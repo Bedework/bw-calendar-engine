@@ -33,7 +33,8 @@ import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
-import org.bedework.calfacade.base.BwShareableDbentity;
+import org.bedework.calfacade.base.BwUnversionedDbentity;
+import org.bedework.calfacade.base.ShareableEntity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -44,8 +45,9 @@ import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.TreeSet;
+import java.util.List;
 
 /** An access helper class. This class makes some assumptions about the
  * classes it deals with but there are no explicit hibernate, or other
@@ -137,13 +139,15 @@ public class AccessUtil implements Logged, AccessUtilI {
    */
 
   @Override
-  public void changeAccess(final BwShareableDbentity<?> ent,
+  public void changeAccess(final ShareableEntity ent,
                            final Collection<Ace> aces,
                            final boolean replaceAll) throws CalFacadeException {
     try {
-      Acl acl = checkAccess(ent, PrivilegeDefs.privWriteAcl, false).getAcl();
+      final Acl acl = checkAccess(ent,
+                                  PrivilegeDefs.privWriteAcl,
+                                  false).getAcl();
 
-      Collection<Ace> allAces;
+      final Collection<Ace> allAces;
       if (replaceAll) {
         allAces = aces;
       } else {
@@ -155,18 +159,20 @@ public class AccessUtil implements Logged, AccessUtilI {
       ent.setAccess(new Acl(allAces).encodeStr());
 
 //      pathInfoMap.flush();
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
 
   @Override
-  public void defaultAccess(final BwShareableDbentity<?> ent,
+  public void defaultAccess(final ShareableEntity ent,
                             final AceWho who) throws CalFacadeException {
     try {
-      Acl acl = checkAccess(ent, PrivilegeDefs.privWriteAcl, false).getAcl();
+      final Acl acl = checkAccess(ent,
+                                  PrivilegeDefs.privWriteAcl,
+                                  false).getAcl();
 
       /* Now remove any access */
 
@@ -175,22 +181,22 @@ public class AccessUtil implements Logged, AccessUtilI {
 
 //        pathInfoMap.flush();
       }
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
 
   @Override
-  public Collection<? extends BwShareableDbentity<?>>
-                checkAccess(final Collection<? extends BwShareableDbentity<?>> ents,
+  public Collection<? extends ShareableEntity>
+                checkAccess(final Collection<? extends ShareableEntity> ents,
                                 final int desiredAccess,
                                 final boolean alwaysReturn)
           throws CalFacadeException {
-    TreeSet<BwShareableDbentity<?>> out = new TreeSet<>();
+    final List<ShareableEntity> out = new ArrayList<>();
 
-    for (BwShareableDbentity<?> sdbe: ents) {
+    for (final var sdbe: ents) {
       if (checkAccess(sdbe, desiredAccess, alwaysReturn).getAccessAllowed()) {
         out.add(sdbe);
       }
@@ -200,7 +206,7 @@ public class AccessUtil implements Logged, AccessUtilI {
   }
 
   @Override
-  public CurrentAccess checkAccess(final BwShareableDbentity<?> ent,
+  public CurrentAccess checkAccess(final ShareableEntity ent,
                                    final int desiredAccess,
                         final boolean alwaysReturnResult) throws CalFacadeException {
     if (ent == null) {
@@ -236,7 +242,7 @@ public class AccessUtil implements Logged, AccessUtilI {
       if (ent instanceof BwCalendar) {
         ident = ((BwCalendar)ent).getPath();
       } else {
-        ident = String.valueOf(ent.getId());
+        ident = ((BwUnversionedDbentity<?>)ent).getHref();
       }
       debug("Check access by " +
                     cb.getPrincipal().getPrincipalRef() +
@@ -266,7 +272,7 @@ public class AccessUtil implements Logged, AccessUtilI {
 
       PrivilegeSet maxPrivs = null;
 
-      char[] aclChars;
+      final char[] aclChars;
 
       if (ent instanceof BwCalendar) {
         final BwCalendar cal = (BwCalendar)ent;
@@ -299,7 +305,7 @@ public class AccessUtil implements Logged, AccessUtilI {
         }
          */
         if (!cb.getSuperUser()) {
-          var userCalPath = Util.buildPath(
+          final var userCalPath = Util.buildPath(
                   BasicSystemProperties.colPathEndsWithSlash,
                   "/",
                   BasicSystemProperties.userCalendarRoot);
@@ -413,11 +419,11 @@ public class AccessUtil implements Logged, AccessUtilI {
    *
    * The calendar/container access might be cached in the pathInfoTable.
    */
-  private char[] getAclChars(final BwShareableDbentity<?> ent,
+  private char[] getAclChars(final ShareableEntity ent,
                              final boolean isSuperUser) throws CalFacadeException {
     if ((!(ent instanceof BwEventProperty)) &&
         (ent instanceof BwShareableContainedDbentity)) {
-      BwCalendar container;
+      final BwCalendar container;
 
       if (ent instanceof BwCalendar) {
         container = (BwCalendar)ent;
@@ -431,13 +437,13 @@ public class AccessUtil implements Logged, AccessUtilI {
 
       final String path = container.getPath();
 
-      CalendarWrapper wcol = (CalendarWrapper)container;
+      final CalendarWrapper wcol = (CalendarWrapper)container;
 
-      String aclStr;
+      final String aclStr;
       char[] aclChars = null;
 
       /* Get access for the parent first if we have one */
-      BwCalendar parent = getParent(wcol);
+      final BwCalendar parent = getParent(wcol);
 
       if (parent != null) {
         aclStr = new String(merged(getAclChars(parent, isSuperUser),
@@ -488,8 +494,9 @@ public class AccessUtil implements Logged, AccessUtilI {
      */
 
     String aclString = null;
-    String entAccess = ent.getAccess();
-    BwPrincipal owner = (BwPrincipal)cb.getPrincipal(ent.getOwnerHref());
+    final String entAccess = ent.getAccess();
+    final BwPrincipal<?> owner =
+            (BwPrincipal<?>)cb.getPrincipal(ent.getOwnerHref());
 
     if (ent instanceof BwCategory) {
       aclString = owner.getCategoryAccess();
@@ -518,7 +525,7 @@ public class AccessUtil implements Logged, AccessUtilI {
       acl = acl.merge(aclString.toCharArray(), "/owner");
 
       return acl.getEncoded();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -540,7 +547,7 @@ public class AccessUtil implements Logged, AccessUtilI {
       }
 
       return acl.encodeAll();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -627,7 +634,7 @@ public class AccessUtil implements Logged, AccessUtilI {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

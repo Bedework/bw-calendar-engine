@@ -22,7 +22,7 @@ import org.bedework.access.CurrentAccess;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.base.BwShareableDbentity;
+import org.bedework.calfacade.base.ShareableEntity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -187,12 +187,12 @@ public class CalSvcDb implements Logged, Serializable {
     return svci.getCal(cal);
   }
 
-  protected BwPrincipal getPublicUser() {
+  protected BwPrincipal<?> getPublicUser() {
     return getSvc().getUsersHandler().getPublicUser();
   }
 
   protected CurrentAccess checkAccess(
-          final BwShareableDbentity<?> ent, final int desiredAccess,
+          final ShareableEntity ent, final int desiredAccess,
           final boolean returnResult) throws CalFacadeException {
     return svci.checkAccess(ent, desiredAccess, returnResult);
   }

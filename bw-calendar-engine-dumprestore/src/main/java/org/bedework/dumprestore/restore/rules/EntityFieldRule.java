@@ -23,9 +23,9 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwString;
-import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
-import org.bedework.calfacade.base.BwShareableDbentity;
+import org.bedework.calfacade.base.OwnedEntity;
+import org.bedework.calfacade.base.ShareableEntity;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 import org.bedework.util.timezones.Timezones;
@@ -168,7 +168,7 @@ public abstract class EntityFieldRule extends RestoreRule {
     return false;
   }
 
-  protected boolean shareableEntityTags(final BwShareableDbentity entity,
+  protected boolean shareableEntityTags(final ShareableEntity entity,
                                         final String name) throws Exception {
     if (ownedEntityTags(entity, name)) {
       return true;
@@ -192,7 +192,7 @@ public abstract class EntityFieldRule extends RestoreRule {
     return false;
   }
 
-  protected boolean ownedEntityTags(final BwOwnedDbentity entity,
+  protected boolean ownedEntityTags(final OwnedEntity entity,
                                     final String name) throws Exception {
     if (name.equals("id")) {  // pre 3.5 - won't work
       return true;

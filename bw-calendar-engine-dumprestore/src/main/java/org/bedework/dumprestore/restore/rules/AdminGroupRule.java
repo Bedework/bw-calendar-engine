@@ -19,11 +19,9 @@
 
 package org.bedework.dumprestore.restore.rules;
 
-import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.svc.BwAdminGroup;
+import org.bedework.dumprestore.Counters;
 import org.bedework.dumprestore.restore.RestoreGlobals;
-
-import java.util.Collection;
 
 /**
  * @author Mike Douglass   douglm  rpi.edu
@@ -58,7 +56,7 @@ public class AdminGroupRule extends EntityRule {
         globals.setPrincipalHref(entity);
       }
 
-      globals.counts[globals.adminGroups]++;
+      globals.counts[Counters.adminGroups]++;
       globals.principalsTbl.put(entity);
 
       if (globals.rintf != null) {
@@ -66,12 +64,12 @@ public class AdminGroupRule extends EntityRule {
 
         /* Save members. */
 
-        final Collection<BwPrincipal> c = entity.getGroupMembers();
+        final var c = entity.getGroupMembers();
         if (c == null) {
           return;
         }
 
-        for (final BwPrincipal pr: c) {
+        for (final var pr: c) {
           globals.rintf.addAdminGroupMember(entity, pr);
         }
       }

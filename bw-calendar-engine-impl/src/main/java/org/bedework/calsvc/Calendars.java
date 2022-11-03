@@ -100,25 +100,27 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return publicCalendarRootPath;
     }
 
-    if (isPublicAdmin()) {
-      if (!getSvc().getSystemProperties().getWorkflowEnabled()) {
-        return publicCalendarRootPath;
-      }
-
-      final BwAuthUser au = getSvc().getUserAuth().getUser(getPars().getAuthUser());
-      final boolean isApprover = isSuper() || (au != null) && au.isApproverUser();
-
-      // Do they have approver status?
-      if (isApprover) {
-        return publicCalendarRootPath;
-      }
-
-      return Util.buildPath(colPathEndsWithSlash,
-                            getSvc().getSystemProperties().getWorkflowRoot()); // "/",
-//                            getPrincipal().getAccountNoSlash());
+    if (!isPublicAdmin()) {
+      return getSvc().getPrincipalInfo().getCalendarHomePath();
     }
 
-    return getSvc().getPrincipalInfo().getCalendarHomePath();
+    if (!getSvc().getSystemProperties().getWorkflowEnabled()) {
+      return publicCalendarRootPath;
+    }
+
+    final BwAuthUser au = getSvc().getUserAuth()
+                                  .getUser(getPars().getAuthUser());
+
+    // Do they have approver status?
+    final boolean isApprover = isSuper() ||
+            ((au != null) && au.isApproverUser());
+    if (isApprover) {
+      return publicCalendarRootPath;
+    }
+
+    // Otherwise we point them at the unapproved home.
+    return Util.buildPath(colPathEndsWithSlash,
+                          getSvc().getSystemProperties().getWorkflowRoot());
   }
 
   @Override
@@ -1092,6 +1094,10 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
 
     if (col.getCalType() == BwCalendar.calTypeCalendarCollection) {
+      if (isPublicAdmin() && !col.getPrimaryCollection()) {
+        return;
+      }
+
       /* We might want to add the busy time calendar here -
        * presumably we will want availability stored somewhere.
        * These might be implicit operations however.

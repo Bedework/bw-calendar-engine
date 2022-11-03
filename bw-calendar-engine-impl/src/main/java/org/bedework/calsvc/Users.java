@@ -26,6 +26,7 @@ import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.DirectoryInfo;
+import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -48,14 +49,14 @@ import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
  * @author Mike Douglass       douglm - rpi.edu
  */
 class Users extends CalSvcDb implements UsersI {
-  private BwPrincipal publicUser;
+  private BwPrincipal<?> publicUser;
 
   Users(final CalSvc svci) {
     super(svci);
   }
 
   @Override
-  public BwPrincipal getUser(final String account) {
+  public BwPrincipal<?> getUser(final String account) {
     if (account == null) {
       return null;
     }
@@ -69,13 +70,13 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   @Override
-  public BwPrincipal getAlways(String account) throws CalFacadeException {
+  public BwPrincipal<?> getAlways(String account) throws CalFacadeException {
     if (account == null) {
       // Return guest user
       return BwPrincipal.makeUserPrincipal();
     }
 
-    final BwPrincipal u = getUser(account);
+    final var u = getUser(account);
     if (u == null) {
       if (account.endsWith("/")) {
         account = account.substring(0, account.length() - 1);
@@ -90,7 +91,8 @@ class Users extends CalSvcDb implements UsersI {
   /* Make this session specific for the moment. We could make it static possibly
    * Also flush every few minutes
    */
-  private final Map<String, BwPrincipal> principalMap = new HashMap<>();
+  private final Map<String, BwPrincipal<?>> principalMap =
+          new HashMap<>();
 
   private long lastFlush = System.currentTimeMillis();
   private static final long flushInt = 1000 * 30 * 5; // 5 minutes
@@ -118,7 +120,7 @@ class Users extends CalSvcDb implements UsersI {
     groupPrincipalRootLen = groupPrincipalRoot.length();
   }
 
-  private BwPrincipal mappedPrincipal(final String val) {
+  private BwPrincipal<?> mappedPrincipal(final String val) {
     final long now = System.currentTimeMillis();
 
     if ((now - lastFlush) > flushInt) {
@@ -131,7 +133,7 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   @Override
-  public BwPrincipal getPrincipal(final String val) {
+  public BwPrincipal<?> getPrincipal(final String val) {
     if (val == null) {
       throw new RuntimeException("getPrincipal: param cannot be null");
     }
@@ -144,7 +146,7 @@ class Users extends CalSvcDb implements UsersI {
       href = val;
     }
 
-    final BwPrincipal p = mappedPrincipal(href);
+    final var p = mappedPrincipal(href);
 
     if (p != null) {
       return p;
@@ -157,7 +159,7 @@ class Users extends CalSvcDb implements UsersI {
     }
 
     if (href.startsWith(userPrincipalRoot)) {
-      final BwPrincipal u = getSvc().getPrincipal(href);
+      final var u = getSvc().getPrincipal(href);
 
       if (u != null) {
         principalMap.put(href, u);
@@ -185,7 +187,7 @@ class Users extends CalSvcDb implements UsersI {
     getSvc().addUser(val);
   }
 
-  BwPrincipal initUserObject(final String val) throws CalFacadeException {
+  BwPrincipal<?> initUserObject(final String val) throws CalFacadeException {
     String account = val;
     if (account.endsWith("/")) {
       account = account.substring(0, account.length() - 1);
@@ -201,7 +203,7 @@ class Users extends CalSvcDb implements UsersI {
 
     setRoots(getSvc());
 
-    final BwPrincipal user = BwPrincipal.makeUserPrincipal();
+    final var user = BwPrincipal.makeUserPrincipal();
     user.setAccount(account);
 
     user.setCategoryAccess(Access.getDefaultPersonalAccess());
@@ -217,11 +219,11 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   void createUser(final String val) throws CalFacadeException {
-    final BwPrincipal user = initUserObject(val);
+    final BwPrincipal<?> user = initUserObject(val);
 
     setRoots(getSvc());
 
-    getCal().saveOrUpdate(user);
+    getCal().saveOrUpdate((BwUnversionedDbentity<?>)user);
 
     getSvc().initPrincipal(user);
     initPrincipal(user, getSvc());
@@ -243,12 +245,12 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   @Override
-  public void update(final BwPrincipal principal) throws CalFacadeException {
-    getCal().saveOrUpdate(principal);
+  public void update(final BwPrincipal<?> principal) throws CalFacadeException {
+    getCal().saveOrUpdate((BwUnversionedDbentity<?>)principal);
   }
 
   @Override
-  public void remove(final BwPrincipal pr) throws CalFacadeException {
+  public void remove(final BwPrincipal<?> pr) throws CalFacadeException {
     final String userRoot = getSvc().getPrincipalInfo().getCalendarHomePath(pr);
 
     /* views */
@@ -280,7 +282,7 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   @Override
-  public void logon(final BwPrincipal val) throws CalFacadeException {
+  public void logon(final BwPrincipal<?> val) throws CalFacadeException {
     //final Timestamp now = new Timestamp(System.currentTimeMillis());
 
     /* TODO - add unversioned login table
@@ -307,11 +309,11 @@ class Users extends CalSvcDb implements UsersI {
   }*/
 
   @Override
-  public void initPrincipal(final BwPrincipal principal) {
+  public void initPrincipal(final BwPrincipal<?> principal) {
     initPrincipal(principal, getSvc());
   }
 
-  private void initPrincipal(final BwPrincipal principal,
+  private void initPrincipal(final BwPrincipal<?> principal,
                              final CalSvc svc) {
     // Add preferences
     final BwPreferences prefs = new BwPreferences();
@@ -351,7 +353,7 @@ class Users extends CalSvcDb implements UsersI {
     getSvc().getPrefsHandler().update(prefs);
   }
 
-  private boolean isTestUser(final BwPrincipal pr) {
+  private boolean isTestUser(final BwPrincipal<?> pr) {
     if (pr.getKind() != WhoDefs.whoTypeUser) {
       return false;
     }
@@ -371,7 +373,7 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   @Override
-  public BwPrincipal getPublicUser() {
+  public BwPrincipal<?> getPublicUser() {
     if (publicUser == null) {
       publicUser = getUser(BwPrincipal.publicUser);
     }

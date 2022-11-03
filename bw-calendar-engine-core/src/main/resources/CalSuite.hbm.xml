@@ -38,11 +38,11 @@
                 index="bwidx_calsuite_group"
                 foreign-key="bw_cs_ag_fk" />
 
-    <property name="rootCollectionPath" column="bw_root_collection"
+    <property name="fields1" column="bw_root_collection"
               type="string" length="3000"
               index="bwidx_cs_rootcol" />
 
-    <property name="submissionsRootPath" column="bw_submissions_root"
+    <property name="fields2" column="bw_submissions_root"
               type="string" length="3000"
               index="bwidx_cs_subroot" />
   </class>

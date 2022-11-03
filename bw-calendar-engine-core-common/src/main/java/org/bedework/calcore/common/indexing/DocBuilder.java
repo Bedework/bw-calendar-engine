@@ -55,17 +55,17 @@ import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.IndexKeys;
 import org.bedework.calfacade.svc.BwAdminGroup;
-import org.bedework.calfacade.svc.BwCalSuitePrincipal;
+import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.opensearch.DocBuilderBase;
-import org.bedework.util.opensearch.EsDocInfo;
 import org.bedework.util.indexing.IndexException;
 import org.bedework.util.misc.Util;
+import org.bedework.util.opensearch.DocBuilderBase;
+import org.bedework.util.opensearch.EsDocInfo;
 import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.parameter.Related;
@@ -136,7 +136,7 @@ public class DocBuilder extends DocBuilderBase {
    * =================================================================== */
 
   /* Return the docinfo for the indexer */
-  EsDocInfo makeDoc(final BwPrincipal ent) throws CalFacadeException {
+  EsDocInfo makeDoc(final BwPrincipal<?> ent) throws CalFacadeException {
     try {
       startObject();
       makeHref(ent);
@@ -152,12 +152,12 @@ public class DocBuilder extends DocBuilderBase {
       makeField("locationAccess", ent.getLocationAccess());
 
       if (ent instanceof BwGroup) {
-        final BwGroup grp = (BwGroup)ent;
+        final BwGroup<?> grp = (BwGroup<?>)ent;
 
         if (!Util.isEmpty(grp.getGroupMembers())) {
           startArray("memberHref");
 
-          for (final BwPrincipal mbr: grp.getGroupMembers()) {
+          for (final var mbr: grp.getGroupMembers()) {
             value(mbr.getPrincipalRef());
           }
           endArray();
@@ -171,16 +171,21 @@ public class DocBuilder extends DocBuilderBase {
         makeField("ownerHref", grp.getOwnerHref());
       }
 
-      if (ent instanceof BwCalSuitePrincipal) {
-        final BwCalSuitePrincipal cs = (BwCalSuitePrincipal)ent;
+      if (ent instanceof BwCalSuite) {
+        final BwCalSuite cs = (BwCalSuite)ent;
 
         makeField(PropertyInfoIndex.OWNER, cs.getOwnerHref());
         makeField(PropertyInfoIndex.PUBLIC, cs.getPublick());
         makeField(PropertyInfoIndex.CREATOR, cs.getCreatorHref());
         makeField(PropertyInfoIndex.ACL, cs.getAccess());
         makeField("rootCollectionPath", cs.getRootCollectionPath());
-        makeField("submissionsRootPath", cs.getSubmissionsRootPath());
+        makeField("description", cs.getDescription());
+        makeField("rootCollectionPath", cs.getRootCollectionPath());
+        makeField("description", cs.getDescription());
         makeField("groupHref", cs.getGroup().getHref());
+
+        makeField("fields1", cs.getFields1());
+        makeField("fields2", cs.getFields2());
       }
 
       endObject();

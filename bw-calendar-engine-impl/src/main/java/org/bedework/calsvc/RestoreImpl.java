@@ -36,6 +36,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwSystem;
+import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
@@ -67,7 +68,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   private int curBatchSize;
   private int batchSize;
 
-  RestoreImpl(final CalSvc svci) throws CalFacadeException {
+  RestoreImpl(final CalSvc svci) {
     super(svci);
   }
 
@@ -129,12 +130,12 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public void restorePrincipal(final BwPrincipal o) throws Throwable {
+  public void restorePrincipal(final BwPrincipal<?> o) throws Throwable {
     try {
       startTransaction();
 
       o.markUnsaved();
-      getCal().saveOrUpdate(o);
+      getCal().saveOrUpdate((BwUnversionedDbentity<?>)o);
     } catch (final Throwable t) {
       handleException(t, "Exception restoring user " + o);
     } finally {
@@ -148,7 +149,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       startTransaction();
 
       o.markUnsaved();
-      getCal().saveOrUpdate(o);
+      getCal().saveOrUpdate((BwUnversionedDbentity<?>)o);
 
       if (debug()) {
         log.debug("Saved admin group " + o);
@@ -160,7 +161,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
 
   @Override
   public void addAdminGroupMember(final BwAdminGroup o,
-                                  final BwPrincipal pr) throws Throwable {
+                                  final BwPrincipal<?> pr) throws Throwable {
     try {
       startTransaction();
 
@@ -214,7 +215,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public BwEvent getEvent(final BwPrincipal owner,
+  public BwEvent getEvent(final BwPrincipal<?> owner,
                           final String colPath,
                           final String recurrenceId,
                           final String uid) throws Throwable {
@@ -396,7 +397,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public BwPrincipal getPrincipal(final String href) throws CalFacadeException {
+  public BwPrincipal<?> getPrincipal(final String href) throws CalFacadeException {
     startTransaction();
 
     return getSvc().getUsersHandler().getPrincipal(href);

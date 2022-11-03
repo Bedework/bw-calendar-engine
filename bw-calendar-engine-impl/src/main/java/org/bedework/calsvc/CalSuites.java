@@ -65,7 +65,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
   public BwCalSuiteWrapper add(final String name,
                                final String adminGroupName,
                                final String rootCollectionPath,
-                               final String submissionsPath) throws CalFacadeException {
+                               final String description) throws CalFacadeException {
     BwCalSuite cs = getCal().getCalSuite(name);
 
     if (cs != null) {
@@ -75,10 +75,11 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     cs = new BwCalSuite();
     cs.setName(name);
 
+    cs.setDescription(description);
+
     setRootCol(cs, rootCollectionPath);
     getSvc().setupSharableEntity(cs, getPrincipal().getPrincipalRef());
 
-    setSubmissionsCol(cs, submissionsPath);
     validateGroup(cs, adminGroupName);
 
     getCal().saveOrUpdate(cs);
@@ -103,11 +104,6 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
   }
 
   private void checkCollections(final BwCalSuite cs) throws CalFacadeException {
-    if ((cs.getSubmissionsRoot() == null) &&
-        (cs.getSubmissionsRootPath() != null)) {
-      cs.setSubmissionsRoot(getCols().get(cs.getSubmissionsRootPath()));
-    }
-
     if ((cs.getRootCollection() == null) &&
         (cs.getRootCollectionPath() != null)) {
       cs.setRootCollection(getCols().get(cs.getRootCollectionPath()));
@@ -116,7 +112,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
 
   @Override
   public BwCalSuiteWrapper get(final String name) throws CalFacadeException {
-    BwCalSuite cs = getCal().getCalSuite(name);
+    final BwCalSuite cs = getCal().getCalSuite(name);
 
     if (cs == null) {
       return null;
@@ -130,7 +126,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
   @Override
   public BwCalSuiteWrapper get(final BwAdminGroup group)
         throws CalFacadeException {
-    BwCalSuite cs = getCal().get(group);
+    final BwCalSuite cs = getCal().get(group);
 
     if (cs == null) {
       return null;
@@ -143,14 +139,14 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
 
   @Override
   public Collection<BwCalSuite> getAll() throws CalFacadeException {
-    Collection<BwCalSuite> css = getCal().getAllCalSuites();
+    final Collection<BwCalSuite> css = getCal().getAllCalSuites();
 
-    TreeSet<BwCalSuite> retCss = new TreeSet<>();
+    final TreeSet<BwCalSuite> retCss = new TreeSet<>();
 
-    for (BwCalSuite cs: css) {
+    for (final BwCalSuite cs: css) {
       checkCollections(cs);
 
-      BwCalSuite w = wrap(cs, true);
+      final BwCalSuite w = wrap(cs, true);
 
       if (w != null) {
         retCss.add(w);
@@ -164,15 +160,16 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
   public void update(final BwCalSuiteWrapper csw,
                      final String adminGroupName,
                      final String rootCollectionPath,
-                     final String submissionsPath) throws CalFacadeException {
-    BwCalSuite cs = csw.fetchEntity();
+                     final String description) throws CalFacadeException {
+    final BwCalSuite cs = csw.fetchEntity();
 
     if (adminGroupName != null) {
       validateGroup(cs, adminGroupName);
     }
 
+    cs.setDescription(description);
+
     setRootCol(cs, rootCollectionPath);
-    setSubmissionsCol(cs, submissionsPath);
 
     getCal().saveOrUpdate(cs);
   }
@@ -192,7 +189,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
       return BasicSystemProperties.globalResourcesPath;
     }
 
-    final BwPrincipal eventsOwner = getPrincipal(suite.getGroup().getOwnerHref());
+    final BwPrincipal<?> eventsOwner = getPrincipal(suite.getGroup().getOwnerHref());
 
     final String home = getSvc().getPrincipalInfo().getCalendarHomePath(eventsOwner);
 
@@ -232,9 +229,9 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
                                 final String name,
                                 final ResourceClass cl) throws CalFacadeException {
     try {
-      BwResource r = getRess().get(Util.buildPath(false, getResourcesPath(suite, cl),
-                                                  "/",
-                                                  name));
+      final BwResource r = getRess().get(Util.buildPath(false, getResourcesPath(suite, cl),
+                                                        "/",
+                                                        name));
       if (r != null) {
         getRess().getContent(r);
       }
@@ -336,7 +333,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
       return;
     }
 
-    BwCalendar rootCol = getCols().get(rootCollectionPath);
+    final BwCalendar rootCol = getCols().get(rootCollectionPath);
     if (rootCol == null) {
       throw new CalFacadeException(CalFacadeException.calsuiteUnknownRootCollection,
                                    rootCollectionPath);
@@ -344,26 +341,6 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
 
     cs.setRootCollection(rootCol);
     cs.setRootCollectionPath(rootCol.getPath());
-  }
-
-  /* Set submissions collection if supplied
-   *
-   */
-  private void setSubmissionsCol(final BwCalSuite cs,
-                                 final String submissionsPath) throws CalFacadeException {
-    if ((submissionsPath == null) ||
-        submissionsPath.equals(cs.getSubmissionsRoot().getPath())) {
-      return;
-    }
-
-    BwCalendar submissionsCol = getCols().get(submissionsPath);
-    if (submissionsCol == null) {
-      throw new CalFacadeException(CalFacadeException.calsuiteUnknownSubmissionsCollection,
-                                   submissionsPath);
-    }
-
-    cs.setSubmissionsRoot(submissionsCol);
-    cs.setSubmissionsRootPath(submissionsCol.getPath());
   }
 
   /* Ensure the given group is valid for the given calendar suite
@@ -375,7 +352,10 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
       throw new CalFacadeException(CalFacadeException.calsuiteGroupNameTooLong);
     }
 
-    BwAdminGroup agrp = (BwAdminGroup)getSvc().getAdminDirectories().findGroup(groupName);
+    final BwAdminGroup agrp =
+            (BwAdminGroup)getSvc().
+                    getAdminDirectories().
+                    findGroup(groupName);
     if (agrp == null) {
       throw new CalFacadeException(CalFacadeException.groupNotFound,
                                    groupName);
@@ -389,7 +369,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
                                    csw.getName());
     }
 
-    final BwPrincipal eventsOwner = getPrincipal(agrp.getOwnerHref());
+    final BwPrincipal<?> eventsOwner = getPrincipal(agrp.getOwnerHref());
 
     if (eventsOwner == null) {
       throw new CalFacadeException(CalFacadeException.calsuiteBadowner);
@@ -461,7 +441,8 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
       return w;
     }
 
-    final BwPrincipal eventsOwner = getSvc().getUsersHandler().getPrincipal(agrp.getOwnerHref());
+    final BwPrincipal<?> eventsOwner =
+            getSvc().getUsersHandler().getPrincipal(agrp.getOwnerHref());
     if (eventsOwner == null) {
       return w;
     }

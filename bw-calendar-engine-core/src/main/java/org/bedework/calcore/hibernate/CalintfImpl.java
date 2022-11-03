@@ -45,6 +45,7 @@ import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
+import org.bedework.calfacade.base.ShareableEntity;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -54,7 +55,6 @@ import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAdminGroupEntry;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
-import org.bedework.calfacade.svc.BwCalSuitePrincipal;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
@@ -639,7 +639,7 @@ public class CalintfImpl extends CalintfROImpl {
    * ==================================================================== */
 
   @Override
-  public void changeAccess(final BwShareableDbentity<?> ent,
+  public void changeAccess(final ShareableEntity ent,
                            final Collection<Ace> aces,
                            final boolean replaceAll) throws CalFacadeException {
     if (ent instanceof BwCalendar) {
@@ -648,7 +648,7 @@ public class CalintfImpl extends CalintfROImpl {
     }
     checkOpen();
     access.changeAccess(ent, aces, replaceAll);
-    entityDao.saveOrUpdate(ent);
+    entityDao.saveOrUpdate((BwUnversionedDbentity<?>)ent);
   }
 
   @Override
@@ -660,7 +660,7 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public void defaultAccess(final BwShareableDbentity<?> ent,
+  public void defaultAccess(final ShareableEntity ent,
                             final AceWho who) throws CalFacadeException {
     if (ent instanceof BwCalendar) {
       defaultAccess((BwCalendar)ent, who);
@@ -669,7 +669,7 @@ public class CalintfImpl extends CalintfROImpl {
     checkOpen();
     checkAccess(ent, privWriteAcl, false);
     access.defaultAccess(ent, who);
-    entityDao.saveOrUpdate(ent);
+    entityDao.saveOrUpdate((BwUnversionedDbentity<?>)ent);
   }
 
   @Override
@@ -752,11 +752,12 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public GetSpecialCalendarResult getSpecialCalendar(final BwIndexer indexer,
-                                                     final BwPrincipal owner,
-                                                     final int calType,
-                                                     final boolean create,
-                                                     final int access) throws CalFacadeException {
+  public GetSpecialCalendarResult getSpecialCalendar(
+          final BwIndexer indexer,
+          final BwPrincipal<?> owner,
+          final int calType,
+          final boolean create,
+          final int access) throws CalFacadeException {
     return calendars.getSpecialCalendar(indexer,
                                         owner, calType, create, access);
   }
@@ -818,7 +819,7 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public void addNewCalendars(final BwPrincipal user) throws CalFacadeException {
+  public void addNewCalendars(final BwPrincipal<?> user) throws CalFacadeException {
     checkOpen();
 
     calendars.addNewCalendars(user);
@@ -1168,7 +1169,7 @@ public class CalintfImpl extends CalintfROImpl {
 
   @Override
   public void save(final BwFilterDef val,
-                   final BwPrincipal owner) throws CalFacadeException {
+                   final BwPrincipal<?> owner) throws CalFacadeException {
     final BwFilterDef fd = filterDefs.fetch(val.getName(), owner);
 
     if (fd != null) {
@@ -1181,12 +1182,12 @@ public class CalintfImpl extends CalintfROImpl {
 
   @Override
   public BwFilterDef getFilterDef(final String name,
-                                  final BwPrincipal owner) throws CalFacadeException {
+                                  final BwPrincipal<?> owner) throws CalFacadeException {
     return filterDefs.fetch(name, owner);
   }
 
   @Override
-  public Collection<BwFilterDef> getAllFilterDefs(final BwPrincipal owner) throws CalFacadeException {
+  public Collection<BwFilterDef> getAllFilterDefs(final BwPrincipal<?> owner) throws CalFacadeException {
     return filterDefs.getAllFilterDefs(owner);
   }
 
@@ -1197,7 +1198,7 @@ public class CalintfImpl extends CalintfROImpl {
 
   @Override
   public void deleteFilterDef(final String name,
-                              final BwPrincipal owner) throws CalFacadeException {
+                              final BwPrincipal<?> owner) throws CalFacadeException {
     final BwFilterDef fd = filterDefs.fetch(name, owner);
 
     if (fd == null) {
@@ -1261,12 +1262,12 @@ public class CalintfImpl extends CalintfROImpl {
    * ==================================================================== */
 
   @Override
-  public BwPrincipal getPrincipal(final String href) throws CalFacadeException {
+  public BwPrincipal<?> getPrincipal(final String href) throws CalFacadeException {
     return principalsAndPrefs.getPrincipal(href);
   }
 
   @Override
-  public void saveOrUpdate(final BwPrincipal val) throws CalFacadeException {
+  public void saveOrUpdate(final BwPrincipal<?> val) throws CalFacadeException {
     entityDao.saveOrUpdate(val);
     getIndexer(val.getPrincipalRef(),
                docTypePrincipal).indexEntity(val);
@@ -1309,13 +1310,13 @@ public class CalintfImpl extends CalintfROImpl {
    * ==================================================================== */
 
   @Override
-  public BwGroup findGroup(final String account,
+  public BwGroup<?> findGroup(final String account,
                            final boolean admin) throws CalFacadeException {
     return principalsAndPrefs.findGroup(account, admin);
   }
 
   @Override
-  public Collection<BwGroup> findGroupParents(final BwGroup group,
+  public Collection<BwGroup<?>> findGroupParents(final BwGroup group,
                                        final boolean admin) throws CalFacadeException {
     return principalsAndPrefs.findGroupParents(group, admin);
  }
@@ -1362,13 +1363,13 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public Collection<BwPrincipal> getMembers(final BwGroup group,
-                                            final boolean admin) throws CalFacadeException {
+  public Collection<BwPrincipal<?>> getMembers(final BwGroup group,
+                                               final boolean admin) throws CalFacadeException {
     return principalsAndPrefs.getMembers(group, admin);
   }
 
   @Override
-  public Collection<BwGroup> getAllGroups(final boolean admin) throws CalFacadeException {
+  public Collection<BwGroup<?>> getAllGroups(final boolean admin) throws CalFacadeException {
     return principalsAndPrefs.getAllGroups(admin);
   }
 
@@ -1378,14 +1379,15 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public Collection<BwGroup> getGroups(final BwPrincipal val,
-                                       final boolean admin) throws CalFacadeException {
+  public Collection<BwGroup<?>> getGroups(
+          final BwPrincipal<?> val,
+          final boolean admin) throws CalFacadeException {
     return principalsAndPrefs.getGroups(val, admin);
   }
 
   @Override
   public Collection<BwAdminGroup> getAdminGroups(
-          final BwPrincipal val) throws CalFacadeException {
+          final BwPrincipal<?> val) throws CalFacadeException {
     return principalsAndPrefs.getGroups(val, true);
   }
 
@@ -1411,15 +1413,13 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public void saveOrUpdate(final BwCalSuite val) throws CalFacadeException {
     entityDao.saveOrUpdate(val);
-    BwCalSuitePrincipal csp = BwCalSuitePrincipal.from(val);
-    indexEntity(csp);
+    indexEntity(val);
   }
 
   @Override
   public void delete(final BwCalSuite val) throws CalFacadeException {
     entityDao.delete(val);
-    BwCalSuitePrincipal csp = BwCalSuitePrincipal.from(val);
-    getIndexer(docTypePrincipal).unindexEntity(csp.getHref());
+    getIndexer(docTypePrincipal).unindexEntity(val.getHref());
   }
 
   /* ====================================================================

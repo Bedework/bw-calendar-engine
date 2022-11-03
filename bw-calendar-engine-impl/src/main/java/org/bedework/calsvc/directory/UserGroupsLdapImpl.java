@@ -33,7 +33,6 @@ import java.util.Properties;
 import java.util.TreeSet;
 
 import javax.naming.Context;
-import javax.naming.NamingEnumeration;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttributes;
@@ -74,7 +73,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
     try {
       // Is it parseable?
       new URI(href);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       valid = false;
     }
 
@@ -86,17 +85,17 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
   }
 
   @Override
-  public Collection<BwGroup> getGroups(final BwPrincipal val) throws CalFacadeException {
+  public Collection<BwGroup<?>> getGroups(final BwPrincipal<?> val) throws CalFacadeException {
     return getGroups(getProps(), val);
   }
 
   @Override
-  public Collection<BwGroup> getAllGroups(final BwPrincipal val) throws CalFacadeException {
-    Collection<BwGroup> groups = getGroups(getProps(), val);
-    Collection<BwGroup> allGroups = new TreeSet<BwGroup>(groups);
+  public Collection<BwGroup<?>> getAllGroups(final BwPrincipal<?> val) throws CalFacadeException {
+    final var groups = getGroups(getProps(), val);
+    final var allGroups = new TreeSet<>(groups);
 
-    for (BwGroup grp: groups) {
-      Collection<BwGroup> gg = getAllGroups(grp);
+    for (final var grp: groups) {
+      final var gg = getAllGroups(grp);
       if (!gg.isEmpty()) {
         allGroups.addAll(gg);
       }
@@ -116,14 +115,14 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
   }
 
   @Override
-  public Collection<BwGroup> getAll(final boolean populate) throws CalFacadeException {
-    Collection<BwGroup> gs = getGroups(getProps(), null);
+  public Collection<BwGroup<?>> getAll(final boolean populate) throws CalFacadeException {
+    final var gs = getGroups(getProps(), null);
 
     if (!populate) {
       return gs;
     }
 
-    for (BwGroup g: gs) {
+    for (final var g: gs) {
       getMembers(g);
     }
 
@@ -131,7 +130,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
   }
 
   @Override
-  public void getMembers(final BwGroup group) throws CalFacadeException {
+  public void getMembers(final BwGroup<?> group) throws CalFacadeException {
     getGroupMembers(getProps(), group);
   }
 
@@ -140,7 +139,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
    * ==================================================================== */
 
   @Override
-  public void addGroup(final BwGroup group) throws CalFacadeException {
+  public void addGroup(final BwGroup<?> group) throws CalFacadeException {
     if (findGroup(group.getAccount()) != null) {
       throw new CalFacadeException(CalFacadeException.duplicateAdminGroup);
     }
@@ -148,13 +147,14 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
   }
 
   @Override
-  public BwGroup findGroup(final String name) {
+  public BwGroup<?> findGroup(final String name) {
     return findGroup(getProps(), name);
   }
 
   @Override
-  public void addMember(final BwGroup group, final BwPrincipal val) throws CalFacadeException {
-    BwGroup ag = findGroup(group.getAccount());
+  public void addMember(final BwGroup<?> group,
+                        final BwPrincipal<?> val) throws CalFacadeException {
+    final BwGroup<?> ag = findGroup(group.getAccount());
 
     if (ag == null) {
       throw new CalFacadeException("Group " + group + " does not exist");
@@ -185,8 +185,9 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
    * @see org.bedework.calfacade.svc.AdminGroups#removeMember(org.bedework.calfacade.BwGroup, org.bedework.calfacade.BwPrincipal)
    */
   @Override
-  public void removeMember(final BwGroup group, final BwPrincipal val) throws CalFacadeException {
-    BwGroup ag = findGroup(group.getAccount());
+  public void removeMember(final BwGroup<?> group,
+                           final BwPrincipal<?> val) throws CalFacadeException {
+    final BwGroup<?> ag = findGroup(group.getAccount());
 
     if (ag == null) {
       throw new CalFacadeException("Group " + group + " does not exist");
@@ -223,7 +224,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
    * @see org.bedework.calfacade.svc.AdminGroups#removeGroup(org.bedework.calfacade.BwGroup)
    */
   @Override
-  public void removeGroup(final BwGroup group) throws CalFacadeException {
+  public void removeGroup(final BwGroup<?> group) throws CalFacadeException {
     // Remove all group members
     /*
     HibSession sess = getSess();
@@ -252,13 +253,13 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
    * @see org.bedework.calfacade.svc.AdminGroups#updateGroup(org.bedework.calfacade.svc.BwAdminGroup)
    */
   @Override
-  public void updateGroup(final BwGroup group) throws CalFacadeException {
+  public void updateGroup(final BwGroup<?> group) throws CalFacadeException {
     //getSess().saveOrUpdate(group);
     throw new CalFacadeUnimplementedException();
   }
 
   @Override
-  public Collection<BwGroup> findGroupParents(final BwGroup group) throws CalFacadeException {
+  public Collection<BwGroup<?>> findGroupParents(final BwGroup<?> group) throws CalFacadeException {
     throw new CalFacadeUnimplementedException();
   }
 
@@ -275,8 +276,9 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
    *  Private methods.
    * ==================================================================== */
 
-  private boolean checkPathForSelf(final BwGroup group,
-                                   final BwPrincipal val) throws CalFacadeException {
+  private boolean checkPathForSelf(final BwGroup<?> group,
+                                   final BwPrincipal<?> val)
+          throws CalFacadeException {
     if (group.equals(val)) {
       return false;
     }
@@ -313,7 +315,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
   private InitialLdapContext createLdapInitContext(final LdapConfigProperties props)
           throws CalFacadeException {
-    Properties env = new Properties();
+    final Properties env = new Properties();
 
     // Map all options into the JNDI InitialLdapContext env
 
@@ -328,7 +330,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
     env.setProperty(Context.PROVIDER_URL, props.getProviderUrl());
 
-    String protocol = env.getProperty(Context.SECURITY_PROTOCOL);
+    final String protocol = env.getProperty(Context.SECURITY_PROTOCOL);
     String providerURL = env.getProperty(Context.PROVIDER_URL);
 
     if (providerURL == null) {
@@ -342,7 +344,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
       env.put(Context.SECURITY_CREDENTIALS, props.getAuthPw());
     }
 
-    InitialLdapContext ctx = null;
+    final InitialLdapContext ctx;
 
     try {
       ctx = new InitialLdapContext(env, null);
@@ -351,7 +353,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
       }
 
       return ctx;
-    } catch(Throwable t) {
+    } catch(final Throwable t) {
       if (debug()) {
         error(t);
       }
@@ -362,23 +364,23 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
   /* Search for a group to ensure it exists
    *
    */
-  private BwGroup findGroup(final DirConfigProperties dirProps,
-                            final String groupName) {
-    LdapConfigProperties props = (LdapConfigProperties)dirProps;
+  private BwGroup<?> findGroup(final DirConfigProperties dirProps,
+                               final String groupName) {
+    final LdapConfigProperties props = (LdapConfigProperties)dirProps;
     InitialLdapContext ctx = null;
 
     try {
       ctx = createLdapInitContext(props);
 
-      BasicAttributes matchAttrs = new BasicAttributes(true);
+      final BasicAttributes matchAttrs = new BasicAttributes(true);
 
       matchAttrs.put(props.getGroupIdAttr(), groupName);
 
-      String[] idAttr = {props.getGroupIdAttr()};
+      final String[] idAttr = {props.getGroupIdAttr()};
 
-      BwGroup group = null;
-      NamingEnumeration response = ctx.search(props.getGroupContextDn(),
-                                              matchAttrs, idAttr);
+      BwGroup<?> group = null;
+      final var response = ctx.search(props.getGroupContextDn(),
+                                                    matchAttrs, idAttr);
       while (response.hasMore()) {
 //        SearchResult sr = (SearchResult)response.next();
 //        Attributes attrs = sr.getAttributes();
@@ -387,13 +389,13 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
           throw new CalFacadeException("org.bedework.ldap.groups.multiple.result");
         }
 
-        group = new BwGroup();
+        group = new BwGroup<>();
         group.setAccount(groupName);
         group.setPrincipalRef(makePrincipalUri(groupName, WhoDefs.whoTypeGroup));
       }
 
       return group;
-    } catch(Throwable t) {
+    } catch(final Throwable t) {
       if (debug()) {
         error(t);
       }
@@ -410,10 +412,11 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
    * is a member
    *
    */
-  private Collection<BwGroup> getGroups(final DirConfigProperties dirProps,
-                                        final BwPrincipal principal)
+  private Collection<BwGroup<?>> getGroups(
+          final DirConfigProperties dirProps,
+          final BwPrincipal<?> principal)
           throws CalFacadeException {
-    final ArrayList<BwGroup> groups = new ArrayList<>();
+    final ArrayList<BwGroup<?>> groups = new ArrayList<>();
     final LdapConfigProperties props = (LdapConfigProperties)dirProps;
 
     if (props.getGroupMemberAttr() == null) {
@@ -450,10 +453,10 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
       final String[] idAttr = {props.getGroupIdAttr()};
 
-      final NamingEnumeration response = ctx.search(props.getGroupContextDn(),
+      final var response = ctx.search(props.getGroupContextDn(),
                                               matchAttrs, idAttr);
       while (response.hasMore()) {
-        final SearchResult sr = (SearchResult)response.next();
+        final SearchResult sr = response.next();
         final Attributes attrs = sr.getAttributes();
 
         final Attribute nmAttr = attrs.get(props.getGroupIdAttr());
@@ -461,7 +464,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
           throw new CalFacadeException("org.bedework.ldap.groups.multiple.result");
         }
 
-        final BwGroup group = new BwGroup();
+        final BwGroup<?> group = new BwGroup<>();
         group.setAccount(nmAttr.get(0).toString());
         group.setPrincipalRef(makePrincipalUri(group.getAccount(),
                                                WhoDefs.whoTypeGroup));
@@ -486,9 +489,10 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
   /* Find members for given group
    *
    */
-  private void getGroupMembers(final DirConfigProperties dirProps, final BwGroup group)
+  private void getGroupMembers(final DirConfigProperties dirProps,
+                               final BwGroup<?> group)
           throws CalFacadeException {
-    LdapConfigProperties props = (LdapConfigProperties)dirProps;
+    final LdapConfigProperties props = (LdapConfigProperties)dirProps;
     InitialLdapContext ctx = null;
 
     try {
@@ -498,17 +502,17 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
       matchAttrs.put(props.getGroupIdAttr(), group.getAccount());
 
-      String[] memberAttr = {props.getGroupMemberAttr()};
+      final String[] memberAttr = {props.getGroupMemberAttr()};
 
       ArrayList<String> mbrs = null;
 
       boolean beenHere = false;
 
-      NamingEnumeration response = ctx.search(props.getGroupContextDn(),
-                                              matchAttrs, memberAttr);
+      var response = ctx.search(props.getGroupContextDn(),
+                                matchAttrs, memberAttr);
       while (response.hasMore()) {
-        SearchResult sr = (SearchResult)response.next();
-        Attributes attrs = sr.getAttributes();
+        final SearchResult sr = response.next();
+        final Attributes attrs = sr.getAttributes();
 
         if (beenHere) {
           throw new CalFacadeException("org.bedework.ldap.groups.multiple.result");
@@ -516,7 +520,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
         beenHere = true;
 
-        Attribute membersAttr = attrs.get(props.getGroupMemberAttr());
+        final Attribute membersAttr = attrs.get(props.getGroupMemberAttr());
         mbrs = new ArrayList<>();
 
         for (int m = 0; m < membersAttr.size(); m ++) {
@@ -526,13 +530,13 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
       // LDAP We need a way to search recursively for groups.
 
       /* Search for each user in the group */
-      String memberContext = props.getGroupMemberContextDn();
-      String memberSearchAttr = props.getGroupMemberSearchAttr();
-      String[] idAttr = {props.getGroupMemberUserIdAttr(),
-                         props.getGroupMemberGroupIdAttr(),
-                         "objectclass"};
+      final String memberContext = props.getGroupMemberContextDn();
+      final String memberSearchAttr = props.getGroupMemberSearchAttr();
+      final String[] idAttr = {props.getGroupMemberUserIdAttr(),
+                               props.getGroupMemberGroupIdAttr(),
+                               "objectclass"};
 
-      for (String mbr: mbrs) {
+      for (final var mbr: mbrs) {
         if (memberContext != null) {
           matchAttrs = new BasicAttributes(true);
 
@@ -544,16 +548,16 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
         }
 
         if (response.hasMore()) {
-          SearchResult sr = (SearchResult)response.next();
-          Attributes attrs = sr.getAttributes();
+          final SearchResult sr = response.next();
+          final Attributes attrs = sr.getAttributes();
 
-          Attribute ocsAttr = attrs.get("objectclass");
-          String userOc = props.getUserObjectClass();
-          String groupOc = props.getGroupObjectClass();
+          final Attribute ocsAttr = attrs.get("objectclass");
+          final String userOc = props.getUserObjectClass();
+          final String groupOc = props.getGroupObjectClass();
           boolean isGroup = false;
 
           for (int oci = 0; oci < ocsAttr.size(); oci++) {
-            String oc = ocsAttr.get(oci).toString();
+            final String oc = ocsAttr.get(oci).toString();
             if (userOc.equals(oc)) {
               break;
             }
@@ -564,8 +568,8 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
             }
           }
 
-          BwPrincipal p = null;
-          Attribute attr;
+          final BwPrincipal<?> p;
+          final Attribute attr;
 
           if (isGroup) {
             p = BwPrincipal.makeGroupPrincipal();
@@ -586,7 +590,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
           group.addGroupMember(p);
         }
       }
-    } catch(Throwable t) {
+    } catch(final Throwable t) {
       if (debug()) {
         error(t);
       }
@@ -600,33 +604,35 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
     /* Recursively fetch members of groups that are members. */
 
-    for (BwGroup g: group.getGroups()) {
+    for (final var g: group.getGroups()) {
       getGroupMembers(props, g);
     }
   }
 
   /* Return the entry we will find in a group identifying this user
    */
-  private String getUserEntryValue(final LdapConfigProperties props,
-                                   final BwPrincipal p) {
+  private String getUserEntryValue(
+          final LdapConfigProperties props,
+          final BwPrincipal<?> p) {
     return makeUserDn(props, p);
   }
 
   /* Return the entry we will find in a group identifying this group
    */
-  private String getGroupEntryValue(final LdapConfigProperties props,
-                                    final BwPrincipal p) {
+  private String getGroupEntryValue(
+          final LdapConfigProperties props,
+          final BwPrincipal<?> p) {
     return makeGroupDn(props, p);
   }
 
   private String makeUserDn(final LdapConfigProperties props,
-                            final BwPrincipal p) {
+                            final BwPrincipal<?> p) {
     return props.getUserDnPrefix() + p.getAccount() +
            props.getUserDnSuffix();
   }
 
   private String makeGroupDn(final LdapConfigProperties props,
-                             final BwPrincipal p) {
+                             final BwPrincipal<?> p) {
     return props.getGroupDnPrefix() + p.getAccount() +
            props.getGroupDnSuffix();
   }

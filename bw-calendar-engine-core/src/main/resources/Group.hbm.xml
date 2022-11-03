@@ -3,10 +3,10 @@
   "-//Hibernate/Hibernate Mapping DTD//EN"
   "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<!-- ===================================================================
+<!-- ==================================================
      Groups stored in the db - most sites will probably use an external
      directory but this is useful for debugging
-     =================================================================== -->
+     =================================================== -->
 
 <hibernate-mapping>
   <class name="org.bedework.calfacade.BwGroup"

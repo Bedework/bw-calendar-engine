@@ -50,16 +50,16 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.svc.BwAdminGroup;
-import org.bedework.calfacade.svc.BwCalSuitePrincipal;
+import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.misc.Util;
 import org.bedework.util.opensearch.DocBuilderBase;
 import org.bedework.util.opensearch.EntityBuilderBase;
-import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.property.RequestStatus;
 
@@ -106,10 +106,10 @@ public class EntityBuilder extends EntityBuilderBase {
     return new DocBuilderBase.UpdateInfo(l);
   }
 
-  BwPrincipal makePrincipal() {
+  BwPrincipal<?> makePrincipal() {
     final String href = getString(PropertyInfoIndex.HREF);
 
-    final BwPrincipal pr = BwPrincipal.makePrincipal(href);
+    final BwPrincipal<?> pr = BwPrincipal.makePrincipal(href);
 
     if (pr == null) {
       return null;
@@ -124,7 +124,7 @@ public class EntityBuilder extends EntityBuilderBase {
     pr.setLocationAccess(getString("locationAccess"));
 
     if (pr instanceof BwGroup) {
-      final BwGroup grp = (BwGroup)pr;
+      final BwGroup<?> grp = (BwGroup<?>)pr;
 
       grp.setMemberHrefs(getStringSet("memberHref"));
     }
@@ -136,16 +136,17 @@ public class EntityBuilder extends EntityBuilderBase {
       grp.setOwnerHref(getString("ownerHref"));
     }
 
-    if (pr instanceof BwCalSuitePrincipal) {
-      final BwCalSuitePrincipal cs = (BwCalSuitePrincipal)pr;
+    if (pr instanceof BwCalSuite) {
+      final BwCalSuite cs = (BwCalSuite)pr;
 
       cs.setCreatorHref(getString(PropertyInfoIndex.CREATOR));
       cs.setOwnerHref(getString(PropertyInfoIndex.OWNER));
       cs.setPublick(getBooleanNotNull(PropertyInfoIndex.PUBLIC));
       cs.setAccess(getString(PropertyInfoIndex.ACL));
-      cs.setRootCollectionPath(getString("rootCollectionPath"));
-      cs.setSubmissionsRootPath(getString("submissionsRootPath"));
       cs.setGroupHref(getString("groupHref"));
+
+      cs.setFields1(getString("fields1"));
+      cs.setFields2(getString("fields2"));
     }
 
     return pr;

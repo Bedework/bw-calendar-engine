@@ -56,7 +56,7 @@ import org.bedework.calfacade.indexing.ReindexResponse;
 import org.bedework.calfacade.indexing.SearchResult;
 import org.bedework.calfacade.indexing.SearchResultEntry;
 import org.bedework.calfacade.svc.BwAdminGroup;
-import org.bedework.calfacade.svc.BwCalSuitePrincipal;
+import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.AccessChecker;
@@ -2215,8 +2215,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     caches.put(entity);
 
-    if (entity instanceof BwCalSuitePrincipal) {
-      final BwCalSuitePrincipal cs = (BwCalSuitePrincipal)entity;
+    if (entity instanceof BwCalSuite) {
+      final BwCalSuite cs = (BwCalSuite)entity;
 
       if (cs.getGroupHref() != null) {
         cs.setGroup((BwAdminGroup)fetchPrincipal(cs.getGroupHref()));
@@ -2228,7 +2228,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       return entity;
     }
 
-    final BwGroup grp = (BwGroup)entity;
+    final BwGroup<?> grp = (BwGroup<?>)entity;
 
     // Get all member entities
     if (Util.isEmpty(grp.getMemberHrefs())) {
@@ -2236,7 +2236,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
 
     for (final String href: grp.getMemberHrefs()) {
-      final BwPrincipal mbr = fetchPrincipal(href);
+      final BwPrincipal<?> mbr = fetchPrincipal(href);
       if (mbr == null) {
         warn("Missing member in index: " + href);
         continue;
@@ -2249,9 +2249,9 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
-  public GetEntitiesResponse<BwGroup> fetchGroups(final boolean admin) {
+  public GetEntitiesResponse<BwGroup<?>> fetchGroups(final boolean admin) {
     final QueryBuilder qb = getFilters(null).allGroupsQuery(admin);
-    final GetEntitiesResponse<BwGroup> resp = new GetEntitiesResponse<>();
+    final GetEntitiesResponse<BwGroup<?>> resp = new GetEntitiesResponse<>();
 
     try {
 
@@ -2260,7 +2260,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                        @Override
                                        BwGroup make(final EntityBuilder eb,
                                                     final String id) {
-                                         return (BwGroup)eb.makePrincipal();
+                                         return (BwGroup<?>)eb.makePrincipal();
                                        }
                                      },
                                      qb,
@@ -2297,11 +2297,13 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
-  public GetEntitiesResponse<BwGroup> fetchGroups(final boolean admin,
-                                                  final String memberHref) {
+  public GetEntitiesResponse<BwGroup<?>> fetchGroups(
+          final boolean admin,
+          final String memberHref) {
     final QueryBuilder qb = getFilters(null).allGroupsQuery(admin,
                                                             memberHref);
-    final GetEntitiesResponse<BwGroup> resp = new GetEntitiesResponse<>();
+    final GetEntitiesResponse<BwGroup<?>> resp =
+            new GetEntitiesResponse<>();
 
     try {
 
@@ -2310,7 +2312,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                        @Override
                                        BwGroup make(final EntityBuilder eb,
                                                     final String id) {
-                                         return (BwGroup)eb.makePrincipal();
+                                         return (BwGroup<?>)eb.makePrincipal();
                                        }
                                      },
                                      qb,

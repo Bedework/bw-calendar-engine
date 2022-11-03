@@ -38,7 +38,7 @@ public interface CoreFilterDefsI extends Serializable {
    * @throws CalFacadeException for errrors including duplicate name
    */
   void save(BwFilterDef val,
-            final BwPrincipal owner) throws CalFacadeException;
+            BwPrincipal<?> owner) throws CalFacadeException;
 
   /** Get a filter given the name
    *
@@ -48,7 +48,7 @@ public interface CoreFilterDefsI extends Serializable {
    * @throws CalFacadeException
    */
   BwFilterDef getFilterDef(String name,
-                           final BwPrincipal owner) throws CalFacadeException;
+                           BwPrincipal<?> owner) throws CalFacadeException;
 
   /** Get filter definitions to which this user has access
    *
@@ -56,7 +56,7 @@ public interface CoreFilterDefsI extends Serializable {
    * @return Collection     of BwCalSuiteWrapper
    * @throws CalFacadeException
    */
-  Collection<BwFilterDef> getAllFilterDefs(final BwPrincipal owner) throws CalFacadeException;
+  Collection<BwFilterDef> getAllFilterDefs(BwPrincipal<?> owner) throws CalFacadeException;
 
   /** Update a filter definition.
    *
@@ -72,5 +72,6 @@ public interface CoreFilterDefsI extends Serializable {
    * @throws CalFacadeException
    */
   void deleteFilterDef(String name,
-                    final BwPrincipal owner) throws CalFacadeException;
+                       BwPrincipal<?> owner)
+          throws CalFacadeException;
 }

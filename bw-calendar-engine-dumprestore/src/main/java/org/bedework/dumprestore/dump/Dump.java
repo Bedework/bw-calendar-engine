@@ -183,9 +183,9 @@ public class Dump implements Logged, Defs {
 
     final DumpPrincipal dumpPr = new DumpPrincipal(globals);
 
-    final Iterator<BwPrincipal> it = globals.di.getAllPrincipals();
+    final Iterator<BwPrincipal<?>> it = globals.di.getAllPrincipals();
     while (it.hasNext()) {
-      final BwPrincipal pr = it.next();
+      final var pr = it.next();
         
       final String account = pr.getAccount().toLowerCase().trim();
         

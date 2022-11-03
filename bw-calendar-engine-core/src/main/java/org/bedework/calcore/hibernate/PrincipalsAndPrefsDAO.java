@@ -58,7 +58,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
           "from " + BwUser.class.getName() +
                   " as u where u.principalRef = :href";
 
-  public BwPrincipal getPrincipal(final String href) throws CalFacadeException {
+  public BwPrincipal<?> getPrincipal(final String href) throws CalFacadeException {
     final HibSession sess = getSess();
 
     if (href == null) {
@@ -80,7 +80,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
 
     sess.setString("href", href);
 
-    return (BwPrincipal)sess.getUnique();
+    return (BwPrincipal<?>)sess.getUnique();
   }
 
   private static final String getPrincipalHrefsQuery =
@@ -168,8 +168,9 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
    * @throws CalFacadeException on error
    */
   @SuppressWarnings("unchecked")
-  public Collection<BwGroup> findGroupParents(final BwGroup group,
-                                              final boolean admin) throws CalFacadeException {
+  public Collection<BwGroup<?>> findGroupParents(
+          final BwGroup<?> group,
+          final boolean admin) throws CalFacadeException {
     final HibSession sess = getSess();
 
     if (admin) {
@@ -180,7 +181,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
 
     sess.setInt("grpid", group.getId());
 
-    return (Collection<BwGroup>)sess.getList();
+    return (Collection<BwGroup<?>>)sess.getList();
   }
 
   private static final String removeAllAdminGroupMemberRefsQuery =
@@ -249,7 +250,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "where grp=:grp and memberId=:mbrId and memberIsGroup=:isgroup";
 
   public void removeMember(final BwGroup group,
-                           final BwPrincipal val,
+                           final BwPrincipal<?> val,
                            final boolean admin) throws CalFacadeException {
     final HibSession sess = getSess();
 
@@ -309,8 +310,8 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "ge.grp=:gr and ge.memberIsGroup=true";
 
   @SuppressWarnings("unchecked")
-  public Collection<BwPrincipal> getMembers(final BwGroup group,
-                                            final boolean admin) throws CalFacadeException {
+  public Collection<BwPrincipal<?>> getMembers(final BwGroup group,
+                                               final boolean admin) throws CalFacadeException {
     final HibSession sess = getSess();
 
     if (admin) {
@@ -321,9 +322,9 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
 
     sess.setEntity("gr", group);
 
-    final Collection<BwPrincipal> ms =
+    final Collection<BwPrincipal<?>> ms =
             new TreeSet<>(
-                    (Collection<? extends BwPrincipal>)sess.getList());
+                    (Collection<? extends BwPrincipal<?>>)sess.getList());
 
     if (admin) {
       sess.createQuery(getAdminGroupGroupMembersQuery);
@@ -333,7 +334,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
 
     sess.setEntity("gr", group);
 
-    ms.addAll((Collection<? extends BwPrincipal>)sess.getList());
+    ms.addAll((Collection<? extends BwPrincipal<?>>)sess.getList());
 
     return ms;
   }
@@ -374,8 +375,9 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "where g.memberId=:entId and g.memberIsGroup=:isgroup";
 
   @SuppressWarnings("unchecked")
-  public <T extends BwGroup> Collection<T> getGroups(final BwPrincipal val,
-                                       final boolean admin) throws CalFacadeException {
+  public <T extends BwGroup> Collection<T> getGroups(
+          final BwPrincipal<?> val,
+          final boolean admin) throws CalFacadeException {
     final HibSession sess = getSess();
 
     if (admin) {

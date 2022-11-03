@@ -107,8 +107,8 @@ public abstract class AbstractDirImpl implements Logged, Directories {
    * @author douglm
    */
   public static class CAPrefixInfo {
-    private String prefix;
-    private int type;
+    private final String prefix;
+    private final int type;
 
     CAPrefixInfo(final String prefix, final int type) {
       this.prefix = prefix;
@@ -156,8 +156,8 @@ public abstract class AbstractDirImpl implements Logged, Directories {
         return false;
       }
 
-      int start = atPos + 1;
-      int domainLen = val.length() - start;
+      final int start = atPos + 1;
+      final int domainLen = val.length() - start;
 
       if (exact) {
         if (domainLen != pattern.length()) {
@@ -171,7 +171,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     }
 
     boolean matches(final String domain) {
-      int domainLen = domain.length();
+      final int domainLen = domain.length();
 
       if (exact) {
         if (domainLen != pattern.length()) {
@@ -260,7 +260,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     try {
       // Is it parseable?
       new URI(href);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       valid = false;
     }
 
@@ -272,7 +272,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   }
 
   @Override
-  public BwPrincipalInfo getDirInfo(final BwPrincipal p) throws CalFacadeException {
+  public BwPrincipalInfo getDirInfo(final BwPrincipal<?> p) throws CalFacadeException {
     BwPrincipalInfo pi = principalInfoMap.get(p.getPrincipalRef());
 
     if (pi != null) {
@@ -585,7 +585,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
   @Override
   public boolean mergePreferences(final BwPreferences prefs,
-                                  final BwPrincipalInfo pinfo) throws CalFacadeException {
+                                  final BwPrincipalInfo pinfo) {
     boolean changed = false;
     //PrincipalProperty kind = pinfo.findProperty("kind");
 
@@ -609,10 +609,10 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       (IntPrincipalProperty)pinfo.findProperty("max-instances");
 
     if (pschedMaxInstances != null) {
-      int mi = pschedMaxInstances.getVal();
-      String strMi = String.valueOf(mi);
+      final int mi = pschedMaxInstances.getVal();
+      final String strMi = String.valueOf(mi);
 
-      BwProperty pmi = prefs.findProperty(BwPreferences.propertyScheduleMaxinstances);
+      final BwProperty pmi = prefs.findProperty(BwPreferences.propertyScheduleMaxinstances);
       if (pmi == null) {
         prefs.addProperty(new BwProperty(BwPreferences.propertyScheduleMaxinstances,
                                          strMi));
@@ -633,7 +633,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
   @Override
   public String accountFromPrincipal(final String val) {
-    String userProot = fromWho.get(WhoDefs.whoTypeUser);
+    final String userProot = fromWho.get(WhoDefs.whoTypeUser);
 
     if (!val.startsWith(userProot)) {
       return null;
@@ -653,7 +653,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   }
 
   @Override
-  public BwPrincipal getPrincipal(final String href) {
+  public BwPrincipal<?> getPrincipal(final String href) {
     return BwPrincipal.makePrincipal(href);
   }
 
@@ -676,13 +676,13 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   @Override
   public Collection<String> getGroups(final String rootUrl,
                                       final String principalUrl) throws CalFacadeException {
-    Collection<String> urls = new TreeSet<String>();
+    final Collection<String> urls = new TreeSet<>();
 
     if (principalUrl == null) {
       /* for the moment if the root url is the user principal hierarchy root
        * just return the current user principal
        */
-      String r = Util.buildPath(true, rootUrl);
+      final String r = Util.buildPath(true, rootUrl);
 
       /* ResourceUri should be the principals root or user principal root */
       if (!r.equals(BwPrincipal.principalRoot) &&
@@ -750,16 +750,16 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   private static final long maxCaRefreshTime = 1000 * 60 * 5; // 5 minutes
 
   protected static Map<String, String> userToCalAddrMap =
-      new FlushMap<String, String>(maxCaRefreshTime, maxCaMapSize);
+          new FlushMap<>(maxCaRefreshTime, maxCaMapSize);
 
-  protected static Map<String, BwPrincipal> calAddrToPrincipalMap =
-      new FlushMap<String, BwPrincipal>(maxCaRefreshTime, maxCaMapSize);
+  protected static Map<String, BwPrincipal<?>> calAddrToPrincipalMap =
+      new FlushMap<>(maxCaRefreshTime, maxCaMapSize);
 
   /* (non-Javadoc)
    * @see org.bedework.calfacade.ifs.Directories#principalToCaladdr(org.bedework.calfacade.BwPrincipal)
    */
   @Override
-  public String principalToCaladdr(final BwPrincipal val) {
+  public String principalToCaladdr(final BwPrincipal<?> val) {
     return userToCaladdr(val.getAccount());
   }
 
@@ -776,7 +776,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     }
 
     if (isPrincipal(val)) {
-      BwPrincipal p = getPrincipal(val);
+      final BwPrincipal<?> p = getPrincipal(val);
 
       if (p.getKind() == WhoDefs.whoTypeUser) {
         ca = userToCaladdr(p.getAccount());
@@ -792,9 +792,9 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
     getProps(); // Ensure all set up
 
-    int atPos = val.indexOf("@");
+    final int atPos = val.indexOf("@");
 
-    boolean hasMailto = val.toLowerCase().startsWith("mailto:");
+    final boolean hasMailto = val.toLowerCase().startsWith("mailto:");
 
     if (atPos > 0) {
       if (hasMailto) {
@@ -808,7 +808,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       return ca;
     }
 
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
     if (!hasMailto) {
       sb.append("mailto:");
     }
@@ -824,12 +824,12 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   }
 
   @Override
-  public BwPrincipal caladdrToPrincipal(final String caladdr) {
+  public BwPrincipal<?> caladdrToPrincipal(final String caladdr) {
     if (caladdr == null) {
       throw new RuntimeException(CalFacadeException.nullCalendarUserAddr);
     }
 
-    BwPrincipal p = calAddrToPrincipalMap.get(caladdr);
+    BwPrincipal<?> p = calAddrToPrincipalMap.get(caladdr);
     if (p != null) {
       return p;
     }
@@ -886,7 +886,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
     int whoType = WhoDefs.whoTypeUser;
 
-    for (CAPrefixInfo c: getCaPrefixInfo()) {
+    for (final CAPrefixInfo c: getCaPrefixInfo()) {
       if (acc.startsWith(c.getPrefix())) {
         whoType = c.getType();
         break;
@@ -953,8 +953,8 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       return val;
     }
 
-    int colonPos = val.indexOf(":");
-    int atPos = val.indexOf("@");
+    final int colonPos = val.indexOf(":");
+    final int atPos = val.indexOf("@");
 
     if (colonPos > 0) {
       if (atPos < colonPos) {
@@ -1020,9 +1020,9 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       return caPrefixInfo;
     }
 
-    CalAddrPrefixes cap = getCaPrefixes();
+    final CalAddrPrefixes cap = getCaPrefixes();
 
-    List<CAPrefixInfo> capInfo = new ArrayList<CAPrefixInfo>();
+    final List<CAPrefixInfo> capInfo = new ArrayList<>();
 
     if (cap != null) {
       addCaPrefix(capInfo, cap.getUser(), WhoDefs.whoTypeUser);
@@ -1060,17 +1060,17 @@ public abstract class AbstractDirImpl implements Logged, Directories {
    * ==================================================================== */
 
   private void setDomains() {
-    String prDomains = dirProps.getDomains();
+    final String prDomains = dirProps.getDomains();
 
     if (prDomains.equals("*")) {
       anyDomain = true;
-    } else if ((prDomains.indexOf(",") < 0) &&
+    } else if ((!prDomains.contains(",")) &&
                !prDomains.startsWith("*")) {
       onlyDomain = new DomainMatcher(prDomains);
     } else {
-      domains = new ArrayList<DomainMatcher>();
+      domains = new ArrayList<>();
 
-      for (String domain: dirProps.getDomains().split(",")) {
+      for (final var domain: dirProps.getDomains().split(",")) {
         domains.add(new DomainMatcher(domain));
       }
     }
@@ -1188,7 +1188,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
       final byte[] content = sw.toString().getBytes();
 
-      final ResponseHolder resp;
+      final ResponseHolder<?> resp;
       try {
         resp = cl.report(url, "infinity",
                                               new String(content),
@@ -1213,19 +1213,19 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     }
   }
 
-  final ResponseHolder processMatchingResponse(final String path,
+  final ResponseHolder<?> processMatchingResponse(final String path,
                                                final CloseableHttpResponse resp) {
     try {
       final int status = HttpUtil.getStatus(resp);
 
       if (status != SC_MULTI_STATUS) {
-        return new ResponseHolder(status,
-                                  "Failed response from server");
+        return new ResponseHolder<>(status,
+                                    "Failed response from server");
       }
 
       if (resp.getEntity() == null) {
-        return new ResponseHolder(status,
-                                  "No content in response from server");
+        return new ResponseHolder<>(status,
+                                    "No content in response from server");
       }
 
       final InputStream is = resp.getEntity().getContent();
@@ -1236,7 +1236,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       final List<MatchResult> mrs = new ArrayList<>();
 
       for (final MultiStatusResponseElement msre: msr.responses) {
-        MatchResult mr = new MatchResult();
+        final MatchResult mr = new MatchResult();
         mrs.add(mr);
 
         mr.href = msre.href;
@@ -1264,7 +1264,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
               new ResponseHolder<>(mrs);
       return response;
     } catch (final Throwable t) {
-      return new ResponseHolder(t);
+      return new ResponseHolder<>(t);
     }
   }
 
@@ -1288,9 +1288,9 @@ public abstract class AbstractDirImpl implements Logged, Directories {
                       "  </D:prop>\n" +
                       "</D:propfind>\n";
 
-      final ResponseHolder resp = cl.propfind(p.getPrincipalRef(),
-                                              "0",
-                                              content,
+      final var resp = cl.propfind(p.getPrincipalRef(),
+                                   "0",
+                                   content,
                                               this::processGetCardHrefResponse);
 
       if (resp.failed) {
@@ -1315,8 +1315,9 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     }
   }
 
-  final ResponseHolder processGetCardHrefResponse(final String path,
-                                                  final CloseableHttpResponse resp) {
+  final ResponseHolder<?> processGetCardHrefResponse(
+          final String path,
+          final CloseableHttpResponse resp) {
     try {
       /* Extract the principal address from something like
        * <?xml version="1.0" encoding="UTF-8" ?>
@@ -1337,19 +1338,19 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       final int status = HttpUtil.getStatus(resp);
 
       if (status != SC_MULTI_STATUS) {
-        return new ResponseHolder(status,
-                                  "Failed response from server");
+        return new ResponseHolder<>(status,
+                                    "Failed response from server");
       }
 
       if (resp.getEntity() == null) {
-        return new ResponseHolder(status,
-                                  "No content in response from server");
+        return new ResponseHolder<>(status,
+                                    "No content in response from server");
       }
 
       final InputStream is = resp.getEntity().getContent();
 
-      DavUtil du = new DavUtil();
-      MultiStatusResponse msr = du.getMultiStatusResponse(is);
+      final DavUtil du = new DavUtil();
+      final MultiStatusResponse msr = du.getMultiStatusResponse(is);
 
       // Expect one response only - might have responseDescription
 
@@ -1358,7 +1359,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
                 "Bad response. Expected exactly 1 response element");
       }
 
-      MultiStatusResponseElement msre = msr.responses.get(0);
+      final var msre = msr.responses.get(0);
 
       /* We want one propstat element with successful status */
 
@@ -1368,18 +1369,18 @@ public abstract class AbstractDirImpl implements Logged, Directories {
                   .size() + " propstat elements");
         }
 
-        return new ResponseHolder(HttpStatus.SC_NOT_ACCEPTABLE,
-                                  "Found " + msre.propstats
+        return new ResponseHolder<>(HttpStatus.SC_NOT_ACCEPTABLE,
+                                    "Found " + msre.propstats
                                           .size() + " propstat elements");
       }
 
-      PropstatElement pse = msre.propstats.get(0);
+      final var pse = msre.propstats.get(0);
       if (pse.status != HttpServletResponse.SC_OK) {
         if (debug()) {
           debug("propstat status was " + pse.status);
         }
 
-        return new ResponseHolder(HttpStatus.SC_NOT_ACCEPTABLE,
+        return new ResponseHolder<>(HttpStatus.SC_NOT_ACCEPTABLE,
                                   "propstat status was " + pse.status);
       }
 
@@ -1389,7 +1390,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
           debug("Found " + pse.props.size() + " prop elements");
         }
 
-        return new ResponseHolder(HttpStatus.SC_NOT_ACCEPTABLE,
+        return new ResponseHolder<>(HttpStatus.SC_NOT_ACCEPTABLE,
                                   "Found " + pse.props.size() + " prop elements");
       }
 
@@ -1400,7 +1401,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
           debug("Expected principal-address - found " + pr);
         }
 
-        return new ResponseHolder(HttpStatus.SC_NOT_ACCEPTABLE,
+        return new ResponseHolder<>(HttpStatus.SC_NOT_ACCEPTABLE,
                                   "Expected principal-address - found " + pr);
       }
 
@@ -1412,15 +1413,15 @@ public abstract class AbstractDirImpl implements Logged, Directories {
                         hrefEl);
         }
 
-        return new ResponseHolder(HttpStatus.SC_NOT_ACCEPTABLE,
+        return new ResponseHolder<>(HttpStatus.SC_NOT_ACCEPTABLE,
                                   "Expected href element for principal-address - found " +
                                           hrefEl);
       }
 
-      return new ResponseHolder(URLDecoder.decode(XmlUtil.getElementContent(
+      return new ResponseHolder<>(URLDecoder.decode(XmlUtil.getElementContent(
               hrefEl), StandardCharsets.UTF_8)); // href should be escaped
     } catch (final Throwable t) {
-      return new ResponseHolder(t);
+      return new ResponseHolder<>(t);
     }
   }
 
@@ -1433,7 +1434,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

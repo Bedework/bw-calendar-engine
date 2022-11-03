@@ -126,14 +126,14 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   }
 
   @Override
-  public Collection<BwGroup> getAll(final boolean populate) throws CalFacadeException {
-    final Collection<BwGroup> gs = cb.getAll(true);
+  public Collection<BwGroup<?>> getAll(final boolean populate) throws CalFacadeException {
+    final Collection<BwGroup<?>> gs = cb.getAll(true);
 
     if (!populate) {
       return gs;
     }
 
-    for (final BwGroup grp: gs) {
+    for (final var grp: gs) {
       getMembers(grp);
     }
 
@@ -141,7 +141,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   }
 
   @Override
-  public void getMembers(final BwGroup group) throws CalFacadeException {
+  public void getMembers(final BwGroup<?> group) throws CalFacadeException {
     group.setGroupMembers(cb.getMembers(group, true));
   }
 
@@ -155,7 +155,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
    * ==================================================================== */
 
   @Override
-  public void addGroup(final BwGroup group) throws CalFacadeException {
+  public void addGroup(final BwGroup<?> group) throws CalFacadeException {
     if (findGroup(group.getAccount()) != null) {
       throw new CalFacadeException(CalFacadeException.duplicateAdminGroup);
     }
@@ -169,14 +169,14 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
    * @exception RuntimeException If there's a problem
    */
   @Override
-  public BwGroup findGroup(final String name) {
+  public BwGroup<?> findGroup(final String name) {
     return cb.findGroup(name, true);
   }
 
   @Override
-  public void addMember(final BwGroup group,
-                        final BwPrincipal val) throws CalFacadeException {
-    final BwGroup ag = findGroup(group.getAccount());
+  public void addMember(final BwGroup<?> group,
+                        final BwPrincipal<?> val) throws CalFacadeException {
+    final BwGroup<?> ag = findGroup(group.getAccount());
 
     if (ag == null) {
       throw new CalFacadeException(CalFacadeException.groupNotFound,
@@ -205,9 +205,9 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   }
 
   @Override
-  public void removeMember(final BwGroup group,
-                           final BwPrincipal val) throws CalFacadeException {
-    final BwGroup ag = findGroup(group.getAccount());
+  public void removeMember(final BwGroup<?> group,
+                           final BwPrincipal<?> val) throws CalFacadeException {
+    final var ag = findGroup(group.getAccount());
 
     if (ag == null) {
       throw new CalFacadeException(CalFacadeException.groupNotFound,
@@ -223,7 +223,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
    * @see org.bedework.calfacade.svc.AdminGroups#removeGroup(org.bedework.calfacade.BwGroup)
    */
   @Override
-  public void removeGroup(final BwGroup group) throws CalFacadeException {
+  public void removeGroup(final BwGroup<?> group) throws CalFacadeException {
     cb.removeGroup(group, true);
   }
 
@@ -243,12 +243,12 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   } */
 
   @Override
-  public void updateGroup(final BwGroup group) {
+  public void updateGroup(final BwGroup<?> group) {
     cb.updateGroup(group, true);
   }
 
   @Override
-  public Collection<BwGroup> findGroupParents(final BwGroup group) {
+  public Collection<BwGroup<?>> findGroupParents(final BwGroup<?> group) {
     return cb.findGroupParents(group, true);
   }
 
@@ -259,8 +259,8 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
     throw new CalFacadeUnimplementedException();
   }
 
-  private boolean checkPathForSelf(final BwGroup group,
-                                   final BwPrincipal val) {
+  private boolean checkPathForSelf(final BwGroup<?> group,
+                                   final BwPrincipal<?> val) {
     if (group.equals(val)) {
       return false;
     }
@@ -268,7 +268,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
     /* get all parents of group and try again */
 
 
-    for (final BwGroup g: findGroupParents(group)) {
+    for (final var g: findGroupParents(group)) {
       if (!checkPathForSelf(g, val)) {
         return false;
       }

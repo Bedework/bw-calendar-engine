@@ -41,13 +41,13 @@ public class GroupsCallBack extends Directories.CallBack {
   }
 
   @Override
-  public BwPrincipal getCurrentUser() {
+  public BwPrincipal<?> getCurrentUser() {
     return svci.getPrincipal();
   }
 
   @Override
-  public BwGroup findGroup(final String account,
-                           final boolean admin) {
+  public BwGroup<?> findGroup(final String account,
+                              final boolean admin) {
     try {
       return svci.getCal().findGroup(account, admin);
     } catch (final Throwable t) {
@@ -56,8 +56,9 @@ public class GroupsCallBack extends Directories.CallBack {
   }
 
   @Override
-  public Collection<BwGroup> findGroupParents(final BwGroup group,
-                                              final boolean admin) {
+  public Collection<BwGroup<?>> findGroupParents(
+          final BwGroup<?> group,
+          final boolean admin) {
     try {
       return svci.getCal().findGroupParents(group, admin);
     } catch (final Throwable t) {
@@ -66,7 +67,7 @@ public class GroupsCallBack extends Directories.CallBack {
   }
 
   @Override
-  public void updateGroup(final BwGroup group,
+  public void updateGroup(final BwGroup<?> group,
                           final boolean admin) {
     try {
       svci.getCal().updateGroup(group, admin);
@@ -76,39 +77,41 @@ public class GroupsCallBack extends Directories.CallBack {
   }
 
   @Override
-  public void removeGroup(final BwGroup group,
+  public void removeGroup(final BwGroup<?> group,
                           final boolean admin) throws CalFacadeException {
     svci.getCal().removeGroup(group, admin);
   }
 
   @Override
-  public void addMember(final BwGroup group,
-                        final BwPrincipal val,
+  public void addMember(final BwGroup<?> group,
+                        final BwPrincipal<?> val,
                         final boolean admin) throws CalFacadeException {
     svci.getCal().addMember(group, val, admin);
   }
 
   @Override
-  public void removeMember(final BwGroup group,
-                           final BwPrincipal val,
+  public void removeMember(final BwGroup<?> group,
+                           final BwPrincipal<?> val,
                            final boolean admin) throws CalFacadeException {
     svci.getCal().removeMember(group, val, admin);
   }
 
   @Override
-  public Collection<BwPrincipal> getMembers(final BwGroup group,
-                                            final boolean admin) throws CalFacadeException {
+  public Collection<BwPrincipal<?>> getMembers(
+          final BwGroup<?> group,
+          final boolean admin) throws CalFacadeException {
     return svci.getCal().getMembers(group, admin);
   }
 
   @Override
-  public Collection<BwGroup> getAll(final boolean admin) throws CalFacadeException {
+  public Collection<BwGroup<?>> getAll(final boolean admin) throws CalFacadeException {
     return svci.getCal().getAllGroups(admin);
   }
 
   @Override
-  public Collection<BwGroup> getGroups(final BwPrincipal val,
-                                       final boolean admin) throws CalFacadeException {
+  public Collection<BwGroup<?>> getGroups(
+          final BwPrincipal<?> val,
+          final boolean admin) throws CalFacadeException {
     return svci.getCal().getGroups(val, admin);
   }
 }

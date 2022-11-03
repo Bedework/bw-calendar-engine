@@ -24,7 +24,6 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
-import org.bedework.calfacade.svc.BwCalSuitePrincipal;
 import org.bedework.calsvci.CalSvcI;
 
 import java.util.Iterator;
@@ -137,8 +136,7 @@ public class PublicProcessor extends Crawler {
 
           info("PublicProcessor: index calendar suite " + cs.getName());
           getIndexer(svc, principal,
-                     docTypePrincipal).indexEntity(
-                             BwCalSuitePrincipal.from(cs));
+                     docTypePrincipal).indexEntity(cs);
           status.stats.inc(IndexedType.principals, 1);
         }
         info("PublicProcessor: finished index of the calendar suites");

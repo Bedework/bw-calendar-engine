@@ -46,6 +46,8 @@ import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
+import org.bedework.calfacade.base.OwnedEntity;
+import org.bedework.calfacade.base.ShareableEntity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.Configurations;
@@ -1144,7 +1146,7 @@ public class CalSvc
    * ==================================================================== */
 
   @Override
-  public void changeAccess(BwShareableDbentity<?> ent,
+  public void changeAccess(ShareableEntity ent,
                            final Collection<Ace> aces,
                            final boolean replaceAll) throws CalFacadeException {
     if (ent instanceof BwCalSuiteWrapper) {
@@ -1179,7 +1181,7 @@ public class CalSvc
   }
 
   @Override
-  public void defaultAccess(BwShareableDbentity<?> ent,
+  public void defaultAccess(ShareableEntity ent,
                             final AceWho who) throws CalFacadeException {
     if (ent instanceof BwCalSuiteWrapper) {
       ent = ((BwCalSuiteWrapper)ent).fetchEntity();
@@ -1188,7 +1190,7 @@ public class CalSvc
   }
 
   @Override
-  public CurrentAccess checkAccess(final BwShareableDbentity<?> ent,
+  public CurrentAccess checkAccess(final ShareableEntity ent,
                                    final int desiredAccess,
                                    final boolean returnResult) throws CalFacadeException {
     return getCal().checkAccess(ent, desiredAccess, returnResult);
@@ -1687,7 +1689,7 @@ public class CalSvc
    * @param entity shareable entity
    * @param ownerHref - new owner
    */
-  void setupSharableEntity(final BwShareableDbentity<?> entity,
+  void setupSharableEntity(final ShareableEntity entity,
                            final String ownerHref) {
     if (entity.getCreatorHref() == null) {
       entity.setCreatorHref(ownerHref);
@@ -1701,7 +1703,7 @@ public class CalSvc
    * @param entity owned entity
    * @param ownerHref - new owner
    */
-  void setupOwnedEntity(final BwOwnedDbentity<?> entity,
+  void setupOwnedEntity(final OwnedEntity entity,
                         final String ownerHref) {
     entity.setPublick(isPublicAdmin());
 

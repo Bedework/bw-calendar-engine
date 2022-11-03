@@ -182,11 +182,12 @@ public interface CoreCalendarsI extends Serializable {
    * @return GetSpecialCalendarResult null for unknown calendar
    * @throws CalFacadeException on error
    */
-  GetSpecialCalendarResult getSpecialCalendar(BwIndexer indexer,
-                                              BwPrincipal owner,
-                                              int calType,
-                                              boolean create,
-                                              int access) throws CalFacadeException;
+  GetSpecialCalendarResult getSpecialCalendar(
+          BwIndexer indexer,
+          BwPrincipal<?> owner,
+          int calType,
+          boolean create,
+          int access) throws CalFacadeException;
 
   /** Add a calendar object
    *
@@ -232,14 +233,14 @@ public interface CoreCalendarsI extends Serializable {
    * @param  path    String path for the collection
    * @throws CalFacadeException on error
    */
-  void touchCalendar(final String path) throws CalFacadeException;
+  void touchCalendar(String path) throws CalFacadeException;
 
   /** Mark collection as modified
    *
    * @param  col         BwCalendar object
    * @throws CalFacadeException on error
    */
-  void touchCalendar(final BwCalendar col) throws CalFacadeException;
+  void touchCalendar(BwCalendar col) throws CalFacadeException;
 
   /** Update a calendar object
    *
@@ -294,7 +295,7 @@ public interface CoreCalendarsI extends Serializable {
    * @param principal the new principal
    * @throws CalFacadeException on error
    */
-  void addNewCalendars(BwPrincipal principal) throws CalFacadeException;
+  void addNewCalendars(BwPrincipal<?> principal) throws CalFacadeException;
 
   /** Return all collections on the given path with a lastmod GREATER
    * THAN that supplied. The path may not be null. A null lastmod will
@@ -352,8 +353,8 @@ public interface CoreCalendarsI extends Serializable {
                                          int start,
                                          int count) throws CalFacadeException;
 
-  BwCalendar checkAccess(final CalendarWrapper col,
-                         final int desiredAccess,
-                         final boolean alwaysReturnResult)
+  BwCalendar checkAccess(CalendarWrapper col,
+                         int desiredAccess,
+                         boolean alwaysReturnResult)
           throws CalFacadeException;
 }

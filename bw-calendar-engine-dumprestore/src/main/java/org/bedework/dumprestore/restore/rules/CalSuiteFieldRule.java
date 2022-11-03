@@ -46,8 +46,10 @@ public class CalSuiteFieldRule extends EntityFieldRule {
     } else if (name.equals("rootCollectionPath")) {
       ent.setRootCollectionPath(stringFld());
     } else if (name.equals("submissionsRootPath")) {
-      ent.setSubmissionsRootPath(stringFld());
-
+    } else if (name.equals("fields1")) {
+      ent.setFields1(stringFld());
+    } else if (name.equals("fields2")) {
+      ent.setFields2(stringFld());
     } else if (name.equals("path")) {           // Intermediate 3.5?
       ent.setRootCollection(calendarFld());
       if (ent.getRootCollection() != null) {

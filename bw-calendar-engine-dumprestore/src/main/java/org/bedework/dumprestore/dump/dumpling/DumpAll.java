@@ -73,7 +73,7 @@ public class DumpAll extends Dumpling {
     close();
 
     open();
-    new Dumpling<BwPrincipal>(globals,
+    new Dumpling<BwPrincipal<?>>(globals,
                          new QName(sectionUsers),
                               Counters.users,
                          xml).dumpSection(globals.di.getAllPrincipals());

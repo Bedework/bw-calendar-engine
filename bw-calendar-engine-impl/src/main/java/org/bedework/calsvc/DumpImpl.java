@@ -300,7 +300,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   }
 
   @Override
-  public Iterator<BwPrincipal> getAllPrincipals() {
+  public Iterator<BwPrincipal<?>> getAllPrincipals() {
     return getObjects(BwUser.class);
   }
 
