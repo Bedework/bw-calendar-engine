@@ -94,6 +94,49 @@ class Calendars extends CalSvcDb implements CalendarsI {
                                      PrivilegeDefs.privRead, true);
   }
 
+  public BwCalendar getPrimaryPublicPath() {
+    try {
+      return findPrimary(getPublicCalendars());
+    } catch (final Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  private BwCalendar findPrimary(final BwCalendar root)
+          throws CalFacadeException {
+    if (root.getAlias()) {
+      return null;
+    }
+
+    final BwCalendar col = resolveAlias(root, true, false);
+    if (col == null) {
+      // No access or gone
+      return null;
+    }
+
+    if (col.getCalType() == BwCalendar.calTypeCalendarCollection) {
+      if (col.getPrimaryCollection()) {
+        return col;
+      }
+
+      return null;
+    }
+
+    if (root.getCalendarCollection()) {
+      // Leaf but cannot add here
+      return null;
+    }
+
+    for (final BwCalendar ch: getChildren(root)) {
+      final var res = findPrimary(ch);
+      if (res != null) {
+        return res;
+      }
+    }
+
+    return null;
+  }
+
   @Override
   public String getHomePath() throws CalFacadeException {
     if (isGuest()) {
@@ -101,6 +144,11 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
 
     if (!isPublicAdmin()) {
+      if (getSvc().getPars().getPublicSubmission()) {
+        return Util.buildPath(colPathEndsWithSlash,
+                              getSvc().getSystemProperties().getSubmissionRoot());
+      }
+
       return getSvc().getPrincipalInfo().getCalendarHomePath();
     }
 
@@ -363,11 +411,14 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public Set<BwCalendar> getAddContentCollections(final boolean includeAliases)
+  public Set<BwCalendar> getAddContentCollections(
+          final boolean includeAliases,
+          final boolean isApprover)
           throws CalFacadeException {
     final Set<BwCalendar> cals = new TreeSet<>();
 
-    getAddContentCalendarCollections(includeAliases, getHome(), cals);
+    getAddContentCalendarCollections(includeAliases,
+                                     isApprover, getHome(), cals);
 
     return cals;
   }
@@ -1079,9 +1130,11 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
   }
 
-  private void getAddContentCalendarCollections(final boolean includeAliases,
-                                                final BwCalendar root,
-                                                final Set<BwCalendar> cals)
+  private void getAddContentCalendarCollections(
+          final boolean includeAliases,
+          final boolean isApprover,
+          final BwCalendar root,
+          final Set<BwCalendar> cals)
         throws CalFacadeException {
     if (!includeAliases && root.getAlias()) {
       return;
@@ -1094,7 +1147,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
 
     if (col.getCalType() == BwCalendar.calTypeCalendarCollection) {
-      if (isPublicAdmin() && !col.getPrimaryCollection()) {
+      if (isPublicAdmin() && isApprover && !col.getPrimaryCollection()) {
         return;
       }
 
@@ -1118,7 +1171,9 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
 
     for (final BwCalendar ch: getChildren(root)) {
-      getAddContentCalendarCollections(includeAliases, ch, cals);
+      getAddContentCalendarCollections(includeAliases,
+                                       isApprover,
+                                       ch, cals);
     }
   }
 

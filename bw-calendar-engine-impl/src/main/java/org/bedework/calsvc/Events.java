@@ -282,14 +282,18 @@ class Events extends CalSvcDb implements EventsI {
 
     final BwEventAnnotation ann = new BwEventAnnotation();
 
+    // Fields that must be the same as master
+    ann.setColPath(ev.getColPath());
+    ann.setName(ev.getName());
+    ann.setUid(ev.getUid());
+    ann.setOwnerHref(ev.getOwnerHref());
+
     ann.setDtstart(rstart);
     ann.setDtend(rend);
     ann.setRecurrenceId(recurrenceId);
-    ann.setOwnerHref(ev.getOwnerHref());
     ann.setOverride(true);  // Call it an override
     ann.setTombstoned(false);
-    ann.setName(ev.getName());
-    ann.setUid(ev.getUid());
+
     ann.setTarget(ev);
     ann.setMaster(ev);
     final BwEvent proxy = new BwEventProxy(ann);
