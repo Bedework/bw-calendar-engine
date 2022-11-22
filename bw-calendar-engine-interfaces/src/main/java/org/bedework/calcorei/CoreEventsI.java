@@ -237,12 +237,12 @@ public interface CoreEventsI extends Serializable {
 
   /** Move an event. Allows us to keep track for synch-report
    *
-   * @param val            BwEvent object to be moved
+   * @param ei             object to be moved
    * @param from           current collection
    * @param to             Where it's going
    * @exception CalFacadeException If there's a database access problem
    */
-  void moveEvent(BwEvent val,
+  void moveEvent(EventInfo ei,
                  BwCalendar from,
                  BwCalendar to) throws CalFacadeException;
 

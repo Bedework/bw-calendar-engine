@@ -1204,7 +1204,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void moveEvent(final BwEvent val,
+  public void moveEvent(final EventInfo ei,
                         final BwCalendar from,
                         final BwCalendar to) throws CalFacadeException {
     throw new RuntimeException("Read only version");

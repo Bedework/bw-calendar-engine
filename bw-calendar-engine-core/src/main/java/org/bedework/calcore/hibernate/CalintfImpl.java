@@ -916,11 +916,11 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public void moveEvent(final BwEvent val,
+  public void moveEvent(final EventInfo ei,
                         final BwCalendar from,
                         final BwCalendar to) throws CalFacadeException {
     checkOpen();
-    events.moveEvent(val, from, to);
+    events.moveEvent(ei, from, to);
   }
 
   @Override

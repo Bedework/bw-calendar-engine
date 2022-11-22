@@ -1062,17 +1062,19 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   }
 
   @Override
-  public void moveEvent(final BwEvent val,
+  public void moveEvent(final EventInfo val,
                         final BwCalendar from,
                         final BwCalendar to) throws CalFacadeException {
-    deleteTombstoned(to.getPath(), val.getUid());
+    final var ev = val.getEvent();
+
+    deleteTombstoned(to.getPath(), ev.getUid());
     final var href = val.getHref();
 
     // Tombstoning effectively deletes the old entity.
     // No tombstone for pending inbox
 
     if (from.getCalType() != BwCalendar.calTypePendingInbox) {
-      final BwEvent tombstone = val.cloneTombstone();
+      final BwEvent tombstone = ev.cloneTombstone();
       tombstone.setDtstamps(getCurrentTimestamp());
 
       //tombstoneEvent(tombstone);
@@ -1087,14 +1089,14 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 //      unindexEntity(toDelete);
     }
 
-    val.setColPath(to.getPath());
+    ev.setColPath(to.getPath());
     // Don't save just yet - updates get triggered
     // TODO - this is asking for trouble if it fails
 
     notifyMove(SysEvent.SysCode.ENTITY_MOVED,
                href,
                from.getShared(),
-               val,
+               ev,
                to.getShared());
   }
 

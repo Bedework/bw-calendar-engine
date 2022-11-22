@@ -1142,7 +1142,7 @@ class Events extends CalSvcDb implements EventsI {
 
           final BwCalendar from = getCols().get(fromPath);
 
-          getCal().moveEvent(ev, from, to);
+          getCal().moveEvent(fromEi, from, to);
 
           getCal().touchCalendar(from);
         } else {
