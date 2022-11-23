@@ -1062,13 +1062,19 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   }
 
   @Override
-  public void moveEvent(final EventInfo val,
+  public void moveEvent(final EventInfo ei,
                         final BwCalendar from,
                         final BwCalendar to) throws CalFacadeException {
-    final var ev = val.getEvent();
+    final var ev = ei.getEvent();
+
+    final boolean isMaster = ev.testRecurring() && (ev.getRecurrenceId() == null);
+
+    if (ev.getRecurrenceId() != null) {
+      throw new CalFacadeException("Cannot move an instance");
+    }
 
     deleteTombstoned(to.getPath(), ev.getUid());
-    final var href = val.getHref();
+    final var href = ev.getHref();
 
     // Tombstoning effectively deletes the old entity.
     // No tombstone for pending inbox
@@ -1092,6 +1098,16 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     ev.setColPath(to.getPath());
     // Don't save just yet - updates get triggered
     // TODO - this is asking for trouble if it fails
+
+    if (isMaster) {
+      for (final BwEventAnnotation aev:
+              dao.getAnnotations(ev, false)) {
+        aev.setColPath(to.getPath());
+        notifyInstanceChange(SysEvent.SysCode.ENTITY_MOVED,
+                             ev, from.getShared(),
+                             aev.getRecurrenceId());
+      }
+    }
 
     notifyMove(SysEvent.SysCode.ENTITY_MOVED,
                href,
