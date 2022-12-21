@@ -43,7 +43,7 @@ public class DescriptionPropUpdater implements PropertyUpdater {
     }
 
     if (ui.getUpdprop() == null) {
-      // No change - parameters only upated?
+      // No change - parameters only updated?
       return UpdateResult.getOkResult();
     }
 

@@ -19,6 +19,38 @@
 
 package org.bedework.caldav.bwserver;
 
+import org.bedework.caldav.bwserver.stdupdaters.AttendeePropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.CategoryPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.ClassPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.CommentPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.CompletedPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.ContactPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.DescriptionPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.DtEndDuePropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.DtStartPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.DurationPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.ExdatePropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.GeoPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.IgnorePropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.ImmutablePropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.LocationPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.PercentCompletePropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.PriorityPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.RdatePropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.RelatedToPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.RepeatPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.ResourcesPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.SequencePropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.StatusPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.SummaryPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.TranspPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.TriggerPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.UrlPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.XbwCategoryPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.XbwContactPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.XbwLocPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.XbwWrapperPropUpdater;
+
 import ietf.params.xml.ns.icalendar_2.ActionPropType;
 import ietf.params.xml.ns.icalendar_2.AttendeePropType;
 import ietf.params.xml.ns.icalendar_2.CalscalePropType;
@@ -65,9 +97,8 @@ import java.util.Map;
 /** This allows us to register updaters for properties making it relatively
  * easy to add new updaters as properties appear.
  *
- * Standard updaters are registered statically. nonStandard updaters are
+ * <p>Standard updaters are registered statically. nonStandard updaters are
  * registered dynamically.
- *
  *
  * @author douglm
  */
@@ -141,11 +172,6 @@ public class PropertyUpdaterRegistry {
                                      " cannot be instantiated");
         }
 
-        if (o == null) {
-          throw new RuntimeException("PropertyUpdater class " +
-                                     ue.className + " not found");
-        }
-
         if (!(o instanceof PropertyUpdater)) {
           throw new RuntimeException("Class " + ue.className +
                                     " is not a subclass of " +
@@ -164,17 +190,16 @@ public class PropertyUpdaterRegistry {
   }
 
   private static void standardPropUpdater(final Class<?> cl,
-                                          final String updCl) {
-    registerStandardUpdater(cl,
-                            "org.bedework.caldav.bwserver.stdupdaters." + updCl);
+                                          final Class<?> updCl) {
+    registerStandardUpdater(cl, updCl.getName());
   }
 
   private static void immutableProp(final Class<?> cl) {
-    standardPropUpdater(cl, "ImmutablePropUpdater");
+    standardPropUpdater(cl, ImmutablePropUpdater.class);
   }
 
   private static void ignoreProp(final Class<?> cl) {
-    standardPropUpdater(cl, "IgnorePropUpdater");
+    standardPropUpdater(cl, IgnorePropUpdater.class);
   }
 
   static {
@@ -182,47 +207,47 @@ public class PropertyUpdaterRegistry {
      *          Register property updaters
      * ====================================================================== */
 
-    standardPropUpdater(AttendeePropType.class, "AttendeePropUpdater");
-    standardPropUpdater(CategoriesPropType.class, "CategoryPropUpdater");
-    standardPropUpdater(ClassPropType.class, "ClassPropUpdater");
-    standardPropUpdater(CommentPropType.class, "CommentPropUpdater");
-    standardPropUpdater(CompletedPropType.class, "CompletedPropUpdater");
-    standardPropUpdater(ContactPropType.class, "ContactPropUpdater");
+    standardPropUpdater(AttendeePropType.class, AttendeePropUpdater.class);
+    standardPropUpdater(CategoriesPropType.class, CategoryPropUpdater.class);
+    standardPropUpdater(ClassPropType.class, ClassPropUpdater.class);
+    standardPropUpdater(CommentPropType.class, CommentPropUpdater.class);
+    standardPropUpdater(CompletedPropType.class, CompletedPropUpdater.class);
+    standardPropUpdater(ContactPropType.class, ContactPropUpdater.class);
 
     ignoreProp(CreatedPropType.class);
-    standardPropUpdater(SequencePropType.class, "SequencePropUpdater");
+    standardPropUpdater(SequencePropType.class, SequencePropUpdater.class);
 
-    standardPropUpdater(DescriptionPropType.class, "DescriptionPropUpdater");
+    standardPropUpdater(DescriptionPropType.class, DescriptionPropUpdater.class);
 
     ignoreProp(DtstampPropType.class);
 
-    standardPropUpdater(DtendPropType.class, "DtEndDuePropUpdater");
-    standardPropUpdater(DtstartPropType.class, "DtStartPropUpdater");
-    standardPropUpdater(DuePropType.class, "DtEndDuePropUpdater");
-    standardPropUpdater(DurationPropType.class, "DurationPropUpdater");
-    standardPropUpdater(ExdatePropType.class, "ExdatePropUpdater");
-    standardPropUpdater(GeoPropType.class, "GeoPropUpdater");
+    standardPropUpdater(DtendPropType.class, DtEndDuePropUpdater.class);
+    standardPropUpdater(DtstartPropType.class, DtStartPropUpdater.class);
+    standardPropUpdater(DuePropType.class, DtEndDuePropUpdater.class);
+    standardPropUpdater(DurationPropType.class, DurationPropUpdater.class);
+    standardPropUpdater(ExdatePropType.class, ExdatePropUpdater.class);
+    standardPropUpdater(GeoPropType.class, GeoPropUpdater.class);
 
     ignoreProp(LastModifiedPropType.class);
 
-    standardPropUpdater(LocationPropType.class, "LocationPropUpdater");
+    standardPropUpdater(LocationPropType.class, LocationPropUpdater.class);
 
     ignoreProp(ProdidPropType.class);
 
-    standardPropUpdater(PercentCompletePropType.class, "PercentCompletePropUpdater");
-    standardPropUpdater(PriorityPropType.class, "PriorityPropUpdater");
-    standardPropUpdater(RdatePropType.class, "RdatePropUpdater");
+    standardPropUpdater(PercentCompletePropType.class, PercentCompletePropUpdater.class);
+    standardPropUpdater(PriorityPropType.class, PriorityPropUpdater.class);
+    standardPropUpdater(RdatePropType.class, RdatePropUpdater.class);
 
     immutableProp(RecurrenceIdPropType.class);
 
-    standardPropUpdater(RelatedToPropType.class, "RelatedToPropUpdater");
-    standardPropUpdater(ResourcesPropType.class, "ResourcesPropUpdater");
-    standardPropUpdater(StatusPropType.class, "StatusPropUpdater");
-    standardPropUpdater(SummaryPropType.class, "SummaryPropUpdater");
-    standardPropUpdater(TranspPropType.class, "TranspPropUpdater");
+    standardPropUpdater(RelatedToPropType.class, RelatedToPropUpdater.class);
+    standardPropUpdater(ResourcesPropType.class, ResourcesPropUpdater.class);
+    standardPropUpdater(StatusPropType.class, StatusPropUpdater.class);
+    standardPropUpdater(SummaryPropType.class, SummaryPropUpdater.class);
+    standardPropUpdater(TranspPropType.class, TranspPropUpdater.class);
 
     immutableProp(UidPropType.class);
-    standardPropUpdater(UrlPropType.class, "UrlPropUpdater");
+    standardPropUpdater(UrlPropType.class, UrlPropUpdater.class);
 
     immutableProp(VersionPropType.class);
 
@@ -231,45 +256,45 @@ public class PropertyUpdaterRegistry {
 
     /* ==== valarm only properties ==== */
     immutableProp(ActionPropType.class);
-    standardPropUpdater(RepeatPropType.class, "RepeatPropUpdater");
-    standardPropUpdater(TriggerPropType.class, "TriggerPropUpdater");
+    standardPropUpdater(RepeatPropType.class, RepeatPropUpdater.class);
+    standardPropUpdater(TriggerPropType.class, TriggerPropUpdater.class);
 
     /* ==== public event synch x-properties ==== */
-    standardPropUpdater(XBwCategoriesPropType.class, "XbwCategoryPropUpdater");
-    standardPropUpdater(XBwContactPropType.class, "XbwContactPropUpdater");
-    standardPropUpdater(XBwLocationPropType.class, "XbwLocPropUpdater");
+    standardPropUpdater(XBwCategoriesPropType.class, XbwCategoryPropUpdater.class);
+    standardPropUpdater(XBwContactPropType.class, XbwContactPropUpdater.class);
+    standardPropUpdater(XBwLocationPropType.class, XbwLocPropUpdater.class);
 
     standardPropUpdater(XBedeworkWrapperPropType.class,
-                        "XbwWrapperPropUpdater");
+                        XbwWrapperPropUpdater.class);
 
     /* All classes
-    standardPropUpdater(AttachPropType.class, "AttachPropUpdater");
-    standardPropUpdater(ExrulePropType.class, "ExrulePropUpdater");
-    standardPropUpdater(LinkPropType.class, "LinkPropUpdater");
-    standardPropUpdater(OrganizerPropType.class, "OrganizerPropUpdater");
-    standardPropUpdater(RequestStatusPropType.class, "RequestStatusPropUpdater");
-    standardPropUpdater(RrulePropType.class, "RrulePropUpdater");
-    standardPropUpdater(TolerancePropType.class, "TolerancePropUpdater");
-    standardPropUpdater(XBedeworkCostPropType.class, "XBedeworkCostPropUpdater");
-    standardPropUpdater(XBedeworkExsynchEndtzidPropType.class, "XBedeworkExsynchEndtzidPropUpdater");
-    standardPropUpdater(XBedeworkExsynchLastmodPropType.class, "XBedeworkExsynchLastmodPropUpdater");
-    standardPropUpdater(XBedeworkExsynchStarttzidPropType.class, "XBedeworkExsynchStarttzidPropUpdater");
-    standardPropUpdater(XMicrosoftCdoBusystatusPropType.class, "XMicrosoftCdoBusystatusPropUpdater");
-    standardPropUpdater(XMicrosoftCdoIntendedstatusPropType.class, "XMicrosoftCdoIntendedstatusPropUpdater");
+    standardPropUpdater(AttachPropType.class, AttachPropUpdater.class);
+    standardPropUpdater(ExrulePropType.class, ExrulePropUpdater.class);
+    standardPropUpdater(LinkPropType.class, LinkPropUpdater.class);
+    standardPropUpdater(OrganizerPropType.class, OrganizerPropUpdater.class);
+    standardPropUpdater(RequestStatusPropType.class, RequestStatusPropUpdater.class);
+    standardPropUpdater(RrulePropType.class, RrulePropUpdater.class);
+    standardPropUpdater(TolerancePropType.class, TolerancePropUpdater.class);
+    standardPropUpdater(XBedeworkCostPropType.class, XBedeworkCostPropUpdater.class);
+    standardPropUpdater(XBedeworkExsynchEndtzidPropType.class, XBedeworkExsynchEndtzidPropUpdater.class);
+    standardPropUpdater(XBedeworkExsynchLastmodPropType.class, XBedeworkExsynchLastmodPropUpdater.class);
+    standardPropUpdater(XBedeworkExsynchStarttzidPropType.class, XBedeworkExsynchStarttzidPropUpdater.class);
+    standardPropUpdater(XMicrosoftCdoBusystatusPropType.class, XMicrosoftCdoBusystatusPropUpdater.class);
+    standardPropUpdater(XMicrosoftCdoIntendedstatusPropType.class, XMicrosoftCdoIntendedstatusPropUpdater.class);
 
     ==== vcalendar properties ====
-    standardPropUpdater(MethodPropType.class, "MethodPropUpdater");
+    standardPropUpdater(MethodPropType.class, MethodPropUpdater.class);
 
     ==== freebusy properties ====
-    standardPropUpdater(BusytypePropType.class, "BusytypePropUpdater");
-    standardPropUpdater(FreebusyPropType.class, "FreebusyPropUpdater");
+    standardPropUpdater(BusytypePropType.class, BusytypePropUpdater.class);
+    standardPropUpdater(FreebusyPropType.class, FreebusyPropUpdater.class);
 
     ==== vtimezone properties ====
-    standardPropUpdater(TzidPropType.class, "TzidPropUpdater");
-    standardPropUpdater(TznamePropType.class, "TznamePropUpdater");
-    standardPropUpdater(TzoffsetfromPropType.class, "TzoffsetfromPropUpdater");
-    standardPropUpdater(TzoffsettoPropType.class, "TzoffsettoPropUpdater");
-    standardPropUpdater(TzurlPropType.class, "TzurlPropUpdater");
+    standardPropUpdater(TzidPropType.class, TzidPropUpdater.class);
+    standardPropUpdater(TznamePropType.class, TznamePropUpdater.class);
+    standardPropUpdater(TzoffsetfromPropType.class, TzoffsetfromPropUpdater.class);
+    standardPropUpdater(TzoffsettoPropType.class, TzoffsettoPropUpdater.class);
+    standardPropUpdater(TzurlPropType.class, TzurlPropUpdater.class);
      */
   }
 
