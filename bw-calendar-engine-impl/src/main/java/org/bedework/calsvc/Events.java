@@ -1892,7 +1892,7 @@ class Events extends CalSvcDb implements EventsI {
     }
 
     // Normalize the line endings
-    final String s1 = val.replaceAll("(\\r|\\n|\\r\\n)+", "\n");
+    final String s1 = val.replaceAll("(\\r\\n|\\r)", "\n");
 
     boolean changed = !s1.equals(val);
 
