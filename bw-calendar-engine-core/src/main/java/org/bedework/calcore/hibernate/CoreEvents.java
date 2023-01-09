@@ -1000,7 +1000,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         // Wasn't an rdate event
         master.addExdate(instDate);
       }
-      master.updateLastmod();
+      master.setDtstamps(getCurrentTimestamp());
       dao.update(master);
 
       der.eventDeleted = true;
