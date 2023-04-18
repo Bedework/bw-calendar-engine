@@ -40,6 +40,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.AccessChecker;
+import org.bedework.calfacade.util.CalFacadeUtil.HrefRecurrenceId;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
@@ -50,6 +51,7 @@ import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.GetEntityResponse;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
@@ -64,6 +66,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.bedework.calfacade.indexing.BwIndexer.DeletedState;
+import static org.bedework.calfacade.util.CalFacadeUtil.getHrefRecurrenceId;
 
 /** Class to encapsulate most of what we do with events.
  *
@@ -319,7 +322,9 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   @Override
   public CoreEventInfo getEvent(final String href)
           throws CalFacadeException {
-    final PathAndName pn = new PathAndName(href);
+    final HrefRecurrenceId hr = getHrefRecurrenceId(href);
+
+    final PathAndName pn = new PathAndName(hr.hrefNorid);
     final List<BwEvent> evs = dao.getEventsByName(pn.colPath, pn.name);
 
     /* If this is availability we should have one vavailability and a number of
@@ -392,11 +397,32 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         ev = cei.getEvent();
         if (ev.testRecurring()) {
           getOverrides(cei);
+          if (hr.recurrenceId != null) {
+            // Single instance
+            return getInstance(cei, hr.recurrenceId);
+          }
         }
       }
     }
 
     return cei;
+  }
+
+  private CoreEventInfo getInstance(final CoreEventInfo cei,
+                                    final String recurrenceId) {
+    final BwEvent ev = cei.getEvent();
+    final String href = ev.getHref() + "#" + recurrenceId;
+
+    final GetEntityResponse<EventInfo> ires =
+            getIndexer(ev).fetchEvent(href);
+
+    if (!ires.isOk()) {
+      return null;
+    }
+
+    final EventInfo ei = ires.getEntity();
+    return new CoreEventInfo(ei.getEvent(),
+                             ei.getCurrentAccess());
   }
 
   @Override

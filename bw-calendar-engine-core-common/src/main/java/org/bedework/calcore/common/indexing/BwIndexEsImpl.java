@@ -1931,7 +1931,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     try {
       fetchStart();
-
+      final String recurrenceId;
       final String hrefNorid;
 
       // Check validity
@@ -1941,27 +1941,82 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       }
 
       final int fragPos = href.lastIndexOf("#");
+      final int expectedObjects;
 
       if (fragPos < pos) {
         hrefNorid = href;
+        recurrenceId = null;
+        expectedObjects = 1;
       } else {
         hrefNorid = href.substring(0, fragPos);
+        recurrenceId = href.substring(fragPos + 1);
+        expectedObjects = 2;
       }
 
       final QueryBuilder qb =
-              getFilters(null).singleEventFilter(hrefNorid);
+              getFilters(null).singleEventFilter(hrefNorid,
+                                                 recurrenceId);
 
-      final List<EventInfo> eis = fetchEvents(qb, -1, privRead);
+      final SearchHit[] hits =
+              fetchEntity(docTypeEvent, qb, expectedObjects);
 
-      if (eis.size() > 1) {
-        return Response.invalid(resp, "More than one event returned");
-      }
-
-      if (eis.isEmpty()) {
+      if (hits == null) {
         return notFound(resp);
       }
 
-      resp.setEntity(eis.get(0));
+      final EventInfo ei;
+
+      if (hits.length == 1) {
+        // Master only
+        ei = makeEvent(resp, hits[0]);
+        if (ei == null) {
+          return notFound(resp);
+        }
+      } else {
+        // Make events then create proxy.
+
+        final EventInfo ei0 = makeEvent(resp, hits[0]);
+        final EventInfo ei1 = makeEvent(resp, hits[1]);
+        if ((ei0 == null) || (ei1 == null)) {
+          return notFound(resp);
+        }
+
+        final BwEvent mstr;
+        final BwEventAnnotation inst;
+
+        if (ei0.getEvent() instanceof BwEventAnnotation) {
+          inst = (BwEventAnnotation)ei0.getEvent();
+          mstr = ei1.getEvent();
+        } else {
+          inst = (BwEventAnnotation)ei1.getEvent();
+          mstr = ei0.getEvent();
+        }
+
+        final BwEvent proxy = new BwEventProxy(inst);
+        inst.setTarget(mstr);
+        inst.setMaster(mstr);
+
+        ei = new EventInfo(proxy);
+      }
+
+      final BwEvent ev = ei.getEvent();
+
+      final CurrentAccess ca =
+              accessCheck.checkAccess(ev, privRead, true);
+
+      if ((ca == null) || !ca.getAccessAllowed()) {
+        return notFound(resp);
+      }
+
+      ei.setCurrentAccess(ca);
+      resp.setEntity(ei);
+
+      if (recurrenceId != null) {
+        // Single instance
+        return resp;
+      }
+
+      addOverrides(resp, ei);
 
       return resp;
     } catch (final Throwable t) {
@@ -3146,6 +3201,19 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   private SearchHit fetchEntity(final String docType,
                                 final QueryBuilder qb)
           throws CalFacadeException {
+    final SearchHit[] res = fetchEntity(docType, qb, 1);
+
+    if (res == null) {
+      return null;
+    }
+
+    return res[0];
+  }
+
+  private SearchHit[] fetchEntity(final String docType,
+                                  final QueryBuilder qb,
+                                  final int expectedObjects)
+          throws CalFacadeException {
     requireDocType(docType);
 
     final SearchSourceBuilder ssb =
@@ -3166,19 +3234,22 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
 
     final SearchHits hits = resp.getHits();
+    final SearchHit[] res = hits.getHits();
 
-    if (hits.getHits().length == 0) {
+    if (res.length == 0) {
       // No match
       return null;
     }
 
-    if (hits.getTotalHits().value != 1) {
-      error("Multiple entities of type " + docType +
-                    " with filter " + qb);
+    if (res.length != expectedObjects) {
+      error(format("Incorrect number of entities of type %s" +
+                           " with filter %s. Expected %d got %d",
+                   docType, qb, expectedObjects,
+                   res.length));
       return null;
     }
 
-    return hits.getHits()[0];
+    return res;
   }
 
   private static class DateLimits {
@@ -3970,6 +4041,18 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
 
     return entity;
+  }
+
+  private EventInfo makeEvent(final Response resp,
+                              final SearchHit hit)
+          throws CalFacadeException {
+    if (hit.getId() == null) {
+      throw new RuntimeException("Missing key");
+    }
+
+    final EntityBuilder ebmstr = getEntityBuilder(
+            hit.getSourceAsMap());
+    return makeEvent(ebmstr, resp, hit.getId(), false);
   }
 
   private EventInfo makeEvent(final EntityBuilder eb,

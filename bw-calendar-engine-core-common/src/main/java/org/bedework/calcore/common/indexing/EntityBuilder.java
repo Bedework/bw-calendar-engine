@@ -402,7 +402,10 @@ public class EntityBuilder extends EntityBuilderBase {
     final boolean override = !expanded &&
             getBool(PropertyInfoIndex.OVERRIDE);
 
-    final String cacheKey = id + override;
+    final boolean instance = !expanded &&
+            getBool(PropertyInfoIndex.INSTANCE);
+
+    final String cacheKey = id + override + instance;
 
     retrievals++;
     
@@ -427,7 +430,7 @@ public class EntityBuilder extends EntityBuilderBase {
     
     final BwEvent ev;
 
-    if (override) {
+    if (override || instance) {
       ev = new BwEventAnnotation();
 
       final BwEventAnnotation ann = (BwEventAnnotation)ev;

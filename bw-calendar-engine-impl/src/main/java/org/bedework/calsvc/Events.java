@@ -30,7 +30,6 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
-import org.bedework.calfacade.BwDuration;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventObj;
@@ -44,6 +43,7 @@ import org.bedework.calfacade.EventListEntry;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.CategorisedEntity;
+import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.filter.RetrieveList;
@@ -83,15 +83,12 @@ import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
 import net.fortuna.ical4j.model.Component;
-import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.component.Participant;
 import net.fortuna.ical4j.model.parameter.CuType;
 import net.fortuna.ical4j.model.property.CalendarAddress;
-import net.fortuna.ical4j.model.property.DtStart;
 
 import java.io.StringReader;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -180,19 +177,6 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       final var ca = ei.getCurrentAccess();
-      final Set<EventInfo> oveis = ei.getOverrides();
-
-      if (!Util.isEmpty(oveis)) {
-        for (final EventInfo oei: oveis) {
-          if (oei.getEvent().inDateTimeRange(recurRetrieval.start.getDate(),
-                                             recurRetrieval.end.getDate())) {
-            oei.setRetrievedEvent(ei);
-            res.add(oei);
-          }
-        }
-      }
-
-      /* Generate non-overridden instances. */
 
       final var authPars = getSvc().getAuthProperties();
 
@@ -203,29 +187,23 @@ class Events extends CalSvcDb implements EventsI {
                                        recurRetrieval.getStartDate(),
                                        recurRetrieval.getEndDate());
 
-      if (instances == null) {
+      if (instances.isEmpty()) {
         return res;
       }
 
-      for (final Recurrence rec: instances) {
-        if (rec.override != null) {
-          continue;
+      for (final Recurrence instance: instances) {
+        final EventInfo oei;
+
+        if (instance.override != null) {
+          oei = instance.override;
+        } else {
+          oei = EventInfo.makeProxy(ev,
+                                    instance.start,
+                                    instance.end,
+                                    instance.recurrenceId,
+                                    true);  // Call it an override
         }
 
-        final BwEventAnnotation ann = new BwEventAnnotation();
-
-        ann.setDtstart(rec.start);
-        ann.setDtend(rec.end);
-        ann.setRecurrenceId(rec.recurrenceId);
-        ann.setOwnerHref(ev.getOwnerHref());
-        ann.setOverride(true);  // Call it an override
-        ann.setTombstoned(false);
-        ann.setName(ev.getName());
-        ann.setUid(ev.getUid());
-        ann.setTarget(ev);
-        ann.setMaster(ev);
-        final BwEvent proxy = new BwEventProxy(ann);
-        final EventInfo oei = new EventInfo(proxy);
         oei.setCurrentAccess(ca);
         oei.setRetrievedEvent(ei);
 
@@ -244,64 +222,55 @@ class Events extends CalSvcDb implements EventsI {
       return ei;
     }
 
-    /* See if it's in the overrides */
-
-    if (!Util.isEmpty(ei.getOverrides())) {
-      for (final EventInfo oei: ei.getOverrides()) {
-        if (oei.getEvent().getRecurrenceId().equals(recurrenceId)) {
-          oei.setRetrievedEvent(ei);
-          oei.setCurrentAccess(ei.getCurrentAccess());
-          return oei;
-        }
-      }
+    final Recurrence instance = findInstance(ei, recurrenceId);
+    if (instance == null) {
+      return null;
     }
 
-    /* Not in the overrides - generate an instance */
-    final BwDateTime rstart;
-    final boolean dateOnly = ev.getDtstart().getDateType();
+    final EventInfo oei;
 
-    if (dateOnly) {
-      rstart = BwDateTime.makeBwDateTime(true,
-                                         recurrenceId.substring(0, 8),
-                                         null);
+    if (instance.override != null) {
+      oei = instance.override;
     } else {
-      final DateTime dt;
-      try {
-        dt = new DateTime(recurrenceId);
-      } catch (final ParseException pe) {
-        throw new RuntimeException(pe);
-      }
-      final DtStart ds = ev.getDtstart().makeDtStart();
-      dt.setTimeZone(ds.getTimeZone());
-
-      rstart = BwDateTime.makeBwDateTime(dt);
+      oei = EventInfo.makeProxy(ev,
+                                instance.start,
+                                instance.end,
+                                recurrenceId,
+                                true);  // Call it an override
     }
 
-    final BwDateTime rend = rstart.addDuration(
-            BwDuration.makeDuration(ev.getDuration()));
-
-    final BwEventAnnotation ann = new BwEventAnnotation();
-
-    // Fields that must be the same as master
-    ann.setColPath(ev.getColPath());
-    ann.setName(ev.getName());
-    ann.setUid(ev.getUid());
-    ann.setOwnerHref(ev.getOwnerHref());
-
-    ann.setDtstart(rstart);
-    ann.setDtend(rend);
-    ann.setRecurrenceId(recurrenceId);
-    ann.setOverride(true);  // Call it an override
-    ann.setTombstoned(false);
-
-    ann.setTarget(ev);
-    ann.setMaster(ev);
-    final BwEvent proxy = new BwEventProxy(ann);
-    final EventInfo oei = new EventInfo(proxy);
     oei.setCurrentAccess(ei.getCurrentAccess());
-
     oei.setRetrievedEvent(ei);
+
     return oei;
+  }
+
+  private Recurrence findInstance(final EventInfo ei,
+                                  final String rid) {
+    final BwEvent ev = ei.getEvent();
+
+    final AuthProperties props =
+            getSvc().getAuthProperties();
+    final int maxYears = props.getMaxYears();
+    final int maxInstances = props.getMaxInstances();
+
+    final Collection<Recurrence> instances =
+            RecurUtil.getRecurrences(ei, maxYears, maxInstances,
+                                     null, null);
+
+    if (instances.isEmpty()) {
+      // No instances for an alleged recurring event.
+      return null;
+    }
+
+    // See if the recurrenceid is in the instances.
+    for (final Recurrence rec: instances) {
+      if (rid.equals(rec.recurrenceId)) {
+        return rec;
+      }
+    }
+
+    return null;
   }
 
   @Override
@@ -315,19 +284,24 @@ class Events extends CalSvcDb implements EventsI {
                        final String name,
                        final String recurrenceId)
           throws CalFacadeException {
-    final EventInfo res =
-            postProcess(getCal().getEvent(Util.buildPath(false,
-                                                         colPath, "/",
-                                          name)));
+    String href = Util.buildPath(false,
+                                 colPath, "/",
+                                 name);
+    if (recurrenceId != null) {
+      href += "#" + recurrenceId;
+    }
+    final EventInfo res = postProcess(getCal().getEvent(href));
 
     int num = 0;
 
     if (res != null) {
       num = 1;
     }
-    getSvc().postNotification(new EntityFetchEvent(SysCode.ENTITY_FETCHED, num));
+    getSvc().postNotification(
+            new EntityFetchEvent(SysCode.ENTITY_FETCHED, num));
 
-    if (res == null) {
+    return res;
+/*    if (res == null) {
       return null;
     }
 
@@ -335,7 +309,7 @@ class Events extends CalSvcDb implements EventsI {
       return res;
     }
 
-    return makeInstance(res, recurrenceId);
+    return makeInstance(res, recurrenceId);*/
   }
 
   @Override

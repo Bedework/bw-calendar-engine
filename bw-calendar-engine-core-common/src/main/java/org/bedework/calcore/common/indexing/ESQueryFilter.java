@@ -46,9 +46,9 @@ import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.util.calendar.IcalDefs;
-import org.bedework.util.opensearch.ESQueryFilterBase;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
+import org.bedework.util.opensearch.ESQueryFilterBase;
 
 import org.apache.lucene.search.join.ScoreMode;
 import org.opensearch.index.query.BoolQueryBuilder;
@@ -138,6 +138,9 @@ public class ESQueryFilter extends ESQueryFilterBase
   private final static String hrefRef =
           makePropertyRef(PropertyInfoIndex.HREF);
 
+  private final static String ridRef =
+          makePropertyRef(PropertyInfoIndex.RECURRENCE_ID);
+
   private final static String colPathRef =
           makePropertyRef(PropertyInfoIndex.COLPATH);
 
@@ -218,16 +221,38 @@ public class ESQueryFilter extends ESQueryFilterBase
                null);
   }
 
-  /** Build a filter for a single event identified by the href.
+  /** Build a filter for a single event identified by the href
+   * and recurrenceid. If recurrenceId is null we target a master only
+   * otherwise we target the master and instance or override.
    *
    * @param href  of event
-   * @return a query builder
+   * @param recurrenceId of instance
+   * @return a filter builder
    */
-  public QueryBuilder singleEventFilter(final String href) {
-    return and(termQuery(hrefRef, href),
-               or(addTerm(PropertyInfoIndex.MASTER, "true"),
-                  addTerm(PropertyInfoIndex.OVERRIDE, "true")),
-               "noInstances");
+  public QueryBuilder singleEventFilter(final String href,
+                                        final String recurrenceId) {
+    QueryBuilder anded = addTerm(PropertyInfoIndex.HREF, href);
+
+    if (recurrenceId == null) {
+      anded = and(anded, addTerm(PropertyInfoIndex.MASTER, "true"), null);
+    } else {
+      final QueryBuilder isMaster =
+              addTerm(PropertyInfoIndex.MASTER, "true");
+
+      final QueryBuilder isOverrideOrInstance =
+              and(or(addTerm(PropertyInfoIndex.INSTANCE, "true"),
+                     addTerm(PropertyInfoIndex.OVERRIDE, "true")),
+                  addTerm(PropertyInfoIndex.RECURRENCE_ID,
+                          recurrenceId),
+                  "isOverrideOrInstance");
+
+      anded = and(anded,
+                  or(isMaster,
+                     isOverrideOrInstance),
+                  null);
+    }
+
+    return anded;
   }
 
   /** Build a filter for a single event identified by the colPath
