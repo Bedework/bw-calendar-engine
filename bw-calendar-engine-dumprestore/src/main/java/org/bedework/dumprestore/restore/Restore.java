@@ -381,7 +381,9 @@ public class Restore implements Logged, Defs, AutoCloseable {
             CalSvcIPars.getDumpRestorePars(logIdRestore,
                                            adminUserAccount,
                                            true); // publicAdmin + superUser
-    return new CalSvcFactoryDefault().getSvc(pars);
+    return new CalSvcFactoryDefault().getSvc(
+            Restore.class.getClassLoader(),
+            pars);
   }
 
   /**
