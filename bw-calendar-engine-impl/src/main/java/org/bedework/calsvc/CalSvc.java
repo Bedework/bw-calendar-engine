@@ -252,7 +252,7 @@ public class CalSvc
 
   @Override
   public void init(final CalSvcIPars parsParam) {
-    init(parsParam, false);
+    init(parsParam, parsParam.getForRestore());
   }
 
   private void init(final CalSvcIPars parsParam,
