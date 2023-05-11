@@ -587,7 +587,7 @@ public class ESQueryFilter extends ESQueryFilterBase
       return q;
     }
     
-    final List<NamedQueryBuilder> nfbs = new ArrayList<>();
+    QueryBuilder limitQuery = null;
 
     if (!queryLimited) {
       if (defaultFilterContext != null) {
@@ -602,28 +602,22 @@ public class ESQueryFilter extends ESQueryFilterBase
           
           if ((fb != null) && (fb.getChildren() != null)) {
             for (final FilterBase vfb : fb.getChildren()) {
-              nfbs.add(new NamedQueryBuilder(vfb.getName(),
-                                              and(buildQuery(vfb), q,
-                                                  vfb.getName())));
+              limitQuery = or(limitQuery,
+                              buildQuery(vfb));
             }
           }
         } else {
-          final QueryBuilder limQb = buildQuery(defaultFilterContext);
-          nfbs.add(new NamedQueryBuilder(null, and(q, limQb, null)));
+          limitQuery = buildQuery(defaultFilterContext);
         }
       }
 
       if (!queryLimited) {
         if (q == null) {
-          nfbs.add(new NamedQueryBuilder(null, new MatchAllQueryBuilder()));
+          limitQuery = new MatchAllQueryBuilder();
         } else {
-          nfbs.add(new NamedQueryBuilder(null, principalQuery(q)));
+          limitQuery = principalQuery(q);
         }
       }
-    } else if (q == null) {
-      nfbs.add(new NamedQueryBuilder(null, new MatchAllQueryBuilder()));
-    } else {
-      nfbs.add(new NamedQueryBuilder(null, q));
     }
 
     QueryBuilder recurQb;
@@ -636,21 +630,18 @@ public class ESQueryFilter extends ESQueryFilterBase
 
     QueryBuilder qb;
 
-    if (nfbs.size() == 1) {
-      qb = nfbs.get(0).qb;
-
-      if (recurQb != null) {
-        qb = and(qb, recurQb, null);
-      }
+    if (q == null) {
+      qb = new MatchAllQueryBuilder();
     } else {
-      qb = null;
-      if (recurQb == null) {
-        recurQb = new MatchAllQueryBuilder();
-      }
+      qb = q;
+    }
 
-      for (final NamedQueryBuilder nfb : nfbs) {
-        qb = or(qb, and(nfb.qb, recurQb, nfb.name));
-      }
+    if (limitQuery != null) {
+      qb = and(qb, limitQuery, null);
+    }
+
+    if (recurQb != null) {
+      qb = and(qb, recurQb, null);
     }
 
     // Always exclude tombstoned here
