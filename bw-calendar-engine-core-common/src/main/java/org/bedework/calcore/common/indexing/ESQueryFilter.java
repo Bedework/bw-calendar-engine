@@ -615,7 +615,7 @@ public class ESQueryFilter extends ESQueryFilterBase
         if (q == null) {
           limitQuery = new MatchAllQueryBuilder();
         } else {
-          limitQuery = principalQuery(q);
+          limitQuery = principalQuery(limitQuery);
         }
       }
     }
