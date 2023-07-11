@@ -63,7 +63,6 @@ import org.bedework.util.opensearch.EntityBuilderBase;
 
 import net.fortuna.ical4j.model.property.RequestStatus;
 
-import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -572,8 +571,8 @@ public class EntityBuilder extends EntityBuilderBase {
     try {
       final BwGeo geo = new BwGeo();
 
-      geo.setLatitude(BigDecimal.valueOf(getLongVal("lat")));
-      geo.setLongitude(BigDecimal.valueOf(getLongVal("lon")));
+      geo.setLatitude(getBigDecimal("lat"));
+      geo.setLongitude(getBigDecimal("lon"));
 
       return geo;
     } finally {
