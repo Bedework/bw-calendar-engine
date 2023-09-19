@@ -1385,6 +1385,7 @@ public class ESQueryFilter extends ESQueryFilterBase
     }
 
     if (pf instanceof ObjectFilter) {
+      final var of = (ObjectFilter<?>)pf;
       final BwIcalPropertyInfoEntry bwPie = BwIcalPropertyInfo.getPinfo(pf.getPropertyIndex());
 
       final String fullTermsPath;
@@ -1394,12 +1395,18 @@ public class ESQueryFilter extends ESQueryFilterBase
         fullTermsPath = makePropertyRef(pf.getPropertyIndexes(),
                                         bwPie.getTermsField());
       }
-      return makeQuery(pf.getPropertyIndex(),
-                       makePropertyRef(pf.getPropertyIndexes(), null),
-                       fullTermsPath,
-                       getValue((ObjectFilter)pf),
-                       OperationType.compare,
-                       1, pf.getNot());
+      final OperationType op;
+      if (of.getPrefixMatch()) {
+        op = OperationType.prefix;
+      } else {
+        op = OperationType.compare;
+      }
+
+      return makeQuery(pf.getPropertyIndexes(),
+                       getValue(of),
+                       pf.getIntKey(), pf.getStrKey(),
+                       op,
+                       pf.getNot());
     }
 
     return null;
