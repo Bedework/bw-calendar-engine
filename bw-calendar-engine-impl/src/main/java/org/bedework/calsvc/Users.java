@@ -26,7 +26,6 @@ import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.DirectoryInfo;
-import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -223,7 +222,7 @@ class Users extends CalSvcDb implements UsersI {
 
     setRoots(getSvc());
 
-    getCal().saveOrUpdate((BwUnversionedDbentity<?>)user);
+    getCal().saveOrUpdate(user);
 
     getSvc().initPrincipal(user);
     initPrincipal(user, getSvc());
@@ -246,7 +245,7 @@ class Users extends CalSvcDb implements UsersI {
 
   @Override
   public void update(final BwPrincipal<?> principal) throws CalFacadeException {
-    getCal().saveOrUpdate((BwUnversionedDbentity<?>)principal);
+    getCal().saveOrUpdate(principal);
   }
 
   @Override
