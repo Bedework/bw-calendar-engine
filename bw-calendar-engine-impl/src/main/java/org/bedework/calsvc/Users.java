@@ -169,7 +169,7 @@ class Users extends CalSvcDb implements UsersI {
     }
 
     if (href.startsWith(groupPrincipalRoot)) {
-      final BwGroup g = getSvc().getDirectories().findGroup(href.substring(groupPrincipalRootLen));
+      final BwGroup<?> g = getSvc().getDirectories().findGroup(href.substring(groupPrincipalRootLen));
 
       if (g != null) {
         principalMap.put(href, g);
