@@ -132,7 +132,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
           "from " + BwGroup.class.getName() + " g " +
                   "where g.account = :account";
 
-  public BwGroup findGroup(final String account,
+  public BwGroup<?> findGroup(final String account,
                            final boolean admin) throws CalFacadeException {
     final HibSession sess = getSess();
 
@@ -144,7 +144,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
 
     sess.setString("account", account);
 
-    return (BwGroup)sess.getUnique();
+    return (BwGroup<?>)sess.getUnique();
   }
 
   private static final String getAdminGroupParentsQuery =
@@ -188,9 +188,9 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
           "delete from " +
                   "org.bedework.calfacade.svc.BwAdminGroupEntry " +
                   "where grp=:gr";
-
   private static final String removeAllGroupMembersQuery =
           "delete from " +
+
                   "org.bedework.calfacade.BwGroupEntry " +
                   "where grp=:gr";
 
@@ -209,7 +209,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
    * @param  group           BwGroup group object to delete
    * @exception CalFacadeException If there's a problem
    */
-  public  void removeGroup(final BwGroup group,
+  public  void removeGroup(final BwGroup<?> group,
                            final boolean admin) throws CalFacadeException {
     final HibSession sess = getSess();
 
@@ -249,7 +249,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
           "from org.bedework.calfacade.BwGroupEntry " +
                   "where grp=:grp and memberId=:mbrId and memberIsGroup=:isgroup";
 
-  public void removeMember(final BwGroup group,
+  public void removeMember(final BwGroup<?> group,
                            final BwPrincipal<?> val,
                            final boolean admin) throws CalFacadeException {
     final HibSession sess = getSess();
@@ -310,7 +310,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "ge.grp=:gr and ge.memberIsGroup=true";
 
   @SuppressWarnings("unchecked")
-  public Collection<BwPrincipal<?>> getMembers(final BwGroup group,
+  public Collection<BwPrincipal<?>> getMembers(final BwGroup<?> group,
                                                final boolean admin) throws CalFacadeException {
     final HibSession sess = getSess();
 
@@ -348,7 +348,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "order by g.account";
 
   @SuppressWarnings("unchecked")
-  public <T extends BwGroup> Collection<T> getAllGroups(final boolean admin) throws CalFacadeException {
+  public <T extends BwGroup<?>> Collection<T> getAllGroups(final boolean admin) throws CalFacadeException {
     final HibSession sess = getSess();
 
     if (admin) {
@@ -375,7 +375,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "where g.memberId=:entId and g.memberIsGroup=:isgroup";
 
   @SuppressWarnings("unchecked")
-  public <T extends BwGroup> Collection<T> getGroups(
+  public <T extends BwGroup<?>> Collection<T> getGroups(
           final BwPrincipal<?> val,
           final boolean admin) throws CalFacadeException {
     final HibSession sess = getSess();
@@ -397,9 +397,9 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
       sess.setString("isgroup", "F");
     }
 
-    final Set<BwGroup> gs =
+    final Set<BwGroup<?>> gs =
             new TreeSet<>(
-                    (Collection<? extends BwGroup>)sess.getList());
+                    (Collection<? extends BwGroup<?>>)sess.getList());
 
     if (admin && (val.getKind() == WhoDefs.whoTypeUser)) {
       /* Event owner for group is implicit member of group. */
@@ -407,7 +407,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
       sess.createQuery(getAdminGroupsByEventOwnerQuery);
       sess.setString("ownerHref", val.getPrincipalRef());
 
-      gs.addAll((Collection<? extends BwGroup>)sess.getList());
+      gs.addAll((Collection<? extends BwGroup<?>>)sess.getList());
     }
 
     return (Collection<T>)gs;
