@@ -451,13 +451,9 @@ public class ESQueryFilter extends ESQueryFilterBase
 
       if (isNested) {
         final QueryBuilder nested;
-        String path = makePropertyRef(pis, plistIndex, null);
+        final String path = makePropertyRef(pis, plistIndex, null);
 
         if (nqb != null) {
-          if (plistIndex == 0) {
-            // TODO Temp fix this
-            path = "event." + path;
-          }
           nested = new NestedQueryBuilder(path, nqb,
                                           ScoreMode.Avg);
         } else {
@@ -947,7 +943,7 @@ public class ESQueryFilter extends ESQueryFilterBase
     String delim = "";
     final int last = numElements - 1;
 
-    StringBuilder sb = new StringBuilder();
+    final var sb = new StringBuilder();
 
     for (int i = 0; i <= numElements; i++) {
       sb.append(delim);
