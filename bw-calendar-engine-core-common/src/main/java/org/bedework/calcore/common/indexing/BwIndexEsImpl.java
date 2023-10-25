@@ -92,6 +92,7 @@ import org.opensearch.action.get.GetRequest;
 import org.opensearch.action.get.GetResponse;
 import org.opensearch.action.index.IndexRequest;
 import org.opensearch.action.index.IndexResponse;
+import org.opensearch.action.search.ClearScrollRequest;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
 import org.opensearch.action.search.SearchScrollRequest;
@@ -665,16 +666,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                    .setFlushInterval(tv)
                    .build();
 
-    /*
-    SearchResponse scrollResp = cl.prepareSearch(targetIndex)
-                                  .setSearchType(SearchType.SCAN)
-                                  .setScroll(tv)
-                                  .setQuery(qb)
-                                  .setSize(batchSize)
-                                  .execute()
-                                  .actionGet(); //100 hits per shard will be returned for each scroll
-*/
-
     final SearchSourceBuilder ssb =
             new SearchSourceBuilder()
                     .size(batchSize)
@@ -687,8 +678,11 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     // Switch to new index
     targetIndex = indexName;
 
+    String scrollId = null;
+
     try {
       SearchResponse scrollResp = cl.search(sr, RequestOptions.DEFAULT);
+      scrollId = scrollResp.getScrollId();
 
       if (scrollResp.status() != RestStatus.OK) {
         if (debug()) {
@@ -697,9 +691,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       }
 
       //Scroll until no hits are returned
-      while (true) {
-        for (final SearchHit hit : scrollResp.getHits().getHits()) {
-
+      do {
+        for (final SearchHit hit: scrollResp.getHits().getHits()) {
           resp.incProcessed();
 
           if ((resp.getProcessed() % 250) == 0) {
@@ -774,16 +767,14 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         }
 
         final SearchScrollRequest scrollRequest =
-                new SearchScrollRequest(scrollResp.getScrollId());
+                new SearchScrollRequest(scrollId);
         scrollRequest.scroll(tv);
         scrollResp = getClient().scroll(scrollRequest,
                                         RequestOptions.DEFAULT);
+        scrollId = scrollResp.getScrollId();
 
         //Break condition: No hits are returned
-        if (scrollResp.getHits().getHits().length == 0) {
-          break;
-        }
-      }
+      } while (scrollResp.getHits().getHits().length != 0);
 
       try {
         bulkProcessor.awaitClose(10, TimeUnit.MINUTES);
@@ -794,6 +785,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       }
     } catch (final Throwable t) {
       errorReturn(resp, t);
+    } finally {
+      closeScroll(scrollId);
     }
 
     return resp;
@@ -834,9 +827,12 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
             .source(ssb)
             .scroll(tv);
 
+    String scrollId = null;
+
     try {
       SearchResponse scrollResp = getClient()
               .search(sr, RequestOptions.DEFAULT);
+      scrollId = scrollResp.getScrollId();
 
       if (scrollResp.status() != RestStatus.OK) {
         if (debug()) {
@@ -884,15 +880,19 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         }
 
         final SearchScrollRequest scrollRequest =
-                new SearchScrollRequest(scrollResp.getScrollId());
+                new SearchScrollRequest(scrollId);
         scrollRequest.scroll(tv);
         scrollResp = getClient().scroll(scrollRequest,
                                         RequestOptions.DEFAULT);
 
         //Break condition: No hits are returned
+
+        scrollId = scrollResp.getScrollId();
       } while (scrollResp.getHits().getHits().length != 0);
     } catch (final Throwable t) {
       errorReturn(resp, t);
+    } finally {
+      closeScroll(scrollId);
     }
 
     return resp;
@@ -2103,7 +2103,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     final GetEntityResponse<BwCalendar> resp = new GetEntityResponse<>();
     BwCalendar entity;
 
-    if ((val == null) || (val.length() == 0)) {
+    if ((val == null) || (val.isEmpty())) {
       return Response.notOk(resp, notFound);
     }
 
@@ -2247,10 +2247,58 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
-  public BwPrincipal fetchPrincipal(final String val)
+  public GetEntitiesResponse<BwGroup<?>> fetchGroups(final boolean admin) {
+    final QueryBuilder qb = getFilters(null).allGroupsQuery(admin);
+    final GetEntitiesResponse<BwGroup<?>> resp = new GetEntitiesResponse<>();
+
+    try {
+
+      resp.setEntities(fetchEntities(docTypePrincipal,
+                                     new BuildEntity<>() {
+                                       @Override
+                                       BwGroup make(final EntityBuilder eb,
+                                                    final String id) {
+                                         return (BwGroup<?>)eb.makePrincipal();
+                                       }
+                                     },
+                                     qb,
+                                     -1));
+
+      return Response.ok(resp, null);
+    } catch (final Throwable t) {
+      return Response.error(resp, t);
+    }
+  }
+
+  @Override
+  public GetEntitiesResponse<BwAdminGroup> fetchAdminGroups() {
+    final QueryBuilder qb = getFilters(null).allGroupsQuery(true);
+    final GetEntitiesResponse<BwAdminGroup> resp = new GetEntitiesResponse<>();
+
+    try {
+
+      resp.setEntities(fetchEntities(docTypePrincipal,
+                                     new BuildEntity<>() {
+                                       @Override
+                                       BwAdminGroup make(final EntityBuilder eb,
+                                                    final String id) {
+                                         return (BwAdminGroup)eb.makePrincipal();
+                                       }
+                                     },
+                                     qb,
+                                     -1));
+
+      return Response.ok(resp, null);
+    } catch (final Throwable t) {
+      return Response.error(resp, t);
+    }
+  }
+
+  @Override
+  public BwPrincipal<?> fetchPrincipal(final String val)
           throws CalFacadeException {
     checkCache();
-    BwPrincipal entity = getCached(val, BwPrincipal.class);
+    BwPrincipal<?> entity = getCached(val, BwPrincipal.class);
 
     if (entity != null) {
       return entity;
@@ -2301,54 +2349,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
 
     return entity;
-  }
-
-  @Override
-  public GetEntitiesResponse<BwGroup<?>> fetchGroups(final boolean admin) {
-    final QueryBuilder qb = getFilters(null).allGroupsQuery(admin);
-    final GetEntitiesResponse<BwGroup<?>> resp = new GetEntitiesResponse<>();
-
-    try {
-
-      resp.setEntities(fetchEntities(docTypePrincipal,
-                                     new BuildEntity<>() {
-                                       @Override
-                                       BwGroup make(final EntityBuilder eb,
-                                                    final String id) {
-                                         return (BwGroup<?>)eb.makePrincipal();
-                                       }
-                                     },
-                                     qb,
-                                     -1));
-
-      return Response.ok(resp, null);
-    } catch (final Throwable t) {
-      return Response.error(resp, t);
-    }
-  }
-
-  @Override
-  public GetEntitiesResponse<BwAdminGroup> fetchAdminGroups() {
-    final QueryBuilder qb = getFilters(null).allGroupsQuery(true);
-    final GetEntitiesResponse<BwAdminGroup> resp = new GetEntitiesResponse<>();
-
-    try {
-
-      resp.setEntities(fetchEntities(docTypePrincipal,
-                                     new BuildEntity<>() {
-                                       @Override
-                                       BwAdminGroup make(final EntityBuilder eb,
-                                                    final String id) {
-                                         return (BwAdminGroup)eb.makePrincipal();
-                                       }
-                                     },
-                                     qb,
-                                     -1));
-
-      return Response.ok(resp, null);
-    } catch (final Throwable t) {
-      return Response.error(resp, t);
-    }
   }
 
   @Override
@@ -2956,7 +2956,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
        We need to keep fetching until nothing is returned
      */
 
-    for (final SearchHit hit : hits) {
+    for (final SearchHit hit: hits) {
       final String kval = hit.getId();
 
       if (kval == null) {
@@ -2992,8 +2992,12 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                     "; ssb=" + ssb);
     }
 
+    String scrollId = null;
+
     try {
-      SearchResponse resp = getClient().search(req, RequestOptions.DEFAULT);
+      SearchResponse resp = getClient().search(req,
+                                               RequestOptions.DEFAULT);
+      scrollId = resp.getScrollId();
 
       int tries = 0;
 
@@ -3025,16 +3029,33 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         tries++;
 
         final SearchScrollRequest scrollRequest =
-                new SearchScrollRequest(resp.getScrollId());
+                new SearchScrollRequest(scrollId);
         scrollRequest.scroll(new TimeValue(60000));
         resp = getClient().scroll(scrollRequest,
                                   RequestOptions.DEFAULT);
 
+        scrollId = resp.getScrollId();
       }
 
       return res;
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
+    } finally {
+      closeScroll(scrollId);
+    }
+  }
+
+  private void closeScroll(final String scrollId) {
+    if (scrollId == null) {
+      return;
+    }
+
+    try {
+      final var closeScroll = new ClearScrollRequest();
+      closeScroll.addScrollId(scrollId);
+      getClient().clearScroll(closeScroll, RequestOptions.DEFAULT);
+    } catch (final Throwable t) {
+      error("Close scroll failed", t);
     }
   }
 
@@ -3096,9 +3117,12 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     final List<T> res = new ArrayList<>();
 
+    String scrollId = null;
+
     try {
       SearchResponse scrollResp = getClient()
               .search(sr, RequestOptions.DEFAULT);
+      scrollId = scrollResp.getScrollId();
 
       if (scrollResp.status() != RestStatus.OK) {
         if (debug()) {
@@ -3142,13 +3166,16 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         tries++;
 
         final SearchScrollRequest scrollRequest =
-                new SearchScrollRequest(scrollResp.getScrollId());
+                new SearchScrollRequest(scrollId);
         scrollRequest.scroll(new TimeValue(60000));
         scrollResp = getClient().scroll(scrollRequest,
                                         RequestOptions.DEFAULT);
+        scrollId = scrollResp.getScrollId();
       }
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
+    } finally {
+      closeScroll(scrollId);
     }
 
     return res;
