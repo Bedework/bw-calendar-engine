@@ -70,6 +70,8 @@ public class IndexPropertiesImpl
 
   private List<String> skipPaths = new ArrayList<>();
 
+  private long contextInfoDelay;
+
   @Override
   public void setIndexerURL(final String val) {
     indexerURL = val;
@@ -244,6 +246,16 @@ public class IndexPropertiesImpl
   }
 
   @Override
+  public void setContextInfoDelay(final long val) {
+    contextInfoDelay = val;
+  }
+
+  @Override
+  public long getContextInfoDelay() {
+    return contextInfoDelay;
+  }
+
+  @Override
   public void setSkipPathsList(final List<String> val) {
     skipPaths = val;
   }
@@ -271,6 +283,7 @@ public class IndexPropertiesImpl
     ts.append("indexPublic", getIndexPublic());
     ts.append("indexUsers", getIndexUsers());
     ts.append("discardMessages", getDiscardMessages());
+    ts.append("contextInfoDelay", getContextInfoDelay());
 
     ts.append("skipPaths", getSkipPaths());
 
@@ -297,5 +310,10 @@ public class IndexPropertiesImpl
     clone.setSkipPaths(getSkipPaths());
 
     return clone;
+  }
+
+  @Override
+  public int compareTo(final IndexPropertiesImpl o) {
+    return 0;
   }
 }

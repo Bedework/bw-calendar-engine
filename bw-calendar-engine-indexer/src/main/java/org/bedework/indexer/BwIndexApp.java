@@ -27,6 +27,7 @@ import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.listeners.JmsSysEventListener;
+import org.bedework.util.indexing.ContextInfo;
 import org.bedework.util.misc.Util;
 
 import java.util.HashMap;
@@ -151,6 +152,10 @@ public class BwIndexApp extends JmsSysEventListener {
 
   public IndexStatsResponse getIndexStats(final String indexName) throws CalFacadeException {
     return getCrawler().getIndexStats(indexName);
+  }
+
+  public List<ContextInfo> getContextInfo() throws CalFacadeException {
+    return getCrawler().getContextInfo();
   }
 
   /** Move the production index alias to the given index

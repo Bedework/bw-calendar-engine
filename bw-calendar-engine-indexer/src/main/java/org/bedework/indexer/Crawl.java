@@ -24,6 +24,7 @@ import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.IndexInfo;
 import org.bedework.calfacade.indexing.IndexStatsResponse;
 import org.bedework.calfacade.indexing.ReindexResponse;
+import org.bedework.util.indexing.ContextInfo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -96,7 +97,7 @@ public class Crawl extends CalSys {
   }
 
   /**
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal exception
    */
   @SuppressWarnings("ConstantConditions")
   public void crawl() throws CalFacadeException {
@@ -179,10 +180,10 @@ public class Crawl extends CalSys {
 
   /**
    * @return info on indexes maintained by indexer.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal exception
    */
   public Set<IndexInfo> getIndexInfo() throws CalFacadeException {
-    try (BwSvc bw = getAdminBw()) {
+    try (final BwSvc bw = getAdminBw()) {
       final BwIndexer idx = bw.getSvci().getIndexer(adminPrincipal,
                                                     BwIndexer.docTypeEvent);
 
@@ -193,10 +194,10 @@ public class Crawl extends CalSys {
   /** Purge non-current indexes maintained by server.
    *
    * @return names of indexes removed.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal exception
    */
   public List<String> purgeIndexes() throws CalFacadeException {
-    try (BwSvc bw = getAdminBw()) {
+    try (final BwSvc bw = getAdminBw()) {
       final BwIndexer idx = bw.getSvci().getIndexer(adminPrincipal,
                                                     BwIndexer.docTypeEvent);
 
@@ -207,7 +208,7 @@ public class Crawl extends CalSys {
   public Map<String, String> newIndexes() throws CalFacadeException {
     final Map<String, String> names = new HashMap<>();
 
-    try (BwSvc bw = getAdminBw()) {
+    try (final BwSvc bw = getAdminBw()) {
       // Switch indexes.
 
       if (docType != null) {
@@ -242,7 +243,7 @@ public class Crawl extends CalSys {
   }
 
   public ReindexResponse reindex(final String docType) throws CalFacadeException {
-    try (BwSvc bw = getAdminBw()) {
+    try (final BwSvc bw = getAdminBw()) {
       // Switch indexes.
 
       final BwIndexer idx = bw.getSvci().getIndexer(adminPrincipal,
@@ -253,9 +254,16 @@ public class Crawl extends CalSys {
   }
 
   public IndexStatsResponse getIndexStats(final String indexName) throws CalFacadeException {
-    try (BwSvc bw = getAdminBw()) {
+    try (final BwSvc bw = getAdminBw()) {
       return bw.getSvci().getIndexer(adminPrincipal,
                                      BwIndexer.docTypeEvent).getIndexStats(indexName);
+    }
+  }
+
+  public List<ContextInfo> getContextInfo() throws CalFacadeException {
+    try (final BwSvc bw = getAdminBw()) {
+      return bw.getSvci().getIndexer(adminPrincipal,
+                                     BwIndexer.docTypeEvent).getContextInfo();
     }
   }
 
@@ -266,7 +274,7 @@ public class Crawl extends CalSys {
    * @throws CalFacadeException on error
    */
   public int setProdAlias(final String indexName) throws CalFacadeException {
-    try (BwSvc bw = getAdminBw()) {
+    try (final BwSvc bw = getAdminBw()) {
       final BwIndexer idx = bw.getSvci().getIndexer(adminPrincipal,
                                                     BwIndexer.docTypeEvent);
 

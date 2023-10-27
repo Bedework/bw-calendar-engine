@@ -76,8 +76,11 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
       info(" * Current indexes: ");
       Set<IndexInfo> is = null;
 
+      var ok = false;
+
       try {
         is = app.getIndexInfo();
+        ok = true;
       } catch (final Throwable t) {
         error(t);
         info(" * Exception getting index info:");
@@ -87,6 +90,10 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
       info(listIndexes(is));
 
       info("************************************************************");
+
+      if (ok) {
+        new StatsThread().start();
+      }
 
       while (running) {
         try {
@@ -151,6 +158,55 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
       try {
         getIndexApp().crawl();
         setStatus(statusDone);
+      } catch (final Throwable t) {
+        setStatus(statusFailed);
+        if (!showedTrace) {
+          error(t);
+          //            showedTrace = true;
+        } else {
+          error(t.getMessage());
+        }
+      }
+    }
+  }
+
+  private class StatsThread extends Thread {
+    boolean showedTrace;
+
+    public StatsThread() {
+      super("IndexStats");
+    }
+
+    @Override
+    public void run() {
+      try {
+        while (!isInterrupted()) {
+          final var cis = getIndexApp().getContextInfo();
+          setStatus(statusDone);
+
+          if (cis != null) {
+            for (final var ci: cis) {
+              final var sii = ci.getSearchIndexInfo();
+              info(String.format("ContextInfo - " +
+                                         "node: %s, " +
+                                         "openContexts: %s, " +
+                                         "scrollTotal: %s," +
+                                         "scrollCurrent: %s",
+                                 ci.getNodeName(),
+                                 sii.getOpenContexts(),
+                                 sii.getScrollTotal(),
+                                 sii.getScrollCurrent()));
+            }
+          }
+          synchronized (this) {
+            long delay = getContextInfoDelay();
+            if (delay <= 0) {
+              delay = 1000 * 60 * 5;
+            }
+
+            this.wait(delay);
+          }
+        }
       } catch (final Throwable t) {
         setStatus(statusFailed);
         if (!showedTrace) {
@@ -388,6 +444,16 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   @Override
   public List<String> getSkipPathsList() {
     return getConfig().getSkipPathsList();
+  }
+
+  @Override
+  public void setContextInfoDelay(final long val) {
+    getConfig().setContextInfoDelay(val);
+  }
+
+  @Override
+  public long getContextInfoDelay() {
+    return getConfig().getContextInfoDelay();
   }
 
   @Override

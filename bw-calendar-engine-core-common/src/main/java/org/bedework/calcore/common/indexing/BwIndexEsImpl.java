@@ -66,6 +66,7 @@ import org.bedework.convert.RecurUtil;
 import org.bedework.convert.RecurUtil.RecurPeriods;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.indexing.ContextInfo;
 import org.bedework.util.indexing.IndexException;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
@@ -1811,6 +1812,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
+  }
+
+  public List<ContextInfo> getContextInfo() {
+    return sch.getContextInfo();
   }
 
   @Override
