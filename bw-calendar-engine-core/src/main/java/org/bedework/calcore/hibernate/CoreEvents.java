@@ -995,21 +995,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         master = cei.getEvent();
       }
 
-      /* Fetch the instance so we can delete it
-      final BwRecurrenceInstance inst =
-              dao.getInstance(master,
-                              ev.getRecurrenceId());
-
-      if (inst == null) {
-        stat(StatsEvent.deleteTime, startTime);
-
-        return der;
-      }
-       */
-
       notifyDelete(true, ev, shared);
-
-      //dao.delete(inst);
 
       if (!ann.unsaved()) {
         //der.alarmsDeleted = deleteAlarms(ann);
@@ -1018,9 +1004,18 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         dao.delete(ann);
       }
 
+      final BwDateTime masterStart = master.getDtstart();
+      final String startTzid;
+      if (masterStart == null) {
+        startTzid = null;
+      } else {
+        startTzid = masterStart.getTzid();
+      }
+
       final BwDateTime instDate =
               BwDateTime.fromUTC(ev.getRecurrenceId().length() == 8,
-                                 ev.getRecurrenceId());
+                                 ev.getRecurrenceId(),
+                                 startTzid);
 
       if (!master.getRdates().remove(instDate)) {
         // Wasn't an rdate event
