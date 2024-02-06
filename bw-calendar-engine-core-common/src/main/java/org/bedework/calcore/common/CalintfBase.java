@@ -42,6 +42,7 @@ import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
+import org.bedework.calfacade.exc.CalFacadeClosed;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexFetcher;
 import org.bedework.calfacade.indexing.BwIndexer;
@@ -690,9 +691,9 @@ public abstract class CalintfBase implements Logged, Calintf {
    *                   Protected methods
    * ==================================================================== */
 
-  protected void checkOpen() throws CalFacadeException {
+  protected void checkOpen() {
     if (!killed && !isOpen) {
-      throw new CalFacadeException("Calintf call when closed");
+      throw new CalFacadeClosed();
     }
   }
 
