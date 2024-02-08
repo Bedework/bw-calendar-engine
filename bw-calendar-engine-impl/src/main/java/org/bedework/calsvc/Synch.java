@@ -325,13 +325,19 @@ class Synch extends CalSvcDb implements SynchI {
                                                    new SubscriptionStatusRequestType(),
                                                    sc.getSynchToken());
 
-    ssr.subscriptionStatus = getPort(synchConf.getManagerUri()).subscriptionStatus(
-            getIdToken(getPrincipal().getPrincipalRef(), sc),
-            ssreq);
-    if (ssr.subscriptionStatus.getStatus() == StatusType.NOT_FOUND) {
-      ssr.requestStatus = CheckSubscriptionResult.notsubscribed;
-    } else {
-      ssr.requestStatus = CheckSubscriptionResult.ok;
+    try {
+      ssr.subscriptionStatus = getPort(
+              synchConf.getManagerUri()).subscriptionStatus(
+              getIdToken(getPrincipal().getPrincipalRef(), sc),
+              ssreq);
+      if (ssr.subscriptionStatus.getStatus() == StatusType.NOT_FOUND) {
+        ssr.requestStatus = CheckSubscriptionResult.notsubscribed;
+      } else {
+        ssr.requestStatus = CheckSubscriptionResult.ok;
+      }
+    } catch (final Throwable t) {
+      error(t);
+      ssr.requestStatus = CheckSubscriptionResult.failed;
     }
 
     return ssr;
