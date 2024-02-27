@@ -86,40 +86,32 @@ class Preferences extends CalSvcDb implements PreferencesI {
       }
     }
 
-    try {
+    prefs = fetch();
+
+    if (prefs == null) {
+      // An uninitialised user?
+
+      if (getPrincipal().getUnauthenticated()) {
+        prefs = new BwPreferences();
+        return prefs;
+      }
+
+      getSvc().getUsersHandler().initPrincipal(getPrincipal());
+
       prefs = fetch();
-
-      if (prefs == null) {
-        // An uninitialised user?
-
-        if (getPrincipal().getUnauthenticated()) {
-          prefs = new BwPreferences();
-          return prefs;
-        }
-
-        getSvc().getUsersHandler().initPrincipal(getPrincipal());
-
-        prefs = fetch();
-      }
-
-      if (prefs == null) {
-        throw new RuntimeException(
-                "org.bedework.unable.to.initialise");
-      }
-
-      return prefs;
-    } catch (final CalFacadeException cfe) {
-      throw new RuntimeException(cfe);
     }
+
+    if (prefs == null) {
+      throw new CalFacadeException(
+              "org.bedework.unable.to.initialise");
+    }
+
+    return prefs;
   }
 
   @Override
-  public BwPreferences get(final BwPrincipal principal) {
-    try {
-      return fetch(principal);
-    } catch (final CalFacadeException cfe) {
-      throw new RuntimeException(cfe);
-    }
+  public BwPreferences get(final BwPrincipal<?> principal) {
+     return fetch(principal);
   }
 
   @Override
@@ -128,15 +120,12 @@ class Preferences extends CalSvcDb implements PreferencesI {
       // Fix the data
       val.setPublick(val.getOwnerHref().equals(BwPrincipal.publicUserHref));
     }
-    try {
-      getCal().saveOrUpdate(val);
-    } catch (final CalFacadeException cfe) {
-      throw new RuntimeException(cfe);
-    }
+
+    getCal().saveOrUpdate(val);
   }
 
   @Override
-  public void delete(final BwPreferences val) throws CalFacadeException {
+  public void delete(final BwPreferences val) {
     getCal().delete(val);
     getCal().getIndexer(docTypePreferences)
             .unindexEntity(val.getHref());
@@ -159,7 +148,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
                                final BwCalendar cal,
                                final Collection<BwCategory> cats,
                                final BwLocation loc,
-                               final BwContact ctct) throws CalFacadeException {
+                               final BwContact ctct) {
     BwCommonUserPrefs prefs = null;
     boolean update = false;
     BwAuthUser au = null;
@@ -233,7 +222,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
   }
 
   @Override
-  public String getAttachmentsPath() throws CalFacadeException {
+  public String getAttachmentsPath() {
     String path = get().getAttachmentsPath();
 
     if (path == null) {
@@ -265,9 +254,8 @@ class Preferences extends CalSvcDb implements PreferencesI {
   /** Fetch the preferences for the current user from the db
    *
    * @return the preferences for the current user
-   * @throws CalFacadeException on fatal error
    */
-  private BwPreferences fetch() throws CalFacadeException {
+  private BwPreferences fetch() {
     return fetch(getPrincipal());
   }
 
@@ -275,9 +263,8 @@ class Preferences extends CalSvcDb implements PreferencesI {
    *
    * @param principal owning the prefs
    * @return the preferences for the current user
-   * @throws CalFacadeException on fatal error
    */
-  private BwPreferences fetch(final BwPrincipal principal) throws CalFacadeException {
+  private BwPreferences fetch(final BwPrincipal<?> principal) {
     final BwPreferences prefs = getSvc().getPreferences(principal.getPrincipalRef());
 
     final BwPrincipalInfo pinfo = principal.getPrincipalInfo();
