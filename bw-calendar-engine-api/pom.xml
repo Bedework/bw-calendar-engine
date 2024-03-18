@@ -39,9 +39,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.bedework</groupId>
-      <artifactId>bw-xml-synchws</artifactId>
-      <scope>provided</scope>
+      <groupId>org.bedework.bw-synch</groupId>
+      <artifactId>bw-synch-ws-xml</artifactId>
     </dependency>
 
 		<!-- Third Party Dependencies -->
