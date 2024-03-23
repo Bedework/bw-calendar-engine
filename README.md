@@ -36,3 +36,7 @@ For full details, see [Sonatype's documentation for using Maven to publish relea
 
 ## Release Notes
 See [Release Notes](http://bedework.github.io/bedework/#release-notes) for the full release which covers the details.
+### 3.12.0
+Many changes up to this point. github log may be best reference.
+
+### 3.12.1
