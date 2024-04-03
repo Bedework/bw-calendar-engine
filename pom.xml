@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.bedework</groupId>
     <artifactId>bedework-parent</artifactId>
-    <version>50</version>
+    <version>56</version>
   </parent>
 
   <groupId>org.bedework.caleng</groupId>
@@ -17,16 +17,16 @@
 
   <modules>
     <module>bw-calendar-engine-api</module>
-    <module>bw-calendar-engine-core</module>
     <module>bw-calendar-engine-caldav</module>
-    <module>bw-calendar-engine-impl</module>
     <module>bw-calendar-engine-chgnote</module>
+    <module>bw-calendar-engine-core</module>
+    <module>bw-calendar-engine-core-common</module>
     <module>bw-calendar-engine-dumprestore</module>
+    <module>bw-calendar-engine-impl</module>
     <module>bw-calendar-engine-indexer</module>
     <module>bw-calendar-engine-inoutsched</module>
     <module>bw-calendar-engine-interfaces</module>
     <module>bw-calendar-engine-tools</module>
-    <module>bw-calendar-engine-core-common</module>
   </modules>
 
   <scm>
@@ -35,4 +35,72 @@
     <url>https://github.com/Bedework/bw-calendar-engine</url>
     <tag>HEAD</tag>
   </scm>
+
+  <dependencyManagement>
+    <!-- These dependencies ensure all transitive dependencies
+       during builds of this project resolve to project.version
+       and NOT the version set in bedework-parent
+    -->
+    <dependencies>
+      <dependency>
+        <groupId>org.bedework.caleng</groupId>
+        <artifactId>bw-calendar-engine-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bedework.caleng</groupId>
+        <artifactId>bw-calendar-engine-caldav</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bedework.caleng</groupId>
+        <artifactId>bw-calendar-engine-chgnote</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bedework.caleng</groupId>
+        <artifactId>bw-calendar-engine-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bedework.caleng</groupId>
+        <artifactId>bw-calendar-engine-core-common</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bedework.caleng</groupId>
+        <artifactId>bw-calendar-engine-dumprestore</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bedework.caleng</groupId>
+        <artifactId>bw-calendar-engine-impl</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bedework.caleng</groupId>
+        <artifactId>bw-calendar-engine-indexer</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bedework.caleng</groupId>
+        <artifactId>bw-calendar-engine-interfaces</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bedework.caleng</groupId>
+        <artifactId>bw-calendar-engine-tools</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 </project>
