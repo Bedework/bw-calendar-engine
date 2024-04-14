@@ -684,16 +684,31 @@ public class CalintfROImpl extends CalintfBase
       return gscr;
     }
 
+    final var thePath = Util.buildPath(colPathEndsWithSlash,
+                                       pathTo, "/", name);
     gscr.cal = getCollectionIdx(indexer,
-                                Util.buildPath(colPathEndsWithSlash,
-                                               pathTo, "/", name),
+                                thePath,
                                 access, false);
 
     if ((gscr.cal != null) || !create) {
       return gscr;
     }
 
-    throw new RuntimeException("Read only version");
+    // Return a fake one
+    gscr.cal = new BwCalendar();
+    gscr.cal.setName(name);
+    gscr.cal.setPath(thePath);
+    gscr.cal.setColPath(pathTo);
+    gscr.cal.setCreatorHref(owner.getPrincipalRef());
+    gscr.cal.setOwnerHref(owner.getPrincipalRef());
+    gscr.cal.setCalType(calType);
+
+    if (entityTypes != null) {
+      gscr.cal.setSupportedComponents(entityTypes);
+    }
+
+    return gscr;
+//    throw new RuntimeException("Read only version");
   }
 
   @Override
