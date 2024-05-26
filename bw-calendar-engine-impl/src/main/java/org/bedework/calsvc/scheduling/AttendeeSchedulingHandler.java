@@ -369,7 +369,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
   /** Set the poll response for the given voter in the output event
    * from the voting state in the incoming event. The output event
-   * should only have one VVOTER sub-component for this voter with
+   * should only have one PARTICIPANT sub-component for this voter with
    * its state set by the current voters state.
    *
    * @param outEi - destined for somebodies inbox
@@ -379,8 +379,8 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
    */
   private void setPollResponse(final EventInfo outEi,
                                final EventInfo ei,
-                               final String attUri) throws CalFacadeException {
-    /* This requires us to parse out the VVOTER components - find our voter
+                               final String attUri) {
+    /* This requires us to parse out the PARTICIPANT components - find our voter
        and add a poll item id property in the output.
 
        Note that this is implementing poll mode basic.
