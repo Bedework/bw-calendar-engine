@@ -252,6 +252,8 @@ public class ESQueryFilter extends ESQueryFilterBase
                   null);
     }
 
+    anded = and(anded, addTerm(PropertyInfoIndex.TOMBSTONED, "false"), null);
+
     return anded;
   }
 
