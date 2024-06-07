@@ -738,7 +738,8 @@ public class EntityBuilder extends EntityBuilderBase {
               pars = xval.substring(0, pos);
               val = xval.substring(pos + 1);
             } else {
-              val = xval;
+              // Strip leading /t
+              val = xval.substring(1);;
             }
 
             final BwXproperty xp = new BwXproperty(xpname, pars, val);
