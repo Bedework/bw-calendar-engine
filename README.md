@@ -7,7 +7,7 @@ This project provides most of the protocol support for the system.
 
 ## Requirements
 
-1. JDK 11
+1. JDK 17
 2. Maven 3
 
 ## Building Locally
