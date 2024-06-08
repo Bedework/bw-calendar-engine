@@ -61,7 +61,6 @@ import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.mail.MailerIntf;
-import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.BwView;
@@ -171,10 +170,6 @@ public class CalSvc
    * access currentUser is the group we are managing.
    */
 //  private BwUser currentAuthUser;
-
-  /* If we're doing admin this is the authorised user entry
-   */
-  BwAuthUser adminUser;
 
   /* ....................... Handlers ..................................... */
 
@@ -409,7 +404,7 @@ public class CalSvc
 
     /* This is wrong. The calsuite doesn't always represent the group
        It may be a sub-group.
-    final BwPrincipal user = getUsersHandler().getPrincipal(cs.getGroup().getOwnerHref());
+    final BwPrincipal<?> user = getUsersHandler().getPrincipal(cs.getGroup().getOwnerHref());
     user.setGroups(getDirectories().getAllGroups(user));
 
     if (!user.equals(principalInfo.getPrincipal())) {
@@ -640,8 +635,7 @@ public class CalSvc
 
   @Override
   public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) throws CalFacadeException {
-    if (val instanceof CalendarWrapper) {
-      final CalendarWrapper w = (CalendarWrapper)val;
+    if (val instanceof final CalendarWrapper w) {
       w.putEntity((BwCalendar)getCal().merge(w.fetchEntity()));
       return w;
     }
@@ -1077,12 +1071,12 @@ public class CalSvc
    * ==================================================================== */
 
   @Override
-  public BwPrincipal getPrincipal() {
+  public BwPrincipal<?> getPrincipal() {
     return principalInfo.getPrincipal();
   }
 
   @Override
-  public BwPrincipal getPrincipal(final String href) {
+  public BwPrincipal<?> getPrincipal(final String href) {
     try {
       return getCal().getPrincipal(href);
     } catch (final CalFacadeException cfe) {
@@ -1136,8 +1130,8 @@ public class CalSvc
    * ==================================================================== */
 
   @Override
-  public BwGroup findGroup(final String account,
-                           final boolean admin) throws CalFacadeException {
+  public BwGroup<?> findGroup(final String account,
+                              final boolean admin) {
     return getCal().findGroup(account, admin);
   }
 
@@ -1148,18 +1142,16 @@ public class CalSvc
   @Override
   public void changeAccess(ShareableEntity ent,
                            final Collection<Ace> aces,
-                           final boolean replaceAll) throws CalFacadeException {
+                           final boolean replaceAll) {
     if (ent instanceof BwCalSuiteWrapper) {
       ent = ((BwCalSuiteWrapper)ent).fetchEntity();
     }
     getCal().changeAccess(ent, aces, replaceAll);
 
-    if (ent instanceof BwCalendar) {
-      final BwCalendar col = (BwCalendar)ent;
-
+    if (ent instanceof final BwCalendar col) {
       if (col.getCalType() == BwCalendar.calTypeInbox) {
         // Same access as inbox
-        final BwCalendar pendingInbox = 
+        final BwCalendar pendingInbox =
                 getCalendarsHandler().getSpecial(BwCalendar.calTypePendingInbox,
                                                  true);
         if (pendingInbox == null) {
@@ -1236,7 +1228,7 @@ public class CalSvc
       }
     }
 
-    if ((resToken == null) || (resToken.length() == 0)) {
+    if ((resToken == null) || (resToken.isEmpty())) {
       resToken = Util.icalUTCTimestamp() + "-0000";
     }
 
@@ -1274,15 +1266,9 @@ public class CalSvc
     return getCal();
   }
 
-  /* We need to synchronize this code to prevent stale update exceptions.
-   * db locking might be better - this could still fail in a clustered
-   * environment for example.
-   */
-  private static volatile Object synchlock = new Object();
+  private static final Map<String, BwPrincipal<?>> authUsers = new HashMap<>();
 
-  private static final Map<String, BwPrincipal> authUsers = new HashMap<>();
-
-  private static final Map<String, BwPrincipal> unauthUsers = new HashMap<>();
+  private static final Map<String, BwPrincipal<?>> unauthUsers = new HashMap<>();
 
   /* Currently this gets a local calintf only. Later we need to use a par to
    * get calintf from a table.
@@ -1416,15 +1402,14 @@ public class CalSvc
                      System.currentTimeMillis() - start));
       }
 
-      //synchronized (synchlock) {
       final Users users = (Users)getUsersHandler();
 
       if (runAsUser == null) {
         runAsUser = authenticatedUser;
       }
 
-      BwPrincipal currentPrincipal;
-      final BwPrincipal authPrincipal;
+      BwPrincipal<?> currentPrincipal;
+      final BwPrincipal<?> authPrincipal;
       PrivilegeSet maxAllowedPrivs = null;
       boolean subscriptionsOnly = getSystemProperties()
               .getUserSubscriptionsOnly();
@@ -1594,10 +1579,10 @@ public class CalSvc
         }
 
         if (debug()) {
-          final Collection<BwGroup> groups =
+          final Collection<BwGroup<?>> groups =
                   currentPrincipal.getGroups();
           if (!Util.isEmpty(groups)) {
-            for (final BwGroup group: groups) {
+            for (final var group: groups) {
               debug("Group: " + group.getAccount());
             }
           }
@@ -1680,7 +1665,7 @@ public class CalSvc
     }
   }
 
-  void initPrincipal(final BwPrincipal p) throws CalFacadeException {
+  void initPrincipal(final BwPrincipal<?> p) throws CalFacadeException {
     getCal().addNewCalendars(p);
   }
 
@@ -1721,7 +1706,7 @@ public class CalSvc
    *
    * @return BwPrincipal
    */
-  BwPrincipal getEntityOwner() {
+  BwPrincipal<?> getEntityOwner() {
     if (isPublicAdmin() || pars.isGuest()) {
       return getUsersHandler().getPublicUser();
     }
@@ -1734,8 +1719,8 @@ public class CalSvc
    *
    * @param principal a principal object
    */
-  void pushPrincipal(final BwPrincipal principal) throws CalFacadeException {
-    BwPrincipal pr = getUsersHandler().getUser(principal.getPrincipalRef());
+  void pushPrincipal(final BwPrincipal<?> principal) throws CalFacadeException {
+    BwPrincipal<?> pr = getUsersHandler().getUser(principal.getPrincipalRef());
 
     if (pr == null) {
       pr = addUser(principal.getPrincipalRef());
@@ -1751,7 +1736,7 @@ public class CalSvc
    * @param principalHref a principal href
    */
   void pushPrincipalOrFail(final String principalHref) {
-    final BwPrincipal pr =
+    final BwPrincipal<?> pr =
             getDirectories()
                     .caladdrToPrincipal(principalHref);
 
@@ -1773,7 +1758,7 @@ public class CalSvc
     getCal().principalChanged();
   }
 
-  BwPrincipal getFakeUser(final String account) throws CalFacadeException {
+  BwPrincipal<?> getFakeUser(final String account) {
     final Users users = (Users)getUsersHandler();
 
     /* Run this in a separate transaction to ensure we don't fail if the user
@@ -1787,7 +1772,7 @@ public class CalSvc
   /* Create the user. Get a new CalSvc object for that purpose.
    *
    */
-  BwPrincipal addUser(final String val) throws CalFacadeException {
+  BwPrincipal<?> addUser(final String val) {
     final Users users = (Users)getUsersHandler();
 
     /* Run this in a separate transaction to ensure we don't fail if the user
@@ -1824,7 +1809,7 @@ public class CalSvc
       throw new CalFacadeException(t);
     }
 
-    final BwPrincipal principal = users.getUser(val);
+    final var principal = users.getUser(val);
 
     if (principal == null) {
       return null;
@@ -1876,12 +1861,12 @@ public class CalSvc
     }
 
     @Override
-    public BwPrincipal getPrincipal() {
+    public BwPrincipal<?> getPrincipal() {
       return CalSvc.this.getPrincipal();
     }
 
     @Override
-    public BwPrincipal getOwner() {
+    public BwPrincipal<?> getOwner() {
       if (isPublicAdmin()) {
         return getUsersHandler().getPublicUser();
       }
@@ -1994,7 +1979,7 @@ public class CalSvc
                                final String vpath,
                                final String tokenPar,
                                final Set<SynchReportItem> items,
-                               final boolean recurse) throws CalFacadeException {
+                               final boolean recurse) {
     final Events eventsH = (Events)getEventsHandler();
     final ResourcesImpl resourcesH = (ResourcesImpl)getResourcesHandler();
     final Calendars colsH = (Calendars)getCalendarsHandler();
@@ -2205,7 +2190,7 @@ public class CalSvc
       }
 
       if (privKeys == null) {
-        throw new RuntimeException(
+        throw new CalFacadeException(
                 "Unable to get keyfile locations. Is genkeys service installed?");
       }
 
@@ -2213,8 +2198,8 @@ public class CalSvc
 
       return pwEncrypt;
     } catch (final Throwable t) {
-      t.printStackTrace();
-      throw new RuntimeException(t);
+      error(t);
+      throw new CalFacadeException(t);
     }
   }
 
