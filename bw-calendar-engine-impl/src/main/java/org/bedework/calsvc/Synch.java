@@ -33,6 +33,8 @@ import org.bedework.synch.wsmessages.ArrayOfSynchProperties;
 import org.bedework.synch.wsmessages.ConnectorInfoType;
 import org.bedework.synch.wsmessages.GetInfoRequestType;
 import org.bedework.synch.wsmessages.GetInfoResponseType;
+import org.bedework.synch.wsmessages.RefreshRequestType;
+import org.bedework.synch.wsmessages.RefreshResponseType;
 import org.bedework.synch.wsmessages.SubscribeRequestType;
 import org.bedework.synch.wsmessages.SubscribeResponseType;
 import org.bedework.synch.wsmessages.SubscriptionStatusRequestType;
@@ -46,13 +48,20 @@ import org.bedework.synch.wsmessages.SynchRemoteServicePortType;
 import org.bedework.synch.wsmessages.UnsubscribeRequestType;
 import org.bedework.synch.wsmessages.UnsubscribeResponseType;
 import org.bedework.util.jmx.MBeanUtil;
+import org.bedework.util.misc.response.Response;
 
+import org.oasis_open.docs.ws_calendar.ns.soap.BaseResponseType;
 import org.oasis_open.docs.ws_calendar.ns.soap.StatusType;
 
 import java.net.URL;
 
 import javax.xml.namespace.QName;
 import javax.xml.ws.BindingProvider;
+
+import static org.bedework.util.misc.response.Response.Status.failed;
+import static org.bedework.util.misc.response.Response.Status.noAccess;
+import static org.bedework.util.misc.response.Response.Status.notFound;
+import static org.bedework.util.misc.response.Response.Status.ok;
 
 /** Handles interactions with the synch engine from within bedework.
  *
@@ -95,7 +104,7 @@ class Synch extends CalSvcDb implements SynchI {
   }
 
   @Override
-  public boolean getActive() throws CalFacadeException {
+  public boolean getActive() {
     return getSynchConnection() != null;
   }
 
@@ -108,7 +117,7 @@ class Synch extends CalSvcDb implements SynchI {
   }
 
   @Override
-  public Connection getSynchConnection() throws CalFacadeException {
+  public Connection getSynchConnection() {
     try {
       return new SConnection(getActiveSynchConnections().
                                  getConnectionById(synchConf.getConnectorId()));
@@ -123,7 +132,7 @@ class Synch extends CalSvcDb implements SynchI {
   }
 
   @Override
-  public boolean subscribe(final BwCalendar val) throws CalFacadeException {
+  public boolean subscribe(final BwCalendar val) {
     final SConnection sconn = (SConnection)getSynchConnection();
 
     if ((sconn == null) || (sconn.sc == null)) {
@@ -258,7 +267,7 @@ class Synch extends CalSvcDb implements SynchI {
 
   @Override
   public boolean unsubscribe(final BwCalendar val,
-                             final boolean forDelete) throws CalFacadeException {
+                             final boolean forDelete) {
     if (val.getSubscriptionId() == null) {
       return true; // just noop it
     }
@@ -293,7 +302,38 @@ class Synch extends CalSvcDb implements SynchI {
   }
 
   @Override
-  public SynchStatusResponse getSynchStatus(final BwCalendar val) throws CalFacadeException {
+  public Response refresh(final BwCalendar val) {
+    if (val.getSubscriptionId() == null) {
+      return Response.ok(); // just noop it
+    }
+
+    final SConnection sconn = (SConnection)getSynchConnection();
+    final Response resp = new Response();
+
+    if ((sconn == null) || (sconn.sc == null)) {
+      return Response.error(resp, "No active synch connection");
+    }
+
+    final SynchConnection sc = sconn.sc;
+
+    final RefreshRequestType syncreq =
+            (RefreshRequestType)makeAsr(val,
+                                        new RefreshRequestType(),
+                                        sc.getSynchToken());
+
+    final RefreshResponseType syncresp =
+            getPort(synchConf.getManagerUri()).refresh(
+                    getIdToken(getPrincipal().getPrincipalRef(), sc),
+                    syncreq);
+    if (syncresp.getStatus() != StatusType.OK) {
+      return fromSynchResponse(resp, syncresp);
+    }
+
+    return resp;
+  }
+
+  @Override
+  public SynchStatusResponse getSynchStatus(final BwCalendar val) {
     final SynchStatusResponse ssr = new SynchStatusResponse();
 
     if (val == null) {
@@ -344,7 +384,7 @@ class Synch extends CalSvcDb implements SynchI {
   }
 
   @Override
-  public CheckSubscriptionResult checkSubscription(final BwCalendar val) throws CalFacadeException {
+  public CheckSubscriptionResult checkSubscription(final BwCalendar val) {
     final SynchStatusResponse ssr = getSynchStatus(val);
 
     if (ssr.requestStatus == CheckSubscriptionResult.notsubscribed) {
@@ -370,7 +410,7 @@ class Synch extends CalSvcDb implements SynchI {
   }
 
   @Override
-  public BwSynchInfo getSynchInfo() throws CalFacadeException {
+  public BwSynchInfo getSynchInfo() {
     if ((synchInfo != null) &&
         ((System.currentTimeMillis() - lastSynchInfoRefresh) < synchInfoRefreshPeriod)) {
       return synchInfo;
@@ -413,7 +453,7 @@ class Synch extends CalSvcDb implements SynchI {
    *                   private methods
    * ==================================================================== */
 
-  private SynchConnectionsMBean getActiveSynchConnections() throws CalFacadeException {
+  private SynchConnectionsMBean getActiveSynchConnections() {
     try {
       if (conns == null) {
         conns = (SynchConnectionsMBean)MBeanUtil.
@@ -429,7 +469,7 @@ class Synch extends CalSvcDb implements SynchI {
 
   private ActiveSubscriptionRequestType makeAsr(final BwCalendar val,
                                                 final ActiveSubscriptionRequestType asr,
-                                                final String synchToken) throws CalFacadeException {
+                                                final String synchToken) {
     if (val.getSubscriptionId() == null) {
       return null; // not active
     }
@@ -445,7 +485,7 @@ class Synch extends CalSvcDb implements SynchI {
     return asr;
   }
 
-  private ConnectorInfoType makeCi(final BwCalendar val) throws CalFacadeException {
+  private ConnectorInfoType makeCi(final BwCalendar val) {
     final ConnectorInfoType ci = new ConnectorInfoType();
 
     ci.setConnectorId(synchConf.getConnectorId());
@@ -471,12 +511,12 @@ class Synch extends CalSvcDb implements SynchI {
     return sp;
   }
 
-//  private String getSynchUri() throws CalFacadeException {
+//  private String getSynchUri() {
     //return (String)getGlobalProperty(synchManagerUriPname);
   //}
 
   SynchIdTokenType getIdToken(final String principal,
-                              final SynchConnection sc) throws CalFacadeException {
+                              final SynchConnection sc) {
     final SynchIdTokenType idToken = new SynchIdTokenType();
 
     idToken.setPrincipalHref(principal);
@@ -486,7 +526,7 @@ class Synch extends CalSvcDb implements SynchI {
     return idToken;
   }
 
-  private String makeOpaqueData(final BwCalendar col) throws CalFacadeException {
+  private String makeOpaqueData(final BwCalendar col) {
     final BwCalSuite cs = getSvc().getCalSuitesHandler().get();
     final String csname;
     if (cs != null) {
@@ -504,7 +544,7 @@ class Synch extends CalSvcDb implements SynchI {
     return s;
   }
 
-  SynchRemoteServicePortType getPort(final String uri) throws CalFacadeException {
+  SynchRemoteServicePortType getPort(final String uri) {
     try {
       final URL wsURL = new URL(synchConf.getWsdlUri());
 
@@ -520,5 +560,32 @@ class Synch extends CalSvcDb implements SynchI {
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
+  }
+
+  private Response fromSynchResponse(final Response resp,
+                                     final BaseResponseType respType) {
+    switch (respType.getStatus()) {
+      case OK -> {
+        resp.setStatus(ok);
+      }
+      case NOT_FOUND -> {
+        resp.setStatus(notFound);
+      }
+      case NO_ACCESS -> {
+        resp.setStatus(noAccess);
+      }
+      default -> {
+        resp.setStatus(failed);
+      }
+    }
+
+    String desc = null;
+    if (respType.getErrorResponse() != null) {
+      desc = respType.getErrorResponse().getDescription();
+    }
+    resp.setMessage(String.format("message: %s, description: %s",
+                                  respType.getMessage(), desc));
+
+    return resp;
   }
 }

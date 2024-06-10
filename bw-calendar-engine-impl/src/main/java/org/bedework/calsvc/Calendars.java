@@ -45,6 +45,7 @@ import org.bedework.calsvci.SynchI;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;
 import org.bedework.util.misc.response.GetEntityResponse;
+import org.bedework.util.misc.response.Response;
 import org.bedework.util.timezones.DateTimeUtil;
 import org.bedework.util.xml.tagdefs.AppleServerTags;
 
@@ -714,6 +715,11 @@ class Calendars extends CalSvcDb implements CalendarsI {
   public CheckSubscriptionResult checkSubscription(final String path)
           throws CalFacadeException {
     return getSvc().getSynch().checkSubscription(get(path));
+  }
+
+  @Override
+  public Response refreshSubscription(final BwCalendar val) {
+    return getSvc().getSynch().refresh(val);
   }
 
   @Override

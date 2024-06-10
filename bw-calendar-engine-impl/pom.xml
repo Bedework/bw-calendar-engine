@@ -91,6 +91,10 @@
       <artifactId>bw-util2-calendar</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.bedework.bw-synch</groupId>
+      <artifactId>bw-synch-ws-xml</artifactId>
+    </dependency>
 
     <!-- Third Party Libraries -->
     <dependency>
