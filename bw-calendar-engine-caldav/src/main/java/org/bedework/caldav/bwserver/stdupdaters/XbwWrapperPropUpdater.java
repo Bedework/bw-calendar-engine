@@ -60,8 +60,8 @@ public class XbwWrapperPropUpdater implements PropertyUpdater {
     }
 
     if (ui.isAdd()) {
-      ev.addXproperty(theProp);
-      cte.addValue(theProp);
+//      ev.addXproperty(theProp);
+      cte.addAddedValue(theProp);
 
       return UpdateResult.getOkResult();
     }
