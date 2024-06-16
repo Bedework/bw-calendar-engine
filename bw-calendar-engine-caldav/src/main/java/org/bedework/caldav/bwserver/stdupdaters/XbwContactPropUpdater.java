@@ -161,7 +161,7 @@ public class XbwContactPropUpdater implements PropertyUpdater {
                                final String val) throws CalFacadeException {
     final BwString sval = new BwString(lang, val);
 
-    var resp = ui.getIcalCallback().findContact(sval);
+    final var resp = ui.getIcalCallback().findContact(sval);
 
     if (resp.getStatus() == Response.Status.notFound) {
       return false;
@@ -180,7 +180,7 @@ public class XbwContactPropUpdater implements PropertyUpdater {
       }
     }
 
-    var contact = resp.getEntity();
+    final var contact = resp.getEntity();
 
     ev.addContact(contact);
 
