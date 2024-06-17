@@ -715,17 +715,13 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
             continue;
           }
 
-          if (entity instanceof BwShareableDbentity) {
-            final BwShareableDbentity<?> ent =
-                    (BwShareableDbentity<?>)entity;
-
+          if (entity instanceof final BwShareableDbentity<?> ent) {
             principalHref = ent.getOwnerHref();
           }
 
-          if (entity instanceof EventInfo) {
+          if (entity instanceof final EventInfo ei) {
             // This might be a single event or a recurring event.
 
-            final EventInfo ei = (EventInfo)entity;
             final BwEvent ev = ei.getEvent();
             if (ev.getRecurring()) {
               resp.incRecurring();
@@ -857,12 +853,9 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
             final BwEvent ev = entity.getEvent();
 
-            if (ev instanceof BwEventAnnotation) {
-              final BwEventAnnotation ann = (BwEventAnnotation)ev;
-
-              if (ann.testOverride()) {
-                resp.incOverrides();
-              }
+            if ((ev instanceof final BwEventAnnotation ann) &&
+                    (ann.testOverride())) {
+              resp.incOverrides();
             }
 
             if (ev.isRecurringEntity()) {
@@ -991,7 +984,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                     " found: " + resp.getHits().getTotalHits());
     }
 
-    res.setFound(resp.getHits().getTotalHits().value);
+    final var th = resp.getHits().getTotalHits();
+    if (th != null) {
+      res.setFound(th.value);
+    }
 
     return res;
   }
@@ -1127,6 +1123,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
             entity = makeEvent(eb, evrestResp, kval,
                                res.recurRetrieval.mode == Rmode.expanded);
             final EventInfo ei = (EventInfo)entity;
+            assert ei != null;
             final BwEvent ev = ei.getEvent();
 
             if (evrestResp.getStatus() != ok) {
@@ -1351,10 +1348,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
           final EventInfo entity;
           if (docTypeEvent.equals(docType)) {
             entity = makeEvent(eb, resp, kval, false);
+            assert entity != null;
             final BwEvent oev = entity.getEvent();
 
-            if (oev instanceof BwEventAnnotation) {
-              final BwEventAnnotation ann = (BwEventAnnotation)oev;
+            if (oev instanceof final BwEventAnnotation ann) {
               final BwEvent proxy = new BwEventProxy(ann);
               ann.setTarget(ev);
               ann.setMaster(ev);
@@ -2261,7 +2258,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       resp.setEntities(fetchEntities(docTypePrincipal,
                                      new BuildEntity<>() {
                                        @Override
-                                       BwGroup make(final EntityBuilder eb,
+                                       BwGroup<?> make(final EntityBuilder eb,
                                                     final String id) {
                                          return (BwGroup<?>)eb.makePrincipal();
                                        }
@@ -2323,20 +2320,16 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     caches.put(entity);
 
-    if (entity instanceof BwCalSuite) {
-      final BwCalSuite cs = (BwCalSuite)entity;
-
+    if (entity instanceof final BwCalSuite cs) {
       if (cs.getGroupHref() != null) {
         cs.setGroup((BwAdminGroup)fetchPrincipal(cs.getGroupHref()));
       }
       return entity;
     }
 
-    if (!(entity instanceof BwGroup)) {
+    if (!(entity instanceof final BwGroup<?> grp)) {
       return entity;
     }
-
-    final BwGroup<?> grp = (BwGroup<?>)entity;
 
     // Get all member entities
     if (Util.isEmpty(grp.getMemberHrefs())) {
@@ -2370,8 +2363,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       resp.setEntities(fetchEntities(docTypePrincipal,
                                      new BuildEntity<>() {
                                        @Override
-                                       BwGroup make(final EntityBuilder eb,
-                                                    final String id) {
+                                       BwGroup<?> make(final EntityBuilder eb,
+                                                       final String id) {
                                          return (BwGroup<?>)eb.makePrincipal();
                                        }
                                      },
@@ -2883,7 +2876,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     final SearchResponse resp;
     try {
-      resp = getClient().search(req, RequestOptions.DEFAULT);
+      resp = cl.search(req, RequestOptions.DEFAULT);
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -3366,9 +3359,9 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         di = db.makeDoc((BwLocation)rec);
       }
 
-      if (rec instanceof BwPrincipal) {
+      if (rec instanceof final BwPrincipal<?> pr) {
         mustBe(docTypePrincipal);
-        di = db.makeDoc((BwPrincipal)rec);
+        di = db.makeDoc(pr);
       }
 
       if (rec instanceof BwPreferences) {
@@ -3684,8 +3677,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     final var path = ei.getEvent().getColPath();
     final var uid = ei.getEvent().getUid();
-
-    final ESQueryFilter esq = getFilters(null);
 
     final QueryBuilder qb = getFilters(null)
             .allInstances(path, uid);
@@ -4038,27 +4029,15 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     try {
       final EntityBuilder eb = getEntityBuilder(hit.getSourceAsMap());
 
-      Object entity = null;
-      switch (docType) {
-        case docTypeCollection:
-          entity = makeCollection(eb);
-          break;
-        case docTypeCategory:
-          entity = eb.makeCat();
-          break;
-        case docTypeContact:
-          entity = eb.makeContact();
-          break;
-        case docTypeLocation:
-          entity = eb.makeLocation();
-          break;
-        case docTypeEvent:
-          entity = makeEvent(eb, resp, kval,
-                             (rrm != null) && (rrm.mode == Rmode.expanded));
-          break;
-      }
-      
-      return entity;
+      return switch (docType) {
+        case docTypeCollection -> makeCollection(eb);
+        case docTypeCategory -> eb.makeCat();
+        case docTypeContact -> eb.makeContact();
+        case docTypeLocation -> eb.makeLocation();
+        case docTypeEvent -> makeEvent(eb, resp, kval,
+                                       (rrm != null) && (rrm.mode == Rmode.expanded));
+        default -> null;
+      };
     } catch (final CalFacadeException cfe) {
       errorReturn(resp, cfe);
       return null;

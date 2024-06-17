@@ -311,7 +311,7 @@ public class ESQueryFilter extends ESQueryFilterBase
 
      */
 
-      QueryBuilder lmeq =
+      final QueryBuilder lmeq =
               and(termQuery(lastModJname, lastmod),
                   new RangeQueryBuilder(lastModSeqJname)
                           .gt(lastmodSeq),
@@ -618,7 +618,7 @@ public class ESQueryFilter extends ESQueryFilterBase
       }
     }
 
-    QueryBuilder recurQb;
+    final QueryBuilder recurQb;
 
     if (forEvents) {
       recurQb = recurTerms();
@@ -660,12 +660,12 @@ public class ESQueryFilter extends ESQueryFilterBase
 
   final QueryBuilder allInstances(final String path,
                                   final String uid) {
-    QueryBuilder qb = addTerm(PropertyInfoIndex.UID, uid);
+    final QueryBuilder qb = addTerm(PropertyInfoIndex.UID, uid);
     return and(qb, addTerm(PropertyInfoIndex.COLPATH, path), null);
   }
 
   final QueryBuilder overridesOnly(final String uid) {
-    QueryBuilder qb = addTerm(PropertyInfoIndex.UID, uid);
+    final QueryBuilder qb = addTerm(PropertyInfoIndex.UID, uid);
     return and(qb, addTerm(PropertyInfoIndex.OVERRIDE, "true"), null);
   }
   
@@ -719,7 +719,6 @@ public class ESQueryFilter extends ESQueryFilterBase
   }
   
   public QueryBuilder getAllForReindex(final String docType) {
-    QueryBuilder limit;
     if (docType.equals(docTypeEvent)) {
       return addTerm(PropertyInfoIndex.MASTER, "true");
     }
@@ -998,8 +997,8 @@ public class ESQueryFilter extends ESQueryFilterBase
             final String[] vals;
 
             try {
-              final Collection valsC = (Collection)val;
-              vals = (String[]) (valsC).toArray(new String[valsC.size()]);
+              final Collection<?> valsC = (Collection<?>)val;
+              vals = valsC.toArray(new String[valsC.size()]);
             } catch (final Throwable t) {
               throw new CalFacadeException(CalFacadeException.filterBadOperator,
                                            "Invalid query. Multi match only allowed on strings");
@@ -1044,8 +1043,8 @@ public class ESQueryFilter extends ESQueryFilterBase
           break;
         }
 
-        if(val instanceof Collection) {
-          qb = new TermsQueryBuilder(path, (Collection)val);
+        if(val instanceof Collection<?>) {
+          qb = new TermsQueryBuilder(path, (Collection<?>)val);
         } else {
           qb = new TermQueryBuilder(path, val);
         }
@@ -1142,7 +1141,7 @@ public class ESQueryFilter extends ESQueryFilterBase
       return q;
     }
 
-    OrQB ofb = new OrQB(q);
+    final OrQB ofb = new OrQB(q);
 
     ofb.add(newQ);
 
@@ -1153,7 +1152,7 @@ public class ESQueryFilter extends ESQueryFilterBase
     final BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
 
     if (ipie == null) {
-      return null;
+      throw new CalFacadeException("Missing property info for " + pi);
     }
 
     return ipie.getJname();
@@ -1244,8 +1243,7 @@ public class ESQueryFilter extends ESQueryFilterBase
       return null;
     }
 
-    if (f instanceof BooleanFilter) {
-      final BooleanFilter bf = (BooleanFilter)f;
+    if (f instanceof final BooleanFilter bf) {
       if (!bf.getValue()) {
         return new MatchNoneQueryBuilder();
       } else {
@@ -1304,24 +1302,18 @@ public class ESQueryFilter extends ESQueryFilterBase
                                      ((BwHrefFilter)f).getHref());
     }
 
-    if (!(f instanceof PropertyFilter)) {
+    if (!(f instanceof final PropertyFilter pf)) {
       return null;
     }
 
-    final PropertyFilter pf = (PropertyFilter)f;
-
-    if (pf instanceof EntityTypeFilter) {
-      final EntityTypeFilter etf = (EntityTypeFilter)pf;
-
+    if (pf instanceof final EntityTypeFilter etf) {
       //return new MatchAllQueryBuilder();
       return new TermOrTermsQuery(entityTypeJname,
                                   IcalDefs.entityTypeNames[etf.getEntity()],
                                   pf.getNot());
     }
 
-    if (f instanceof PresenceFilter) {
-      final PresenceFilter prf = (PresenceFilter)f;
-
+    if (f instanceof final PresenceFilter prf) {
       if (prf.getTestPresent()) {
         return makeQuery(pf.getPropertyIndex(),
                          makePropertyRef(pf.getPropertyIndexes(), null),
@@ -1357,9 +1349,7 @@ public class ESQueryFilter extends ESQueryFilterBase
                              f.getName());
     }
 
-    if (pf instanceof EntityTimeRangeFilter) {
-      final EntityTimeRangeFilter etrf = (EntityTimeRangeFilter)pf;
-
+    if (pf instanceof final EntityTimeRangeFilter etrf) {
       final TimeRange tr = etrf.getEntity();
       String start = null;
       String end = null;
@@ -1382,8 +1372,7 @@ public class ESQueryFilter extends ESQueryFilterBase
       }
     }
 
-    if (pf instanceof ObjectFilter) {
-      final var of = (ObjectFilter<?>)pf;
+    if (pf instanceof final ObjectFilter<?> of) {
       final BwIcalPropertyInfoEntry bwPie = BwIcalPropertyInfo.getPinfo(pf.getPropertyIndex());
 
       final String fullTermsPath;
@@ -1434,11 +1423,10 @@ public class ESQueryFilter extends ESQueryFilterBase
         }
 
         lastQb = (TermOrTermsQuery) qb;
-      } else if (!(qb instanceof TermOrTermsQuery)) {
+      } else if (!(qb instanceof final TermOrTermsQuery thisQb)) {
         qbs.add(qb);
       } else {
-                /* Can we combine them? */
-        final TermOrTermsQuery thisQb = (TermOrTermsQuery)qb;
+        /* Can we combine them? */
 
         if (thisQb.dontMerge ||
                 !lastQb.fldName.equals(thisQb.fldName) ||
@@ -1449,7 +1437,7 @@ public class ESQueryFilter extends ESQueryFilterBase
           lastQb = lastQb.anding(anding);
 
           if (thisQb.isTerms) {
-            for (final Object o: (Collection)thisQb.value) {
+            for (final Object o: (Collection<?>)thisQb.value) {
               lastQb.addValue(o);
             }
           } else {
@@ -1466,29 +1454,29 @@ public class ESQueryFilter extends ESQueryFilterBase
     return qbs;
   }
 
-  private Object getValue(final ObjectFilter of) throws CalFacadeException {
+  private Object getValue(final ObjectFilter<?> of) throws CalFacadeException {
     Object o = of.getEntity();
-    Collection c = null;
+    Collection<?> c = null;
 
     boolean isString = o instanceof String;
 
     if (!isString) {
-      if (o instanceof Collection) {
-        c = (Collection)o;
-        if (c.size() > 0) {
+      if (o instanceof Collection<?>) {
+        c = (Collection<?>)o;
+        if (!c.isEmpty()) {
           o = c.iterator().next();
           isString = o instanceof String;
         }
       }
     }
 
-    boolean doCaseless = isString && of.getCaseless();
+    final boolean doCaseless = isString && of.getCaseless();
 
     if (c != null) {
       // TODO - Assuming String collection
-      List res = new ArrayList();
+      final var res = new ArrayList<String>();
 
-      for (Object co: c) {
+      for (final Object co: c) {
         String s = (String)co;
         if (doCaseless) {
           s = s.toLowerCase();
@@ -1500,13 +1488,12 @@ public class ESQueryFilter extends ESQueryFilterBase
       return res;
     }
 
-    if (o instanceof BwCalendar) {
-      BwCalendar cal = (BwCalendar)o;
+    if (o instanceof final BwCalendar cal) {
       return cal.getPath();
     }
 
     if (o instanceof BwPrincipal) {
-      return ((BwPrincipal)o).getPrincipalRef();
+      return ((BwPrincipal<?>)o).getPrincipalRef();
     }
 
     if (o instanceof BwDbentity) {
@@ -1544,7 +1531,7 @@ public class ESQueryFilter extends ESQueryFilterBase
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {
