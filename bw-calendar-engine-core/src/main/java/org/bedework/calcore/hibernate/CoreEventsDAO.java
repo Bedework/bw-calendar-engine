@@ -47,20 +47,6 @@ public class CoreEventsDAO extends DAOBase {
     return CoreEventsDAO.class.getName();
   }
 
-  /*
-  protected void update(final BwRecurrenceInstance val) throws CalFacadeException {
-    getSess().update(val);
-  }
-
-  protected void save(final BwRecurrenceInstance val) throws CalFacadeException {
-    getSess().save(val);
-  }
-
-  protected void delete(final BwRecurrenceInstance val) throws CalFacadeException {
-    getSess().delete(val);
-  }
-   */
-  
   private static final String eventsByNameQuery =
     "from " + BwEventObj.class.getName() + " as ev " +
       "where ev.name = :name and ev.tombstoned=false and ev.colPath = :colPath";
@@ -95,53 +81,6 @@ public class CoreEventsDAO extends DAOBase {
 
     return (BwEventAnnotation)sess.getUnique();
   }
-
-  /*
-  private static final String recurrenceInstanceQuery =
-          "from " + BwRecurrenceInstance.class.getName() + " as ev " +
-                  "where master=:master and " +
-                  "recurrenceId=:rid";
-
-  protected BwRecurrenceInstance getInstance(final BwEvent ev,
-                                             final String rid)
-          throws CalFacadeException {
-    final HibSession sess = getSess();
-
-    sess.createQuery(recurrenceInstanceQuery);
-    sess.setEntity("master", ev);
-    sess.setString("rid", rid);
-
-    return (BwRecurrenceInstance)sess.getUnique();
-  }
-
-  private static final String instancesQuery =
-          "from " + BwRecurrenceInstance.class.getName() + " as ev " +
-                  "where master=:master";
-
-  protected List<BwRecurrenceInstance> getInstances(final BwEvent ev)
-          throws CalFacadeException {
-    final HibSession sess = getSess();
-
-    sess.createQuery(instancesQuery);
-    sess.setEntity("master", ev);
-
-    return (List<BwRecurrenceInstance>)sess.getList();
-  }
-
-  private static final String deleteInstancesQuery =
-          "delete from " + BwRecurrenceInstance.class.getName() + " as ev " +
-                  "where master=:master";
-
-  protected void deleteInstances(final BwEvent ev)
-          throws CalFacadeException {
-    final HibSession sess = getSess();
-
-    sess.createQuery(deleteInstancesQuery);
-    sess.setEntity("master", ev);
-
-    sess.executeUpdate();
-  }
-   */
 
   /* TODO - we get deadlocks (at least with mysql) when
      we try to do this. For the moment move them to a purged
@@ -295,9 +234,7 @@ public class CoreEventsDAO extends DAOBase {
 
     if (!adding) {
       if (annotation) {
-        if (val instanceof BwEventProxy) {
-          final BwEventProxy proxy = (BwEventProxy)val;
-
+        if (val instanceof final BwEventProxy proxy) {
           testEvent = proxy.getRef();
         }
         sb.append("ev.override=false and ");
@@ -343,7 +280,7 @@ public class CoreEventsDAO extends DAOBase {
 
     String res = null;
 
-    if (refs.size() != 0) {
+    if (!refs.isEmpty()) {
       res = (String)refs.iterator().next();
     }
 
@@ -375,8 +312,7 @@ public class CoreEventsDAO extends DAOBase {
 
     if (!adding) {
       if (annotation) {
-        if (val instanceof BwEventProxy) {
-          final BwEventProxy proxy = (BwEventProxy)val;
+        if (val instanceof final BwEventProxy proxy) {
           testEvent = proxy.getRef();
         }
         sb.append("ev.override=false and ");
@@ -411,8 +347,7 @@ public class CoreEventsDAO extends DAOBase {
     final boolean res;
 
     /* Apparently some get a Long - others get Integer */
-    if (o instanceof Long) {
-      final Long ct = (Long)o;
+    if (o instanceof final Long ct) {
       res = ct > 0;
     } else {
       final Integer ct = (Integer)o;
@@ -427,20 +362,17 @@ public class CoreEventsDAO extends DAOBase {
                   " where target=:target";
 
   @SuppressWarnings("unchecked")
-  protected Collection<BwEventAnnotation> getAnnotations(final BwEvent val,
-                                    final boolean overrides) throws CalFacadeException {
+  protected Collection<BwEventAnnotation> getAnnotations(final BwEvent val) {
     final HibSession sess = getSess();
 
     sess.createQuery(getAnnotationsQuery);
     sess.setEntity("target", val);
-  //  sess.setBool("override", overrides);
 
     final Collection<BwEventAnnotation> anns =
             (Collection<BwEventAnnotation>)sess.getList();
 
     if (debug()) {
       debug("getAnnotations for event " + val.getId() +
-               " overrides=" + overrides +
                " returns " + anns.size());
     }
 
