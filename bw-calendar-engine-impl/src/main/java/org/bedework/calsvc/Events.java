@@ -479,6 +479,12 @@ class Events extends CalSvcDb implements EventsI {
         throw new RuntimeException("No calendar for event");
       }
 
+      if (!cal.getSupportedComponents().contains(
+              IcalDefs.entityTypeIcalNames[event.getEntityType()])) {
+        return notOk(updResult, noAccess,
+                     "Invalid component type for this collection");
+      }
+
       final BwEventProxy proxy;
       final BwEvent override;
 
