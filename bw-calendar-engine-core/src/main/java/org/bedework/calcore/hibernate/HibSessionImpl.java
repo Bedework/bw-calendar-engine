@@ -70,9 +70,11 @@ public class HibSessionImpl implements Logged, HibSession {
           new SimpleDateFormat("yyyy-MM-dd");
 
   @Override
-  public void init(final SessionFactory sessFactory) throws CalFacadeException {
+  public void init(final SessionFactory sessFactory) {
     try {
-      sess = sessFactory.openSession();
+      sess = sessFactory.withOptions()
+                        .interceptor(new HibernateInterceptor())
+                        .openSession();
       rolledBack = false;
       //sess.setFlushMode(FlushMode.COMMIT);
 //      tx = sess.beginTransaction();

@@ -699,11 +699,12 @@ public class InRequest extends InProcessor {
         ourEv.setPollWinner(pw);
       }
 
-      ourEv.clearVoters();
+      final var ourParts = ourEv.getParticipants();
+      ourParts.clearParticipants();
 
-      for (final String s: inEv.getVoters()) {
-        ourEv.addVoter(s);
-        chg.addValue(PropertyInfoIndex.VOTER, s);
+      for (final var p: inEv.getParticipants().getParticipants()) {
+        ourParts.addParticipant(p);
+        chg.addValue(PropertyInfoIndex.PARTICIPANT, p);
       }
 
       if (!statusUpdate) {

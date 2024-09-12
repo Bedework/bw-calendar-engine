@@ -24,20 +24,18 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwOrganizer;
+import org.bedework.calfacade.BwParticipant;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.SchedulingInfo;
-import org.bedework.calsvc.CalSvc;
 import org.bedework.convert.Icalendar;
-import org.bedework.convert.ical.IcalUtil;
+import org.bedework.calsvc.CalSvc;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
-
-import net.fortuna.ical4j.model.component.Participant;
 
 import java.util.Map;
 
@@ -390,16 +388,18 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     final BwEvent outEv = outEi.getEvent();
 
     try {
-      final Map<String, Participant> voters = IcalUtil.parseVpollVoters(ev);
-      outEv.clearVoters();
+      final var parts = ev.getParticipants();
+      final Map<String, BwParticipant> voters =
+              parts.getVoters();
 
-      final Participant v = voters.get(attUri);
+      final var v = voters.get(attUri);
       if (v == null) {
         warn("No participant element for " + attUri);
         return;
       }
 
-      outEv.addVoter(v.toString());
+
+      parts.addParticipant(v);
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }

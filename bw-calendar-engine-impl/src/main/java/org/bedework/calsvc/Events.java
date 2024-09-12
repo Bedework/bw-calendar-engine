@@ -36,6 +36,8 @@ import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwOrganizer;
+import org.bedework.calfacade.BwParticipant;
+import org.bedework.calfacade.BwParticipants;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.CalFacadeDefs;
@@ -63,15 +65,14 @@ import org.bedework.calfacade.svc.EventInfo.UpdateResult;
 import org.bedework.calfacade.svc.RealiasResult;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
+import org.bedework.convert.Icalendar;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
 import org.bedework.calsvci.EventProperties;
 import org.bedework.calsvci.EventsI;
 import org.bedework.convert.IcalTranslator;
-import org.bedework.convert.Icalendar;
 import org.bedework.convert.RecurUtil;
 import org.bedework.convert.RecurUtil.RecurPeriods;
 import org.bedework.convert.RecurUtil.Recurrence;
-import org.bedework.convert.ical.IcalUtil;
 import org.bedework.sysevents.events.EntityFetchEvent;
 import org.bedework.sysevents.events.SysEventBase.SysCode;
 import org.bedework.util.calendar.IcalDefs;
@@ -83,10 +84,8 @@ import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
 import net.fortuna.ical4j.model.Component;
-import net.fortuna.ical4j.model.PropertyList;
-import net.fortuna.ical4j.model.component.Participant;
 import net.fortuna.ical4j.model.parameter.CuType;
-import net.fortuna.ical4j.model.property.CalendarAddress;
+import net.fortuna.ical4j.model.property.ParticipantType;
 
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -103,7 +102,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 import javax.xml.ws.Holder;
 
-import static net.fortuna.ical4j.model.Property.CALENDAR_ADDRESS;
 import static org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
 import static org.bedework.calsvci.EventsI.SetEntityCategoriesResult.success;
 import static org.bedework.util.misc.response.Response.Status.failed;
@@ -127,7 +125,7 @@ class Events extends CalSvcDb implements EventsI {
                                         final String guid,
                                         final String recurrenceId,
                                         final RecurringRetrievalMode recurRetrieval)
-          throws CalFacadeException {
+          {
     final Collection<EventInfo> res =
             postProcess(getCal().getEvent(colPath,
                                           guid));
@@ -247,8 +245,6 @@ class Events extends CalSvcDb implements EventsI {
 
   private Recurrence findInstance(final EventInfo ei,
                                   final String rid) {
-    final BwEvent ev = ei.getEvent();
-
     final AuthProperties props =
             getSvc().getAuthProperties();
     final int maxYears = props.getMaxYears();
@@ -275,7 +271,7 @@ class Events extends CalSvcDb implements EventsI {
 
   @Override
   public EventInfo get(final String colPath,
-                       final String name) throws CalFacadeException {
+                       final String name) {
     return get(colPath, name, null);
   }
 
@@ -283,7 +279,7 @@ class Events extends CalSvcDb implements EventsI {
   public EventInfo get(final String colPath,
                        final String name,
                        final String recurrenceId)
-          throws CalFacadeException {
+          {
     String href = Util.buildPath(false,
                                  colPath, "/",
                                  name);
@@ -317,7 +313,7 @@ class Events extends CalSvcDb implements EventsI {
                        final String name,
                        final String recurrenceId,
                        final List<String> retrieveList)
-          throws CalFacadeException {
+          {
     if ((col == null) || (name == null)) {
       throw new RuntimeException(CalFacadeException.badRequest);
     }
@@ -345,7 +341,7 @@ class Events extends CalSvcDb implements EventsI {
                         RetrieveList.getRetrieveList(retrieveList),
                         DeletedState.noDeleted,
                         RecurringRetrievalMode.overrides);
-      if (evs.size() == 0) {
+      if (evs.isEmpty()) {
         return null;
       }
 
@@ -389,7 +385,7 @@ class Events extends CalSvcDb implements EventsI {
           final List<BwIcalPropertyInfoEntry> retrieveList,
           final DeletedState delState,
           final RecurringRetrievalMode recurRetrieval)
-          throws CalFacadeException {
+          {
     Collection<BwCalendar> cals = null;
 
     if (cal != null) {
@@ -910,7 +906,7 @@ class Events extends CalSvcDb implements EventsI {
   @SuppressWarnings("unchecked")
   private boolean checkChanges(final EventInfo ei,
                                final boolean organizerSchedulingObject,
-                               final boolean attendeeSchedulingObject) throws CalFacadeException {
+                               final boolean attendeeSchedulingObject) {
     final UpdateResult updResult = ei.getUpdResult();
 
     if (ei.getChangeset(getPrincipalHref()).isEmpty()) {
@@ -1008,7 +1004,7 @@ class Events extends CalSvcDb implements EventsI {
    * @see org.bedework.calsvci.EventsI#markDeleted(org.bedework.calfacade.BwEvent)
    */
   @Override
-  public void markDeleted(final BwEvent event) throws CalFacadeException {
+  public void markDeleted(final BwEvent event) {
     /* Trash disabled
     if (getCal().checkAccess(event, PrivilegeDefs.privWrite, true).accessAllowed) {
       // Have write access - just set the flag and move it into the owners trash
@@ -1297,7 +1293,7 @@ class Events extends CalSvcDb implements EventsI {
                                                        final Set<String> allDefCatUids,
                                                        final Collection<String> strCatUids,
                                                        final ChangeTable changes) 
-          throws CalFacadeException {
+          {
     // XXX We should use the change table code for this.
     final SetEntityCategoriesResult secr = new SetEntityCategoriesResult();
 
@@ -1529,7 +1525,7 @@ class Events extends CalSvcDb implements EventsI {
           final List<BwIcalPropertyInfoEntry> retrieveList,
           final DeletedState delState,
           final RecurringRetrievalMode recurRetrieval,
-          final boolean freeBusy) throws CalFacadeException {
+          final boolean freeBusy) {
     final TreeSet<EventInfo> ts = new TreeSet<>();
 
     if ((filter != null) && (filter.equals(BooleanFilter.falseFilter))) {
@@ -1558,7 +1554,7 @@ class Events extends CalSvcDb implements EventsI {
   }
   
   boolean isVisible(final BwCalendar col,
-                    final String entityName) throws CalFacadeException {
+                    final String entityName) {
     // This should do a cheap test of access - not retrieve the entire event
     return getSvc().getEventsHandler().get(col,
                                            entityName,
@@ -1567,7 +1563,7 @@ class Events extends CalSvcDb implements EventsI {
   }
   
   Set<EventInfo> getSynchEvents(final String path,
-                                final String lastmod) throws CalFacadeException {
+                                final String lastmod) {
     return postProcess(getCal().getSynchEvents(path, lastmod));
   }
 
@@ -1700,7 +1696,7 @@ class Events extends CalSvcDb implements EventsI {
 
   private void buildCalendarSet(final Collection<BwCalendar> cals,
                                 BwCalendar calendar,
-                                final boolean freeBusy) throws CalFacadeException {
+                                final boolean freeBusy) {
     if (calendar == null) {
       return;
     }
@@ -1759,7 +1755,7 @@ class Events extends CalSvcDb implements EventsI {
   private BwCalendar validate(final BwEvent ev,
                               final boolean adding,
                               final boolean schedulingInbox,
-                              final boolean autoCreateCollection) throws CalFacadeException {
+                              final boolean autoCreateCollection) {
     if (ev.getColPath() == null) {
       throw new CalFacadeException(CalFacadeException.noEventCalendar);
     }
@@ -1821,21 +1817,13 @@ class Events extends CalSvcDb implements EventsI {
 
       final String entityType = IcalDefs.entityTypeIcalNames[ev
               .getEntityType()];
-      final int calType;
-
-      switch (entityType) {
-        case Component.VEVENT:
-          calType = BwCalendar.calTypeCalendarCollection;
-          break;
-        case Component.VTODO:
-          calType = BwCalendar.calTypeTasks;
-          break;
-        case Component.VPOLL:
-          calType = BwCalendar.calTypePoll;
-          break;
-        default:
-          throw new CalFacadeException(CalFacadeException.noEventCalendar);
-      }
+      final int calType = switch (entityType) {
+        case Component.VEVENT -> BwCalendar.calTypeCalendarCollection;
+        case Component.VTODO -> BwCalendar.calTypeTasks;
+        case Component.VPOLL -> BwCalendar.calTypePoll;
+        default -> throw new CalFacadeException(
+                CalFacadeException.noEventCalendar);
+      };
 
       final GetSpecialCalendarResult gscr =
               getCal().getSpecialCalendar(null, getPrincipal(), calType,
@@ -1878,7 +1866,7 @@ class Events extends CalSvcDb implements EventsI {
 
     // Get rid of all controls except cr and LF
     final String s2 =
-            s1.replaceAll("[\u0000-\u0009\u000B-\u000C\u000E-\u0019\u007F]+",
+            s1.replaceAll("[\u0000-\t\u000B-\u000C\u000E-\u0019\u007F]+",
                           "");
 
     if (!s2.equals(s1)) {
@@ -2007,12 +1995,15 @@ class Events extends CalSvcDb implements EventsI {
            I think this will work for any poll mode - if not we may
            have to rethink this approach.
          */
-    Map<String, Participant> voters = null;
+    Map<String, BwParticipant> voters = null;
     final var vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
+    final BwParticipants parts;
 
     if (vpoll) {
-      voters = IcalUtil.parseVpollVoters(ev);
-      ev.clearVoters(); // We'll add them all back
+      voters = ev.getParticipants().getVoters();
+      parts = ev.getParticipants();
+    } else {
+      parts = null;
     }
 
     for (final BwAttendee att : groups) {
@@ -2037,9 +2028,7 @@ class Events extends CalSvcDb implements EventsI {
         continue;
       }
 
-      final Participant groupVoter;
-      CalendarAddress groupVoterCa = null;
-      PropertyList pl = null;
+      final BwParticipant groupVoter;
 
       if (vpoll) {
         groupVoter = voters.get(att.getAttendeeUri());
@@ -2051,16 +2040,21 @@ class Events extends CalSvcDb implements EventsI {
           continue;
         }
 
-        voters.remove(att.getAttendeeUri());
-        pl = groupVoter.getProperties();
-        groupVoterCa = (CalendarAddress)groupVoter.getProperty(CALENDAR_ADDRESS);
+        // Participant may have more than one role.
+        final var types = groupVoter.getParticipantTypes();
+        if (types.size() == 1) {
+          // just delete
+          parts.removeParticipant(groupVoter);
+        } else {
+          groupVoter.removeParticipantType(ParticipantType.VALUE_VOTER);
+        }
       }
 
       ev.removeAttendee(att); // Remove the group
 
       chg.changed(PropertyInfoIndex.ATTENDEE, att, null);
 
-      for (final BwPrincipalInfo mbrPi : pi.getMembers()) {
+      for (final BwPrincipalInfo mbrPi: pi.getMembers()) {
         if (mbrPi.getCaladruri() == null) {
           continue;
         }
@@ -2077,19 +2071,10 @@ class Events extends CalSvcDb implements EventsI {
         chg.addValue(PropertyInfoIndex.ATTENDEE, mbrAtt);
 
         if (vpoll) {
-          final Participant voter = IcalUtil.setVoter(mbrAtt);
-
-          ev.addVoter(voter.toString());
+          parts.makeParticipant(mbrAtt);
         }
       }
     }
-
-    if (vpoll) {
-        // Add back any remaining vvoters
-        for (final Participant v: voters.values()) {
-          ev.addVoter(v.toString());
-        }
-      }
 
     if (ev instanceof BwEventProxy) {
       // Only add x-property to master
@@ -2155,7 +2140,7 @@ class Events extends CalSvcDb implements EventsI {
   }
 
   private void setDefaultAlarms(final EventInfo ei,
-                                final BwCalendar col) throws CalFacadeException {
+                                final BwCalendar col) {
     final BwEvent event = ei.getEvent();
 
     final boolean isEvent = event.getEntityType() == IcalDefs.entityTypeEvent;
@@ -2182,7 +2167,7 @@ class Events extends CalSvcDb implements EventsI {
                               isEvent, isDate);
     }
 
-    if ((al == null) || (al.length() == 0)) {
+    if ((al == null) || (al.isEmpty())) {
       return;
     }
 
@@ -2232,19 +2217,23 @@ class Events extends CalSvcDb implements EventsI {
   }
 
   private static final String ValidateAlarmPrefix =
-      "BEGIN:VCALENDAR\n" +
-      "VERSION:2.0\n" +
-      "PRODID:bedework-validate\n" +
-      "BEGIN:VEVENT\n" +
-      "DTSTART:20101231T230000\n" +
-      "DTEND:20110101T010000\n" +
-      "SUMMARY:Just checking\n" +
-      "UID:1234\n" +
-      "DTSTAMP:20101125T112600\n";
+          """
+                  BEGIN:VCALENDAR
+                  VERSION:2.0
+                  PRODID:bedework-validate
+                  BEGIN:VEVENT
+                  DTSTART:20101231T230000
+                  DTEND:20110101T010000
+                  SUMMARY:Just checking
+                  UID:1234
+                  DTSTAMP:20101125T112600
+                  """;
 
   private static final String ValidateAlarmSuffix =
-      "END:VEVENT\n" +
-      "END:VCALENDAR\n";
+          """
+                  END:VEVENT
+                  END:VCALENDAR
+                  """;
 
   /** Compile an alarm component
    *

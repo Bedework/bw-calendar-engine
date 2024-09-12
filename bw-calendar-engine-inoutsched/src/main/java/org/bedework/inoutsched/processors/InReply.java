@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProxy;
+import org.bedework.calfacade.BwParticipant;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -31,7 +32,6 @@ import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.SchedulingI;
-import org.bedework.convert.ical.IcalUtil;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.ScheduleMethods;
@@ -41,7 +41,6 @@ import org.bedework.util.timezones.TimezonesException;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.TimeZone;
-import net.fortuna.ical4j.model.component.Participant;
 import net.fortuna.ical4j.model.property.DtStart;
 
 import java.text.ParseException;
@@ -169,37 +168,41 @@ public class InReply extends InProcessor {
                                           final String attUri,
                                           @SuppressWarnings("UnusedParameters") final ScheduleResult sr) {
     /* We have a single voter and their responses to each item.
-       Replace the VVOTER component for that respondee.
+       Update the Participant component for that respondee.
      */
 
     /* First parse out the poll items */
     final BwEvent colEv = colEi.getEvent();
-    final Map<String, Participant> votes = IcalUtil.parseVpollVoters(
-            colEv);
-
-    colEv.clearVoters();  // We'll add them back
+    final var colParts = colEv.getParticipants();
+    final Map<String, BwParticipant> voters =
+            colParts.getVoters();
 
     final BwEvent inEv = inBoxEi.getEvent();
 
-    final Map<String, Participant> invote = IcalUtil.parseVpollVoters(inEv);
+    final Map<String, BwParticipant> invoters =
+            inEv.getParticipants().getVoters();
 
     /* Should only be one Participant for this attendee */
 
-    if (invote.size() != 1) {
+    if (invoters.size() != 1) {
       return true; // Ignore it.
     }
 
-    final Participant vote = invote.get(attUri);
+    final BwParticipant inVoter = invoters.get(attUri);
 
-    if (vote == null) {
+    if (inVoter == null) {
       return true; // Ignore it.
     }
 
-    votes.put(attUri, vote);
-
-    for (final Participant v: votes.values()) {
-      colEv.addVoter(v.toString());
+    final var colVoter = voters.get(attUri);
+    if (colVoter == null) {
+      // This is party crashing _ ignore?
+      //colParts.addParticipant(inVoter);
+      return true;
     }
+
+    inVoter.copyTo(colVoter);
+    colParts.markChanged();
 
     getSvc().getEventsHandler().update(colEi, false, attUri,
                                        false); // autocreate
@@ -274,9 +277,7 @@ public class InReply extends InProcessor {
       }
 
       // XXX Ensure no name change
-      if (calEv instanceof BwEventProxy) {
-        final BwEventProxy pr = (BwEventProxy)calEv;
-
+      if (calEv instanceof final BwEventProxy pr) {
         final BwEventAnnotation ann = pr.getRef();
         ann.setName(null);
       }
