@@ -50,11 +50,8 @@ public class Scheduling extends ImplicitSchedulingHandler {
     super(svci);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SchedulingI#getStoredMeeting(org.bedework.calfacade.BwEvent)
-   */
   @Override
-  public EventInfo getStoredMeeting(final BwEvent ev) throws CalFacadeException {
+  public EventInfo getStoredMeeting(final BwEvent ev) {
     final String preferred = getSvc().getCalendarsHandler().
             getPreferred(IcalDefs.entityTypeIcalNames[ev.getEntityType()]);
     if (preferred == null) {

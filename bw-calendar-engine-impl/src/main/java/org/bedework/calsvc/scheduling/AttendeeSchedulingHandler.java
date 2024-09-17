@@ -57,7 +57,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
   @Override
   public ScheduleResult requestRefresh(final EventInfo ei,
-                                       final String comment) throws CalFacadeException {
+                                       final String comment) {
     ScheduleResult sr = new ScheduleResult();
     final BwEvent ev = ei.getEvent();
 

@@ -46,6 +46,7 @@ import org.bedework.calfacade.util.Granulator.GetPeriodsPars;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.webdav.servlet.shared.WebdavException;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
@@ -74,7 +75,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
   private static final int fbtbu = BwFreeBusyComponent.typeBusyUnavailable;
   private static final int fbtbt = BwFreeBusyComponent.typeBusyTentative;
 
-  private static int[][] typeTable = {
+  private static final int[][] typeTable = {
     {fbtb, fbtb, fbtb, fbtb}, // typeto == typeBusy
     {fbtb, fbtf, fbtbu, fbtbt}, // typeto == typeFree
     {fbtb, fbtbu, fbtbu, fbtbu}, // typeto == typeBusyUnavailable
@@ -90,13 +91,12 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
    */
   @Override
   public BwEvent getFreeBusy(final Collection<BwCalendar> fbset,
-                             final BwPrincipal who,
+                             final BwPrincipal<?> who,
                              final BwDateTime start,
                              final BwDateTime end,
                              final BwOrganizer org,
                              final String uid,
-                             final String exceptUid)
-          throws CalFacadeException {
+                             final String exceptUid) {
     final CalendarsI colHandler = getSvc().getCalendarsHandler();
     Collection<BwCalendar> cals = null;
 
@@ -125,7 +125,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
                            BwCalendar.calTypeInbox,
                            true,
                            PrivilegeDefs.privReadFreeBusy);
-      } catch (CalFacadeAccessException cae) {
+      } catch (final CalFacadeAccessException cae) {
         getSpecialCalendar(who,
                            BwCalendar.calTypeInbox,
                            true,
@@ -166,7 +166,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
 
     final Collection<EventInfo> events = new TreeSet<>();
     /* Only events and freebusy for freebusy reports. */
-    FilterBase filter = new OrFilter();
+    final FilterBase filter = new OrFilter();
     try {
       filter.addChild(EntityTypeFilter.makeEntityTypeFilter(null,
                                                             "event",
@@ -174,7 +174,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
       filter.addChild(EntityTypeFilter.makeEntityTypeFilter(null,
                                                             "freeAndBusy",
                                                             false));
-    } catch (Throwable t) {
+    } catch (final WebdavException t) {
       throw new CalFacadeException(t);
     }
 
@@ -223,7 +223,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
           att = ev.findAttendee(uri);
 
           if (att != null) {
-            int pstat = IcalDefs.checkPartstat(att.getPartstat());
+            final int pstat = IcalDefs.checkPartstat(att.getPartstat());
 
             if (pstat == IcalDefs.partstatDeclined) {
               continue;
@@ -240,10 +240,10 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
     }
 
     try {
-      EventPeriods eventPeriods = new EventPeriods(start, end);
+      final EventPeriods eventPeriods = new EventPeriods(start, end);
 
-      for (EventInfo ei: events) {
-        BwEvent ev = ei.getEvent();
+      for (final EventInfo ei: events) {
+        final BwEvent ev = ei.getEvent();
         int type;
 
         if (ev.getEntityType() == IcalDefs.entityTypeEvent) {
@@ -272,12 +272,12 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
 
           eventPeriods.addPeriod(ev.getDtstart(), ev.getDtend(), type);
         } else if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
-          Collection<BwFreeBusyComponent> fbcs = ev.getFreeBusyPeriods();
+          final Collection<BwFreeBusyComponent> fbcs = ev.getFreeBusyPeriods();
 
-          for (BwFreeBusyComponent fbc: fbcs) {
+          for (final BwFreeBusyComponent fbc: fbcs) {
             type = fbc.getType();
 
-            for (Period p: fbc.getPeriods()) {
+            for (final Period p: fbc.getPeriods()) {
               eventPeriods.addPeriod(p.getStart(), p.getEnd(),
                                      type);
             }
@@ -302,7 +302,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
       if (fbc != null) {
         fb.addFreeBusyPeriod(fbc);
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       if (debug()) {
         error(t);
       }
@@ -312,12 +312,9 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
     return fb;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SchedulingI#getFreebusySet()
-   */
   @Override
-  public Collection<BwCalendar> getFreebusySet() throws CalFacadeException {
-    Collection<BwCalendar> fbset = new ArrayList<>();
+  public Collection<BwCalendar> getFreebusySet() {
+    final Collection<BwCalendar> fbset = new ArrayList<>();
 
     fbset.add(getSvc().getCalendarsHandler().getHome());
 
@@ -325,8 +322,8 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
   }
 
   private Collection<BwCalendar> addToFreeBusySet(final Collection<BwCalendar> cals,
-                                                  final Collection<BwCalendar> fbset) throws CalFacadeException {
-    Collection<BwCalendar> resCals;
+                                                  final Collection<BwCalendar> fbset) {
+    final Collection<BwCalendar> resCals;
     if (cals == null) {
       resCals = new ArrayList<>();
     } else {
@@ -358,8 +355,8 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
   @Override
   public FbResponses aggregateFreeBusy(final ScheduleResult sr,
                                        final BwDateTime start, final BwDateTime end,
-                                       final BwDuration granularity) throws CalFacadeException {
-    FbResponses resps = new FbResponses();
+                                       final BwDuration granularity) {
+    final FbResponses resps = new FbResponses();
 
     if (start.getDateType() || end.getDateType()) {
       throw new CalFacadeException(CalFacadeException.schedulingBadGranulatorDt);
@@ -368,14 +365,15 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
     resps.setResponses(new ArrayList<>());
 
     /* Combine the responses into one big collection */
-    FbGranulatedResponse allResponses = new FbGranulatedResponse();
+    final FbGranulatedResponse allResponses = 
+            new FbGranulatedResponse();
 
     allResponses.setStart(start);
     allResponses.setEnd(end);
     resps.setAggregatedResponse(allResponses);
 
-    for (ScheduleRecipientResult srr: sr.recipientResults.values()) {
-      FbGranulatedResponse fb = new FbGranulatedResponse();
+    for (final ScheduleRecipientResult srr: sr.recipientResults.values()) {
+      final FbGranulatedResponse fb = new FbGranulatedResponse();
 
       resps.getResponses().add(fb);
 
@@ -404,10 +402,10 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
       }
 
       // Merge resp into allResponses - they should have the same start/end
-      Iterator<EventPeriod> allIt = allResponses.eps.iterator();
+      final Iterator<EventPeriod> allIt = allResponses.eps.iterator();
 
-      for (EventPeriod respEp: fb.eps) {
-        EventPeriod allEp;
+      for (final EventPeriod respEp: fb.eps) {
+        final EventPeriod allEp;
         if (first) {
           // Just set the event period from this first response.
           allResponses.eps.add(respEp);
@@ -444,8 +442,8 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
   @Override
   public FbGranulatedResponse granulateFreeBusy(final BwEvent fb,
                                                 final BwDateTime start, final BwDateTime end,
-                                                final BwDuration granularity) throws CalFacadeException {
-    FbGranulatedResponse fbresp = new FbGranulatedResponse();
+                                                final BwDuration granularity) {
+    final FbGranulatedResponse fbresp = new FbGranulatedResponse();
 
     granulateFreeBusy(fbresp, fb, start, end, granularity);
 
@@ -458,7 +456,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
 
   /*
   private void addFbcal(Collection<BwCalendar> cals,
-                        BwCalendar cal) throws CalFacadeException {
+                        BwCalendar cal) {
     if (cal.getCalType() == BwCalendar.calTypeCollection) {
       // Leaf
       cals.add(cal);
@@ -475,14 +473,14 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
   private void granulateFreeBusy(final FbGranulatedResponse fbresp,
                                  final BwEvent fb,
                                  final BwDateTime start, final BwDateTime end,
-                                 final BwDuration granularity) throws CalFacadeException {
-    DateTime startDt;
-    DateTime endDt;
+                                 final BwDuration granularity) {
+    final DateTime startDt;
+    final DateTime endDt;
     try {
       startDt = new DateTime(start.getDate());
       endDt = new DateTime(end.getDate());
-    } catch (ParseException pe) {
-      throw new RuntimeException(pe);
+    } catch (final ParseException pe) {
+      throw new CalFacadeException(pe);
     }
 
     if (fb.getDtstart().after(start)) {
@@ -498,11 +496,11 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
     fbresp.setStart(start);
     fbresp.setEnd(end);
 
-    Collection<EventPeriod> periods = new ArrayList<>();
+    final Collection<EventPeriod> periods = new ArrayList<>();
 
     if (fb.getFreeBusyPeriods() != null) {
-      for (BwFreeBusyComponent fbcomp: fb.getFreeBusyPeriods()) {
-        for (Period p: fbcomp.getPeriods()) {
+      for (final BwFreeBusyComponent fbcomp: fb.getFreeBusyPeriods()) {
+        for (final Period p: fbcomp.getPeriods()) {
           DateTime pstart = p.getStart();
           DateTime pend = p.getEnd();
           if (!pend.isUtc()) {
@@ -532,7 +530,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
     gpp.startDt = start;
     gpp.dur = granularity;
 
-    Collection<EventPeriod> respeps = new ArrayList<>();
+    final Collection<EventPeriod> respeps = new ArrayList<>();
     fbresp.eps = respeps;
 
     int limit = 10000; // XXX do this better
@@ -549,19 +547,19 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
       }
       limit--;
 
-      Collection<?> periodEvents = Granulator.getPeriodsEvents(gpp);
+      final Collection<?> periodEvents = Granulator.getPeriodsEvents(gpp);
 
       /* Some events fall in the period. Add an entry.
        * We eliminated cancelled events earler. Now we should set the
        * free/busy type based on the events status.
        */
 
-      DateTime psdt;
-      DateTime pedt;
+      final DateTime psdt;
+      final DateTime pedt;
       try {
         psdt = new DateTime(gpp.startDt.getDtval());
         pedt = new DateTime(gpp.endDt.getDtval());
-      } catch (ParseException pe) {
+      } catch (final ParseException pe) {
         throw new CalFacadeException(pe);
       }
 
@@ -569,7 +567,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
       pedt.setUtc(true);
 
 
-      EventPeriod ep = new EventPeriod(psdt, pedt, 0);
+      final EventPeriod ep = new EventPeriod(psdt, pedt, 0);
       setFreeBusyType(ep, periodEvents);
       respeps.add(ep);
     }
@@ -583,9 +581,9 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
 
 //    Iterator it = periodEvents.iterator();
 //    while (it.hasNext()) {
-    for (Object o: periodEvents) {
+    for (final Object o: periodEvents) {
 //      int type = ((EventPeriod)it.next()).getType();
-      int type = ((EventPeriod)o).getType();
+      final int type = ((EventPeriod)o).getType();
 
       if (type == BwFreeBusyComponent.typeBusy) {
         fbtype = BwFreeBusyComponent.typeBusy;

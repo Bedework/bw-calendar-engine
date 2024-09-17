@@ -55,8 +55,10 @@ import java.util.TreeSet;
  */
 public abstract class IScheduleHandler extends FreeAndBusyHandler {
   protected static class UserInbox extends ScheduleRecipientResult {
+    final BwEvent ev;
+
     //String account;
-    BwPrincipal principal;
+    BwPrincipal<?> principal;
 
     /* Attendee objects in the organizers event and overrides */
     private final List<BwAttendee> atts = new ArrayList<>();
@@ -66,12 +68,15 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
     /* Non-null if this is an external recipient we can process in real-time */
     private HostInfo host;
 
-    public UserInbox(final String recipient) {
+    public UserInbox(final BwEvent ev,
+                     final String recipient) {
       super();
+      this.ev = ev;
       this.recipient = recipient;
     }
 
     public void addAttendee(final BwAttendee val) {
+      /*
       for (final BwAttendee att: atts) {
         if (val.unsaved()) {
           if (val == att) {
@@ -80,7 +85,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
         } else if (val.getId() == att.getId()) {
           return;  // already there
         }
-      }
+      }*/
 
       atts.add(val);
     }

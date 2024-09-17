@@ -57,10 +57,10 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
 
   @Override
   public void implicitSchedule(final EventInfo ei,
-                               final boolean noInvites) throws CalFacadeException {
+                               final boolean noInvites) {
     UpdateResult uer = ei.getUpdResult();
 
-    BwEvent ev = ei.getEvent();
+    final BwEvent ev = ei.getEvent();
 
     boolean organizerSchedulingObject = ev.getOrganizerSchedulingObject();
     boolean attendeeSchedulingObject = ev.getAttendeeSchedulingObject();
@@ -73,9 +73,9 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
      */
 
     if (!Util.isEmpty(ei.getOverrides())) {
-      for (EventInfo oei: ei.getOverrides()) {
+      for (final EventInfo oei: ei.getOverrides()) {
         uer = oei.getUpdResult();
-        BwEvent oev = oei.getEvent();
+        final BwEvent oev = oei.getEvent();
 
         if (organizer == null) {
           organizer = oev.getOrganizer();
@@ -112,7 +112,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
     }
 
     if (uer.reply) {
-      int meth;
+      final int meth;
 
       if (ei.getReplyAttendeeURI() != null) {
         meth = ScheduleMethods.methodTypeRefresh;
@@ -203,7 +203,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
   @Override
   public ScheduleResult sendReply(final EventInfo ei,
                                   final int partstat,
-                                  final String comment) throws CalFacadeException {
+                                  final String comment) {
     ScheduleResult sr = new ScheduleResult();
     final BwEvent ev = ei.getEvent();
 
@@ -223,8 +223,8 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
     att.setPartstat(IcalDefs.partstats[partstat]);
     att.setRsvp(partstat == IcalDefs.partstatNeedsAction);
 
-    BwEvent outEv = new BwEventObj();
-    EventInfo outEi = new EventInfo(outEv);
+    final BwEvent outEv = new BwEventObj();
+    final EventInfo outEi = new EventInfo(outEv);
 
     outEv.setScheduleMethod(ScheduleMethods.methodTypeReply);
     outEv.addRequestStatus(new BwRequestStatus(IcalDefs.requestStatusSuccess.getCode(),

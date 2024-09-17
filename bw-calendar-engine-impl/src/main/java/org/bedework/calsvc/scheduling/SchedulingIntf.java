@@ -19,7 +19,6 @@
 package org.bedework.calsvc.scheduling;
 
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.SchedulingI;
 import org.bedework.util.misc.response.Response;
@@ -43,11 +42,9 @@ public interface SchedulingIntf extends SchedulingI {
    * @param ei event to schedule
    * @param noInvites - suppresses the sending of invitations. Does NOT suppress the
    *               sending of CANCEL to disinvited attendees
-   * @throws CalFacadeException on fatal error
    */
   void implicitSchedule(EventInfo ei,
-                        boolean noInvites)
-          throws CalFacadeException;
+                        boolean noInvites);
 
   /** Copy an event to send as a request or a response. Non-recurring is easy,
    * we just copy it.
@@ -66,7 +63,7 @@ public interface SchedulingIntf extends SchedulingI {
    * @return a copy of the event.
    */
   EventInfo copyEventInfo(EventInfo ei,
-                          BwPrincipal owner);
+                          BwPrincipal<?> owner);
 
   /** Save the event which is all set up except for the name. If we get a
    * conflict we add a suffix and try again

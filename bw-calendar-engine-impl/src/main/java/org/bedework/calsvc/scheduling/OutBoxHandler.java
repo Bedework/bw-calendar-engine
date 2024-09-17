@@ -43,12 +43,13 @@ public abstract class OutBoxHandler extends SchedulingBase {
     super(svci);
   }
 
-  protected Response addToOutBox(final EventInfo ei, final BwCalendar outBox,
+  protected Response addToOutBox(final EventInfo ei,
+                                 final BwCalendar outBox,
                                  final Set<String> externalRcs) {
     // We have external recipients. Put in the outbox for mailing
-    EventInfo outEi = copyEventInfo(ei, getPrincipal());
+    final EventInfo outEi = copyEventInfo(ei, getPrincipal());
 
-    BwEvent event = outEi.getEvent();
+    final BwEvent event = outEi.getEvent();
     event.setScheduleState(BwEvent.scheduleStateNotProcessed);
     event.setRecipients(externalRcs);
     event.setColPath(outBox.getPath());

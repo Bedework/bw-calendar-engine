@@ -69,7 +69,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
                               final EventInfo ei,
                               final String recipient,
                               final String fromAttUri,
-                              final boolean fromOrganizer) throws CalFacadeException {
+                              final boolean fromOrganizer) {
     /* Recipients external to the system. */
     final BwEvent ev = ei.getEvent();
     final boolean freeBusyRequest = ev.getEntityType() ==
@@ -172,7 +172,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
   }
 
   /** Add a copy of senderEi to the users inbox and add to the autoschedule queue.
-   * The 'sender' may be the organizer of a meeting, if it's REQUEST etc, or the
+   * The 'sender' may be the organizer of a meeting, if it's REQUEST etc., or the
    * attendee replying.
    *
    * @param inboxPath - eventual destination
@@ -182,7 +182,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
    * @return status
    */
   private Response addToInbox(final String inboxPath,
-                              final BwPrincipal attPrincipal,
+                              final BwPrincipal<?> attPrincipal,
                               final EventInfo senderEi,
                               final boolean fromOrganizer) {
     final var resp = new Response();
@@ -311,7 +311,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
    * attendees.
    *
    * If reinvite is true we are resending the invitation to all attendees,
-   * including those who previously declined. Otherwise we skip those who
+   * including those who previously declined. Otherwise, we skip those who
    * declined.
    *
    * Note we have to search all overrides to get the information we need. We can
@@ -321,8 +321,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
                                  final String recip,
                                  final String fromAttUri,
                                  final ScheduleResult sr,
-                                 final boolean freeBusyRequest)
-  throws CalFacadeException {
+                                 final boolean freeBusyRequest) {
     final BwEvent ev = ei.getEvent();
     if (debug()) {
       debug(format("Get inbox for %s", recip));
@@ -337,7 +336,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
       return;
     }
 
-    final UserInbox ui = getInbox(sr, recip, freeBusyRequest);
+    final UserInbox ui = getInbox(ev, sr, recip, freeBusyRequest);
 
     if (att != null) {
       ui.addAttendee(att);
@@ -371,23 +370,24 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
 
   /* Return with deferred for external user.
    *
-   * For an internal user - skips it if it's ourself - we don't want
-   * our own message in our inbox. Otherwise checks that we have access
+   * For an internal user - skips it if it's ourselves - we don't want
+   * our own message in our inbox. Otherwise, checks that we have access
    * to send the message. If so sets the path of the inbox.
    */
-  private UserInbox getInbox(final ScheduleResult sr,
+  private UserInbox getInbox(final BwEvent ev,
+                             final ScheduleResult sr,
                              final String recipient,
-                             final boolean freeBusyRequest) throws CalFacadeException {
+                             final boolean freeBusyRequest) {
     UserInbox ui = (UserInbox)sr.recipientResults.get(recipient);
 
     if (ui != null) {
       return ui;
     }
 
-    ui = new UserInbox(recipient);
+    ui = new UserInbox(ev, recipient);
     sr.addRecipientResult(ui);
 
-    final BwPrincipal principal = getSvc().getDirectories().caladdrToPrincipal(recipient);
+    final BwPrincipal<?> principal = getSvc().getDirectories().caladdrToPrincipal(recipient);
 
     if (principal == null) {
       /* External to the system */

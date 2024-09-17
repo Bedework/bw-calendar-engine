@@ -54,7 +54,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
   public ScheduleResult schedule(final EventInfo ei,
                                  final String recipient,
                                  final String fromAttUri,
-                                 final boolean iSchedule) throws CalFacadeException {
+                                 final boolean iSchedule) {
     /* A request (that is we are (re)sending a meeting request) or a publish
      *
      * <p>We handle the following iTIP methods<ul>
@@ -112,7 +112,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
        */
       BwCalendar outBox = null;
 
-      final BwPrincipal currentUser = getPrincipal();
+      final BwPrincipal<?> currentUser = getPrincipal();
       if (!currentUser.getUnauthenticated()) {
         outBox = getSpecialCalendar(getPrincipal(),
                                     BwCalendar.calTypeOutbox,
@@ -134,7 +134,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
       if (!iSchedule &&
           (outBox != null) &&  // We have something to mail
           (!Util.isEmpty(sr.externalRcs))) {
-        var addResp = addToOutBox(ei, outBox, sr.externalRcs);
+        final var addResp = addToOutBox(ei, outBox, sr.externalRcs);
 
         if (!addResp.isOk()) {
           sr.errorCode = addResp.getMessage();
@@ -154,7 +154,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
   @Override
   public ScheduleResult declineCounter(final EventInfo ei,
                                        final String comment,
-                                       final BwAttendee fromAtt) throws CalFacadeException {
+                                       final BwAttendee fromAtt) {
     final EventInfo outEi = copyEventInfo(ei, getPrincipal());
     final BwEvent ev = outEi.getEvent();
     ev.setScheduleMethod(ScheduleMethods.methodTypeDeclineCounter);
@@ -170,7 +170,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
   /* (non-Javadoc)
    * @see org.bedework.calsvci.SchedulingI#processResponse(org.bedework.calfacade.svc.EventInfo)
    * /
-  public ScheduleResult processResponse(final EventInfo ei) throws CalFacadeException {
+  public ScheduleResult processResponse(final EventInfo ei) {
     /* Process a response we as the organizer, or their proxy, received from
      * an attendee
      * /
@@ -280,7 +280,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
                                       final EventInfo inBoxEi,
                                       final String attUri,
                                       final ScheduleResult sr,
-                                      final int action) throws CalFacadeException {
+                                      final int action) {
     BwEvent inBoxEv = inBoxEi.getEvent();
     BwEvent calEv = colEi.getEvent();
 

@@ -128,7 +128,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
    */
   @Override
   public EventInfo copyEventInfo(final EventInfo ei,
-                                 final BwPrincipal owner) {
+                                 final BwPrincipal<?> owner) {
     return copyEventInfo(ei, false, owner);
   }
 
@@ -142,7 +142,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
    */
   protected EventInfo copyEventInfo(final EventInfo ei,
                                     final boolean significantChangesOnly,
-                                    final BwPrincipal owner) {
+                                    final BwPrincipal<?> owner) {
     final BwEvent ev = ei.getEvent();
     final BwEvent newEv = copyEvent(ev, null, owner);
     final StringBuilder changeInfo = new StringBuilder();
@@ -355,7 +355,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
       /* TODO - fix this at source */
       if ((cte.getIndex() == PropertyInfoIndex.DTEND) &&
           (ei.getEvent().getEntityType() == IcalDefs.entityTypeTodo)) {
-        changeInfo.append(PropertyInfoIndex.DUE.toString());
+        changeInfo.append(PropertyInfoIndex.DUE);
       } else {
         changeInfo.append(cte.getIndex().toString());
       }
@@ -375,7 +375,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
 
   private void setChangeInfo(final BwEvent ev,
                              final StringBuilder changeInfo) {
-    if (changeInfo.length() == 0) {
+    if (changeInfo.isEmpty()) {
       return;
     }
 
@@ -387,7 +387,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
 
   protected BwEvent copyEvent(final BwEvent origEv,
                               final BwEvent masterEv,
-                              final BwPrincipal owner) {
+                              final BwPrincipal<?> owner) {
     final BwEvent newEv;
     BwEventProxy proxy = null;
     final String ownerHref = owner.getPrincipalRef();
@@ -538,7 +538,6 @@ public abstract class SchedulingBase extends CalSvcHelperRw
    * @return attendee or null.
    */
   protected BwAttendee findUserAttendee(final EventInfo ei) {
-    Directories dir = getSvc().getDirectories();
     final String thisPref = getPrincipal().getPrincipalRef();
 
     final BwEvent ev = ei.getEvent();
@@ -566,10 +565,10 @@ public abstract class SchedulingBase extends CalSvcHelperRw
 
   private BwAttendee findUserAttendee(final BwEvent ev,
                                       final String ourPref) {
-    Directories dir = getSvc().getDirectories();
+    final Directories dir = getSvc().getDirectories();
 
-    for (BwAttendee att: ev.getAttendees()) {
-      BwPrincipal p = dir.caladdrToPrincipal(att.getAttendeeUri());
+    for (final BwAttendee att: ev.getAttendees()) {
+      final BwPrincipal<?> p = dir.caladdrToPrincipal(att.getAttendeeUri());
 
       if (p == null) {
         continue;
