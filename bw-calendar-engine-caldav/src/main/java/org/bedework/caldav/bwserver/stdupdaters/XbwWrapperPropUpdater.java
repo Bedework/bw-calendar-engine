@@ -38,7 +38,7 @@ import java.util.List;
  */
 @SuppressWarnings("UnusedDeclaration")
 public class XbwWrapperPropUpdater implements PropertyUpdater {
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     final ChangeTableEntry cte = ui.getCte();
     final BwEvent ev = ui.getEvent();
 
@@ -83,7 +83,7 @@ public class XbwWrapperPropUpdater implements PropertyUpdater {
     return UpdateResult.getOkResult();
   }
 
-  private String getValue(final BasePropertyType bp) throws WebdavException {
+  private String getValue(final BasePropertyType bp) {
     final List<String> xvals = ((TextListPropertyType)bp).getText();
 
       /* We normalize to a single category per property */

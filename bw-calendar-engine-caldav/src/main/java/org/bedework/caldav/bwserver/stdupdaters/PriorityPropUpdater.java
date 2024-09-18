@@ -36,7 +36,7 @@ import java.math.BigInteger;
  */
 public class PriorityPropUpdater implements PropertyUpdater {
   @Override
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     BwEvent ev = ui.getEvent();
     PriorityPropType pr = (PriorityPropType)ui.getProp();
     ChangeTableEntry cte = ui.getCte();

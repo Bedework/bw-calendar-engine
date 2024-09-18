@@ -37,7 +37,7 @@ public class CategoryPropUpdater extends LangTextListPropUpdater {
   @Override
   protected void addValue(final BwEvent ev,
                           final BwString val,
-                          final UpdateInfo ui) throws WebdavException {
+                          final UpdateInfo ui) {
     /* See if this is a value to be mapped */
     final CategoryMapping catMap =
             ui.getCatMapInfo().findMapping(val.getValue());
@@ -116,7 +116,7 @@ public class CategoryPropUpdater extends LangTextListPropUpdater {
   @Override
   protected boolean removeValue(final BwEvent ev,
                                 final BwString val,
-                                final UpdateInfo ui) throws WebdavException {
+                                final UpdateInfo ui) {
     if (ev.getNumCategories() == 0) {
       return false;
     }

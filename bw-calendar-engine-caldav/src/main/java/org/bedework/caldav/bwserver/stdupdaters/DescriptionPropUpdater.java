@@ -33,7 +33,7 @@ import ietf.params.xml.ns.icalendar_2.TextPropertyType;
 @SuppressWarnings("UnusedDeclaration")
 public class DescriptionPropUpdater implements PropertyUpdater {
   @Override
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     final BwEvent ev = ui.getEvent();
     if (ui.isRemove()) {
       ui.getCte().setDeleted(ev.getDescription());

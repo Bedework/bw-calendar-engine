@@ -52,7 +52,7 @@ public class FiltersCommon implements Logged, FiltersCommonI {
    */
   protected boolean termsDropped;
 
-  public FiltersCommon(final FilterBase filter) throws CalFacadeException {
+  public FiltersCommon(final FilterBase filter) {
     /* Reconstruct the filter and create a date only filter for overrides. */
 
     fullFilter = reconstruct(filter, false);
@@ -61,7 +61,7 @@ public class FiltersCommon implements Logged, FiltersCommonI {
 
   @Override
   public boolean postFilter(final BwEvent ev,
-                            final String userHref) throws CalFacadeException {
+                            final String userHref) {
     return match(fullFilter, ev, userHref);
   }
 
@@ -71,25 +71,25 @@ public class FiltersCommon implements Logged, FiltersCommonI {
    * Mostly we replace ObjectFilter with its wrapped form.
    */
   private FilterBase reconstruct(final FilterBase f,
-                                 final boolean forOverrides) throws CalFacadeException {
+                                 final boolean forOverrides) {
     if (f == null) {
       return null;
     }
 
     if ((f instanceof AndFilter) || (f instanceof OrFilter)) {
-      boolean itsAnd = (f instanceof AndFilter);
+      final boolean itsAnd = (f instanceof AndFilter);
 
-      List<FilterBase> fs = new ArrayList<FilterBase>();
+      final List<FilterBase> fs = new ArrayList<>();
 
-      for (FilterBase flt: f.getChildren()) {
-        FilterBase chf = reconstruct(flt, forOverrides);
+      for (final FilterBase flt: f.getChildren()) {
+        final FilterBase chf = reconstruct(flt, forOverrides);
 
         if (chf != null) {
           fs.add(chf);
         }
       }
 
-      if (fs.size() == 0) {
+      if (fs.isEmpty()) {
         return null;
       }
 
@@ -97,7 +97,7 @@ public class FiltersCommon implements Logged, FiltersCommonI {
         return fs.get(0);
       }
 
-      FilterBase res;
+      final FilterBase res;
 
       if (itsAnd) {
         res = new AndFilter();
@@ -105,7 +105,7 @@ public class FiltersCommon implements Logged, FiltersCommonI {
         res = new OrFilter();
       }
 
-      for (FilterBase flt: fs) {
+      for (final FilterBase flt: fs) {
         res.addChild(flt);
       }
 
@@ -114,12 +114,11 @@ public class FiltersCommon implements Logged, FiltersCommonI {
 
     /* Not AND/OR */
 
-    if (!(f instanceof PropertyFilter)) {
+    if (!(f instanceof final PropertyFilter pf)) {
       throw new CalFacadeException("org.bedework.filters.unknownfilter",
                                    String.valueOf(f));
     }
 
-    PropertyFilter pf = (PropertyFilter)f;
     if (pf.getPropertyIndex() == PropertyInfoIndex.HREF) {
       // Special case this
       return f;
@@ -162,14 +161,13 @@ public class FiltersCommon implements Logged, FiltersCommonI {
       return null;
     } else if (pf instanceof ObjectFilter) {
       if (!forOverrides) {
-        if (pf instanceof EntityTypeFilter) {
-          EntityTypeFilter etf = (EntityTypeFilter)pf;
+        if (pf instanceof final EntityTypeFilter etf) {
 
           if ((etf.getEntity() == IcalDefs.entityTypeVavailability) ||
-                  (etf.getEntity() == IcalDefs.entityTypeVavailability)) {
+                  (etf.getEntity() == IcalDefs.entityTypeAvailable)) {
             // Ensure we get or exclude both
-            boolean not = etf.getNot();
-            FilterBase both;
+            final boolean not = etf.getNot();
+            final FilterBase both;
 
             if (not) {
               both = new AndFilter();
@@ -184,14 +182,14 @@ public class FiltersCommon implements Logged, FiltersCommonI {
               both.addChild(EntityTypeFilter.makeEntityTypeFilter(null,
                                                                   "available",
                                                                   false));
-            } catch (Throwable t) {
+            } catch (final Throwable t) {
               throw new CalFacadeException(t);
             }
 
             return both;
           }
         }
-        return new BwObjectFilter(null, (ObjectFilter)pf);
+        return new BwObjectFilter(null, (ObjectFilter<?>)pf);
       }
 
       /* An override - filter on collection as well */
@@ -201,7 +199,7 @@ public class FiltersCommon implements Logged, FiltersCommonI {
         return null;
       }
 
-      return new BwObjectFilter(null, (ObjectFilter)pf);
+      return new BwObjectFilter(null, (ObjectFilter<?>)pf);
     } else {
       /* We assume we can't handle this one as a query.
        */
@@ -212,7 +210,7 @@ public class FiltersCommon implements Logged, FiltersCommonI {
 
   private boolean match(final FilterBase f,
                         final BwEvent ev,
-                        final String userHref) throws CalFacadeException {
+                        final String userHref) {
     if (f == null) {
       return true;
     }
@@ -222,9 +220,9 @@ public class FiltersCommon implements Logged, FiltersCommonI {
     }
 
     if ((f instanceof AndFilter) || (f instanceof OrFilter)) {
-      boolean itsAnd = (f instanceof AndFilter);
+      final boolean itsAnd = (f instanceof AndFilter);
 
-      for (FilterBase flt: f.getChildren()) {
+      for (final FilterBase flt: f.getChildren()) {
         if (match(flt, ev, userHref)) {
           if (!itsAnd) {
             // Success for OR
@@ -249,15 +247,14 @@ public class FiltersCommon implements Logged, FiltersCommonI {
       return true; // Matched in db query
     }
 
-    if (!(f instanceof PropertyFilter)) {
+    if (!(f instanceof final PropertyFilter pf)) {
       /* We assume we can't handle this one as a query.
        */
       throw new CalFacadeException("org.bedework.filters.unknownfilter",
                                    String.valueOf(f));
     }
 
-    PropertyFilter pf = (PropertyFilter)f;
-    BwIcalPropertyInfoEntry pi = BwIcalPropertyInfo.getPinfo(pf.getPropertyIndex());
+    final BwIcalPropertyInfoEntry pi = BwIcalPropertyInfo.getPinfo(pf.getPropertyIndex());
 
     if (pi == null) {
       throw new CalFacadeException("org.bedework.filters.unknownproperty",
@@ -265,10 +262,10 @@ public class FiltersCommon implements Logged, FiltersCommonI {
     }
 
     String fieldName = pi.getDbFieldName();
-    boolean param = pi.getParam();
+    final boolean param = pi.getParam();
 
     if (param) {
-      BwIcalPropertyInfoEntry parentPi =
+      final BwIcalPropertyInfoEntry parentPi =
               BwIcalPropertyInfo.getPinfo(pf.getParentPropertyIndex());
 
       fieldName = parentPi.getDbFieldName() + "." + fieldName;
@@ -290,7 +287,7 @@ public class FiltersCommon implements Logged, FiltersCommonI {
       if (pf instanceof BwObjectFilter) {
         return traceMatch(pf.match(ev, userHref));
       }
-    } catch (WebdavException wde) {
+    } catch (final WebdavException wde) {
       throw new CalFacadeException(wde);
     }
 
@@ -307,36 +304,29 @@ public class FiltersCommon implements Logged, FiltersCommonI {
   }
 
   private boolean match(final TimeRangeFilter f,
-                        final BwEvent ev) throws CalFacadeException {
+                        final BwEvent ev) {
 
-    switch (f.getPropertyIndex()) {
-      case COMPLETED:
-        return (ev.getCompleted() != null) &&
-                matchTimeRange(f, ev.getCompleted());
-
-      case DTSTAMP:
-        return matchTimeRange(f, ev.getDtstamp());
-
-      case LAST_MODIFIED:
-        return matchTimeRange(f, ev.getLastmod());
-
-      case VALARM:
-        for (BwAlarm a: ev.getAlarms()) {
+    return switch (f.getPropertyIndex()) {
+      case COMPLETED -> (ev.getCompleted() != null) &&
+              matchTimeRange(f, ev.getCompleted());
+      case DTSTAMP -> matchTimeRange(f, ev.getDtstamp());
+      case LAST_MODIFIED -> matchTimeRange(f, ev.getLastmod());
+      case VALARM -> {
+        for (final BwAlarm a: ev.getAlarms()) {
           if (matchTimeRange(f, a.getTrigger())) {
-            return true;
+            yield true;
           }
         }
 
-        return false;
-
-      default:
-        return false;
-    }
+        yield false;
+      }
+      default -> false;
+    };
   }
 
   private boolean matchTimeRange(final TimeRangeFilter trf,
                                  final String fld) {
-    TimeRange tr = trf.getEntity();
+    final TimeRange tr = trf.getEntity();
 
     if (tr.getStart() != null) {
       if (fld.compareTo(tr.getStart().toString()) < 0) {
@@ -355,7 +345,7 @@ public class FiltersCommon implements Logged, FiltersCommonI {
 
   private boolean matchPresence(final PropertyInfoIndex pi,
                                 final BwEvent ev,
-                                final String userHref) throws CalFacadeException {
+                                final String userHref) {
 
     switch (pi) {
       case CLASS:
@@ -365,7 +355,7 @@ public class FiltersCommon implements Logged, FiltersCommonI {
         return true;
 
       case DESCRIPTION:
-        return ev.getDescriptions().size() > 0;
+        return !ev.getDescriptions().isEmpty();
 
       case DTSTAMP:
         return true;
@@ -401,7 +391,7 @@ public class FiltersCommon implements Logged, FiltersCommonI {
         return ev.getStatus() != null;
 
       case SUMMARY:
-        return ev.getSummaries().size() > 0;
+        return !ev.getSummaries().isEmpty();
 
       case UID:
         return true;
@@ -439,34 +429,34 @@ public class FiltersCommon implements Logged, FiltersCommonI {
         break;
 
       case CATEGORIES:
-        return ev.getCategories().size() > 0;
+        return !ev.getCategories().isEmpty();
 
       case COMMENT:
-        return ev.getComments().size() > 0;
+        return !ev.getComments().isEmpty();
 
       case CONTACT:
-        return ev.getContacts().size() > 0;
+        return !ev.getContacts().isEmpty();
 
       case EXDATE:
-        return ev.getExdates().size() > 0;
+        return !ev.getExdates().isEmpty();
 
       case EXRULE :
-        return ev.getExrules().size() > 0;
+        return !ev.getExrules().isEmpty();
 
       case REQUEST_STATUS:
-        return ev.getRequestStatuses().size() > 0;
+        return !ev.getRequestStatuses().isEmpty();
 
       case RELATED_TO:
         return ev.getRelatedTo() != null;
 
       case RESOURCES:
-        return ev.getResources().size() > 0;
+        return !ev.getResources().isEmpty();
 
       case RDATE:
-        return ev.getRdates().size() > 0;
+        return !ev.getRdates().isEmpty();
 
       case RRULE :
-        return ev.getRrules().size() > 0;
+        return !ev.getRrules().isEmpty();
 
     /* -------------- Other non-event: non-todo ---------------- */
 
@@ -515,7 +505,7 @@ public class FiltersCommon implements Logged, FiltersCommonI {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

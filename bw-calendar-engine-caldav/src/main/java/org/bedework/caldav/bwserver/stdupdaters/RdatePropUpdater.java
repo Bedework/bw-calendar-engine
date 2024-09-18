@@ -36,7 +36,7 @@ import java.util.Set;
  *
  */
 public class RdatePropUpdater extends DateDatetimePropUpdater {
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     BwEvent ev = ui.getEvent();
     ChangeTableEntry cte = ui.getCte();
 

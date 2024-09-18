@@ -35,7 +35,7 @@ import ietf.params.xml.ns.icalendar_2.CompletedPropType;
  */
 public class CompletedPropUpdater implements PropertyUpdater {
   @Override
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     BwEvent ev = ui.getEvent();
     CompletedPropType pr = (CompletedPropType)ui.getProp();
     ChangeTableEntry cte = ui.getCte();

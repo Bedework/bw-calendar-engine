@@ -33,7 +33,7 @@ import ietf.params.xml.ns.icalendar_2.SequencePropType;
  */
 public class SequencePropUpdater implements PropertyUpdater {
   @Override
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     BwEvent ev = ui.getEvent();
     SequencePropType pr = (SequencePropType)ui.getProp();
     ChangeTableEntry cte = ui.getCte();

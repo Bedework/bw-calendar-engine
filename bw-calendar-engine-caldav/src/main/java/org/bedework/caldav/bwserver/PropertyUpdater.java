@@ -187,8 +187,7 @@ public interface PropertyUpdater {
    *
    * @param ui - update information
    * @return UpdateResult - success or failure
-   * @throws WebdavException
    */
-  UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException;
+  UpdateResult applyUpdate(final UpdateInfo ui);
 
 }

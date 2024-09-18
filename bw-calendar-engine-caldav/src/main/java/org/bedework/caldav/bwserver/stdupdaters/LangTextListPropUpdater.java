@@ -49,20 +49,19 @@ import java.util.List;
 public abstract class LangTextListPropUpdater implements PropertyUpdater {
   protected abstract void addValue(BwEvent ev,
                                    BwString val,
-                                   UpdateInfo ui) throws WebdavException;
+                                   UpdateInfo ui);
 
   /**
    * @param ev
    * @param val
    * @param ui
    * @return false if collection is empty
-   * @throws WebdavException
    */
   protected abstract boolean removeValue(BwEvent ev,
                                          BwString val,
-                                         UpdateInfo ui) throws WebdavException;
+                                         UpdateInfo ui);
 
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     BwEvent ev = ui.getEvent();
     Collection<String> adds = new ArrayList<String>();
     Collection<String> removes = new ArrayList<String>();

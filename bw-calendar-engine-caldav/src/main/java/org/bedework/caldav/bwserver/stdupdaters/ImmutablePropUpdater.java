@@ -28,7 +28,7 @@ import org.bedework.webdav.servlet.shared.WebdavException;
  * @author douglm
  */
 public class ImmutablePropUpdater implements PropertyUpdater {
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     return new UpdateResult("Not allowed to change " + ui.getPropName());
   }
 }

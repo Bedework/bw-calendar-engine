@@ -90,10 +90,9 @@ public interface ParameterUpdater {
    * @param property - the particular property being updated.
    * @param ui - update information
    * @return UpdateResult - success or failure
-   * @throws WebdavException
    */
   UpdateResult applyUpdate(final EventInfo ei,
                            final Object property,
-                           final UpdateInfo ui) throws WebdavException;
+                           final UpdateInfo ui);
 
 }

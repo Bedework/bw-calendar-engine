@@ -34,7 +34,7 @@ public class ResourcesPropUpdater extends LangTextListPropUpdater {
   @Override
   protected void addValue(final BwEvent ev,
                           final BwString val,
-                          final UpdateInfo ui) throws WebdavException {
+                          final UpdateInfo ui) {
     Set<BwString> ress = ev.getResources();
 
     if (!Util.isEmpty(ress) && ress.contains(val)) {
@@ -50,7 +50,7 @@ public class ResourcesPropUpdater extends LangTextListPropUpdater {
   @Override
   protected boolean removeValue(final BwEvent ev,
                                 final BwString val,
-                                final UpdateInfo ui) throws WebdavException {
+                                final UpdateInfo ui) {
     Set<BwString> ress = ev.getResources();
 
     if (Util.isEmpty(ress)) {

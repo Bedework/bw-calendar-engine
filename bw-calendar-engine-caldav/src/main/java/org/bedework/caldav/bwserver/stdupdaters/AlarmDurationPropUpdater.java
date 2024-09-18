@@ -32,7 +32,7 @@ import ietf.params.xml.ns.icalendar_2.DurationPropType;
  *
  */
 public class AlarmDurationPropUpdater extends DateDatetimePropUpdater {
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     BwAlarm alarm = ui.getSubComponent().getAlarm();
     DurationPropType dur = (DurationPropType)ui.getProp();
 

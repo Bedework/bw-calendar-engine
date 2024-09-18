@@ -37,7 +37,7 @@ import java.util.Set;
  */
 @SuppressWarnings("UnusedDeclaration")
 public class CommentPropUpdater implements PropertyUpdater {
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     final ChangeTableEntry cte = ui.getCte();
     final BwEvent ev = ui.getEvent();
 

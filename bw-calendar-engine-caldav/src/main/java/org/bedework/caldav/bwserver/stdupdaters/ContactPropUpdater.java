@@ -39,7 +39,7 @@ import java.util.Set;
  */
 @SuppressWarnings("unused")
 public class ContactPropUpdater implements PropertyUpdater {
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     try {
       final ChangeTableEntry cte = ui.getCte();
       final BwEvent ev = ui.getEvent();

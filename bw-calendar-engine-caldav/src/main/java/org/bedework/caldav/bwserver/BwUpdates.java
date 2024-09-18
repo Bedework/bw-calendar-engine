@@ -143,11 +143,10 @@ public class BwUpdates implements Logged {
    * @param updates
    * @param cb
    * @return true if updated OK
-   * @throws WebdavException
    */
   public UpdateResult updateEvent(final EventInfo ei,
                                   final List<ComponentSelectionType> updates,
-                                  final IcalCallback cb) throws WebdavException {
+                                  final IcalCallback cb) {
     this.cb = cb;
 
     try {
@@ -177,7 +176,7 @@ public class BwUpdates implements Logged {
   }
 
   private UpdateResult applyUpdate(final EventInfo ei,
-                                   final ComponentSelectionType selPar) throws WebdavException {
+                                   final ComponentSelectionType selPar) {
     /* First two selects just get us in to the events */
 
     ComponentSelectionType sel = selPar;
@@ -276,10 +275,9 @@ public class BwUpdates implements Logged {
    * @param ei
    * @param csel
    * @return UpdateResult
-   * @throws WebdavException
    */
   private UpdateResult applySubCompUpdates(final EventInfo ei,
-                                      final ComponentsSelectionType csel) throws WebdavException {
+                                      final ComponentsSelectionType csel) {
     /* Deal with removals first */
 
     for (ComponentReferenceType c: csel.getRemove()) {
@@ -312,7 +310,7 @@ public class BwUpdates implements Logged {
   /* Return matching entities. */
   private List<EventInfo> match(final List<EventInfo> eis,
 //                                final SelectElementType sel,
-                                final BaseComponentType selComp) throws WebdavException {
+                                final BaseComponentType selComp) {
     List<EventInfo> matched = new ArrayList<>();
 
     CompSelector cs = getCompSelector(selComp);
@@ -366,7 +364,7 @@ public class BwUpdates implements Logged {
     BwDateTime recurrenceId;
   }
 
-  private CompSelector getCompSelector(final BaseComponentType selComp) throws WebdavException {
+  private CompSelector getCompSelector(final BaseComponentType selComp) {
     CompSelector cs = new CompSelector();
 
     for (JAXBElement<? extends BasePropertyType> prop:
@@ -405,7 +403,7 @@ public class BwUpdates implements Logged {
   }
 
   private UpdateResult addOverride(final EventInfo ei,
-                              final ComponentReferenceType sel) throws WebdavException {
+                              final ComponentReferenceType sel) {
     try {
       new IcalTranslator(cb).addOverride(ei, sel.getBaseComponent());
 
@@ -421,7 +419,7 @@ public class BwUpdates implements Logged {
   }
 
   private UpdateResult addSubComp(final EventInfo ei,
-                              final ComponentReferenceType sel) throws WebdavException {
+                              final ComponentReferenceType sel) {
     try {
       BwEvent ev = ei.getEvent();
       int etype = ev.getEntityType();
@@ -450,7 +448,7 @@ public class BwUpdates implements Logged {
   }
 
   private UpdateResult removeSubComp(final EventInfo ei,
-                              final ComponentReferenceType sel) throws WebdavException {
+                              final ComponentReferenceType sel) {
     Component subc = findSubComponent(ei, sel.getBaseComponent().getValue());
     if (subc == null) {
       return new UpdateResult("Invalid sub-component selection for remove");
@@ -461,7 +459,7 @@ public class BwUpdates implements Logged {
   }
 
   private UpdateResult updateSubComp(final EventInfo ei,
-                                     final ComponentSelectionType sel) throws WebdavException {
+                                     final ComponentSelectionType sel) {
     Component subc = findSubComponent(ei, sel.getBaseComponent().getValue());
     if (subc == null) {
       return new UpdateResult("Invalid sub-component selection for update");
@@ -471,7 +469,7 @@ public class BwUpdates implements Logged {
   }
 
   private Component findSubComponent(final EventInfo ei,
-                              final BaseComponentType bc) throws WebdavException {
+                              final BaseComponentType bc) {
     try {
       BwEvent ev = ei.getEvent();
       int etype = ev.getEntityType();
@@ -513,10 +511,9 @@ public class BwUpdates implements Logged {
    * @param eis
    * @param sel - matching the "properties" element
    * @return UpdateResult
-   * @throws WebdavException
    */
   private UpdateResult updateEventsProperties(final List<EventInfo> eis,
-                                         final PropertiesSelectionType sel) throws WebdavException {
+                                         final PropertiesSelectionType sel) {
     for (final EventInfo ei: eis) {
       final UpdateResult ur = updateEventProperties(ei, null, sel);
       if (!ur.getOk()) {
@@ -537,11 +534,10 @@ public class BwUpdates implements Logged {
    * @param subComponent - non null if this is a sub-component update
    * @param sel - matching the "properties" element
    * @return true for updated OK
-   * @throws WebdavException
    */
   private UpdateResult updateEventProperties(final EventInfo ei,
                                              final Component subComponent,
-                                             final PropertiesSelectionType sel) throws WebdavException {
+                                             final PropertiesSelectionType sel) {
     /* First deal with all the changes
      */
 
@@ -774,7 +770,7 @@ public class BwUpdates implements Logged {
                                  final Component subComponent,
                                  final boolean add,
                                  final List<PropertyReferenceType> refs,
-                                 final IcalCallback cb) throws WebdavException {
+                                 final IcalCallback cb) {
     for (PropertyReferenceType r: refs) {
       BasePropertyType bprop;
       QName pname;

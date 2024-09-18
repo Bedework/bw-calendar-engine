@@ -32,7 +32,7 @@ import ietf.params.xml.ns.icalendar_2.TextPropertyType;
  */
 public class SummaryPropUpdater implements PropertyUpdater {
   @Override
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     BwEvent ev = ui.getEvent();
     if (ui.isRemove()) {
       return new UpdateResult("cannot remove: " + ui.getPropName());

@@ -29,7 +29,7 @@ import org.bedework.webdav.servlet.shared.WebdavException;
  *
  */
 public class IgnorePropUpdater implements PropertyUpdater {
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     return UpdateResult.getOkResult();
   }
 }

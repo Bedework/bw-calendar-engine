@@ -39,7 +39,7 @@ public class DurationPropUpdater extends DateDatetimePropUpdater {
       new AlarmDurationPropUpdater();
 
   @Override
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     if (ui.getSubComponent() != null) {
       return alarmDurationPropUpdater.applyUpdate(ui);
     }

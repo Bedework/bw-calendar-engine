@@ -41,7 +41,7 @@ import java.util.Set;
  * @author douglm
  */
 public class AttendeePropUpdater implements PropertyUpdater {
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     ChangeTableEntry cte = ui.getCte();
     BwEvent ev = ui.getEvent();
 

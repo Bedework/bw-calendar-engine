@@ -38,7 +38,7 @@ import javax.xml.ws.Holder;
  */
 public class DtEndDuePropUpdater extends DateDatetimePropUpdater {
   @Override
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     /* For start, end and duration we have to finish up at the end after all
      * changes are made.
      */

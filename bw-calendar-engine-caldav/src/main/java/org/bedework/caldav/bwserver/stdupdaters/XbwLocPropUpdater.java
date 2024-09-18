@@ -56,7 +56,7 @@ import static org.bedework.util.misc.response.Response.Status.ok;
  */
 @SuppressWarnings("UnusedDeclaration")
 public class XbwLocPropUpdater implements Logged, PropertyUpdater {
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     try {
       final ChangeTableEntry cte = ui.getCte();
       final BwEvent ev = ui.getEvent();

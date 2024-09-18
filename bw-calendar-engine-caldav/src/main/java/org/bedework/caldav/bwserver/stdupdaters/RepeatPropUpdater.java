@@ -30,7 +30,7 @@ import ietf.params.xml.ns.icalendar_2.RepeatPropType;
  *
  */
 public class RepeatPropUpdater extends AlarmPropUpdater {
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     BwAlarm alarm = ui.getSubComponent().getAlarm();
     RepeatPropType pr = (RepeatPropType)ui.getProp();
 

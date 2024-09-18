@@ -34,7 +34,7 @@ import ietf.params.xml.ns.icalendar_2.StatusPropType;
  */
 public class StatusPropUpdater implements PropertyUpdater {
   @Override
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     BwEvent ev = ui.getEvent();
     StatusPropType pr = (StatusPropType)ui.getProp();
     ChangeTableEntry cte = ui.getCte();

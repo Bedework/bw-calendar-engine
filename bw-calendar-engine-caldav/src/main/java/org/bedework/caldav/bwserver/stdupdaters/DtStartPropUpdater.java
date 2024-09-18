@@ -37,7 +37,7 @@ import javax.xml.ws.Holder;
  */
 public class DtStartPropUpdater extends DateDatetimePropUpdater {
   @Override
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     BwEvent ev = ui.getEvent();
     boolean scheduleReply = ev.getScheduleMethod() == ScheduleMethods.methodTypeReply;
     // No dates valid for reply

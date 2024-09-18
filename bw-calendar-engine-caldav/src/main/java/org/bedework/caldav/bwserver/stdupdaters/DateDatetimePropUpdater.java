@@ -67,7 +67,7 @@ public abstract class DateDatetimePropUpdater extends AlarmPropUpdater {
 
   protected UpdateResult makeDt(final BwDateTime evdt,
                                 final Holder<BwDateTime> resdt,
-                                final UpdateInfo ui) throws WebdavException {
+                                final UpdateInfo ui) {
     String tzid = evdt.getTzid();
     String dtval = evdt.getDtval();
     boolean dateOnly = evdt.getDateType();

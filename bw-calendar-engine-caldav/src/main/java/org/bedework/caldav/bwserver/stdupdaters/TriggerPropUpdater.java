@@ -33,7 +33,7 @@ import ietf.params.xml.ns.icalendar_2.TriggerPropType;
  *
  */
 public class TriggerPropUpdater extends AlarmPropUpdater {
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     BwAlarm alarm = ui.getSubComponent().getAlarm();
     TriggerPropType pr = (TriggerPropType)ui.getProp();
 

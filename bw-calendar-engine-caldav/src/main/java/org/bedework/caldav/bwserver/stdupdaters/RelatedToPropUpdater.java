@@ -39,7 +39,7 @@ import java.util.Arrays;
  *
  */
 public class RelatedToPropUpdater implements PropertyUpdater {
-  public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
+  public UpdateResult applyUpdate(final UpdateInfo ui) {
     ChangeTableEntry cte = ui.getCte();
     BwEvent ev = ui.getEvent();
 
