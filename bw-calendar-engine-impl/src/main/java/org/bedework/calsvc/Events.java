@@ -472,11 +472,10 @@ class Events extends CalSvcDb implements EventsI {
       BwCalendar cal = validate(event, true, schedulingInbox, 
                                 autoCreateCollection);
       if (cal == null) {
-        throw new RuntimeException("No calendar for event");
+        throw new CalFacadeException("No calendar for event");
       }
 
-      if (!cal.getSupportedComponents().contains(
-              IcalDefs.entityTypeIcalNames[event.getEntityType()])) {
+      if (!cal.isSupportedComponent(event.getEntityType())) {
         return notOk(updResult, noAccess,
                      "Invalid component type for this collection");
       }

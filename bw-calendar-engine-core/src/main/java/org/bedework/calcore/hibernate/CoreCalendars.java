@@ -109,24 +109,24 @@ class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public void rollback() throws CalFacadeException {
+  public void rollback() {
     dao.rollback();
   }
 
   @Override
   public <T> T throwException(final CalFacadeException cfe)
-          throws CalFacadeException {
+          {
     dao.rollback();
     throw cfe;
   }
 
   @Override
-  public BwCalendar getCollectionNoCheck(final String path) throws CalFacadeException {
+  public BwCalendar getCollectionNoCheck(final String path) {
     return getCollection(path);
   }
 
   @Override
-  public BwCalendar getCollection(final String path) throws CalFacadeException {
+  public BwCalendar getCollection(final String path) {
     if (path == null) {
       return null;
     }
@@ -190,13 +190,13 @@ class CoreCalendars extends CalintfHelper
 
   @Override
   public CollectionSynchInfo getSynchInfo(final String path,
-                                          final String token) throws CalFacadeException {
+                                          final String token) {
     return dao.getSynchInfo(path, token);
   }
   
   @Override
   public Collection<BwCalendar> getCalendars(final BwCalendar col,
-                                             final BwIndexer indexer) throws CalFacadeException {
+                                             final BwIndexer indexer) {
     if (indexer == null) {
       final Collection<BwCalendar> ch = getChildren(col);
 
@@ -210,7 +210,7 @@ class CoreCalendars extends CalintfHelper
   public BwCalendar resolveAlias(final BwCalendar val,
                                  final boolean resolveSubAlias,
                                  final boolean freeBusy,
-                                 final BwIndexer indexer) throws CalFacadeException {
+                                 final BwIndexer indexer) {
     if ((val == null) || !val.getInternalAlias()) {
       return val;
     }
@@ -230,7 +230,7 @@ class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public List<BwCalendar> findAlias(final String val) throws CalFacadeException {
+  public List<BwCalendar> findAlias(final String val) {
     final List<BwCalendar> aliases = dao.findCollectionAlias(fixPath(val),
                                                              currentPrincipal());
 
@@ -250,7 +250,7 @@ class CoreCalendars extends CalintfHelper
   @Override
   public BwCalendar getCalendar(final String path,
                                 final int desiredAccess,
-                                final boolean alwaysReturnResult) throws CalFacadeException {
+                                final boolean alwaysReturnResult) {
     BwCalendar col = getCollection(path);
     /* TODO - fix on import/export of 4.0. topical areas had wrong owner
       */
@@ -271,8 +271,8 @@ class CoreCalendars extends CalintfHelper
   public BwCalendar getCollectionIdx(final BwIndexer indexer,
                                      final String path,
                                      final int desiredAccess,
-                                     final boolean alwaysReturnResult) throws CalFacadeException {
-    BwCalendar col = intf.colCache.get(path);
+                                     final boolean alwaysReturnResult) {
+    final BwCalendar col = intf.colCache.get(path);
 
     if (col != null) {
       return col;
@@ -302,24 +302,25 @@ class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public GetSpecialCalendarResult getSpecialCalendar(final BwIndexer indexer,
-                                                     final BwPrincipal owner,
-                                                     final int calType,
-                                                     final boolean create,
-                                                     final int access) throws CalFacadeException {
+  public GetSpecialCalendarResult getSpecialCalendar(
+          final BwIndexer indexer,
+          final BwPrincipal<?> owner,
+          final int calType,
+          final boolean create,
+          final int access) {
     return getSpecialCalendar(owner, calType, create, true, access,
                               indexer);
   }
 
   @Override
   public BwCalendar add(final BwCalendar val,
-                        final String parentPath) throws CalFacadeException {
+                        final String parentPath) {
     return add(val, parentPath, false, privBind);
   }
 
   @Override
   public void renameCalendar(BwCalendar val,
-                             final String newName) throws CalFacadeException {
+                             final String newName) {
     intf.colCache.flush();
 
     ac.checkAccess(val, privWriteProperties, false);
@@ -354,7 +355,7 @@ class CoreCalendars extends CalintfHelper
 
   @Override
   public void moveCalendar(BwCalendar val,
-                           final BwCalendar newParent) throws CalFacadeException {
+                           final BwCalendar newParent) {
     intf.colCache.flush();
 
     /* check access - privbind on new parent privunbind on val?
@@ -393,7 +394,7 @@ class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public void touchCalendar(final String path) throws CalFacadeException {
+  public void touchCalendar(final String path) {
     final BwCalendar col = dao.getCollection(path);
     if (col == null) {
       return;
@@ -403,7 +404,7 @@ class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public void touchCalendar(final BwCalendar col) throws CalFacadeException {
+  public void touchCalendar(final BwCalendar col) {
     dao.touchCollection(col, getCurrentTimestamp());
     // Remove it
     intf.colCache.remove(col.getPath());
@@ -414,7 +415,7 @@ class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public void updateCalendar(final BwCalendar val) throws CalFacadeException {
+  public void updateCalendar(final BwCalendar val) {
     ac.checkAccess(val, privWriteProperties, false);
 
     dao.updateCollection(unwrap(val));
@@ -428,7 +429,7 @@ class CoreCalendars extends CalintfHelper
   @Override
   public void changeAccess(final BwCalendar col,
                            final Collection<Ace> aces,
-                           final boolean replaceAll) throws CalFacadeException {
+                           final boolean replaceAll) {
     ac.getAccessUtil().changeAccess(col, aces, replaceAll);
 
     // Clear the cache - inheritance makes it difficult to be sure of the effects.
@@ -446,7 +447,7 @@ class CoreCalendars extends CalintfHelper
 
   @Override
   public void defaultAccess(final BwCalendar cal,
-                            final AceWho who) throws CalFacadeException {
+                            final AceWho who) {
     ac.getAccessUtil().defaultAccess(cal, who);
     dao.saveOrUpdateCollection(unwrap(cal));
 
@@ -459,7 +460,7 @@ class CoreCalendars extends CalintfHelper
 
   @Override
   public boolean deleteCalendar(BwCalendar val,
-                                final boolean reallyDelete) throws CalFacadeException {
+                                final boolean reallyDelete) {
     intf.colCache.flush();
 
     ac.checkAccess(val, privUnbind, false);
@@ -523,12 +524,12 @@ class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public boolean isEmpty(final BwCalendar val) throws CalFacadeException {
+  public boolean isEmpty(final BwCalendar val) {
     return dao.isEmptyCollection(val);
   }
   
   @Override
-  public void addNewCalendars(final BwPrincipal user) throws CalFacadeException {
+  public void addNewCalendars(final BwPrincipal<?> user) {
     /* Add a user collection to the userCalendarRoot and then a default
        calendar collection. */
 
@@ -550,7 +551,7 @@ class CoreCalendars extends CalintfHelper
     for (int i = 0; i < upath.length; i++) {
       final String pathSeg = upath[i];
 
-      if ((pathSeg == null) || (pathSeg.length() == 0)) {
+      if ((pathSeg == null) || (pathSeg.isEmpty())) {
         // Leading or double slash - skip it
         continue;
       }
@@ -633,7 +634,7 @@ class CoreCalendars extends CalintfHelper
 
   @Override
   public Set<BwCalendar> getSynchCols(final String path,
-                                      final String token) throws CalFacadeException {
+                                      final String token) {
     final Collection<BwCalendar> cols =
             dao.getSynchCollections(fixPath(path),
                                     token);
@@ -656,12 +657,12 @@ class CoreCalendars extends CalintfHelper
   @Override
   public boolean testSynchCol(final BwCalendar col,
                               final String token)
-          throws CalFacadeException {
+          {
     throw new CalFacadeException("Should not get here - handled by interface");
   }
 
   @Override
-  public String getSyncToken(final String path) throws CalFacadeException {
+  public String getSyncToken(final String path) {
     final BwCalendar thisCol = getCalendar(path, privAny, false);
     
     if (thisCol == null) {
@@ -679,7 +680,6 @@ class CoreCalendars extends CalintfHelper
     final String fpath = fixPath(path); // Removes "/"
     final String fpathSlash = fpath + "/";
     
-    @SuppressWarnings("unchecked")
     final List<BwCalendar> cols = dao.getPathPrefix(fpath);
 
     String token = thisCol.getLastmod().getTagValue();
@@ -710,16 +710,16 @@ class CoreCalendars extends CalintfHelper
   @Override
   public Collection<String> getChildCollections(final String parentPath,
                                                 final int start,
-                                                final int count) throws CalFacadeException {
+                                                final int count) {
     return dao.getChildrenCollections(parentPath, start, count);
   }
   
-  /* ====================================================================
+  /* ==============================================================
    *                   Private methods
-   * ==================================================================== */
+   * ============================================================== */
 
-  private GetSpecialCalendarResult getIfSpecial(final BwPrincipal owner,
-                                                final String path) throws CalFacadeException {
+  private GetSpecialCalendarResult getIfSpecial(final BwPrincipal<?> owner,
+                                                final String path) {
     final String pathTo = intf.getPrincipalInfo().getCalendarHomePath(owner);
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
@@ -773,19 +773,18 @@ class CoreCalendars extends CalintfHelper
     return null;
   }
 
-  private GetSpecialCalendarResult getSpecialCalendar(final BwPrincipal owner,
-                                                      final int calType,
-                                                      final boolean create,
-                                                      final boolean tryFetch,
-                                                      final int access,
-                                                      final BwIndexer indexer) throws CalFacadeException {
+  private GetSpecialCalendarResult getSpecialCalendar(
+          final BwPrincipal<?> owner,
+          final int calType,
+          final boolean create,
+          final boolean tryFetch,
+          final int access,
+          final BwIndexer indexer) {
     final String name = intf.getCalendarNameFromType(calType);
     if (name == null) {
       // Not supported
       return null;
     }
-
-    final List<String> entityTypes = BwCalendar.entityTypes.get(calType);
 
     final String pathTo = intf.getPrincipalInfo().getCalendarHomePath(owner);
 
@@ -827,10 +826,6 @@ class CoreCalendars extends CalintfHelper
     gscr.cal.setOwnerHref(owner.getPrincipalRef());
     gscr.cal.setCalType(calType);
 
-    if (entityTypes != null) {
-      gscr.cal.setSupportedComponents(entityTypes);
-    }
-
     /* I think we're allowing privNone here because we don't mind if the
      * calendar gets created even if the caller has no access.
      */
@@ -847,7 +842,7 @@ class CoreCalendars extends CalintfHelper
                                   final boolean resolveSubAlias,
                                   final boolean freeBusy,
                                   final ArrayList<String> pathElements,
-                                  final BwIndexer indexer) throws CalFacadeException {
+                                  final BwIndexer indexer) {
     if ((val == null) || !val.getInternalAlias()) {
       return val;
     }
@@ -922,7 +917,7 @@ class CoreCalendars extends CalintfHelper
     return res;
   }
 
-  private void disableAlias(final BwCalendar val) throws CalFacadeException {
+  private void disableAlias(final BwCalendar val) {
     val.setDisabled(true);
     if (val.getId() != CalFacadeDefs.unsavedItemKey) {
       // Save the state
@@ -940,22 +935,23 @@ class CoreCalendars extends CalintfHelper
 
   private void checkNewCalendarName(final String name,
                                     final boolean special,
-                                    final BwCalendar parent) throws CalFacadeException {
+                                    final BwCalendar parent) {
     // XXX This should be accessible to all implementations.
     if (!special) {
       /* Ensure the name isn't reserved */
 
-      if (name.equals(BasicSystemProperties.userInbox)) {
-        throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
+      switch (name) {
+        case BasicSystemProperties.userInbox ->
+                throw new CalFacadeException(
+                        CalFacadeException.illegalCalendarCreation);
+        case BasicSystemProperties.userOutbox ->
+                throw new CalFacadeException(
+                        CalFacadeException.illegalCalendarCreation);
+        case BasicSystemProperties.defaultNotificationsName ->
+                throw new CalFacadeException(
+                        CalFacadeException.illegalCalendarCreation);
       }
 
-      if (name.equals(BasicSystemProperties.userOutbox)) {
-        throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
-      }
-
-      if (name.equals(BasicSystemProperties.defaultNotificationsName)) {
-        throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
-      }
     }
 
     /* Ensure the name is not-null and contains no invalid characters
@@ -988,7 +984,7 @@ class CoreCalendars extends CalintfHelper
   private BwCalendar add(final BwCalendar val,
                          final String parentPath,
                          final boolean special,
-                         final int access) throws CalFacadeException {
+                         final int access) {
     BwCalendar parent = null;
     final String newPath;
 
@@ -1061,7 +1057,7 @@ class CoreCalendars extends CalintfHelper
   }
 
   private void updatePaths(BwCalendar val,
-                           final BwCalendar newParent) throws CalFacadeException {
+                           final BwCalendar newParent) {
     final Collection<BwCalendar> children = getChildren(val);
 
     final String oldHref = val.getPath();
@@ -1096,12 +1092,12 @@ class CoreCalendars extends CalintfHelper
    * @param desiredAccess access we want
    * @param nullForNoAccess boolean flag behaviour on no access
    * @return Collection   of checked objects
-   * @throws CalFacadeException for no access or other failure
    */
-  private Collection<BwCalendar> checkAccess(final Collection<BwCalendar> ents,
-                                             final int desiredAccess,
-                                             @SuppressWarnings("SameParameterValue") final boolean nullForNoAccess)
-          throws CalFacadeException {
+  private Collection<BwCalendar> checkAccess(
+          final Collection<BwCalendar> ents,
+          @SuppressWarnings("SameParameterValue") final int desiredAccess,
+          @SuppressWarnings("SameParameterValue") final boolean nullForNoAccess)
+  {
     final TreeSet<BwCalendar> out = new TreeSet<>();
     if (ents == null) {
       return out;
@@ -1120,7 +1116,7 @@ class CoreCalendars extends CalintfHelper
   public BwCalendar checkAccess(final CalendarWrapper col,
                                 final int desiredAccess,
                                 final boolean alwaysReturnResult)
-          throws CalFacadeException {
+          {
     if (col == null) {
       return null;
     }
@@ -1161,7 +1157,7 @@ class CoreCalendars extends CalintfHelper
     }
   }
 
-  private void notifyMove(final SysEvent.SysCode code,
+  private void notifyMove(@SuppressWarnings("SameParameterValue") final SysEvent.SysCode code,
                           final String oldHref,
                           final BwCalendar val) {
     final boolean indexed = true;
@@ -1178,7 +1174,7 @@ class CoreCalendars extends CalintfHelper
   }
 
   /* No access checks performed */
-  private Collection<BwCalendar> getChildren(final BwCalendar col) throws CalFacadeException {
+  private Collection<BwCalendar> getChildren(final BwCalendar col) {
     final List<BwCalendar> ch;
     final List<BwCalendar> wch = new ArrayList<>();
 

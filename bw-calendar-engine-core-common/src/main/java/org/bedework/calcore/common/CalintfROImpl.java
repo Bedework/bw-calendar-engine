@@ -667,8 +667,6 @@ public class CalintfROImpl extends CalintfBase
       return null;
     }
 
-    final List<String> entityTypes = BwCalendar.entityTypes.get(calType);
-
     final GetSpecialCalendarResult gscr = new GetSpecialCalendarResult();
 
     if (getPrincipalInfo() == null) {
@@ -702,10 +700,6 @@ public class CalintfROImpl extends CalintfBase
     gscr.cal.setCreatorHref(owner.getPrincipalRef());
     gscr.cal.setOwnerHref(owner.getPrincipalRef());
     gscr.cal.setCalType(calType);
-
-    if (entityTypes != null) {
-      gscr.cal.setSupportedComponents(entityTypes);
-    }
 
     return gscr;
 //    throw new RuntimeException("Read only version");
@@ -1111,11 +1105,10 @@ public class CalintfROImpl extends CalintfBase
     for (final SearchResultEntry sre: sres) {
       final Object o = sre.getEntity();
 
-      if (!(o instanceof EventInfo)) {
+      if (!(o instanceof final EventInfo ei)) {
         continue;
       }
 
-      final EventInfo ei = (EventInfo)o;
       final BwEvent ev = ei.getEvent();
 
       final CoreEventInfo cei = postGetEvent(ev, ei.getCurrentAccess());
