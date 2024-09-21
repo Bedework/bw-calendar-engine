@@ -38,7 +38,6 @@ import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwParticipant;
-import org.bedework.calfacade.BwParticipants;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.CalFacadeDefs;
@@ -86,7 +85,6 @@ import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.parameter.CuType;
-import net.fortuna.ical4j.model.property.ParticipantType;
 
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -1919,7 +1917,7 @@ class Events extends CalSvcDb implements EventsI {
 
     /* Check organizer property to see if it is us.
      */
-    AccessPrincipal evPrincipal =
+    final AccessPrincipal evPrincipal =
       dirs.caladdrToPrincipal(org.getOrganizerUri());
 
     final var weAreOrganizer = (evPrincipal != null) &&
@@ -1943,47 +1941,64 @@ class Events extends CalSvcDb implements EventsI {
     /* If we are expanding groups do so here */
 
     final ChangeTable chg = ev.getChangeset(getPrincipalHref());
-    final Set<BwAttendee> groups = new TreeSet<>();
+    final Set<Attendee> groups = new TreeSet<>();
 
     if (!schedulingInbox) {
-      final ChangeTableEntry cte = chg
+      final ChangeTableEntry cteAtts = chg
               .getEntry(PropertyInfoIndex.ATTENDEE);
+      final ChangeTableEntry cteParts = chg
+              .getEntry(PropertyInfoIndex.PARTICIPANT);
 
       checkAttendees:
-      for (final BwAttendee att : atts) {
-        if (CuType.GROUP.getValue().equals(att.getCuType())) {
+      for (final var att : atts) {
+        if (CuType.GROUP.getValue().equals(att.getKind())) {
           groups.add(att);
         }
 
-        final AccessPrincipal attPrincipal =
-                getSvc().getDirectories().
-                        caladdrToPrincipal(att.getAttendeeUri());
-        if ((attPrincipal != null) &&
-                (attPrincipal.getPrincipalRef()
-                             .equals(curPrincipal))) {
+        if (curCalAddr.equals(att.getCalendarAddress())) {
           // It's us
           continue checkAttendees;
         }
 
-        if (att.getPartstat()
+        if (att.getParticipationStatus()
                .equals(IcalDefs.partstatValNeedsAction)) {
           continue checkAttendees;
         }
 
         if (adding) {
           // Can't add an event with attendees set to accepted
-          att.setPartstat(IcalDefs.partstatValNeedsAction);
+          att.setParticipationStatus(IcalDefs.partstatValNeedsAction);
           continue checkAttendees;
         }
 
+        /*TODO Revisit the whole change table stuff.
+          It adds a lot of complication and the reasons for doing
+          this may no longer be valid. Tracking actual changes could
+          be done as a before/after comparison which may also make
+          rolling back easier.
+         */
+
         // Not adding event. Did we add attendee?
-        if ((cte != null) &&
-                !Util.isEmpty(cte.getAddedValues())) {
-          for (final Object o : cte.getAddedValues()) {
+        if ((cteAtts != null) &&
+                !Util.isEmpty(cteAtts.getAddedValues())) {
+          for (final Object o: cteAtts.getAddedValues()) {
             final BwAttendee chgAtt = (BwAttendee)o;
 
-            if (chgAtt.getCn().equals(att.getCn())) {
-              att.setPartstat(IcalDefs.partstatValNeedsAction);
+            if (chgAtt.getCn().equals(att.getCalendarAddress())) {
+              chgAtt.setPartstat(IcalDefs.partstatValNeedsAction);
+              continue checkAttendees;
+            }
+          }
+        }
+
+        // Not adding event. Did we add participant?
+        if ((cteParts != null) &&
+                !Util.isEmpty(cteParts.getAddedValues())) {
+          for (final Object o: cteParts.getAddedValues()) {
+            final BwParticipant chgAtt = (BwParticipant)o;
+
+            if (chgAtt.getCalendarAddress().equals(att.getCalendarAddress())) {
+              chgAtt.setParticipationStatus(IcalDefs.partstatValNeedsAction);
               continue checkAttendees;
             }
           }
@@ -1998,26 +2013,17 @@ class Events extends CalSvcDb implements EventsI {
            I think this will work for any poll mode - if not we may
            have to rethink this approach.
          */
-    Map<String, BwParticipant> voters = null;
     final var vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
-    final BwParticipants parts;
 
-    if (vpoll) {
-      voters = ev.getParticipants().getVoters();
-      parts = ev.getParticipants();
-    } else {
-      parts = null;
-    }
-
-    for (final BwAttendee att : groups) {
+    for (final Attendee att : groups) {
       /* If the group is in one of our domains we can try to expand it.
            * We should leave it if it's an external id.
            */
 
       final Holder<Boolean> trunc = new Holder<>();
       final List<BwPrincipalInfo> groupPis =
-              dirs.find(att.getAttendeeUri(),
-                        att.getCuType(),
+              dirs.find(att.getCalendarAddress(),
+                        att.getKind(),
                         true,  // expand
                         trunc);
 
@@ -2031,51 +2037,32 @@ class Events extends CalSvcDb implements EventsI {
         continue;
       }
 
-      final BwParticipant groupVoter;
-
-      if (vpoll) {
-        groupVoter = voters.get(att.getAttendeeUri());
-
-        if (groupVoter == null) {
-          if (debug()) {
-            warn("No voter found for " + att.getAttendeeUri());
-          }
-          continue;
-        }
-
-        // Participant may have more than one role.
-        final var types = groupVoter.getParticipantTypes();
-        if (types.size() == 1) {
-          // just delete
-          parts.removeParticipant(groupVoter);
-        } else {
-          groupVoter.removeParticipantType(ParticipantType.VALUE_VOTER);
-        }
-      }
-
-      ev.removeAttendee(att); // Remove the group
-
-      chg.changed(PropertyInfoIndex.ATTENDEE, att, null);
+      // Delete the group
+      parts.removeAttendee(att);
 
       for (final BwPrincipalInfo mbrPi: pi.getMembers()) {
         if (mbrPi.getCaladruri() == null) {
           continue;
         }
 
-        final BwAttendee mbrAtt = new BwAttendee();
+        final BwAttendee mAtt;
+        final BwParticipant mPart;
 
-        mbrAtt.setType(att.getType());
-        mbrAtt.setAttendeeUri(mbrPi.getCaladruri());
-        mbrAtt.setCn(mbrPi.getEmail());
-        mbrAtt.setCuType(mbrPi.getKind());
-        mbrAtt.setMember(att.getAttendeeUri());
-
-        ev.addAttendee(mbrAtt);
-        chg.addValue(PropertyInfoIndex.ATTENDEE, mbrAtt);
-
-        if (vpoll) {
-          parts.makeParticipant(mbrAtt);
+        if (att.getAttendee() != null) {
+          mAtt = new BwAttendee();
+          mPart = null;
+        } else {
+          mPart = parts.newParticipant();
+          mAtt = null;
         }
+
+        final var mbrAtt = parts.makeAttendee(mAtt, mPart);
+
+        mbrAtt.setParticipantType(att.getParticipantType());
+        mbrAtt.setCalendarAddress(mbrPi.getCaladruri());
+        mbrAtt.setEmail(mbrPi.getEmail());
+        mbrAtt.setKind(mbrPi.getKind());
+        mbrAtt.setMemberOf(att.getCalendarAddress());
       }
     }
 
