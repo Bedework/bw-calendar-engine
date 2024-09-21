@@ -18,6 +18,7 @@
 */
 package org.bedework.inoutsched.processors;
 
+import org.bedework.calfacade.Attendee;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
@@ -71,13 +72,8 @@ public class InRequest extends InProcessor {
     super(svci);
   }
 
-  /**
-   * @param ei request
-   * @return ScheduleResult
-   * @throws CalFacadeException
-   */
   @Override
-  public ProcessResult process(final EventInfo ei) throws CalFacadeException {
+  public ProcessResult process(final EventInfo ei)  {
     /* We are acting as an attendee getting a request from the organizer, either
      * a first invitation or an update
      */
@@ -213,9 +209,7 @@ public class InRequest extends InProcessor {
                 " adding event for " + owner);
         }
 
-        pr.sr.errorCode = resp.getMessage();
-
-        return pr;
+        return Response.fromResponse(pr, resp);
       }
     } else {
       final UpdateResult ur = 
@@ -225,12 +219,12 @@ public class InRequest extends InProcessor {
                                                  false); // autocreate
 
       if (debug()) {
-        debug("Schedule - update result " + pr.sr +
+        debug("Schedule - update result " + pr +
                       " for event" + ourCopy.getEvent());
       }
 
-      if (ur.schedulingResult != null) {
-        pr.sr = ur.schedulingResult;
+      if (!ur.isOk()) {
+        return Response.fromResponse(pr, ur);
       }
     }
 
@@ -241,15 +235,15 @@ public class InRequest extends InProcessor {
     return pr;
   }
 
-  /* ====================================================================
+  /* ============================================================
                       Private methods
-     ==================================================================== */
+     ============================================================ */
 
   private boolean autoRespond(final CalSvcI svci,
                               final EventInfo ourCopy,
                               final EventInfo inboxEi,
                               final boolean doubleBookOk,
-                              final String uri) throws CalFacadeException {
+                              final String uri) {
     final BwEvent inboxEv = inboxEi.getEvent();
     final String owner = inboxEv.getOwnerHref();
 
@@ -732,8 +726,8 @@ public class InRequest extends InProcessor {
    *
    * <p>This may be why Apple is adding a needs reply x-prop?
    *
-   * @param ourCopy
-   * @param inCopy
+   * @param ourCopy attendees copy
+   * @param inCopy inbox version
    * @param attUri - our attendee uri
    * @return boolean true for OK
    */
@@ -1057,20 +1051,23 @@ public class InRequest extends InProcessor {
         case ATTENDEE :
           String transparency = ourEv.getTransparency();
 
-          BwAttendee ourAtt = null;
+          Attendee ourAtt = null;
+          final var ourParts = ourEv.getParticipants();
 
-          for (final BwAttendee inAtt: inEv.getAttendees()) {
-            final BwAttendee att = (BwAttendee)inAtt.clone();
+          for (final Attendee inAtt: inEv.getParticipants()
+                                         .getAttendees()) {
+            final var att = ourParts.copyAttendee(inAtt);
+
             att.setScheduleStatus(null);
-            final String inAttUri = att.getAttendeeUri();
-            final BwAttendee evAtt = ourEv.findAttendee(inAttUri);
+            final String inAttUri = inAtt.getCalendarAddress();
 
             if (inAttUri.equals(attUri)) {
               // It's ours
               ourAtt = att;
 
-              if ((att.getPartstat() == null) ||
-                  att.getPartstat().equals(IcalDefs.partstatValNeedsAction)) {
+              if ((att.getParticipationStatus() == null) ||
+                  att.getParticipationStatus().equals(
+                          IcalDefs.partstatValNeedsAction)) {
                 transparency = IcalDefs.transparencyTransparent;
 
                 // Apple ical seems to expect an x-prop.
@@ -1089,12 +1086,6 @@ public class InRequest extends InProcessor {
                 }
               }
             }*/
-            final ChangeTableEntry cte = chg.getEntry(PropertyInfoIndex.ATTENDEE);
-            if (evAtt != null) {
-              cte.addChangedValue(att);
-            } else {
-              cte.addAddedValue(att);
-            }
           }
 
           if (ourAtt == null) {

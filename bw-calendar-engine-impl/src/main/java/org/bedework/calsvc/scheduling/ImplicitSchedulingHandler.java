@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc.scheduling;
 
+import org.bedework.calfacade.Attendee;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
@@ -59,6 +60,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
   public void implicitSchedule(final EventInfo ei,
                                final boolean noInvites) {
     UpdateResult uer = ei.getUpdResult();
+    uer.wasScheduled = true;
 
     final BwEvent ev = ei.getEvent();
 
@@ -121,7 +123,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
       }
 
       ev.setScheduleMethod(meth);
-      uer.schedulingResult = attendeeRespond(ei, meth);
+      attendeeRespond(ei, meth, uer);
       return;
     }
 
@@ -142,9 +144,10 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
     }
 
     if (!noInvites) {
-      uer.schedulingResult = schedule(ei,
-                                      ei.getReplyAttendeeURI(),
-                                      uer.fromAttUri, false);
+      schedule(ei,
+               ei.getReplyAttendeeURI(),
+               uer.fromAttUri,
+               false, uer);
     }
 
     if (!uer.adding && !Util.isEmpty(uer.deletedAttendees)) {
@@ -174,7 +177,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
         final EventInfo cei = new EventInfo(cncl);
 
         final ScheduleResult cnclr = schedule(cei,
-                                              null, null, false);
+                                              null, null, false, null);
         if (debug()) {
           trace(cnclr.toString());
         }
@@ -204,38 +207,39 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
   public ScheduleResult sendReply(final EventInfo ei,
                                   final int partstat,
                                   final String comment) {
-    ScheduleResult sr = new ScheduleResult();
+    final ScheduleResult sr = new ScheduleResult();
     final BwEvent ev = ei.getEvent();
 
     if (!ev.getAttendeeSchedulingObject()) {
-      sr.errorCode = CalFacadeException.schedulingBadMethod;
-      return sr;
+      return Response.error(sr, new CalFacadeException(
+              CalFacadeException.schedulingBadMethod));
     }
 
-    BwAttendee att = findUserAttendee(ei);
+    final Attendee att = findUserAttendee(ei);
 
     if (att == null) {
-      sr.errorCode = CalFacadeException.schedulingNotAttendee;
-      return sr;
+      return Response.error(sr, new CalFacadeException(
+              CalFacadeException.schedulingNotAttendee));
     }
-
-    att = (BwAttendee)att.clone();
-    att.setPartstat(IcalDefs.partstats[partstat]);
-    att.setRsvp(partstat == IcalDefs.partstatNeedsAction);
 
     final BwEvent outEv = new BwEventObj();
     final EventInfo outEi = new EventInfo(outEv);
+    final var outParticipants = outEv.getParticipants();
+
+    final var outAtt = outParticipants.copyAttendee(att);
+    outAtt.setParticipationStatus(IcalDefs.partstats[partstat]);
+    outAtt.setExpectReply(partstat == IcalDefs.partstatNeedsAction);
 
     outEv.setScheduleMethod(ScheduleMethods.methodTypeReply);
-    outEv.addRequestStatus(new BwRequestStatus(IcalDefs.requestStatusSuccess.getCode(),
-                                               IcalDefs.requestStatusSuccess.getDescription()));
+    outEv.addRequestStatus(new BwRequestStatus(
+            IcalDefs.requestStatusSuccess.getCode(),
+            IcalDefs.requestStatusSuccess.getDescription()));
 
     outEv.addRecipient(ev.getOrganizer().getOrganizerUri());
-    outEv.setOriginator(att.getAttendeeUri());
+    outEv.setOriginator(outAtt.getCalendarAddress());
     outEv.updateDtstamp();
     outEv.setOrganizer((BwOrganizer)ev.getOrganizer().clone());
     outEv.getOrganizer().setDtstamp(outEv.getDtstamp());
-    outEv.addAttendee(att);
     outEv.setUid(ev.getUid());
     outEv.setRecurrenceId(ev.getRecurrenceId());
 
@@ -252,7 +256,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
       outEv.addComment(new BwString(null, comment));
     }
 
-    sr = scheduleResponse(outEi);
+    scheduleResponse(outEi, sr);
     outEv.setScheduleState(BwEvent.scheduleStateProcessed);
 
     return sr;

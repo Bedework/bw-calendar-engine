@@ -32,7 +32,7 @@ public class CalSvcHelperRw extends CalSvcDb {
   }
 
   /** Set the owner and creator on a shareable entity.
-   * Makes this visible outside of the package.
+   * Makes this visible outside the package.
    *
    * @param entity shareable entity
    * @param ownerHref - new owner
@@ -50,10 +50,10 @@ public class CalSvcHelperRw extends CalSvcDb {
     return getSvc().getEncrypter();
   }
 
-  protected BwCalendar getSpecialCalendar(final BwPrincipal owner,
+  protected BwCalendar getSpecialCalendar(final BwPrincipal<?> owner,
                                           final int calType,
                                           final boolean create,
-                                          final int access) throws CalFacadeException {
+                                          final int access) {
     return getCols().getSpecial(owner, calType, create, access);
   }
 
@@ -74,7 +74,7 @@ public class CalSvcHelperRw extends CalSvcDb {
           final FilterBase filter,
           final BwDateTime startDate, final BwDateTime endDate,
           final RecurringRetrievalMode recurRetrieval,
-          final boolean freeBusy) throws CalFacadeException {
+          final boolean freeBusy) {
     final Events events = (Events)getSvc().getEventsHandler();
 
     return events.getMatching(cols, filter, startDate, endDate,
@@ -90,8 +90,9 @@ public class CalSvcHelperRw extends CalSvcDb {
    *                collection as there may be more than
    *                one with this uid in the inbox.
    */
-  protected GetEntitiesResponse<EventInfo> getEventsByUid(final String colPath,
-                                                          final String guid) {
+  protected GetEntitiesResponse<EventInfo> getEventsByUid(
+          final String colPath,
+          final String guid) {
     final Events events = (Events)getSvc().getEventsHandler();
     final GetEntitiesResponse<EventInfo> resp = new GetEntitiesResponse<>();
 

@@ -24,6 +24,7 @@ import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
 import org.bedework.caldav.util.filter.BooleanFilter;
 import org.bedework.caldav.util.filter.FilterBase;
+import org.bedework.calfacade.Attendee;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
@@ -65,11 +66,11 @@ import org.bedework.calfacade.svc.EventInfo.UpdateResult;
 import org.bedework.calfacade.svc.RealiasResult;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
-import org.bedework.convert.Icalendar;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
 import org.bedework.calsvci.EventProperties;
 import org.bedework.calsvci.EventsI;
 import org.bedework.convert.IcalTranslator;
+import org.bedework.convert.Icalendar;
 import org.bedework.convert.RecurUtil;
 import org.bedework.convert.RecurUtil.RecurPeriods;
 import org.bedework.convert.RecurUtil.Recurrence;
@@ -548,10 +549,12 @@ class Events extends CalSvcDb implements EventsI {
 
       final Integer maxAttendees =
               getSvc().getAuthProperties().getMaxAttendeesPerInstance();
+      final var parts = event.getParticipants();
+      final var atts = parts.getAttendees();
 
       if ((maxAttendees != null) &&
-              !Util.isEmpty(event.getAttendees()) &&
-              (event.getAttendees().size() > maxAttendees)) {
+              !Util.isEmpty(atts) &&
+              (atts.size() > maxAttendees)) {
         return notOk(updResult, limitExceeded,
                               CalFacadeException.schedulingTooManyAttendees);
       }
@@ -567,38 +570,41 @@ class Events extends CalSvcDb implements EventsI {
 
       final Collection<BwEventProxy> overrides = ei.getOverrideProxies();
       if (overrides != null) {
-        for (final BwEventProxy ovei: overrides) {
-          setScheduleState(ovei, true, schedulingInbox);
+        for (final BwEventProxy ovev: overrides) {
+          setScheduleState(ovev, true, schedulingInbox);
+
+          final var ovParts = ovev.getParticipants();
+          final var ovAtts = ovParts.getAttendees();
 
           if ((maxAttendees != null) &&
-                  !Util.isEmpty(ovei.getAttendees()) &&
-                  (ovei.getAttendees().size() > maxAttendees)) {
+                  !Util.isEmpty(ovAtts) &&
+                  (ovAtts.size() > maxAttendees)) {
             return notOk(updResult, limitExceeded,
                                   CalFacadeException.schedulingTooManyAttendees);
           }
 
-          ovei.setDtstamps(currentTimestamp);
+          ovev.setDtstamps(currentTimestamp);
 
           if (cal.getCollectionInfo().scheduling &&
-              (ovei.getOrganizerSchedulingObject() ||
-               ovei.getAttendeeSchedulingObject())) {
+              (ovev.getOrganizerSchedulingObject() ||
+               ovev.getAttendeeSchedulingObject())) {
             schedulingObject = true;
           }
 
-          if (ovei.getOrganizerSchedulingObject()) {
+          if (ovev.getOrganizerSchedulingObject()) {
             // Set RSVP on all attendees with PARTSTAT = NEEDS_ACTION
-            for (final BwAttendee att: ovei.getAttendees()) {
-              if (att.getPartstat().equals(IcalDefs.partstatValNeedsAction)) {
-                att.setRsvp(true);
+            for (final Attendee att: ovAtts) {
+              if (att.getParticipationStatus().equals(IcalDefs.partstatValNeedsAction)) {
+                att.setExpectReply(true);
               }
             }
           }
 
           if (schedulingObject) {
-            ovei.updateStag(currentTimestamp);
+            ovev.updateStag(currentTimestamp);
           }
 
-          final BwEventAnnotation ann = ovei.getRef();
+          final BwEventAnnotation ann = ovev.getRef();
           ann.setColPath(event.getColPath());
           ann.setName(event.getName());
         }
@@ -606,9 +612,9 @@ class Events extends CalSvcDb implements EventsI {
 
       if (event.getOrganizerSchedulingObject()) {
         // Set RSVP on all attendees with PARTSTAT = NEEDS_ACTION
-        for (final BwAttendee att: event.getAttendees()) {
-          if (att.getPartstat().equals(IcalDefs.partstatValNeedsAction)) {
-            att.setRsvp(true);
+        for (final Attendee att: atts) {
+          if (att.getParticipationStatus().equals(IcalDefs.partstatValNeedsAction)) {
+            att.setExpectReply(true);
           }
         }
       }
@@ -720,7 +726,7 @@ class Events extends CalSvcDb implements EventsI {
       final BwCalendar cal = validate(event, false, false,
                                       autoCreateCollection);
       if (cal == null) {
-        throw new RuntimeException("No calendar for event");
+        throw new CalFacadeException("No calendar for event");
       }
 
       adjustEntities(ei);
@@ -833,9 +839,11 @@ class Events extends CalSvcDb implements EventsI {
 
       if (organizerSchedulingObject) {
         // Set RSVP on all attendees with PARTSTAT = NEEDS_ACTION
-        for (final BwAttendee att: event.getAttendees()) {
-          if (att.getPartstat().equals(IcalDefs.partstatValNeedsAction)) {
-            att.setRsvp(true);
+        for (final Attendee att: event.getParticipants()
+                                      .getAttendees()) {
+          if (att.getParticipationStatus().equals(
+                  IcalDefs.partstatValNeedsAction)) {
+            att.setExpectReply(true);
           }
         }
       }
@@ -1898,7 +1906,8 @@ class Events extends CalSvcDb implements EventsI {
 
     final BwOrganizer org = ev.getOrganizer();
 
-    final Set<BwAttendee> atts = ev.getAttendees();
+    final var parts = ev.getParticipants();
+    final Set<Attendee> atts = parts.getAttendees();
 
     if (Util.isEmpty(atts) || (org == null)) {
       return;
@@ -1906,6 +1915,7 @@ class Events extends CalSvcDb implements EventsI {
 
     final String curPrincipal = getSvc().getPrincipal().getPrincipalRef();
     final Directories dirs = getSvc().getDirectories();
+    final var curCalAddr = dirs.principalToCaladdr(getPrincipal());
 
     /* Check organizer property to see if it is us.
      */
@@ -1916,17 +1926,11 @@ class Events extends CalSvcDb implements EventsI {
         (evPrincipal.getPrincipalRef().equals(curPrincipal));
 
     if (!weAreOrganizer) {
-      /* Go through the attendees and see if at least one is us.
+      /* Check the attendees and see if there is one for us.
           If so this is an attendee-scheduling-object.
        */
-      for (final BwAttendee att: atts) {
-        evPrincipal = getSvc().getDirectories().caladdrToPrincipal(att.getAttendeeUri());
-        if ((evPrincipal != null) &&
-                (evPrincipal.getPrincipalRef().equals(curPrincipal))) {
-          ev.setAttendeeSchedulingObject(true);
-
-          break;
-        }
+      if (parts.findAttendee(curCalAddr) != null) {
+        ev.setAttendeeSchedulingObject(true);
       }
 
       return;

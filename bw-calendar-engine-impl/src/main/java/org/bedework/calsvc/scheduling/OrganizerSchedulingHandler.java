@@ -31,6 +31,7 @@ import org.bedework.convert.Icalendar;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.Response;
 
 /** Rather than have a single class steering calls to a number of smaller classes
  * we will build up a full implementation by progressively implementing abstract
@@ -54,7 +55,8 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
   public ScheduleResult schedule(final EventInfo ei,
                                  final String recipient,
                                  final String fromAttUri,
-                                 final boolean iSchedule) {
+                                 final boolean iSchedule,
+                                 final ScheduleResult res) {
     /* A request (that is we are (re)sending a meeting request) or a publish
      *
      * <p>We handle the following iTIP methods<ul>
@@ -76,13 +78,20 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
      * If any external recipients - leave in outbox with unprocessed status.
      * </pre>
      */
-    final ScheduleResult sr = new ScheduleResult();
+    final ScheduleResult sr;
+
+    if (res == null) {
+      sr = new ScheduleResult();
+    } else {
+      sr = res;
+    }
+
     final BwEvent ev = ei.getEvent();
 
     try {
       if (!Icalendar.itipRequestMethodType(ev.getScheduleMethod())) {
-        sr.errorCode = CalFacadeException.schedulingBadMethod;
-        return sr;
+        return Response.error(sr, new CalFacadeException(
+                CalFacadeException.schedulingBadMethod));
       }
 
       /* For each recipient within this system add the event to their inbox.
@@ -105,7 +114,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
       /* For a request type action the organizer should be the current user. */
 
       if (!initScheduleEvent(ei, false, iSchedule)) {
-        return sr;
+        return Response.notFound(sr, "Unable to initialise schedule");
       }
 
       /* Do this here to check we have access. We might need the outbox later
@@ -121,7 +130,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
 
       sendSchedule(sr, ei, recipient, fromAttUri, true);
 
-      if ((sr.errorCode != null) || sr.ignored) {
+      if (!sr.isOk() || sr.ignored) {
         return sr;
       }
 
@@ -137,17 +146,14 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
         final var addResp = addToOutBox(ei, outBox, sr.externalRcs);
 
         if (!addResp.isOk()) {
-          sr.errorCode = addResp.getMessage();
+          return Response.fromResponse(sr, addResp);
         }
       }
 
       return sr;
     } catch (final Throwable t) {
       getSvc().rollbackTransaction();
-      if (t instanceof CalFacadeException) {
-        throw (CalFacadeException)t;
-      }
-      throw new CalFacadeException(t);
+      return Response.error(sr, t);
     }
   }
 
@@ -164,7 +170,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
     }
 
     return schedule(outEi,
-                    fromAtt.getAttendeeUri(), null, false);
+                    fromAtt.getAttendeeUri(), null, false, null);
   }
 
   /* (non-Javadoc)

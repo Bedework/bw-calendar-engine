@@ -18,6 +18,7 @@
 */
 package org.bedework.inoutsched.processors;
 
+import org.bedework.calfacade.Attendee;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
@@ -35,6 +36,7 @@ import org.bedework.calsvci.SchedulingI;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.ScheduleMethods;
+import org.bedework.util.misc.response.Response;
 import org.bedework.util.timezones.Timezones;
 import org.bedework.util.timezones.TimezonesException;
 
@@ -44,7 +46,6 @@ import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.property.DtStart;
 
 import java.text.ParseException;
-import java.util.Collection;
 import java.util.Map;
 
 /** Handles incoming method REPLY scheduling messages.
@@ -63,7 +64,7 @@ public class InReply extends InProcessor {
   }
 
   @Override
-  public ProcessResult process(final EventInfo ei) throws CalFacadeException {
+  public ProcessResult process(final EventInfo ei) {
     /* Process a response we as the organizer, or their proxy, received from
      * an attendee
      */
@@ -89,54 +90,59 @@ public class InReply extends InProcessor {
       }
 
       if (ev.getOriginator() == null) {
-        pr.sr.errorCode = CalFacadeException.schedulingNoOriginator;
-        break check;
+        return Response.error(pr, new CalFacadeException(
+                CalFacadeException.schedulingNoOriginator));
       }
 
       String attUri = null;
 
       /* Should be exactly one attendee */
       if (!ev.getSuppressed()) {
-        final Collection<BwAttendee> atts = ev.getAttendees();
-        if ((atts == null) || (atts.size() != 1)) {
-          pr.sr.errorCode = CalFacadeException.schedulingExpectOneAttendee;
-          break check;
+        final var parts = ev.getParticipants();
+
+        if (parts.getAttendees().size() != 1) {
+          return Response.error(pr, new CalFacadeException(
+                  CalFacadeException.schedulingExpectOneAttendee));
         }
 
-        final BwAttendee att = atts.iterator().next();
-        if (!att.getPartstat().equals(acceptPartstat)) {
+        final Attendee att = parts.getAttendees().iterator().next();
+
+        if (!att.getParticipationStatus().equals(acceptPartstat)) {
           pr.attendeeAccepting = false;
         }
 
-        attUri = att.getAttendeeUri();
+        attUri = att.getCalendarAddress();
       }
 
       if (ei.getNumOverrides() > 0) {
         for (final EventInfo oei: ei.getOverrides()) {
           ev = oei.getEvent();
-          final Collection<BwAttendee> atts = ev.getAttendees();
-          if ((atts == null) || (atts.size() != 1)) {
-            pr.sr.errorCode = CalFacadeException.schedulingExpectOneAttendee;
-            break check;
+
+          final var parts = ev.getParticipants();
+
+          if (parts.getAttendees().size() != 1) {
+            return Response.error(pr, new CalFacadeException(
+                    CalFacadeException.schedulingExpectOneAttendee));
           }
 
-          final BwAttendee att = atts.iterator().next();
-          if (!att.getPartstat().equals(acceptPartstat)) {
+          final Attendee att = parts.getAttendees().iterator().next();
+
+          if (!att.getParticipationStatus().equals(acceptPartstat)) {
             pr.attendeeAccepting = false;
           }
 
           if (attUri == null) {
-            attUri = att.getAttendeeUri();
-          } else if (!attUri.equals(att.getAttendeeUri())) {
-            pr.sr.errorCode = CalFacadeException.schedulingExpectOneAttendee;
-            break check;
+            attUri = att.getCalendarAddress();
+          } else if (!attUri.equals(att.getCalendarAddress())) {
+            return Response.error(pr, new CalFacadeException(
+                    CalFacadeException.schedulingExpectOneAttendee));
           }
         }
       }
 
       if (attUri == null) {
-        pr.sr.errorCode = CalFacadeException.schedulingExpectOneAttendee;
-        break check;
+        return Response.error(pr, new CalFacadeException(
+                CalFacadeException.schedulingExpectOneAttendee));
       }
 
       /*TODO If the sequence of the incoming event is lower than the sequence on the
@@ -146,10 +152,10 @@ public class InReply extends InProcessor {
       final boolean vpoll = colEi.getEvent().getEntityType() ==
               IcalDefs.entityTypeVpoll;
       if (vpoll) {
-        if (!updateOrganizerPollCopy(colEi, ei, attUri, pr.sr)) {
+        if (!updateOrganizerPollCopy(colEi, ei, attUri, pr)) {
           break check;
         }
-      } else if (!updateOrganizerCopy(colEi, ei, attUri, pr.sr)) {
+      } else if (!updateOrganizerCopy(colEi, ei, attUri, pr)) {
         break check;
       }
 
@@ -159,9 +165,9 @@ public class InReply extends InProcessor {
     return pr;
   }
 
-  /* ====================================================================
+  /* =============================================================
                       Private methods
-     ==================================================================== */
+     ============================================================= */
 
   private boolean updateOrganizerPollCopy(final EventInfo colEi,
                                           final EventInfo inBoxEi,
@@ -228,7 +234,8 @@ public class InReply extends InProcessor {
     }
 
     if (inBoxEv.getScheduleMethod() != ScheduleMethods.methodTypeReply) {
-      sr.errorCode = CalFacadeException.schedulingBadMethod;
+      Response.error(sr, new CalFacadeException(
+              CalFacadeException.schedulingExpectOneAttendee));
       return false;
     }
 
@@ -248,8 +255,9 @@ public class InReply extends InProcessor {
         if (debug()) {
           debug("Not an attendee of " + calEv);
         }
-        sr.errorCode = CalFacadeException.schedulingUnknownAttendee;
-        sr.extraInfo = attUri;
+        Response.error(sr, new CalFacadeException(
+                CalFacadeException.schedulingUnknownAttendee,
+                attUri));
         return false;
       }
 

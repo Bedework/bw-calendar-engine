@@ -599,12 +599,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public String principalToCaladdr(final AccessPrincipal principal) {
     try {
-      if (principal instanceof BwPrincipal) {
-        return getSvci().getDirectories().principalToCaladdr((BwPrincipal)principal);
-      }
-
-      return getSvci().getDirectories().principalToCaladdr(
-              (BwPrincipal)getPrincipal(principal.getPrincipalRef()));
+      return getSvci().getDirectories().principalToCaladdr(principal);
     } catch (final Throwable t) {
       throw new WebdavException(t);
     }
@@ -1059,37 +1054,24 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
   @Override
   public Collection<SchedRecipientResult> schedule(final CalDAVEvent<?> ev) {
-    try {
-      final ScheduleResult sr;
+    final BwEvent event = getEvent(ev);
+    event.setOwnerHref(currentPrincipal.getPrincipalRef());
 
-      final BwEvent event = getEvent(ev);
-      event.setOwnerHref(currentPrincipal.getPrincipalRef());
-      if (Icalendar.itipReplyMethodType(event.getScheduleMethod())) {
-        sr = getSvci().getScheduler().scheduleResponse(getEvinfo(ev));
-      } else {
-        sr = getSvci().getScheduler().schedule(getEvinfo(ev),
-                                               null, null,
-                                               true); // iSchedule
-      }
+    final var sched = getSvci().getScheduler();
+    final var evinfo = getEvinfo(ev);
 
-      return checkStatus(sr);
-    } catch (final WebdavException we) {
-      throw we;
-    } catch (final CalFacadeAccessException cfae) {
-      throw new WebdavForbidden();
-    } catch (final CalFacadeException cfe) {
-      if (CalFacadeException.duplicateGuid.equals(cfe.getMessage())) {
-        throw new WebdavBadRequest("Duplicate-guid");
-      }
-      throw new WebdavException(cfe);
-    } catch (final Throwable t) {
-      throw new WebdavException(t);
+    if (Icalendar.itipReplyMethodType(event.getScheduleMethod())) {
+      return checkStatus(sched.scheduleResponse(evinfo, null));
     }
+
+    return checkStatus(sched.schedule(evinfo,
+                                      null, null,
+                                      true, null)); // iSchedule
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                   Events
-   * ==================================================================== */
+   * ============================================================== */
 
   @Override
   public Collection<CalDAVEvent<?>> addEvent(final CalDAVEvent<?> ev,
@@ -1331,44 +1313,25 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   }
 
   @Override
-  public Collection<SchedRecipientResult> requestFreeBusy(final CalDAVEvent<?> val,
-                                                          final boolean iSchedule) {
-    try {
-      final ScheduleResult sr;
-
-      final BwEvent ev = getEvent(val);
-      if (currentPrincipal != null) {
-        ev.setOwnerHref(currentPrincipal.getPrincipalRef());
-      }
-
-      if (Icalendar.itipReplyMethodType(ev.getScheduleMethod())) {
-        sr = getSvci().getScheduler().scheduleResponse(getEvinfo(val));
-      } else {
-        sr = getSvci().getScheduler().schedule(getEvinfo(val),
-                                               null, null, iSchedule);
-      }
-
-      return checkStatus(sr);
-    } catch (CalFacadeAccessException cfae) {
-      if (debug()) {
-        error(cfae);
-      }
-      throw new WebdavForbidden();
-    } catch (final CalFacadeException cfe) {
-      if (CalFacadeException.duplicateGuid.equals(cfe.getMessage())) {
-        throw new WebdavBadRequest("Duplicate-guid");
-      }
-      throw new WebdavException(cfe);
-    } catch (final WebdavException wde) {
-      throw wde;
-    } catch (final Throwable t) {
-      throw new WebdavException(t);
+  public Collection<SchedRecipientResult> requestFreeBusy(
+          final CalDAVEvent<?> val,
+          final boolean iSchedule) {
+    final BwEvent ev = getEvent(val);
+    if (currentPrincipal != null) {
+      ev.setOwnerHref(currentPrincipal.getPrincipalRef());
     }
+
+    final var sched = getSvci().getScheduler();
+    final var evinfo = getEvinfo(val);
+
+    if (Icalendar.itipReplyMethodType(ev.getScheduleMethod())) {
+      return checkStatus(sched.scheduleResponse(evinfo, null));
+    }
+
+    return checkStatus(sched.schedule(evinfo,
+                                      null, null, iSchedule, null));
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.sysinterface.SysIntf#getSpecialFreeBusy(java.lang.String, java.util.Set, java.lang.String, org.bedework.caldav.util.TimeRange, java.io.Writer)
-   */
   @Override
   public void getSpecialFreeBusy(final String cua,
                                  final Set<String> recipients,
@@ -2582,8 +2545,17 @@ public class BwSysIntfImpl implements Logged, SysIntf {
    * @return recipient results
    */
   private Collection<SchedRecipientResult> checkStatus(final ScheduleResult sr) {
-    if ((sr.errorCode == null) ||
-        (sr.errorCode.equals(CalFacadeException.schedulingNoRecipients))) {
+    final String errorCode;
+    final var exc = sr.getException();
+
+    if (exc != null) {
+      errorCode = sr.getException().getMessage();
+    } else {
+      errorCode = null;
+    }
+
+    if ((errorCode == null) ||
+        (errorCode.equals(CalFacadeException.schedulingNoRecipients))) {
       final Collection<SchedRecipientResult> srrs = new ArrayList<>();
 
       for (final ScheduleRecipientResult bwsrr: sr.recipientResults.values()) {
@@ -2602,19 +2574,19 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       return srrs;
     }
 
-    if (sr.errorCode.equals(CalFacadeException.schedulingBadMethod)) {
+    if (errorCode.equals(CalFacadeException.schedulingBadMethod)) {
       throw new WebdavForbidden(CaldavTags.validCalendarData, "Bad METHOD");
     }
 
-    if (sr.errorCode.equals(CalFacadeException.schedulingBadAttendees)) {
+    if (errorCode.equals(CalFacadeException.schedulingBadAttendees)) {
       throw new WebdavForbidden(CaldavTags.attendeeAllowed, "Bad attendees");
     }
 
-    if (sr.errorCode.equals(CalFacadeException.schedulingAttendeeAccessDisallowed)) {
+    if (errorCode.equals(CalFacadeException.schedulingAttendeeAccessDisallowed)) {
       throw new WebdavForbidden(CaldavTags.attendeeAllowed, "attendeeAccessDisallowed");
     }
 
-    throw new WebdavForbidden(sr.errorCode);
+    throw new WebdavForbidden(errorCode);
   }
 
   private BwCalendar unwrap(final CalDAVCollection<?> col) {

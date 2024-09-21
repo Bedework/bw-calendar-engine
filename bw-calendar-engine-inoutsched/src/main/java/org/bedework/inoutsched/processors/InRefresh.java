@@ -18,16 +18,13 @@
 */
 package org.bedework.inoutsched.processors;
 
-import org.bedework.calfacade.BwAttendee;
+import org.bedework.calfacade.Attendee;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.SchedulingI;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.response.Response;
-
-import java.util.Collection;
 
 /** Handles incoming method REFRESH scheduling messages.
  *
@@ -44,10 +41,9 @@ public class InRefresh extends InProcessor {
   /**
    * @param ei the event
    * @return ScheduleResult
-   * @throws CalFacadeException
    */
   @Override
-  public ProcessResult process(final EventInfo ei) throws CalFacadeException {
+  public ProcessResult process(final EventInfo ei) {
     final SchedulingI sched =  getSvc().getScheduler();
     final BwEvent ev = ei.getEvent();
     final ProcessResult pr = new ProcessResult();
@@ -58,12 +54,13 @@ public class InRefresh extends InProcessor {
      */
 
     /* Should be exactly one attendee. */
-    final Collection<BwAttendee> atts = ev.getAttendees();
-    if ((atts == null) || (atts.size() != 1)) {
+    final var parts = ev.getParticipants();
+
+    if (parts.getAttendees().size() != 1) {
       return null;
     }
 
-    final BwAttendee att = atts.iterator().next();
+    final Attendee att = parts.getAttendees().iterator().next();
 
     /* We can only do this if there is an active copy */
 
@@ -76,16 +73,18 @@ public class InRefresh extends InProcessor {
     calEi.getEvent().setScheduleMethod(ScheduleMethods.methodTypeRequest);
 
     /* Just send a copy to the attendee. */
-    pr.sr = sched.schedule(calEi,
-                           att.getAttendeeUri(), null, false);
+    sched.schedule(calEi,
+                   att.getCalendarAddress(), null, false, pr);
 
-    if (pr.sr.errorCode == null) {
-      final Response resp = getSvc().getEventsHandler()
-                                    .delete(ei, false);
+    if (!pr.isOk()) {
+      return pr;
+    }
 
-      if (!resp.isOk()) {
-        return Response.fromResponse(pr, resp);
-      }
+    final Response resp = getSvc().getEventsHandler()
+                                  .delete(ei, false);
+
+    if (!resp.isOk()) {
+      return Response.fromResponse(pr, resp);
     }
 
     return pr;

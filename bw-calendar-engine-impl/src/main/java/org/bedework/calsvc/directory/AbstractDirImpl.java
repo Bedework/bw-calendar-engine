@@ -755,11 +755,8 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   protected static Map<String, BwPrincipal<?>> calAddrToPrincipalMap =
       new FlushMap<>(maxCaRefreshTime, maxCaMapSize);
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Directories#principalToCaladdr(org.bedework.calfacade.BwPrincipal)
-   */
   @Override
-  public String principalToCaladdr(final BwPrincipal<?> val) {
+  public String principalToCaladdr(final AccessPrincipal val) {
     return userToCaladdr(val.getAccount());
   }
 

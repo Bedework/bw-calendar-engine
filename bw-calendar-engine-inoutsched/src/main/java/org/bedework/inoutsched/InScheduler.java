@@ -34,7 +34,6 @@ import org.bedework.inoutsched.processors.InReply;
 import org.bedework.inoutsched.processors.InRequest;
 import org.bedework.inoutsched.processors.SchedAttendeeUpdate;
 import org.bedework.inoutsched.processors.SchedProcessor;
-import org.bedework.inoutsched.processors.SchedProcessor.SchedProcResult;
 import org.bedework.sysevents.events.EntityQueuedEvent;
 import org.bedework.sysevents.events.ScheduleUpdateEvent;
 import org.bedework.sysevents.events.SysEvent;
@@ -113,10 +112,17 @@ public class InScheduler extends AbstractScheduler {
         return ProcessMessageResult.PROCESSED;
       }
 
-      final SchedProcResult pr = proc.process(ei);
+      final var sr = proc.process(ei);
 
       if (debug()) {
-        debug("InSchedule " + pr.sr);
+        debug("InSchedule " + sr);
+      }
+
+      if (!sr.isOk()) {
+        if (sr.getException() != null) {
+          // Do better than this...
+          throw sr.getException();
+        }
       }
 
       return ProcessMessageResult.PROCESSED;

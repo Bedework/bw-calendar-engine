@@ -353,7 +353,9 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     if (ui.getStatus() == ScheduleStates.scheduleDeferred) {
       sr.externalRcs.add(recip);
     } else if (ui.getStatus() == ScheduleStates.scheduleNoAccess) {
-      sr.errorCode = CalFacadeException.schedulingAttendeeAccessDisallowed;
+      Response.error(sr, new CalFacadeException(
+              CalFacadeException.schedulingAttendeeAccessDisallowed));
+
       if (att != null) {
         att.setScheduleStatus(IcalDefs.deliveryStatusNoAccess);
       }

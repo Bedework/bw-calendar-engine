@@ -47,10 +47,7 @@ public abstract class InProcessor extends CalSvcHelperRw {
   }
 
   /** Result from processing */
-  public static class ProcessResult extends Response {
-    /** Result of the scheduling operations */
-    public ScheduleResult sr = new ScheduleResult();
-
+  public static class ProcessResult extends ScheduleResult {
     /** processors set this true when appropriate */
     public boolean noInboxChange;
 
@@ -63,18 +60,17 @@ public abstract class InProcessor extends CalSvcHelperRw {
     public void toStringSegment(final ToString ts) {
       super.toStringSegment(ts);
 
-      ts.append("sr", sr);
+      ts.append("noInboxChange", noInboxChange);
     }
   }
 
   /**
    * @param ei the event
    * @return ProcessResult
-   * @throws CalFacadeException on fatal error
    */
-  public abstract ProcessResult process(EventInfo ei) throws CalFacadeException;
+  public abstract ProcessResult process(EventInfo ei);
 
-  /** Update the inbox according to it's owners wishes (what if owner and proxy
+  /** Update the inbox according to its owners wishes (what if owner and proxy
    * have different wishes)
    *
    * @param ei - the pending inbox event
@@ -92,7 +88,7 @@ public abstract class InProcessor extends CalSvcHelperRw {
     boolean delete = forceDelete;
 
     if (!delete) {
-      final BwPrincipal principal =
+      final BwPrincipal<?> principal =
               getSvc().getUsersHandler().getPrincipal(inboxOwnerHref);
 
       if (principal == null) {

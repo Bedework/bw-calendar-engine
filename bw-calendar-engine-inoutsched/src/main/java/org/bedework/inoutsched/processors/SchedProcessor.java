@@ -36,25 +36,9 @@ public abstract class SchedProcessor extends CalSvcDb {
     setSvc(svci);
   }
 
-  /** Result from processing */
-  public static class SchedProcResult {
-    /** Result of the scheduling operations */
-    public ScheduleResult sr = new ScheduleResult();
-
-    /* * processors set this true when appropriate * /
-    public boolean noInboxChange;
-
-    /** Errors imply removal of associated inbox entry if any * /
-    public boolean removeInboxEntry;
-
-    /** Update was just attendee accepting * /
-    public boolean attendeeAccepting;
-    */
-  }
-
   /**
    * @param ei - the originating event
    * @return ProcessResult
    */
-  public abstract SchedProcResult process(final EventInfo ei);
+  public abstract ScheduleResult process(final EventInfo ei);
 }

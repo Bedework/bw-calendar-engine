@@ -41,10 +41,9 @@ public class InCancel extends InProcessor {
   /**
    * @param ei the incoming event
    * @return ScheduleResult
-   * @throws CalFacadeException on error
    */
   @Override
-  public ProcessResult process(final EventInfo ei) throws CalFacadeException {
+  public ProcessResult process(final EventInfo ei) {
     /* We, as an attendee, received a CANCEL from the organizer.
      *
      */
@@ -57,8 +56,9 @@ public class InCancel extends InProcessor {
 
     check: {
       if (ev.getOriginator() == null) {
-        pr.sr.errorCode = CalFacadeException.schedulingNoOriginator;
-        break check;
+        return Response.error(pr,
+                              new CalFacadeException(
+                                      CalFacadeException.schedulingNoOriginator));
       }
 
       final BwPreferences prefs = getPrefs();
