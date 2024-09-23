@@ -547,8 +547,8 @@ class Events extends CalSvcDb implements EventsI {
 
       final Integer maxAttendees =
               getSvc().getAuthProperties().getMaxAttendeesPerInstance();
-      final var parts = event.getParticipants();
-      final var atts = parts.getAttendees();
+      final var si = event.getSchedulingInfo();
+      final var atts = si.getAttendees();
 
       if ((maxAttendees != null) &&
               !Util.isEmpty(atts) &&
@@ -571,7 +571,7 @@ class Events extends CalSvcDb implements EventsI {
         for (final BwEventProxy ovev: overrides) {
           setScheduleState(ovev, true, schedulingInbox);
 
-          final var ovParts = ovev.getParticipants();
+          final var ovParts = ovev.getSchedulingInfo();
           final var ovAtts = ovParts.getAttendees();
 
           if ((maxAttendees != null) &&
@@ -837,7 +837,7 @@ class Events extends CalSvcDb implements EventsI {
 
       if (organizerSchedulingObject) {
         // Set RSVP on all attendees with PARTSTAT = NEEDS_ACTION
-        for (final Attendee att: event.getParticipants()
+        for (final Attendee att: event.getSchedulingInfo()
                                       .getAttendees()) {
           if (att.getParticipationStatus().equals(
                   IcalDefs.partstatValNeedsAction)) {
@@ -1903,7 +1903,7 @@ class Events extends CalSvcDb implements EventsI {
     }
 
 
-    final var parts = ev.getParticipants();
+    final var parts = ev.getSchedulingInfo();
     final var sowner = parts.getSchedulingOwner();
     final Set<Attendee> atts = parts.getAttendees();
 

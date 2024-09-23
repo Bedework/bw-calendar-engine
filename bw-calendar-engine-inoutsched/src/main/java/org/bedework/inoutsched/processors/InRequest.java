@@ -693,11 +693,11 @@ public class InRequest extends InProcessor {
         ourEv.setPollWinner(pw);
       }
 
-      final var ourParts = ourEv.getParticipants();
-      ourParts.clearAttendees();
+      final var ourSi = ourEv.getSchedulingInfo();
+      ourSi.clearAttendees();
 
-      for (final var a: inEv.getParticipants().getAttendees()) {
-        ourParts.copyAttendee(a);
+      for (final var a: inEv.getSchedulingInfo().getAttendees()) {
+        ourSi.copyAttendee(a);
       }
 
       if (!statusUpdate) {
@@ -1059,11 +1059,11 @@ public class InRequest extends InProcessor {
           String transparency = ourEv.getTransparency();
 
           Attendee ourAtt = null;
-          final var ourParts = ourEv.getParticipants();
+          final var ourSi = ourEv.getSchedulingInfo();
 
-          for (final Attendee inAtt: inEv.getParticipants()
+          for (final Attendee inAtt: inEv.getSchedulingInfo()
                                          .getAttendees()) {
-            final var att = ourParts.copyAttendee(inAtt);
+            final var att = ourSi.copyAttendee(inAtt);
 
             att.setScheduleStatus(null);
             final String inAttUri = inAtt.getCalendarAddress();

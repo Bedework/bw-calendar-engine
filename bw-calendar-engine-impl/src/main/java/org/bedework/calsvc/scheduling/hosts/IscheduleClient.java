@@ -632,7 +632,7 @@ public class IscheduleClient implements Logged {
       return;
     }
 
-    iout.addHeader("Originator", ev.getParticipants()
+    iout.addHeader("Originator", ev.getSchedulingInfo()
                                    .getSchedulingOwner()
                                    .getCalendarAddress());
   }

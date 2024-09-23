@@ -178,14 +178,14 @@ public abstract class SchedulingBase extends CalSvcHelperRw
       /* Collect any attendees in overrides not in the copied master */
 
       final Set<EventInfo> overrides = ei.getOverrides();
-      final var parts = newEv.getParticipants();
+      final var si = newEv.getSchedulingInfo();
 
       if (overrides != null) {
         for (final EventInfo oei: overrides) {
-          final var ovParts = oei.getEvent().getParticipants();
+          final var ovParts = oei.getEvent().getSchedulingInfo();
           for (final var ovatt: ovParts.getAttendees()) {
-            if (parts.findAttendee(ovatt.getCalendarAddress()) == null) {
-              parts.copyAttendee(ovatt);
+            if (si.findAttendee(ovatt.getCalendarAddress()) == null) {
+              si.copyAttendee(ovatt);
             }
           }
         }
@@ -422,7 +422,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
 
     /* Remove some stuff we won't be sending */
 
-    final var newParticipants = newEv.getParticipants();
+    final var newParticipants = newEv.getSchedulingInfo();
 
     for (final var att: newParticipants.getAttendees()) {
       att.setScheduleStatus(null);
@@ -541,14 +541,14 @@ public abstract class SchedulingBase extends CalSvcHelperRw
     final BwEvent ev = ei.getEvent();
 
     if (!ev.getSuppressed()) {
-      return ev.getParticipants().findAttendee(attUri);
+      return ev.getSchedulingInfo().findAttendee(attUri);
     }
 
     if (ei.getNumOverrides() > 0) {
       for (final EventInfo oei: ei.getOverrides()) {
         final BwEvent oev = oei.getEvent();
 
-        final Attendee att = oev.getParticipants()
+        final Attendee att = oev.getSchedulingInfo()
                                 .findAttendee(attUri);
         if (att != null) {
           return att;
@@ -562,7 +562,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
   @Override
   public void setupReschedule(final EventInfo ei) {
     final var event = ei.getEvent();
-    final var parts = event.getParticipants();
+    final var parts = event.getSchedulingInfo();
 
     final Attendee userAttendee = findUserAttendee(ei);
     if (userAttendee == null) {
@@ -611,7 +611,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
     event.assignGuid(getSvc().getSystemProperties().getSystemid()); // no-op if already set
 
     /* Ensure attendees have sequence and dtstamp of event */
-    for (final var att: event.getParticipants().getAttendees()) {
+    for (final var att: event.getSchedulingInfo().getAttendees()) {
       if (!att.getScheduleAgent().equalsIgnoreCase(
               IcalDefs.scheduleAgents[scheduleAgentServer])) {
         continue;
@@ -629,7 +629,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
   }
 
   private void getRecipients(final BwEvent master, final BwEvent ev) {
-    for (final var att: ev.getParticipants().getAttendees()) {
+    for (final var att: ev.getSchedulingInfo().getAttendees()) {
       if (!att.getScheduleAgent().equalsIgnoreCase(
               IcalDefs.scheduleAgents[scheduleAgentServer])) {
         continue;

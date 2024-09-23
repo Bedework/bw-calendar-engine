@@ -65,7 +65,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
 
     boolean organizerSchedulingObject = ev.getOrganizerSchedulingObject();
     boolean attendeeSchedulingObject = ev.getAttendeeSchedulingObject();
-    var orgCalAddr = ev.getParticipants()
+    var orgCalAddr = ev.getSchedulingInfo()
                        .getSchedulingOwner().getCalendarAddress();
 
     /* We may have an event with a suppressed master (attendee invited
@@ -80,7 +80,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
         final BwEvent oev = oei.getEvent();
 
         if (orgCalAddr == null) {
-          orgCalAddr = oev.getParticipants()
+          orgCalAddr = oev.getSchedulingInfo()
                           .getSchedulingOwner().getCalendarAddress();
         }
 
@@ -225,10 +225,10 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
 
     final BwEvent outEv = new BwEventObj();
     final EventInfo outEi = new EventInfo(outEv);
-    final var outParticipants = outEv.getParticipants();
+    final var outSi = outEv.getSchedulingInfo();
 
     // Attendees first
-    final var outAtt = outParticipants.copyAttendee(att);
+    final var outAtt = outSi.copyAttendee(att);
     outAtt.setParticipationStatus(IcalDefs.partstats[partstat]);
     outAtt.setExpectReply(partstat == IcalDefs.partstatNeedsAction);
     outEv.setOriginator(outAtt.getCalendarAddress());
@@ -238,10 +238,10 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
             IcalDefs.requestStatusSuccess.getCode(),
             IcalDefs.requestStatusSuccess.getDescription()));
 
-    final var evSowner = ev.getParticipants().getSchedulingOwner();
+    final var evSowner = ev.getSchedulingInfo().getSchedulingOwner();
     outEv.addRecipient(evSowner.getCalendarAddress());
     outEv.updateDtstamp();
-    final var outSowner = outParticipants.copySchedulingOwner(evSowner);
+    final var outSowner = outSi.copySchedulingOwner(evSowner);
     outSowner.setSchedulingDtStamp(outEv.getDtstamp());
     outEv.setUid(ev.getUid());
     outEv.setRecurrenceId(ev.getRecurrenceId());

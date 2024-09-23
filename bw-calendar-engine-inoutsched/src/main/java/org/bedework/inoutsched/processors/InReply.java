@@ -98,14 +98,14 @@ public class InReply extends InProcessor {
 
       /* Should be exactly one attendee */
       if (!ev.getSuppressed()) {
-        final var parts = ev.getParticipants();
+        final var si = ev.getSchedulingInfo();
 
-        if (parts.getAttendees().size() != 1) {
+        if (si.getAttendees().size() != 1) {
           return Response.error(pr, new CalFacadeException(
                   CalFacadeException.schedulingExpectOneAttendee));
         }
 
-        final Attendee att = parts.getAttendees().iterator().next();
+        final Attendee att = si.getAttendees().iterator().next();
 
         if (!att.getParticipationStatus().equals(acceptPartstat)) {
           pr.attendeeAccepting = false;
@@ -118,14 +118,14 @@ public class InReply extends InProcessor {
         for (final EventInfo oei: ei.getOverrides()) {
           ev = oei.getEvent();
 
-          final var parts = ev.getParticipants();
+          final var si = ev.getSchedulingInfo();
 
-          if (parts.getAttendees().size() != 1) {
+          if (si.getAttendees().size() != 1) {
             return Response.error(pr, new CalFacadeException(
                     CalFacadeException.schedulingExpectOneAttendee));
           }
 
-          final Attendee att = parts.getAttendees().iterator().next();
+          final Attendee att = si.getAttendees().iterator().next();
 
           if (!att.getParticipationStatus().equals(acceptPartstat)) {
             pr.attendeeAccepting = false;
@@ -178,14 +178,14 @@ public class InReply extends InProcessor {
      */
 
     final BwEvent colEv = colEi.getEvent();
-    final var colParts = colEv.getParticipants();
+    final var colSi = colEv.getSchedulingInfo();
     final Map<String, Attendee> voters =
-            colParts.getAttendeesWithRole(ParticipantType.VALUE_VOTER);
+            colSi.getAttendeesWithRole(ParticipantType.VALUE_VOTER);
 
     final BwEvent inEv = inBoxEi.getEvent();
 
     final Map<String, Attendee> invoters =
-            inEv.getParticipants()
+            inEv.getSchedulingInfo()
                 .getAttendeesWithRole(ParticipantType.VALUE_VOTER);
 
     /* Should only be one Participant for this attendee */
@@ -203,12 +203,12 @@ public class InReply extends InProcessor {
     final var colVoter = voters.get(attUri);
     if (colVoter == null) {
       // This is party crashing _ ignore?
-      //colParts.addParticipant(inVoter);
+      //colSi.addParticipant(inVoter);
       return true;
     }
 
     inVoter.copyTo(colVoter);
-    colParts.markChanged();
+    colSi.markChanged();
 
     getSvc().getEventsHandler().update(colEi, false, attUri,
                                        false); // autocreate
