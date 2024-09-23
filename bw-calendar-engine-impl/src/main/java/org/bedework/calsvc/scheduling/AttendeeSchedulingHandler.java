@@ -24,7 +24,6 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwOrganizer;
-import org.bedework.calfacade.BwParticipant;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.ScheduleResult;
@@ -37,8 +36,6 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 import org.bedework.util.misc.response.Response;
-
-import java.util.Map;
 
 /** Rather than have a single class steering calls to a number of smaller classes
  * we will build up a full implementation by progressively implementing abstract
@@ -79,7 +76,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
     outEv.setScheduleMethod(ScheduleMethods.methodTypeRefresh);
 
-    outEv.addRecipient(ev.getOrganizer().getOrganizerUri());
+    outEv.addRecipient(ev.getSchedulingOwner().getCalendarAddress());
     outEv.setOriginator(att.getCalendarAddress());
     outEv.updateDtstamp();
     outEv.setOrganizer((BwOrganizer)ev.getOrganizer().clone());
@@ -154,14 +151,14 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     //  outEv.addComment(null, comment);
     //}
 
-    if (si.getOrganizer() == null) {
+    if (si.getSchedulingOwner() == null) {
       throw new CalFacadeException("No organizer");
     }
 
-    outEv.addRecipient(si.getOrganizer().getOrganizerUri());
+    outEv.addRecipient(si.getSchedulingOwner().getCalendarAddress());
     outEv.setOriginator(att.getCalendarAddress());
     outEv.updateDtstamp();
-    si.getOrganizer().setDtstamp(outEv.getDtstamp());
+    si.getSchedulingOwner().setSchedulingDtStamp(outEv.getDtstamp());
 
     final String delegate = att.getDelegatedTo();
 
@@ -253,7 +250,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
     if (sr.isOk()) {
       outEv.setScheduleState(BwEvent.scheduleStateProcessed);
-      si.getOrganizer()
+      si.getSchedulingOwner()
         .setScheduleStatus(IcalDefs.deliveryStatusDelivered);
     }
 
@@ -408,16 +405,14 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
     try {
       final var parts = ev.getParticipants();
-      final Map<String, BwParticipant> voters =
-              parts.getVoters();
 
-      final var v = voters.get(attUri);
+      final var v = parts.findAttendee(attUri);
       if (v == null) {
         warn("No participant element for " + attUri);
         return;
       }
 
-      outEv.getParticipants().addParticipant(v);
+      outEv.getParticipants().copyAttendee(v);
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }

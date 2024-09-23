@@ -23,7 +23,6 @@ import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
-import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.ScheduleResult;
@@ -66,7 +65,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
 
     boolean organizerSchedulingObject = ev.getOrganizerSchedulingObject();
     boolean attendeeSchedulingObject = ev.getAttendeeSchedulingObject();
-    BwOrganizer organizer = ev.getOrganizer();
+    var orgCalAddr = ev.getSchedulingOwner().getCalendarAddress();
 
     /* We may have an event with a suppressed master (attendee invited
        to one or more instances), or we may have an organizer sending
@@ -79,8 +78,8 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
         uer = oei.getUpdResult();
         final BwEvent oev = oei.getEvent();
 
-        if (organizer == null) {
-          organizer = oev.getOrganizer();
+        if (orgCalAddr == null) {
+          orgCalAddr = oev.getSchedulingOwner().getCalendarAddress();
         }
 
         if (oev.getOrganizerSchedulingObject()) {
@@ -103,14 +102,14 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
       return;
     }
 
-    if (organizer == null) {
+    if (orgCalAddr == null) {
       throw new CalFacadeBadRequest(CalFacadeException.missingEventProperty);
     }
 
     // Ensure we have an originator for ischedule
 
     if (ev.getOriginator() == null) {
-      ev.setOriginator(organizer.getOrganizerUri());
+      ev.setOriginator(orgCalAddr);
     }
 
     if (uer.reply) {
@@ -235,11 +234,12 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
             IcalDefs.requestStatusSuccess.getCode(),
             IcalDefs.requestStatusSuccess.getDescription()));
 
-    outEv.addRecipient(ev.getOrganizer().getOrganizerUri());
+    final var evSowner = ev.getSchedulingOwner();
+    outEv.addRecipient(evSowner.getCalendarAddress());
     outEv.setOriginator(outAtt.getCalendarAddress());
     outEv.updateDtstamp();
-    outEv.setOrganizer((BwOrganizer)ev.getOrganizer().clone());
-    outEv.getOrganizer().setDtstamp(outEv.getDtstamp());
+    final var outSowner = outEv.copySchedulingOwner(evSowner);
+    outSowner.setSchedulingDtStamp(outEv.getDtstamp());
     outEv.setUid(ev.getUid());
     outEv.setRecurrenceId(ev.getRecurrenceId());
 

@@ -1902,7 +1902,7 @@ class Events extends CalSvcDb implements EventsI {
       return;
     }
 
-    final BwOrganizer org = ev.getOrganizer();
+    final var org = ev.getSchedulingOwner();
 
     final var parts = ev.getParticipants();
     final Set<Attendee> atts = parts.getAttendees();
@@ -1918,7 +1918,7 @@ class Events extends CalSvcDb implements EventsI {
     /* Check organizer property to see if it is us.
      */
     final AccessPrincipal evPrincipal =
-      dirs.caladdrToPrincipal(org.getOrganizerUri());
+      dirs.caladdrToPrincipal(org.getCalendarAddress());
 
     final var weAreOrganizer = (evPrincipal != null) &&
         (evPrincipal.getPrincipalRef().equals(curPrincipal));
@@ -2045,18 +2045,7 @@ class Events extends CalSvcDb implements EventsI {
           continue;
         }
 
-        final BwAttendee mAtt;
-        final BwParticipant mPart;
-
-        if (att.getAttendee() != null) {
-          mAtt = new BwAttendee();
-          mPart = null;
-        } else {
-          mPart = parts.newParticipant();
-          mAtt = null;
-        }
-
-        final var mbrAtt = parts.makeAttendee(mAtt, mPart);
+        final var mbrAtt = parts.makeAttendeeLike(att);
 
         mbrAtt.setParticipantType(att.getParticipantType());
         mbrAtt.setCalendarAddress(mbrPi.getCaladruri());

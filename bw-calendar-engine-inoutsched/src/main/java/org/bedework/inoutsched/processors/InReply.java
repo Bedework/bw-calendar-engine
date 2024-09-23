@@ -24,7 +24,6 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProxy;
-import org.bedework.calfacade.BwParticipant;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -44,6 +43,7 @@ import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.property.DtStart;
+import net.fortuna.ical4j.model.property.ParticipantType;
 
 import java.text.ParseException;
 import java.util.Map;
@@ -177,16 +177,16 @@ public class InReply extends InProcessor {
        Update the Participant component for that respondee.
      */
 
-    /* First parse out the poll items */
     final BwEvent colEv = colEi.getEvent();
     final var colParts = colEv.getParticipants();
-    final Map<String, BwParticipant> voters =
-            colParts.getVoters();
+    final Map<String, Attendee> voters =
+            colParts.getAttendeesWithRole(ParticipantType.VALUE_VOTER);
 
     final BwEvent inEv = inBoxEi.getEvent();
 
-    final Map<String, BwParticipant> invoters =
-            inEv.getParticipants().getVoters();
+    final Map<String, Attendee> invoters =
+            inEv.getParticipants()
+                .getAttendeesWithRole(ParticipantType.VALUE_VOTER);
 
     /* Should only be one Participant for this attendee */
 
@@ -194,7 +194,7 @@ public class InReply extends InProcessor {
       return true; // Ignore it.
     }
 
-    final BwParticipant inVoter = invoters.get(attUri);
+    final Attendee inVoter = invoters.get(attUri);
 
     if (inVoter == null) {
       return true; // Ignore it.

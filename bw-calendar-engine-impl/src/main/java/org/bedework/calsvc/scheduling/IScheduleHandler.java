@@ -238,7 +238,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
     class PrivateKeysGetter extends IscheduleClient.PrivateKeys {
       @Override
       public PrivateKey getKey(final String domain,
-                               final String service) throws CalFacadeException {
+                               final String service) {
         try {
           return getEncrypter().getPrivateKey();
         } catch (final Throwable t) {

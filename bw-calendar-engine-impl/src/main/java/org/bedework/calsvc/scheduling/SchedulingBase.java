@@ -429,11 +429,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
 
     //newEv.removeXproperties(BwXproperty.appleNeedsReply);
 
-    if (newEv.getOrganizer() != null) {
-      newEv.getOrganizer().setScheduleStatus(null);
-    } else {
-      // Copy in the organizer
-    }
+    newEv.getSchedulingOwner().setScheduleStatus(null);
 
     newEv.setOwnerHref(ownerHref);
     newEv.setCreatorHref(ownerHref);
@@ -597,7 +593,8 @@ public abstract class SchedulingBase extends CalSvcHelperRw
       }
 
       if (response) {
-        event.addRecipient(si.getOrganizer().getOrganizerUri());
+        event.addRecipient(si.getSchedulingOwner()
+                             .getCalendarAddress());
       } else {
         getRecipients(event, event);
 

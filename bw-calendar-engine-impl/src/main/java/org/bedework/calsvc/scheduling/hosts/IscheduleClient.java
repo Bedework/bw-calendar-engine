@@ -74,13 +74,13 @@ import static org.bedework.util.http.HttpUtil.setContent;
  * @author Mike Douglass
  */
 public class IscheduleClient implements Logged {
-  private transient IcalTranslator trans;
+  private final transient IcalTranslator trans;
 
   private static CloseableHttpClient cio;
 
   private PrivateKeys pkeys;
 
-  private String domain;
+  private final String domain;
 
   /** Provided to the client class to allow access to private key.
    *
@@ -94,10 +94,9 @@ public class IscheduleClient implements Logged {
      * @param domain
      * @param service
      * @return key or null for unsigned.
-     * @throws CalFacadeException
      */
     public abstract PrivateKey getKey(final String domain,
-                                      final String service) throws CalFacadeException;
+                                      final String service);
   }
 
   /** Constructor
@@ -148,11 +147,11 @@ public class IscheduleClient implements Logged {
    * @throws CalFacadeException
    */
   public Response getFreeBusy(final HostInfo hi,
-                              final EventInfo ei) throws CalFacadeException {
+                              final EventInfo ei) {
     discover(hi);
-    IscheduleOut iout = makeFreeBusyRequest(hi, ei);
+    final IscheduleOut iout = makeFreeBusyRequest(hi, ei);
 
-    Response resp = new Response();
+    final Response resp = new Response();
 
     send(iout, hi, resp);
 
@@ -220,11 +219,11 @@ public class IscheduleClient implements Logged {
    * @throws CalFacadeException
    */
   public Response scheduleMeeting(final HostInfo hi,
-                                  final EventInfo ei) throws CalFacadeException {
+                                  final EventInfo ei) {
     discover(hi);
-    IscheduleOut iout = makeMeetingRequest(hi, ei);
+    final IscheduleOut iout = makeMeetingRequest(hi, ei);
 
-    Response resp = new Response();
+    final Response resp = new Response();
 
     send(iout, hi, resp);
 
@@ -239,7 +238,7 @@ public class IscheduleClient implements Logged {
    *
    * @param hi
    */
-  private void discover(final HostInfo hi) throws CalFacadeException {
+  private void discover(final HostInfo hi) {
     if (hi.getIScheduleUrl() != null) {
       return;
     }
@@ -297,7 +296,7 @@ public class IscheduleClient implements Logged {
       final HttpRequestBase req = findMethod("GET", uri);
 
       for (int redirects = 0; redirects < 10; redirects++) {
-        try (CloseableHttpResponse resp = cio.execute(req)) {
+        try (final CloseableHttpResponse resp = cio.execute(req)) {
           rcode = getStatus(resp);
 
           if ((rcode == HttpServletResponse.SC_MOVED_PERMANENTLY) ||
@@ -314,7 +313,7 @@ public class IscheduleClient implements Logged {
                               " from " + uri);
               }
 
-              int qpos = location.indexOf("?");
+              final int qpos = location.indexOf("?");
 
               final String noreq;
               if (qpos < 0) {
@@ -397,7 +396,7 @@ public class IscheduleClient implements Logged {
    * @return Document  Parsed body or null for no body
    * @exception CalFacadeException Some error occurred.
    */
-  private Document parseContent(final Response resp) throws CalFacadeException {
+  private Document parseContent(final Response resp) {
     try {
       final CloseableHttpResponse hresp = resp.getHttpResponse();
 
@@ -423,7 +422,7 @@ public class IscheduleClient implements Logged {
   }
 
   private void parseResponse(final HostInfo hi,
-                             final Response resp) throws CalFacadeException {
+                             final Response resp) {
     try {
       final Document doc = parseContent(resp);
       if (doc == null){
@@ -469,7 +468,7 @@ public class IscheduleClient implements Logged {
           throw new CalFacadeException(CalFacadeException.badResponse);
         }
 
-        /* ================================================================
+        /* ========================================================
         11.2.  CALDAV/ISCHEDULE:response XML Element
 
         Name:  response
@@ -543,7 +542,7 @@ public class IscheduleClient implements Logged {
    */
   public void send(final IscheduleOut iout,
                    final HostInfo hi,
-                   final Response resp) throws CalFacadeException {
+                   final Response resp) {
     try {
       /* We may have to rediscover and retry. */
       for (int failures = 0; failures < 10; failures++) {
@@ -604,7 +603,7 @@ public class IscheduleClient implements Logged {
   }
 
   private IscheduleOut makeFreeBusyRequest(final HostInfo hi,
-                                           final EventInfo ei) throws CalFacadeException {
+                                           final EventInfo ei) {
     final BwEvent ev = ei.getEvent();
 
     //if (!iSchedule && (recipients.size() > 1)) {
@@ -627,17 +626,18 @@ public class IscheduleClient implements Logged {
   }
 
   private void addOriginator(final IscheduleOut iout,
-                            final BwEvent ev) throws CalFacadeException {
+                            final BwEvent ev) {
     if (ev.getOriginator() != null) {
       iout.addHeader("Originator", ev.getOriginator());
       return;
     }
 
-    iout.addHeader("Originator", ev.getOrganizer().getOrganizerUri());
+    iout.addHeader("Originator", ev.getSchedulingOwner()
+                                   .getCalendarAddress());
   }
 
   private void addRecipients(final IscheduleOut iout,
-                             final BwEvent ev) throws CalFacadeException {
+                             final BwEvent ev) {
     final Collection<String> recipients = ev.getRecipients();
 
     for (final String recip: recipients) {
@@ -646,7 +646,7 @@ public class IscheduleClient implements Logged {
   }
 
   private IscheduleOut makeMeetingRequest(final HostInfo hi,
-                                          final EventInfo ei) throws CalFacadeException {
+                                          final EventInfo ei) {
     final BwEvent ev = ei.getEvent();
 
     final IscheduleOut iout = makeIout(hi, "text/calendar", "POST");
@@ -666,7 +666,7 @@ public class IscheduleClient implements Logged {
 
   private IscheduleOut makeIout(final HostInfo hi,
                                 final String contentType,
-                                final String method) throws CalFacadeException {
+                                final String method) {
     final IscheduleOut iout = new IscheduleOut(domain);
 
     iout.setContentType(contentType);
@@ -675,11 +675,11 @@ public class IscheduleClient implements Logged {
     return iout;
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                   XmlUtil wrappers
-   * ==================================================================== */
+   * ============================================================== */
 
-  protected Collection<Element> getChildren(final Node nd) throws CalFacadeException {
+  protected Collection<Element> getChildren(final Node nd) {
     try {
       return XmlUtil.getElements(nd);
     } catch (final Throwable t) {
@@ -691,7 +691,7 @@ public class IscheduleClient implements Logged {
     }
   }
 
-  protected String getElementContent(final Element el) throws CalFacadeException {
+  protected String getElementContent(final Element el) {
     try {
       return XmlUtil.getElementContent(el);
     } catch (final Throwable t) {
@@ -703,11 +703,11 @@ public class IscheduleClient implements Logged {
     }
   }
 
-  /* ====================================================================
+  /* =============================================================
    *                   Logged methods
-   * ==================================================================== */
+   * ============================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

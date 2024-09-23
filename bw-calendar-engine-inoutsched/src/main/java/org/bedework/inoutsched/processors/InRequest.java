@@ -694,11 +694,10 @@ public class InRequest extends InProcessor {
       }
 
       final var ourParts = ourEv.getParticipants();
-      ourParts.clearParticipants();
+      ourParts.clearAttendees();
 
-      for (final var p: inEv.getParticipants().getParticipants()) {
-        ourParts.addParticipant(p);
-        chg.addValue(PropertyInfoIndex.PARTICIPANT, p);
+      for (final var a: inEv.getParticipants().getAttendees()) {
+        ourParts.copyAttendee(a);
       }
 
       if (!statusUpdate) {
@@ -896,6 +895,14 @@ public class InRequest extends InProcessor {
 
       switch (ipi) {
         case UNKNOWN_PROPERTY:
+          break;
+
+        case BUSYTYPE:
+          if (chg.changed(ipi,
+                          ourEv.getBusyType(),
+                          inEv.getBusyType())) {
+            ourEv.setBusyType(inEv.getBusyType());
+          }
           break;
 
         case CLASS:
@@ -1215,10 +1222,14 @@ public class InRequest extends InProcessor {
         case VALARM: // Component
           break;
 
-        case LANG: // Param
-        case TZIDPAR: // Param
+        // parameters
+        case CN:
+        case EMAIL:
+        case LANG:
+        case TZIDPAR:
+        case VALUE:
           break;
-        
+
         case PUBLISH_URL:
         case POLL_ITEM_ID:
         case END_TYPE:
@@ -1258,9 +1269,14 @@ public class InRequest extends InProcessor {
 
         // Internal bedework properties
         case CALSUITE:
+        case CTAG:
+        case DELETED:
+        case FLOATING:
         case LASTMODSEQ:
+        case LOCAL:
         case MASTER:
         case NAME:
+        case NEXT_TRIGGER_DATE_TIME:
         case NO_START:
         case ORGANIZER_SCHEDULING_OBJECT:
         case ORIGINATOR:
@@ -1268,6 +1284,7 @@ public class InRequest extends InProcessor {
         case PARAMETERS:
         case PUBLIC:
         case RECIPIENT:
+        case RECURRING:
         case REFRESH_RATE:
         case REMOTE_ID:
         case REMOTE_PW:
@@ -1278,15 +1295,67 @@ public class InRequest extends InProcessor {
         case TOMBSTONED:
         case TOPICAL_AREA:
         case UNREMOVEABLE:
-        case VPATH:
+        case UTC:
         case VIEW:
+        case VOTER:
+        case VPATH:
         case X_BEDEWORK_CATEGORIES:
         case X_BEDEWORK_CONTACT:
         case X_BEDEWORK_LOCATION:
+
+        // Contact fields
+        case CONTACT_ALL:
+        case PHONE:
+
+        // Location fields
+        case ACCESSIBLE_FLD:
+        case ADDRESS:
+        case ADDRESS_FLD:
+        case ALTADDRESS_FLD:
+        case CITY_FLD:
+        case CODEIDX_FLD:
+        case COUNTRY_FLD:
+        case GEOURI_FLD:
+        case LOC_ALL:
+        case LOC_COMBINED_VALUES:
+        case LOC_DONOTUSE_FLD:
+        case LOC_KEYS_FLD:
+        case LOCTYPE_FLD:
+        case ROOM_FLD:
+        case STATE_FLD:
+        case STREET_FLD:
+        case SUBADDRESS:
+        case SUB1_FLD:
+        case SUB2_FLD:
+        case ZIP_FLD:
+
+        // Participant fields
+        case EXPECT_REPLY:
+        case KIND:
+        case MEMBER_OF:
+        case PARTICIPANT_TYPE:
+        case PARTICIPATION_STATUS:
+        case SCHEDULING_FORCE_SEND:
+        case SCHEDULING_SEQUENCE:
+        case SCHEDULING_STATUS:
+
+        // Fields stored as x-properties
+        case ACCEPT_RESPONSE:
+        case PARTICIPANT:
+        case POLL_COMPLETION:
+        case POLL_ITEM:
+        case POLL_MODE:
+        case POLL_PROPERTIES:
+        case POLL_WINNER:
           break;
 
         default:
           warn("Not handling icalendar property " + ipi);
+          /* Seen warnings for these:
+             CONCEPT
+             ESTIMATED_DURATION
+             RANGE
+           */
       } // switch
     } // for
 
