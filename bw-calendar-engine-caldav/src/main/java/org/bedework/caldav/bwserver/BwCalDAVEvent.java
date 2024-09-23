@@ -492,7 +492,9 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
     }
 
     if (tag.equals(ICalTags.organizer)) {
-      final var owner = ev.getSchedulingOwner().getCalendarAddress();
+      final var owner = ev.getParticipants()
+                          .getSchedulingOwner()
+                          .getCalendarAddress();
       if (owner != null) {
         xml.property(tag, owner);
       }

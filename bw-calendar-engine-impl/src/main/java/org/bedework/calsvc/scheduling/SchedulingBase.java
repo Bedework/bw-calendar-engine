@@ -30,7 +30,6 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.calfacade.svc.SchedulingInfo;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvc.CalSvcHelperRw;
@@ -423,13 +422,15 @@ public abstract class SchedulingBase extends CalSvcHelperRw
 
     /* Remove some stuff we won't be sending */
 
-    for (final var att: newEv.getParticipants().getAttendees()) {
+    final var newParticipants = newEv.getParticipants();
+
+    for (final var att: newParticipants.getAttendees()) {
       att.setScheduleStatus(null);
     }
 
     //newEv.removeXproperties(BwXproperty.appleNeedsReply);
 
-    newEv.getSchedulingOwner().setScheduleStatus(null);
+    newParticipants.getSchedulingOwner().setScheduleStatus(null);
 
     newEv.setOwnerHref(ownerHref);
     newEv.setCreatorHref(ownerHref);
@@ -581,7 +582,6 @@ public abstract class SchedulingBase extends CalSvcHelperRw
   protected boolean initScheduleEvent(final EventInfo ei,
                                       final boolean response,
                                       final boolean iSchedule) {
-    final SchedulingInfo si = ei.getSchedulingInfo();
     final BwEvent event = ei.getEvent();
 
     if (!iSchedule) {
@@ -593,7 +593,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
       }
 
       if (response) {
-        event.addRecipient(si.getSchedulingOwner()
+        event.addRecipient(ei.getSchedulingOwner()
                              .getCalendarAddress());
       } else {
         getRecipients(event, event);

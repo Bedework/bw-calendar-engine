@@ -1902,12 +1902,12 @@ class Events extends CalSvcDb implements EventsI {
       return;
     }
 
-    final var org = ev.getSchedulingOwner();
 
     final var parts = ev.getParticipants();
+    final var sowner = parts.getSchedulingOwner();
     final Set<Attendee> atts = parts.getAttendees();
 
-    if (Util.isEmpty(atts) || (org == null)) {
+    if (Util.isEmpty(atts) || sowner.noOwner()) {
       return;
     }
 
@@ -1918,7 +1918,7 @@ class Events extends CalSvcDb implements EventsI {
     /* Check organizer property to see if it is us.
      */
     final AccessPrincipal evPrincipal =
-      dirs.caladdrToPrincipal(org.getCalendarAddress());
+      dirs.caladdrToPrincipal(sowner.getCalendarAddress());
 
     final var weAreOrganizer = (evPrincipal != null) &&
         (evPrincipal.getPrincipalRef().equals(curPrincipal));

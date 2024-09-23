@@ -23,13 +23,11 @@ import org.bedework.calfacade.Attendee;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
-import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.calfacade.svc.SchedulingInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.convert.Icalendar;
 import org.bedework.util.calendar.IcalDefs;
@@ -73,15 +71,21 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
     final BwEvent outEv = new BwEventObj();
     final EventInfo outEi = new EventInfo(outEv);
+    final var outParts = outEv.getParticipants();
 
     outEv.setScheduleMethod(ScheduleMethods.methodTypeRefresh);
 
-    outEv.addRecipient(ev.getSchedulingOwner().getCalendarAddress());
+    // Attendees first - affects owner.
+    outParts.copyAttendee(att);
     outEv.setOriginator(att.getCalendarAddress());
+
+    outParts.copySchedulingOwner(ev.getParticipants()
+                                   .getSchedulingOwner());
+
+    final var outSchedOwner = outParts.getSchedulingOwner();
+    outEv.addRecipient(outSchedOwner.getCalendarAddress());
     outEv.updateDtstamp();
-    outEv.setOrganizer((BwOrganizer)ev.getOrganizer().clone());
-    outEv.getOrganizer().setDtstamp(outEv.getDtstamp());
-    outEv.getParticipants().copyAttendee(att);
+    outSchedOwner.setSchedulingDtStamp(outEv.getDtstamp());
     outEv.setUid(ev.getUid());
     outEv.setRecurrenceId(ev.getRecurrenceId());
 
@@ -117,7 +121,6 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     }
 
     final BwEvent ev = ei.getEvent();
-    final SchedulingInfo si = ei.getSchedulingInfo();
     final var outParticipants = ev.getParticipants();
 
     /* Check that the current user is actually the only attendee of the event.
@@ -151,14 +154,15 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     //  outEv.addComment(null, comment);
     //}
 
-    if (si.getSchedulingOwner() == null) {
+    var sowner = ei.getSchedulingOwner();
+    if (sowner == null) {
       throw new CalFacadeException("No organizer");
     }
 
-    outEv.addRecipient(si.getSchedulingOwner().getCalendarAddress());
+    outEv.addRecipient(sowner.getCalendarAddress());
     outEv.setOriginator(att.getCalendarAddress());
     outEv.updateDtstamp();
-    si.getSchedulingOwner().setSchedulingDtStamp(outEv.getDtstamp());
+    sowner.setSchedulingDtStamp(outEv.getDtstamp());
 
     final String delegate = att.getDelegatedTo();
 
@@ -250,8 +254,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
     if (sr.isOk()) {
       outEv.setScheduleState(BwEvent.scheduleStateProcessed);
-      si.getSchedulingOwner()
-        .setScheduleStatus(IcalDefs.deliveryStatusDelivered);
+      sowner.setScheduleStatus(IcalDefs.deliveryStatusDelivered);
     }
 
     return sr;
@@ -345,7 +348,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       final int outAccess = PrivilegeDefs.privScheduleReply;
 
       /* There should only be one attendee for a reply */
-      if (ei.getSchedulingInfo().getMaxAttendees() > 1) {
+      if (ei.getMaxAttendees() > 1) {
         return Response.error(sr, new CalFacadeException(
                 CalFacadeException.schedulingBadAttendees));
       }
