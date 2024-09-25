@@ -2877,16 +2877,17 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
     @Override
     public Organizer getOrganizer() {
-      BwOrganizer bworg = ic.getOrganizer();
+      final var owner = ic.getOrganizer();
 
-      if (bworg == null) {
+      if (owner.noOwner()) {
         return null;
       }
 
-      return new Organizer(bworg.getCn(), bworg.getDir(),
-                           bworg.getLanguage(),
-                           bworg.getSentBy(),
-                           bworg.getOrganizerUri());
+      return new Organizer(owner.getName(),
+                           null, //owner.getDir(),
+                           owner.getLanguage(),
+                           owner.getInvitedBy(),
+                           owner.getCalendarAddress());
     }
 
     @Override

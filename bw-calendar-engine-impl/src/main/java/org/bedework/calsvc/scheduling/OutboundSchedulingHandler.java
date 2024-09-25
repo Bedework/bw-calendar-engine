@@ -20,7 +20,6 @@ package org.bedework.calsvc.scheduling;
 
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.caldav.server.sysinterface.Host;
-import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
@@ -127,7 +126,9 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
           if (freeBusyRequest) {
             sres.freeBusy = getFreeBusy(null, ui.principal,
                                         ev.getDtstart(), ev.getDtend(),
-                                        ev.getOrganizer(),
+                                        ev.getSchedulingInfo()
+                                          .getSchedulingOwner()
+                                          .makeOrganizer(),
                                         ev.getUid(),
                                         null);
 
@@ -328,10 +329,10 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     }
 
     /* See if the attendee is in this event */
-    final BwAttendee att = ev.findAttendee(recip);
+    final var att = ev.getSchedulingInfo().findParticipant(recip);
 
     if ((att != null) && (fromAttUri != null) &&
-        fromAttUri.equals(att.getAttendeeUri())) {
+        fromAttUri.equals(att.getCalendarAddress())) {
       // Skip this one, they were the ones that sent the reply.
       return;
     }
@@ -341,7 +342,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     if (att != null) {
       ui.addAttendee(att);
 
-      if (Util.compareStrings(att.getPartstat(),
+      if (Util.compareStrings(att.getParticipationStatus(),
                               IcalDefs.partstatValDeclined) == 0) {
         // Skip this one, they declined.
         return;

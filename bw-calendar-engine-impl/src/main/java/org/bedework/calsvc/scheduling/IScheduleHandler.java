@@ -18,9 +18,9 @@
 */
 package org.bedework.calsvc.scheduling;
 
-import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -61,7 +61,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
     BwPrincipal<?> principal;
 
     /* Attendee objects in the organizers event and overrides */
-    private final List<BwAttendee> atts = new ArrayList<>();
+    private final List<Participant> atts = new ArrayList<>();
 
     String inboxPath; // null for our own account
 
@@ -75,7 +75,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
       this.recipient = recipient;
     }
 
-    public void addAttendee(final BwAttendee val) {
+    public void addAttendee(final Participant val) {
       /*
       for (final BwAttendee att: atts) {
         if (val.unsaved()) {
@@ -91,7 +91,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
     }
 
     public void setAttendeeScheduleStatus(final String val) {
-      for (final BwAttendee att: atts) {
+      for (final var att: atts) {
         att.setScheduleStatus(val);
       }
     }

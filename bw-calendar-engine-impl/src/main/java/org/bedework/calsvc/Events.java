@@ -24,7 +24,7 @@ import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
 import org.bedework.caldav.util.filter.BooleanFilter;
 import org.bedework.caldav.util.filter.FilterBase;
-import org.bedework.calfacade.Attendee;
+import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
@@ -548,7 +548,7 @@ class Events extends CalSvcDb implements EventsI {
       final Integer maxAttendees =
               getSvc().getAuthProperties().getMaxAttendeesPerInstance();
       final var si = event.getSchedulingInfo();
-      final var atts = si.getAttendees();
+      final var atts = si.getRecipientParticipants().values();
 
       if ((maxAttendees != null) &&
               !Util.isEmpty(atts) &&
@@ -572,7 +572,7 @@ class Events extends CalSvcDb implements EventsI {
           setScheduleState(ovev, true, schedulingInbox);
 
           final var ovParts = ovev.getSchedulingInfo();
-          final var ovAtts = ovParts.getAttendees();
+          final var ovAtts = ovParts.getParticipants();
 
           if ((maxAttendees != null) &&
                   !Util.isEmpty(ovAtts) &&
@@ -591,7 +591,7 @@ class Events extends CalSvcDb implements EventsI {
 
           if (ovev.getOrganizerSchedulingObject()) {
             // Set RSVP on all attendees with PARTSTAT = NEEDS_ACTION
-            for (final Attendee att: ovAtts) {
+            for (final Participant att: ovAtts) {
               if (att.getParticipationStatus().equals(IcalDefs.partstatValNeedsAction)) {
                 att.setExpectReply(true);
               }
@@ -610,7 +610,7 @@ class Events extends CalSvcDb implements EventsI {
 
       if (event.getOrganizerSchedulingObject()) {
         // Set RSVP on all attendees with PARTSTAT = NEEDS_ACTION
-        for (final Attendee att: atts) {
+        for (final Participant att: atts) {
           if (att.getParticipationStatus().equals(IcalDefs.partstatValNeedsAction)) {
             att.setExpectReply(true);
           }
@@ -837,8 +837,8 @@ class Events extends CalSvcDb implements EventsI {
 
       if (organizerSchedulingObject) {
         // Set RSVP on all attendees with PARTSTAT = NEEDS_ACTION
-        for (final Attendee att: event.getSchedulingInfo()
-                                      .getAttendees()) {
+        for (final Participant att: event.getSchedulingInfo()
+                                         .getParticipants()) {
           if (att.getParticipationStatus().equals(
                   IcalDefs.partstatValNeedsAction)) {
             att.setExpectReply(true);
@@ -1636,24 +1636,20 @@ class Events extends CalSvcDb implements EventsI {
          * However that also requires a way to forcibly delete it so we need to
          * ensure we have that first. (Just don't set sendSchedulingMessage
          */
-        try {
-          final SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
-          if (!organizerSchedulingObject) {
-            /* Send a declined message to the organizer
+        final SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
+        if (!organizerSchedulingObject) {
+          /* Send a declined message to the organizer
              */
-            sched.sendReply(ei,
-                            IcalDefs.partstatDeclined, null);
-          } else {
-            // send a cancel
-            final UpdateResult uer = ei.getUpdResult();
-            uer.deleting = true;
+          sched.sendReply(ei,
+                          IcalDefs.partstatDeclined, null);
+        } else {
+          // send a cancel
+          final UpdateResult uer = ei.getUpdResult();
+          uer.deleting = true;
 
-            event.setSequence(event.getSequence() + 1);
-            sched.implicitSchedule(ei, false);
-          }
-        } catch (final CalFacadeException cfe) {
-          if (debug()) {
-            error(cfe);
+          event.setSequence(event.getSequence() + 1);
+          if (!sched.implicitSchedule(ei, false).isOk()) {
+            return Response.fromResponse(resp, uer);
           }
         }
       }
@@ -1903,9 +1899,10 @@ class Events extends CalSvcDb implements EventsI {
     }
 
 
-    final var parts = ev.getSchedulingInfo();
-    final var sowner = parts.getSchedulingOwner();
-    final Set<Attendee> atts = parts.getAttendees();
+    final var si = ev.getSchedulingInfo();
+    final var sowner = si.getSchedulingOwner();
+    final Collection<Participant> atts =
+            si.getRecipientParticipants().values();
 
     if (Util.isEmpty(atts) || sowner.noOwner()) {
       return;
@@ -1927,7 +1924,7 @@ class Events extends CalSvcDb implements EventsI {
       /* Check the attendees and see if there is one for us.
           If so this is an attendee-scheduling-object.
        */
-      if (parts.findAttendee(curCalAddr) != null) {
+      if (si.findParticipant(curCalAddr) != null) {
         ev.setAttendeeSchedulingObject(true);
       }
 
@@ -1941,7 +1938,7 @@ class Events extends CalSvcDb implements EventsI {
     /* If we are expanding groups do so here */
 
     final ChangeTable chg = ev.getChangeset(getPrincipalHref());
-    final Set<Attendee> groups = new TreeSet<>();
+    final Set<Participant> groups = new TreeSet<>();
 
     if (!schedulingInbox) {
       final ChangeTableEntry cteAtts = chg
@@ -1950,7 +1947,7 @@ class Events extends CalSvcDb implements EventsI {
               .getEntry(PropertyInfoIndex.PARTICIPANT);
 
       checkAttendees:
-      for (final var att : atts) {
+      for (final var att: atts) {
         if (CuType.GROUP.getValue().equals(att.getKind())) {
           groups.add(att);
         }
@@ -2015,7 +2012,7 @@ class Events extends CalSvcDb implements EventsI {
          */
     final var vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
 
-    for (final Attendee att : groups) {
+    for (final Participant att : groups) {
       /* If the group is in one of our domains we can try to expand it.
            * We should leave it if it's an external id.
            */
@@ -2038,14 +2035,14 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       // Delete the group
-      parts.removeAttendee(att);
+      si.removeParticipant(att);
 
       for (final BwPrincipalInfo mbrPi: pi.getMembers()) {
         if (mbrPi.getCaladruri() == null) {
           continue;
         }
 
-        final var mbrAtt = parts.makeAttendeeLike(att);
+        final var mbrAtt = si.makeParticipantLike(att);
 
         mbrAtt.setParticipantType(att.getParticipantType());
         mbrAtt.setCalendarAddress(mbrPi.getCaladruri());

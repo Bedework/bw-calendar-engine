@@ -18,8 +18,6 @@
 */
 package org.bedework.inoutsched.processors;
 
-import org.bedework.calfacade.Attendee;
-import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -28,9 +26,10 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwFreeBusyComponent;
 import org.bedework.calfacade.BwLocation;
-import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
+import org.bedework.calfacade.Participant;
+import org.bedework.calfacade.SchedulingOwner;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
@@ -246,6 +245,7 @@ public class InRequest extends InProcessor {
                               final String uri) {
     final BwEvent inboxEv = inboxEi.getEvent();
     final String owner = inboxEv.getOwnerHref();
+    final var inSi = inboxEv.getSchedulingInfo();
 
     if (ourCopy == null) {
       // Error - deleted while we did this?
@@ -256,12 +256,11 @@ public class InRequest extends InProcessor {
       return false;
     }
 
-    final BwOrganizer org = new BwOrganizer();
-    org.setOrganizerUri(uri);
-
-    BwAttendee att;
+    final var inOwner = inSi.newSchedulingOwner();
+    inOwner.setCalendarAddress(uri);
 
     final BwEvent ourEvent = ourCopy.getEvent();
+    final var ourSi = ourEvent.getSchedulingInfo();
 
     final String now = DateTimeUtil.isoDateTimeUTC(new Date());
 
@@ -272,9 +271,9 @@ public class InRequest extends InProcessor {
         return false;
       }
 
-      att = ourEvent.findAttendee(uri);
+      final Participant part = ourSi.findParticipant(uri);
 
-      if (att == null) {
+      if (part == null) {
         // Error?
         if (debug()) {
           debug("InSchedule - no attendee on our copy for auto respond for " +
@@ -288,7 +287,7 @@ public class InRequest extends InProcessor {
         debug("send response event for " + owner + " " + inboxEv.getName());
       }
 
-      att.setRsvp(false); // We're about to reply.
+      part.setExpectReply(false); // We're about to reply.
 
       String partStat = IcalDefs.partstatValAccepted;
 
@@ -298,7 +297,8 @@ public class InRequest extends InProcessor {
         // See if there are any events booked during this time.
         if (checkBusy(svci,
                       ourEvent.getUid(),
-                      inboxEv.getDtstart(), inboxEv.getDtend(), org,
+                      inboxEv.getDtstart(), inboxEv.getDtend(),
+                      inOwner,
                       inboxEv.getUid())) {
           partStat = IcalDefs.partstatValDeclined;
         } else {
@@ -306,12 +306,11 @@ public class InRequest extends InProcessor {
         }
       }
 
-      ourEvent.setScheduleMethod(ScheduleMethods.methodTypeReply);
-      att = (BwAttendee)att.clone();
-      ourEvent.removeAttendee(att);
-      ourEvent.addAttendee(att);
+      part.setParticipationStatus(partStat);
 
-      att.setPartstat(partStat);
+      ourEvent.setScheduleMethod(ScheduleMethods.methodTypeReply);
+      ourSi.removeParticipant(part);
+      ourSi.addParticipant(part);
 
       return true;
     }
@@ -346,20 +345,20 @@ public class InRequest extends InProcessor {
 
     if (!inboxEv.getSuppressed()) {
       masterSupressed = false;
-      att = ourEvent.findAttendee(uri);
+      final Participant part = ourSi.findParticipant(uri);
 
-      if (att != null) {
+      if (part != null) {
         // It should never be null
 
-        att.setRsvp(false);
-        att.setPartstat(IcalDefs.partstatValAccepted);
+        part.setExpectReply(false);
+        part.setParticipationStatus(IcalDefs.partstatValAccepted);
       }
       ourEvent.setTransparency(IcalDefs.transparencyOpaque);
     }
 
     final RecurInfo rinfo = checkBusy(svci,
                                       ourEvent.getUid(),
-                                      recurrences, org,
+                                      recurrences, inOwner,
                                       inboxEv.getUid(), doubleBookOk);
 
     /* If we have a master then we should set its status to cover the largest
@@ -382,10 +381,10 @@ public class InRequest extends InProcessor {
     }
 
     if (!masterSupressed) {
-      att = ourEvent.findAttendee(uri);
+      final Participant part = ourSi.findParticipant(uri);
 
-      if (!masterPartStat.equals(att.getPartstat())) {
-        att.setPartstat(masterPartStat);
+      if (!masterPartStat.equals(part.getParticipationStatus())) {
+        part.setParticipationStatus(masterPartStat);
       }
 
       if (masterAccept) {
@@ -397,18 +396,15 @@ public class InRequest extends InProcessor {
 
     if (allAcceptedOrDeclined) {
       // Ensure any overrides have the same status
-      for (final EventInfo oei: ourCopy.getOverrides()) {
-        final BwEvent override = oei.getEvent();
+      for (final var oei: ourCopy.getOverrides()) {
+        final var override = oei.getEvent();
+        final var ovSi = override.getSchedulingInfo();
+        final var ovpart = ovSi.findParticipant(uri);
 
-        att = override.findAttendee(uri);
-        att = (BwAttendee)att.clone();
-        att.setRsvp(false); // We're about to reply.
+        ovpart.setExpectReply(false); // We're about to reply.
 
-        override.removeAttendee(att);
-        override.addAttendee(att);
-
-        if (!masterPartStat.equals(att.getPartstat())) {
-          att.setPartstat(masterPartStat);
+        if (!masterPartStat.equals(ovpart.getParticipationStatus())) {
+          ovpart.setParticipationStatus(masterPartStat);
         }
 
         if (masterAccept) {
@@ -442,6 +438,8 @@ public class InRequest extends InProcessor {
       }
 
       final BwEvent override = oei.getEvent();
+      final var ovSi = override.getSchedulingInfo();
+      final var ovpart = ovSi.findParticipant(uri);
 
       if (((BwEventProxy)override).getRef().unsaved()) {
         override.setDtstart(r.start);
@@ -449,23 +447,18 @@ public class InRequest extends InProcessor {
         override.setDuration(BwDateTime.makeDuration(r.start, r.end).toString());
       }
 
-      att = override.findAttendee(uri);
-      if (att == null) {
+      if (ovpart == null) {
         // Guess we weren't invited
         continue;
       }
 
-      att = (BwAttendee)att.clone();
-      att.setRsvp(false); // We're about to reply.
-
-      override.removeAttendee(att);
-      override.addAttendee(att);
+      ovpart.setExpectReply(false); // We're about to reply.
 
       if (!ri.busy) {
-        att.setPartstat(IcalDefs.partstatValAccepted);
+        ovpart.setParticipationStatus(IcalDefs.partstatValAccepted);
         override.setTransparency(IcalDefs.transparencyOpaque);
       } else {
-        att.setPartstat(IcalDefs.partstatValDeclined);
+        ovpart.setParticipationStatus(IcalDefs.partstatValDeclined);
         override.setTransparency(IcalDefs.transparencyTransparent);
       }
 
@@ -505,7 +498,7 @@ public class InRequest extends InProcessor {
   private RecurInfo checkBusy(final CalSvcI svci,
                               final String excludeUid,
                               final Collection<Recurrence> recurrences,
-                              final BwOrganizer org,
+                              final SchedulingOwner org,
                               final String uid,
                               final boolean doubleBookOk) throws CalFacadeException {
     /* TODO
@@ -539,11 +532,12 @@ public class InRequest extends InProcessor {
                             final String excludeUid,
                             final BwDateTime start,
                             final BwDateTime end,
-                            final BwOrganizer org,
+                            final SchedulingOwner org,
                             final String uid) throws CalFacadeException {
     final BwEvent fb = svci.getScheduler()
                            .getFreeBusy(null, svci.getPrincipal(),
-                                        start, end, org,
+                                        start, end,
+                                        org.makeOrganizer(),
                                         uid, excludeUid);
 
     final Collection<BwFreeBusyComponent> times = fb.getFreeBusyPeriods();
@@ -614,25 +608,21 @@ public class InRequest extends InProcessor {
       return true;
     }
 
-    final BwAttendee att = ev.findAttendee(uri);
+    final Participant part = ev.getSchedulingInfo()
+                               .findParticipant(uri);
 
-    if (att == null) {
+    if (part == null) {
       // Error?
       if (debug()) {
-        debug("Schedule - no attendee with uri " + uri +
-              " for " + svci.getPrincipal().getPrincipalRef());
+        debug("Schedule - no attendee with uri {} for {}",
+              uri, svci.getPrincipal().getPrincipalRef());
       }
 
       return false;
     }
 
     //att.setScheduleStatus(IcalDefs.deliveryStatusSuccess);
-    if ((att.getPartstat() == null) ||
-        att.getPartstat().equals(IcalDefs.partstatValNeedsAction)) {
-      if (att.getPartstat() == null) {
-        att.setPartstat(IcalDefs.partstatValNeedsAction);
-      }
-
+    if (part.getParticipationStatus().equals(IcalDefs.partstatValNeedsAction)) {
       ev.setTransparency(IcalDefs.transparencyTransparent);
 
       // Apple ical seems to expect an x-prop.
@@ -694,10 +684,10 @@ public class InRequest extends InProcessor {
       }
 
       final var ourSi = ourEv.getSchedulingInfo();
-      ourSi.clearAttendees();
+      ourSi.clearParticipants();
 
-      for (final var a: inEv.getSchedulingInfo().getAttendees()) {
-        ourSi.copyAttendee(a);
+      for (final var a: inEv.getSchedulingInfo().getParticipants()) {
+        ourSi.copyParticipant(a);
       }
 
       if (!statusUpdate) {
@@ -872,6 +862,8 @@ public class InRequest extends InProcessor {
                                        final String attUri) {
     final BwEvent ourEv = ourCopy.getEvent();
     final BwEvent inEv = inBoxEi.getEvent();
+    final var ourSi = ourEv.getSchedulingInfo();
+    final var inSi = inEv.getSchedulingInfo();
     boolean flagNeedsReply = false;
 
     final ChangeTable chg = ourCopy.getChangeset(getPrincipalHref());
@@ -988,9 +980,9 @@ public class InRequest extends InProcessor {
           break;
 
         case ORGANIZER:
-          if (chg.changed(ipi,
-                          ourEv.getOrganizer(), inEv.getOrganizer())) {
-            ourEv.setOrganizer((BwOrganizer)inEv.getOrganizer().clone());
+          final var inOwner = inSi.getSchedulingOwner();
+          if (inOwner != null) {
+            ourSi.copySchedulingOwner(inOwner);
           }
           break;
 
@@ -1058,22 +1050,20 @@ public class InRequest extends InProcessor {
         case ATTENDEE :
           String transparency = ourEv.getTransparency();
 
-          Attendee ourAtt = null;
-          final var ourSi = ourEv.getSchedulingInfo();
+          Participant ourPart = null;
 
-          for (final Attendee inAtt: inEv.getSchedulingInfo()
-                                         .getAttendees()) {
-            final var att = ourSi.copyAttendee(inAtt);
+          for (final var inPart: inSi.getRecipientParticipants().values()) {
+            final var part = ourSi.copyParticipant(inPart);
 
-            att.setScheduleStatus(null);
-            final String inAttUri = inAtt.getCalendarAddress();
+            part.setScheduleStatus(null);
+            final String inAttUri = inPart.getCalendarAddress();
 
             if (inAttUri.equals(attUri)) {
               // It's ours
-              ourAtt = att;
+              ourPart = part;
 
-              if ((att.getParticipationStatus() == null) ||
-                  att.getParticipationStatus().equals(
+              if ((ourPart.getParticipationStatus() == null) ||
+                      ourPart.getParticipationStatus().equals(
                           IcalDefs.partstatValNeedsAction)) {
                 transparency = IcalDefs.transparencyTransparent;
 
@@ -1083,19 +1073,9 @@ public class InRequest extends InProcessor {
 
               //att.setScheduleStatus(IcalDefs.deliveryStatusSuccess);
             }
-
-            /* See if it's in the current set and if anything significant changed
-
-            for (BwAttendee calAtt: ourEv.getAttendees()) {
-              if (calAtt.getAttendeeUri().equals(inAttUri)) {
-                if (calAtt.changedBy(inAtt, false)) {
-                  ourEv.setSignificantChange(true);
-                }
-              }
-            }*/
           }
 
-          if (ourAtt == null) {
+          if (ourPart == null) {
             // Error?
             if (debug()) {
               debug("InSchedule - no attendee for " + ourEv.getOwnerHref());

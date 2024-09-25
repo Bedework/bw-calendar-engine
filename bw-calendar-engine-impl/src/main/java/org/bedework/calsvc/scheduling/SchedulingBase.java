@@ -18,7 +18,7 @@
 */
 package org.bedework.calsvc.scheduling;
 
-import org.bedework.calfacade.Attendee;
+import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
@@ -183,9 +183,9 @@ public abstract class SchedulingBase extends CalSvcHelperRw
       if (overrides != null) {
         for (final EventInfo oei: overrides) {
           final var ovParts = oei.getEvent().getSchedulingInfo();
-          for (final var ovatt: ovParts.getAttendees()) {
-            if (si.findAttendee(ovatt.getCalendarAddress()) == null) {
-              si.copyAttendee(ovatt);
+          for (final var ovatt: ovParts.getParticipants()) {
+            if (si.findParticipant(ovatt.getCalendarAddress()) == null) {
+              si.copyParticipant(ovatt);
             }
           }
         }
@@ -209,7 +209,8 @@ public abstract class SchedulingBase extends CalSvcHelperRw
     final String uri = getSvc().getDirectories()
                                .principalToCaladdr(owner);
     if (fromOrganizer) {
-      attendeeInMaster = ev.findAttendee(uri) != null;
+      attendeeInMaster = ev.getSchedulingInfo()
+                           .findParticipant(uri) != null;
     }
 
     /* Save the status - we may change to master-suppressed */
@@ -262,7 +263,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
         final BwEvent oev = oei.getEvent();
 
         final boolean attendeeInOverride =
-                oev.findAttendee(uri) != null;
+                oev.getSchedulingInfo().findParticipant(uri) != null;
 
         if (!masterSuppressed && attendeeInMaster && attendeeInOverride) {
           // Don't try to suppress this one. We need the exdate
@@ -424,7 +425,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
 
     final var newParticipants = newEv.getSchedulingInfo();
 
-    for (final var att: newParticipants.getAttendees()) {
+    for (final var att: newParticipants.getParticipants()) {
       att.setScheduleStatus(null);
     }
 
@@ -535,21 +536,21 @@ public abstract class SchedulingBase extends CalSvcHelperRw
    * @param ei to search
    * @return attendee or null.
    */
-  public Attendee findUserAttendee(final EventInfo ei) {
+  public Participant findUserAttendee(final EventInfo ei) {
     final String attUri = getSvc().getDirectories().principalToCaladdr(getPrincipal());
 
     final BwEvent ev = ei.getEvent();
 
     if (!ev.getSuppressed()) {
-      return ev.getSchedulingInfo().findAttendee(attUri);
+      return ev.getSchedulingInfo().findParticipant(attUri);
     }
 
     if (ei.getNumOverrides() > 0) {
       for (final EventInfo oei: ei.getOverrides()) {
         final BwEvent oev = oei.getEvent();
 
-        final Attendee att = oev.getSchedulingInfo()
-                                .findAttendee(attUri);
+        final Participant att = oev.getSchedulingInfo()
+                                   .findParticipant(attUri);
         if (att != null) {
           return att;
         }
@@ -564,16 +565,16 @@ public abstract class SchedulingBase extends CalSvcHelperRw
     final var event = ei.getEvent();
     final var parts = event.getSchedulingInfo();
 
-    final Attendee userAttendee = findUserAttendee(ei);
-    if (userAttendee == null) {
+    final Participant userParticipant = findUserAttendee(ei);
+    if (userParticipant == null) {
       throw new CalFacadeException(CalFacadeException.schedulingNotAttendee);
     }
 
     //event.setSequence(event.getSequence() + 1);
 
     /* Set the PARTSTAT to needs action for all attendees - except us */
-    parts.getAttendees().stream()
-         .filter(att -> !att.equals(userAttendee)).forEach(att -> {
+    parts.getParticipants().stream()
+         .filter(att -> !att.equals(userParticipant)).forEach(att -> {
       att.setParticipationStatus(IcalDefs.partstatValNeedsAction);
       att.setExpectReply(true);
     });
@@ -611,7 +612,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
     event.assignGuid(getSvc().getSystemProperties().getSystemid()); // no-op if already set
 
     /* Ensure attendees have sequence and dtstamp of event */
-    for (final var att: event.getSchedulingInfo().getAttendees()) {
+    for (final var att: event.getSchedulingInfo().getParticipants()) {
       if (!att.getScheduleAgent().equalsIgnoreCase(
               IcalDefs.scheduleAgents[scheduleAgentServer])) {
         continue;
@@ -629,7 +630,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
   }
 
   private void getRecipients(final BwEvent master, final BwEvent ev) {
-    for (final var att: ev.getSchedulingInfo().getAttendees()) {
+    for (final var att: ev.getSchedulingInfo().getParticipants()) {
       if (!att.getScheduleAgent().equalsIgnoreCase(
               IcalDefs.scheduleAgents[scheduleAgentServer])) {
         continue;

@@ -18,7 +18,7 @@
 */
 package org.bedework.calsvc.scheduling;
 
-import org.bedework.calfacade.Attendee;
+import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
@@ -56,8 +56,8 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
   }
 
   @Override
-  public void implicitSchedule(final EventInfo ei,
-                               final boolean noInvites) {
+  public ScheduleResult implicitSchedule(final EventInfo ei,
+                                         final boolean noInvites) {
     UpdateResult uer = ei.getUpdResult();
     uer.wasScheduled = true;
 
@@ -101,11 +101,13 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
         debug(format("Not a scheduling object: uid=\"%s\", just return",
                      ev.getUid()));
       }
-      return;
+      return Response.ok(uer);
     }
 
     if (orgCalAddr == null) {
-      throw new CalFacadeBadRequest(CalFacadeException.missingEventProperty);
+      return Response.error(uer,
+                            new CalFacadeBadRequest(
+                                    CalFacadeException.missingEventProperty));
     }
 
     // Ensure we have an originator for ischedule
@@ -125,7 +127,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
 
       ev.setScheduleMethod(meth);
       attendeeRespond(ei, meth, uer);
-      return;
+      return uer;
     }
 
     if (uer.deleting) {
@@ -149,6 +151,9 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
                ei.getReplyAttendeeURI(),
                uer.fromAttUri,
                false, uer);
+      if (!uer.isOk()) {
+        return uer;
+      }
     }
 
     if (!uer.adding && !Util.isEmpty(uer.deletedAttendees)) {
@@ -198,10 +203,12 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
         final Response resp = events.delete(inboxei, false);
 
         if (!resp.isOk()) {
-          Response.fromResponse(uer, resp);
+          return Response.fromResponse(uer, resp);
         }
       }
     }
+
+    return uer;
   }
 
   @Override
@@ -216,7 +223,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
               CalFacadeException.schedulingBadMethod));
     }
 
-    final Attendee att = findUserAttendee(ei);
+    final Participant att = findUserAttendee(ei);
 
     if (att == null) {
       return Response.error(sr, new CalFacadeException(
@@ -228,7 +235,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
     final var outSi = outEv.getSchedulingInfo();
 
     // Attendees first
-    final var outAtt = outSi.copyAttendee(att);
+    final var outAtt = outSi.copyParticipant(att);
     outAtt.setParticipationStatus(IcalDefs.partstats[partstat]);
     outAtt.setExpectReply(partstat == IcalDefs.partstatNeedsAction);
     outEv.setOriginator(outAtt.getCalendarAddress());

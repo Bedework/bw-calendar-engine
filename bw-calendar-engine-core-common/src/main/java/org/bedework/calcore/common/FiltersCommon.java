@@ -376,7 +376,7 @@ public class FiltersCommon implements Logged, FiltersCommonI {
         return ev.getLocation() != null;
 
       case ORGANIZER:
-        return ev.getOrganizer() != null;
+        return !ev.getSchedulingInfo().getSchedulingOwner().noOwner();
 
       case PRIORITY:
         return ev.getPriority() != null;

@@ -24,7 +24,6 @@ import org.bedework.caldav.server.Organizer;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
-import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.convert.IcalTranslator;
@@ -154,25 +153,27 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
 
   @Override
   public void setOrganizer(final Organizer val) {
-    final BwOrganizer org = new BwOrganizer();
+    final var so = getEv().getSchedulingInfo().newSchedulingOwner();
 
-    org.setCn(val.getCn());
-    org.setDir(val.getDir());
-    org.setLanguage(val.getLanguage());
-    org.setSentBy(val.getSentBy());
-    org.setOrganizerUri(val.getOrganizerUri());
-
-    getEv().setOrganizer(org);
+    so.setName(val.getCn());
+//    so.setDir(val.getDir());
+    so.setLanguage(val.getLanguage());
+    so.setInvitedBy(val.getSentBy());
+    so.setCalendarAddress(val.getOrganizerUri());
   }
 
   @Override
   public Organizer getOrganizer() {
-    final BwOrganizer bworg = getEv().getOrganizer();
-    return new Organizer(bworg.getCn(),
-                         bworg.getDir(),
-                         bworg.getLanguage(),
-                         bworg.getSentBy(),
-                         bworg.getOrganizerUri());
+    final var so = getEv().getSchedulingInfo().newSchedulingOwner();
+    if (so.noOwner()) {
+      return null;
+    }
+
+    return new Organizer(so.getName(),
+                         null, //so.getDir(),
+                         so.getLanguage(),
+                         so.getInvitedBy(),
+                         so.getCalendarAddress());
   }
 
   @Override

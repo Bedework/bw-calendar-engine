@@ -18,7 +18,7 @@
 */
 package org.bedework.inoutsched.processors;
 
-import org.bedework.calfacade.Attendee;
+import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
@@ -56,11 +56,11 @@ public class InRefresh extends InProcessor {
     /* Should be exactly one attendee. */
     final var si = ev.getSchedulingInfo();
 
-    if (si.getAttendees().size() != 1) {
+    if (si.getParticipants().size() != 1) {
       return null;
     }
 
-    final Attendee att = si.getAttendees().iterator().next();
+    final Participant att = si.getParticipants().iterator().next();
 
     /* We can only do this if there is an active copy */
 

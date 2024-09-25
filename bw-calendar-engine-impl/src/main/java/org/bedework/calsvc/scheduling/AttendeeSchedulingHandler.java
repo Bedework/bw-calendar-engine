@@ -19,7 +19,7 @@
 package org.bedework.calsvc.scheduling;
 
 import org.bedework.access.PrivilegeDefs;
-import org.bedework.calfacade.Attendee;
+import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
@@ -62,7 +62,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
               CalFacadeException.schedulingBadMethod));
     }
 
-    final Attendee att = findUserAttendee(ei);
+    final Participant att = findUserAttendee(ei);
 
     if (att == null) {
       return Response.error(sr, new CalFacadeException(
@@ -76,7 +76,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     outEv.setScheduleMethod(ScheduleMethods.methodTypeRefresh);
 
     // Attendees first - affects owner.
-    outSi.copyAttendee(att);
+    outSi.copyParticipant(att);
     outEv.setOriginator(att.getCalendarAddress());
 
     outSi.copySchedulingOwner(ev.getSchedulingInfo()
@@ -126,7 +126,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     /* Check that the current user is actually the only attendee of the event.
        * Note we may have a suppressed master and/or multiple overrides
        */
-    final Attendee att = findUserAttendee(ei);
+    final Participant att = findUserAttendee(ei);
 
     if (att == null) {
       return Response.error(sr, new CalFacadeException(
@@ -146,7 +146,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     }
 
     final var outSi = outEv.getSchedulingInfo();
-    outSi.clearAttendees();
+    outSi.clearParticipants();
 
     // XXX we should get a comment from non db field in event
     //if (comment != null) {
@@ -197,7 +197,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       outEv.setScheduleMethod(ScheduleMethods.methodTypeReply);
 
       // Additional attendee
-      final Attendee delAtt = si.makeAttendee();
+      final Participant delAtt = si.makeParticipant();
       delAtt.setCalendarAddress(delegate);
       delAtt.setDelegatedFrom(att.getCalendarAddress());
       delAtt.setParticipationStatus(
@@ -213,7 +213,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       delegateEv.addRecipient(delegate);
 
       delegateEv.getSchedulingInfo()
-                .copyAttendee(delAtt); // Not in RFC
+                .copyParticipant(delAtt); // Not in RFC
       delegateEv.setScheduleMethod(
               ScheduleMethods.methodTypeRequest);
 
@@ -228,7 +228,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     } else if (method == ScheduleMethods.methodTypeReply) {
       // Only attendee should be us
 
-      outEv.getSchedulingInfo().setOnlyAttendee(att);
+      outEv.getSchedulingInfo().setOnlyParticipant(att);
 
       if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
         setPollResponse(outEi, ei, att.getCalendarAddress());
@@ -238,7 +238,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     } else if (method == ScheduleMethods.methodTypeCounter) {
       // Only attendee should be us
 
-      outEv.getSchedulingInfo().setOnlyAttendee(att);
+      outEv.getSchedulingInfo().setOnlyParticipant(att);
 
       /* Not sure how much we can change - at least times of the meeting.
          */
@@ -409,13 +409,13 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     try {
       final var si = ev.getSchedulingInfo();
 
-      final var v = si.findAttendee(attUri);
+      final var v = si.findParticipant(attUri);
       if (v == null) {
         warn("No participant element for " + attUri);
         return;
       }
 
-      outEv.getSchedulingInfo().copyAttendee(v);
+      outEv.getSchedulingInfo().copyParticipant(v);
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }

@@ -18,13 +18,12 @@
 */
 package org.bedework.inoutsched.processors;
 
-import org.bedework.calfacade.Attendee;
-import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwRequestStatus;
+import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
@@ -100,12 +99,12 @@ public class InReply extends InProcessor {
       if (!ev.getSuppressed()) {
         final var si = ev.getSchedulingInfo();
 
-        if (si.getAttendees().size() != 1) {
+        if (si.getParticipants().size() != 1) {
           return Response.error(pr, new CalFacadeException(
                   CalFacadeException.schedulingExpectOneAttendee));
         }
 
-        final Attendee att = si.getAttendees().iterator().next();
+        final Participant att = si.getParticipants().iterator().next();
 
         if (!att.getParticipationStatus().equals(acceptPartstat)) {
           pr.attendeeAccepting = false;
@@ -120,12 +119,12 @@ public class InReply extends InProcessor {
 
           final var si = ev.getSchedulingInfo();
 
-          if (si.getAttendees().size() != 1) {
+          if (si.getParticipants().size() != 1) {
             return Response.error(pr, new CalFacadeException(
                     CalFacadeException.schedulingExpectOneAttendee));
           }
 
-          final Attendee att = si.getAttendees().iterator().next();
+          final Participant att = si.getParticipants().iterator().next();
 
           if (!att.getParticipationStatus().equals(acceptPartstat)) {
             pr.attendeeAccepting = false;
@@ -179,14 +178,14 @@ public class InReply extends InProcessor {
 
     final BwEvent colEv = colEi.getEvent();
     final var colSi = colEv.getSchedulingInfo();
-    final Map<String, Attendee> voters =
-            colSi.getAttendeesWithRole(ParticipantType.VALUE_VOTER);
+    final Map<String, Participant> voters =
+            colSi.getParticipantsWithRoles(ParticipantType.VALUE_VOTER);
 
     final BwEvent inEv = inBoxEi.getEvent();
 
-    final Map<String, Attendee> invoters =
+    final Map<String, Participant> invoters =
             inEv.getSchedulingInfo()
-                .getAttendeesWithRole(ParticipantType.VALUE_VOTER);
+                .getParticipantsWithRoles(ParticipantType.VALUE_VOTER);
 
     /* Should only be one Participant for this attendee */
 
@@ -194,7 +193,7 @@ public class InReply extends InProcessor {
       return true; // Ignore it.
     }
 
-    final Attendee inVoter = invoters.get(attUri);
+    final Participant inVoter = invoters.get(attUri);
 
     if (inVoter == null) {
       return true; // Ignore it.
@@ -244,14 +243,16 @@ public class InReply extends InProcessor {
      */
     /* Update the participation status from the incoming attendee */
 
-    BwAttendee calAtt;
+    Participant calPart;
 
     final ChangeTableEntry cte = chg.getEntry(
             PropertyIndex.PropertyInfoIndex.ATTENDEE);
+    final var calSi = calEv.getSchedulingInfo();
+    final var inSi = inBoxEv.getSchedulingInfo();
 
     if (!inBoxEv.getSuppressed()) {
-      calAtt = calEv.findAttendee(attUri);
-      if (calAtt == null) {
+      calPart = calSi.findParticipant(attUri);
+      if (calPart == null) {
         if (debug()) {
           debug("Not an attendee of " + calEv);
         }
@@ -263,25 +264,24 @@ public class InReply extends InProcessor {
 
       // For a recurring instance we replace or we update all recurring instances.
       final boolean recurringInstance = (calEv instanceof BwEventProxy);
-      final BwAttendee att = inBoxEv.findAttendee(attUri);
+      final Participant inPart = inSi.findParticipant(attUri);
 
-      if (calAtt.changedBy(att)) {
+      if (calPart.changedBy(inPart)) {
         changed = true;
 
         if (recurringInstance) {
-          calEv.removeAttendee(att);
+          calSi.removeParticipant(inPart);
 
-          calAtt = (BwAttendee)att.clone();
+          calPart = calSi.addParticipant(inPart);
         } else {
-          att.copyTo(calAtt);
+          calPart = calSi.copyParticipant(inPart);
         }
-        cte.addChangedValue(calAtt);
       }
 
-      calAtt.setScheduleStatus(getRstat(inBoxEv));
+      calPart.setScheduleStatus(getRstat(inBoxEv));
 
       if (recurringInstance) {
-        calEv.addAttendee(calAtt);
+        calSi.addParticipant(calPart);
       }
 
       // XXX Ensure no name change
@@ -297,6 +297,7 @@ public class InReply extends InProcessor {
       for (final EventInfo oei: inBoxEi.getOverrides()) {
         final BwEvent oev = oei.getEvent();
         final EventInfo cei = colEi.findOverride(oev.getRecurrenceId() /*, false */);
+        final var oSi = oev.getSchedulingInfo();
 
         /*
         if (cei == null) {
@@ -308,6 +309,7 @@ public class InReply extends InProcessor {
         }*/
 
         final BwEvent ocalEv = cei.getEvent();
+        final var ocalSi = ocalEv.getSchedulingInfo();
 
         if (((BwEventProxy)ocalEv).getRef().unsaved()) {
           // New Override
@@ -338,10 +340,10 @@ public class InReply extends InProcessor {
           }
         }
 
-        final BwAttendee ovatt = oev.findAttendee(attUri);
-        calAtt = ocalEv.findAttendee(attUri);
+        final var ovpart = oSi.findParticipant(attUri);
+        calPart = ocalSi.findParticipant(attUri);
 
-        if (calAtt == null) {
+        if (calPart == null) {
           // Organizer must have removed the attendee.
           if (debug()) {
             debug("Skipping override " + attUri +
@@ -350,16 +352,13 @@ public class InReply extends InProcessor {
           continue;
         }
 
-        if (calAtt.changedBy(ovatt)) {
+        if (calPart.changedBy(ovpart)) {
           changed = true;
 
-          ocalEv.removeAttendee(ovatt);
+          ocalSi.removeParticipant(ovpart);
 
-          calAtt = (BwAttendee)ovatt.clone();
-          calAtt.setScheduleStatus(getRstat(oev));
-
-          ocalEv.addAttendee(calAtt);
-          cte.addChangedValue(calAtt);
+          calPart = ocalSi.addParticipant(calPart);
+          calPart.setScheduleStatus(getRstat(oev));
         }
       }
     }
