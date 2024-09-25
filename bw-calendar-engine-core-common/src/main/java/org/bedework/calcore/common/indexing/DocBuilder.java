@@ -35,6 +35,7 @@ import org.bedework.calfacade.BwGeo;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwOrganizer;
+import org.bedework.calfacade.BwParticipant;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.BwRelatedTo;
@@ -42,6 +43,7 @@ import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwXproperty;
+import org.bedework.calfacade.SchedulingInfo;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
@@ -50,8 +52,6 @@ import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.ConceptEntity;
 import org.bedework.calfacade.base.XpropsEntity;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.ical.BwIcalPropertyInfo;
-import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.IndexKeys;
 import org.bedework.calfacade.svc.BwAdminGroup;
@@ -79,6 +79,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static org.bedework.calcore.common.indexing.EntityBuilder.getJname;
+
 /** Build documents for OpenSearch
  *
  * @author Mike Douglass douglm - rpi.edu
@@ -88,6 +90,9 @@ public class DocBuilder extends DocBuilderBase {
   private final IndexKeys keys = new IndexKeys();
 
   static Map<String, String> interestingXprops = new HashMap<>();
+
+  // Already processed as fields.
+  static final Set<String> processedXprops = new TreeSet<>();
 
   static {
     interestingXprops.put(BwXproperty.bedeworkTag,
@@ -101,14 +106,16 @@ public class DocBuilder extends DocBuilderBase {
 
     interestingXprops.put(BwXproperty.bedeworkEventRegMaxTickets,
                           getJname(PropertyInfoIndex.EVENTREG_MAX_TICKETS));
-    interestingXprops.put(BwXproperty.bedeworkEventRegMaxTicketsPerUser,
-                          getJname(PropertyInfoIndex.EVENTREG_MAX_TICKETS_PER_USER));
+    interestingXprops.put(
+            BwXproperty.bedeworkEventRegMaxTicketsPerUser,
+            getJname(PropertyInfoIndex.EVENTREG_MAX_TICKETS_PER_USER));
     interestingXprops.put(BwXproperty.bedeworkEventRegStart,
                           getJname(PropertyInfoIndex.EVENTREG_START));
     interestingXprops.put(BwXproperty.bedeworkEventRegEnd,
                           getJname(PropertyInfoIndex.EVENTREG_END));
     interestingXprops.put(BwXproperty.bedeworkEventRegWaitListLimit,
                           getJname(PropertyInfoIndex.EVENTREG_WAIT_LIST_LIMIT));
+
 
     /* The suggestedTo field that gets built is losing the suggested by
        value. It's not clear that the suggested to value is used but we really
@@ -122,6 +129,28 @@ public class DocBuilder extends DocBuilderBase {
      */
     //interestingXprops.put(BwXproperty.bedeworkSuggestedTo,
     //                      getJname(PropertyInfoIndex.SUGGESTED_TO));
+
+    processedXprops.add(BwXproperty.bedeworkSuggestedTo);
+
+    processedXprops.add(BwXproperty.bedeworkAttendeeSchedulingObject);
+
+    processedXprops.add(BwXproperty.bedeworkOrganizerSchedulingObject);
+
+    processedXprops.add(BwXproperty.bedeworkParticipant);
+
+    processedXprops.add(BwXproperty.pollItemId);
+
+    processedXprops.add(BwXproperty.pollAccceptResponse);
+
+    processedXprops.add(BwXproperty.pollCompletion);
+
+    processedXprops.add(BwXproperty.pollMode);
+
+    processedXprops.add(BwXproperty.pollWinner);
+
+    processedXprops.add(BwXproperty.pollProperties);
+
+    processedXprops.add(BwXproperty.pollItem);
   }
 
   /**
@@ -136,7 +165,7 @@ public class DocBuilder extends DocBuilderBase {
    * =================================================================== */
 
   /* Return the docinfo for the indexer */
-  EsDocInfo makeDoc(final BwPrincipal<?> ent) throws CalFacadeException {
+  EsDocInfo makeDoc(final BwPrincipal<?> ent) {
     try {
       startObject();
       makeHref(ent);
@@ -151,9 +180,7 @@ public class DocBuilder extends DocBuilderBase {
       makeField("contactAccess", ent.getContactAccess());
       makeField("locationAccess", ent.getLocationAccess());
 
-      if (ent instanceof BwGroup) {
-        final BwGroup<?> grp = (BwGroup<?>)ent;
-
+      if (ent instanceof final BwGroup<?> grp) {
         if (!Util.isEmpty(grp.getGroupMembers())) {
           startArray("memberHref");
 
@@ -164,16 +191,12 @@ public class DocBuilder extends DocBuilderBase {
         }
       }
 
-      if (ent instanceof BwAdminGroup) {
-        final BwAdminGroup grp = (BwAdminGroup)ent;
-
+      if (ent instanceof final BwAdminGroup grp) {
         makeField("groupOwnerHref", grp.getGroupOwnerHref());
         makeField("ownerHref", grp.getOwnerHref());
       }
 
-      if (ent instanceof BwCalSuite) {
-        final BwCalSuite cs = (BwCalSuite)ent;
-
+      if (ent instanceof final BwCalSuite cs) {
         makeField(PropertyInfoIndex.OWNER, cs.getOwnerHref());
         makeField(PropertyInfoIndex.PUBLIC, cs.getPublick());
         makeField(PropertyInfoIndex.CREATOR, cs.getCreatorHref());
@@ -216,7 +239,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   /* Return the docinfo for the indexer */
-  EsDocInfo makeDoc(final BwPreferences ent) throws CalFacadeException {
+  EsDocInfo makeDoc(final BwPreferences ent) {
     try {
       startObject();
       makeHref(ent);
@@ -256,7 +279,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   /* Return the docinfo for the indexer */
-  EsDocInfo makeDoc(final BwResource ent) throws CalFacadeException {
+  EsDocInfo makeDoc(final BwResource ent) {
     try {
       startObject();
 
@@ -286,7 +309,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   /* Return the docinfo for the indexer */
-  EsDocInfo makeDoc(final BwResourceContent ent) throws CalFacadeException {
+  EsDocInfo makeDoc(final BwResourceContent ent) {
     try {
       startObject();
       makeHref(ent);
@@ -309,7 +332,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   /* Return the docinfo for the indexer */
-  EsDocInfo makeDoc(final BwCategory ent) throws CalFacadeException {
+  EsDocInfo makeDoc(final BwCategory ent) {
     try {
       /* We don't have real collections. It's been the practice to
          create "/" delimited names to emulate a hierarchy. Look out
@@ -341,7 +364,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   /* Return the docinfo for the indexer */
-  EsDocInfo makeDoc(final BwContact ent) throws CalFacadeException {
+  EsDocInfo makeDoc(final BwContact ent) {
     try {
       /* We don't have real collections. It's been the practice to
          create "/" delimited names to emulate a hierarchy. Look out
@@ -378,7 +401,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   /* Return the docinfo for the indexer */
-  EsDocInfo makeDoc(final BwLocation ent) throws CalFacadeException {
+  EsDocInfo makeDoc(final BwLocation ent) {
     try {
       /* We don't have real collections. It's been the practice to
          create "/" delimited names to emulate a hierarchy. Look out
@@ -433,7 +456,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   /* Return the docinfo for the indexer */
-  EsDocInfo makeDoc(final BwFilterDef ent) throws CalFacadeException {
+  EsDocInfo makeDoc(final BwFilterDef ent) {
     try {
       /* We don't have real collections. It's been the practice to
          create "/" delimited names to emulate a hierarchy. Look out
@@ -461,7 +484,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   /* Return the docinfo for the indexer */
-  EsDocInfo makeDoc(final BwCalendar col) throws CalFacadeException {
+  EsDocInfo makeDoc(final BwCalendar col) {
     try {
       final long version = col.getMicrosecsVersion();
 
@@ -551,7 +574,7 @@ public class DocBuilder extends DocBuilderBase {
                     final ItemKind kind,
                     final BwDateTime start,
                     final BwDateTime end,
-                    final String recurid) throws CalFacadeException {
+                    final String recurid) {
     try {
       final BwEvent ev = ei.getEvent();
       final long version = ev.getMicrosecsVersion();
@@ -609,8 +632,6 @@ public class DocBuilder extends DocBuilderBase {
       makeField(PropertyInfoIndex.STATUS, ev.getStatus());
       makeField(PropertyInfoIndex.COST, ev.getCost());
 
-      indexOrganizer(ev.getOrganizer());
-
       makeField(PropertyInfoIndex.DTSTAMP, ev.getDtstamp());
       makeField(PropertyInfoIndex.LAST_MODIFIED, ev.getLastmod());
       makeField(PropertyInfoIndex.CREATED, ev.getCreated());
@@ -649,6 +670,10 @@ public class DocBuilder extends DocBuilderBase {
                 ev.getOrganizerSchedulingObject());
       makeField(PropertyInfoIndex.ATTENDEE_SCHEDULING_OBJECT,
                 ev.getAttendeeSchedulingObject());
+
+      indexOrganizer(ev.getOrganizer());
+      indexSchedulingInfo(ev.getSchedulingInfo());
+
       indexRelatedTo(ev.getRelatedTo());
 
       indexXprops(ev);
@@ -702,8 +727,6 @@ public class DocBuilder extends DocBuilderBase {
 
       final boolean vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
 
-      indexAttendees(ev.getAttendees(), vpoll);
-
       makeField(PropertyInfoIndex.RECIPIENT, ev.getRecipients());
 
       indexBwStrings(PropertyInfoIndex.COMMENT,
@@ -726,8 +749,14 @@ public class DocBuilder extends DocBuilderBase {
         }
 
         makeField(PropertyInfoIndex.POLL_MODE, ev.getPollMode());
-        makeField(PropertyInfoIndex.POLL_WINNER, ev.getPollWinner());
-        makeField(PropertyInfoIndex.POLL_PROPERTIES, ev.getPollProperties());
+        makeField(PropertyInfoIndex.POLL_WINNER,
+                  ev.getPollWinner());
+        makeField(PropertyInfoIndex.POLL_PROPERTIES,
+                  ev.getPollProperties());
+        makeField(PropertyInfoIndex.POLL_COMPLETION,
+                  ev.getPollCompletion());
+        makeField(PropertyInfoIndex.ACCEPT_RESPONSE,
+                  ev.getPollAcceptResponse());
       }
 
       endObject();
@@ -756,26 +785,23 @@ public class DocBuilder extends DocBuilderBase {
     return val.getHref();
   }
 
-  void makeHref(final BwUnversionedDbentity<?> val) throws CalFacadeException {
+  void makeHref(final BwUnversionedDbentity<?> val) {
     makeField(PropertyInfoIndex.HREF, getHref(val));
   }
 
-  private void makeOwned(final BwOwnedDbentity<?> ent)
-          throws Throwable {
+  private void makeOwned(final BwOwnedDbentity<?> ent) {
     makeHref(ent);
     makeField(PropertyInfoIndex.OWNER, ent.getOwnerHref());
     makeField(PropertyInfoIndex.PUBLIC, ent.getPublick());
   }
 
-  private void makeShareable(final BwShareableDbentity<?> ent)
-          throws Throwable {
+  private void makeShareable(final BwShareableDbentity<?> ent) {
     makeOwned(ent);
     makeField(PropertyInfoIndex.CREATOR, ent.getCreatorHref());
     makeField(PropertyInfoIndex.ACL, ent.getAccess());
   }
 
-  private void makeShareableContained(final BwShareableContainedDbentity<?> ent)
-          throws Throwable {
+  private void makeShareableContained(final BwShareableContainedDbentity<?> ent) {
     makeShareable(ent);
 
     final String colPath = ent.getColPath();
@@ -784,7 +810,7 @@ public class DocBuilder extends DocBuilderBase {
     }
   }
 
-  private void indexXprops(final XpropsEntity ent) throws CalFacadeException {
+  private void indexXprops(final XpropsEntity ent) {
     try {
       if (Util.isEmpty(ent.getXproperties())) {
         return;
@@ -815,7 +841,7 @@ public class DocBuilder extends DocBuilderBase {
               }
 
               final String svalTrim = sval.trim();
-              if (svalTrim.length() == 0) {
+              if (svalTrim.isEmpty()) {
                 continue;
               }
 
@@ -892,7 +918,8 @@ public class DocBuilder extends DocBuilderBase {
 
         final String nm = interestingXprops.get(xp.getName());
 
-        if (nm != null) {
+        if ((nm != null) ||
+           processedXprops.contains(xp.getName())) {
           continue;
         }
 
@@ -915,7 +942,7 @@ public class DocBuilder extends DocBuilderBase {
     }
   }
 
-  private void indexViews(final Collection<BwView> views) throws CalFacadeException {
+  private void indexViews(final Collection<BwView> views) {
     if (Util.isEmpty(views)) {
       return;
     }
@@ -940,7 +967,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   private void indexProperties(final String name,
-                               final Set<BwProperty> props) throws CalFacadeException {
+                               final Set<BwProperty> props) {
     if (props == null) {
       return;
     }
@@ -961,7 +988,7 @@ public class DocBuilder extends DocBuilderBase {
     }
   }
 
-  private void indexCategories(final Collection <BwCategory> cats) throws CalFacadeException {
+  private void indexCategories(final Collection <BwCategory> cats) {
     if (cats == null) {
       return;
     }
@@ -987,7 +1014,7 @@ public class DocBuilder extends DocBuilderBase {
     }
   }
 
-  private void indexContacts(final Set<BwContact> val) throws CalFacadeException {
+  private void indexContacts(final Set<BwContact> val) {
     try {
       if (Util.isEmpty(val)) {
         return;
@@ -1018,7 +1045,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   private void indexAlarms(final BwDateTime start,
-                           final Set<BwAlarm> alarms) throws CalFacadeException {
+                           final Set<BwAlarm> alarms) {
     try {
       if (Util.isEmpty(alarms)) {
         return;
@@ -1095,7 +1122,7 @@ public class DocBuilder extends DocBuilderBase {
           makeField(PropertyInfoIndex.SUMMARY, al.getSummary());
 
           if (al.getNumAttendees() > 0) {
-            indexAttendees(al.getAttendees(), false);
+            indexAttendees(al.getAttendees());
           }
         } else if (atype == BwAlarm.alarmTypeProcedure) {
           makeField(PropertyInfoIndex.ATTACH, al.getAttach());
@@ -1115,7 +1142,7 @@ public class DocBuilder extends DocBuilderBase {
     }
   }
 
-  private void indexReqStat(final Set<BwRequestStatus> val) throws CalFacadeException {
+  private void indexReqStat(final Set<BwRequestStatus> val) {
     try {
       if (Util.isEmpty(val)) {
         return;
@@ -1133,7 +1160,7 @@ public class DocBuilder extends DocBuilderBase {
     }
   }
 
-  private void indexGeo(final BwGeo val) throws CalFacadeException {
+  private void indexGeo(final BwGeo val) {
     try {
       if (val == null) {
         return;
@@ -1148,7 +1175,7 @@ public class DocBuilder extends DocBuilderBase {
     }
   }
 
-  private void indexRelatedTo(final BwRelatedTo val) throws CalFacadeException {
+  private void indexRelatedTo(final BwRelatedTo val) {
     try {
       if (val == null) {
         return;
@@ -1164,7 +1191,7 @@ public class DocBuilder extends DocBuilderBase {
     }
   }
 
-  private void indexOrganizer(final BwOrganizer val) throws CalFacadeException {
+  private void indexOrganizer(final BwOrganizer val) {
     try {
       if (val == null) {
         return;
@@ -1194,7 +1221,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   private void indexAttachments(
-          final Set<BwAttachment> atts) throws CalFacadeException {
+          final Set<BwAttachment> atts) {
     try {
       if (Util.isEmpty(atts)) {
         return;
@@ -1224,68 +1251,40 @@ public class DocBuilder extends DocBuilderBase {
     }
   }
 
-  private void indexAttendees(final Set<BwAttendee> atts,
-                              final boolean vpoll) throws CalFacadeException {
+  private void indexAttendees(final Set<BwAttendee> atts) {
+    if (Util.isEmpty(atts)) {
+      return;
+    }
     try {
-      if (Util.isEmpty(atts)) {
-        return;
+      startArray(getJname(PropertyInfoIndex.ATTENDEE));
+
+      for (final var val: atts) {
+        indexAttendee(val);
       }
 
-      if (vpoll) {
-        startArray(getJname(PropertyInfoIndex.VOTER));
-      } else {
-        startArray(getJname(PropertyInfoIndex.ATTENDEE));
-      }
+      endArray();
+    } catch (final IndexException e) {
+      throw new CalFacadeException(e);
+    }
+  }
 
-      for (final BwAttendee val: atts) {
+  private void indexSchedulingInfo(final SchedulingInfo si) {
+    try {
+      startArray(getJname(PropertyInfoIndex.PARTICIPANT));
+
+      for (final var val: si.getParticipants()) {
         startObject();
-        startObject("pars");
-
-        if (val.getRsvp()) {
-          makeField(ParameterInfoIndex.RSVP.getJname(),
-                        val.getRsvp());
+        
+        if (val.getAttendee() != null) {
+          indexAttendee(val.getAttendee());
         }
-
-        if (vpoll && val.getStayInformed()) {
-          makeField(ParameterInfoIndex.STAY_INFORMED.getJname(),
-                        val.getStayInformed());
+        
+        // Participant fields.
+        final var part = val.getBwParticipant();
+        if (part != null) {
+          indexParticipant(part);
         }
-
-        makeField(ParameterInfoIndex.CN.getJname(), val.getCn());
-
-        String temp = val.getPartstat();
-        if (temp == null) {
-          temp = IcalDefs.partstatValNeedsAction;
-        }
-        makeField(ParameterInfoIndex.PARTSTAT.getJname(), temp);
-
-        makeField(ParameterInfoIndex.SCHEDULE_STATUS.getJname(),
-                  val.getScheduleStatus());
-
-        makeField(ParameterInfoIndex.CUTYPE.getJname(), val.getCuType());
-
-        makeField(ParameterInfoIndex.DELEGATED_FROM.getJname(),
-                  val.getDelegatedFrom());
-
-        makeField(ParameterInfoIndex.DELEGATED_TO.getJname(),
-                  val.getDelegatedTo());
-
-        makeField(ParameterInfoIndex.DIR.getJname(), val.getDir());
-
-        makeField(ParameterInfoIndex.EMAIL.getJname(), val.getEmail());
-
-        makeField(ParameterInfoIndex.LANGUAGE.getJname(),
-                  val.getLanguage());
-
-        makeField(ParameterInfoIndex.MEMBER.getJname(), val.getMember());
-
-        makeField(ParameterInfoIndex.ROLE.getJname(), val.getRole());
-
-        makeField(ParameterInfoIndex.SENT_BY.getJname(), val.getSentBy());
-
-        endObject();
-
-        makeField("uri", val.getAttendeeUri());
+        
         endObject();
       }
 
@@ -1295,8 +1294,121 @@ public class DocBuilder extends DocBuilderBase {
     }
   }
 
+  private void indexAttendee(final BwAttendee val) {
+    try {
+      startObject(getJname(PropertyInfoIndex.ATTENDEE));
+
+      startObject("pars");
+
+      if (val.getRsvp()) {
+        makeField(ParameterInfoIndex.RSVP.getJname(),
+                  val.getRsvp());
+      }
+
+      makeField(ParameterInfoIndex.CN.getJname(), val.getCn());
+
+      String temp = val.getPartstat();
+      if (temp == null) {
+        temp = IcalDefs.partstatValNeedsAction;
+      }
+      makeField(ParameterInfoIndex.PARTSTAT.getJname(), temp);
+
+      makeField(ParameterInfoIndex.SCHEDULE_STATUS.getJname(),
+                val.getScheduleStatus());
+
+      makeField(ParameterInfoIndex.CUTYPE.getJname(), val.getCuType());
+
+      makeField(ParameterInfoIndex.DELEGATED_FROM.getJname(),
+                val.getDelegatedFrom());
+
+      makeField(ParameterInfoIndex.DELEGATED_TO.getJname(),
+                val.getDelegatedTo());
+
+      makeField(ParameterInfoIndex.DIR.getJname(), val.getDir());
+
+      makeField(ParameterInfoIndex.EMAIL.getJname(), val.getEmail());
+
+      makeField(ParameterInfoIndex.LANGUAGE.getJname(),
+                val.getLanguage());
+
+      makeField(ParameterInfoIndex.MEMBER.getJname(), val.getMember());
+
+      makeField(ParameterInfoIndex.ROLE.getJname(), val.getRole());
+
+      makeField(ParameterInfoIndex.SENT_BY.getJname(), val.getSentBy());
+
+      endObject();
+
+      makeField("uri", val.getAttendeeUri());
+      endObject();
+    } catch (final IndexException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
+  private void indexParticipant(final BwParticipant val) {
+    try {
+      startObject("bwparticipant");
+
+      makeField("uri", val.getCalendarAddress());
+
+      if (val.getExpectReply()) {
+        makeField("expect-reply", val.getExpectReply());
+      }
+
+      makeField("name", val.getName());
+
+      makeField(ParameterInfoIndex.PARTSTAT.getJname(),
+                val.getParticipationStatus());
+
+      makeField(ParameterInfoIndex.SCHEDULE_STATUS.getJname(),
+                val.getScheduleStatus());
+
+      makeField("kind", val.getKind());
+
+      makeField(ParameterInfoIndex.DELEGATED_FROM.getJname(),
+                val.getDelegatedFrom());
+
+      makeField(ParameterInfoIndex.DELEGATED_TO.getJname(),
+                val.getDelegatedTo());
+
+      //makeField(ParameterInfoIndex.DIR.getJname(), val.getDir());
+
+      makeField(ParameterInfoIndex.EMAIL.getJname(), val.getEmail());
+
+      makeField(ParameterInfoIndex.LANGUAGE.getJname(),
+                val.getLanguage());
+
+      makeField("member-of", 
+                val.getMemberOf());
+
+      makeField(ParameterInfoIndex.ROLE.getJname(), 
+                val.getParticipantType());
+
+      makeField("invited-by", val.getInvitedBy());
+      
+      final var votes = val.getVotes();
+      if (!votes.isEmpty()) {
+        startArray("votes");
+        for (final var vote: votes) {
+          startObject();
+
+          makeField("poll-item-id", vote.getPollItemId());
+          makeField("response", vote.getResponse());
+          
+          endObject();
+        }
+        endArray();
+      }
+
+      endObject();
+    } catch (final IndexException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
   private void indexDate(final PropertyInfoIndex dtype,
-                         final BwDateTime dt) throws CalFacadeException {
+                         final BwDateTime dt) {
     try {
       if (dt == null) {
         return;
@@ -1321,12 +1433,12 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   private void indexBwStrings(final PropertyInfoIndex pi,
-                              final Collection<? extends BwStringBase<?>> val) throws CalFacadeException {
+                              final Collection<? extends BwStringBase<?>> val) {
     indexBwStrings(getJname(pi), val);
   }
 
   private void indexBwStrings(final String name,
-                              final Collection<? extends BwStringBase<?>> val) throws CalFacadeException {
+                              final Collection<? extends BwStringBase<?>> val) {
     try {
       if (Util.isEmpty(val)) {
         return;
@@ -1345,7 +1457,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   private void makeField(final PropertyInfoIndex pi,
-                         final BwStringBase<?> val) throws CalFacadeException {
+                         final BwStringBase<?> val) {
     if (val == null) {
       return;
     }
@@ -1365,7 +1477,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   private void makeField(final PropertyInfoIndex pi,
-                         final String val) throws CalFacadeException {
+                         final String val) {
     if (val == null) {
       return;
     }
@@ -1378,7 +1490,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   private void makeField(final PropertyInfoIndex pi,
-                         final Object val) throws CalFacadeException {
+                         final Object val) {
     if (val == null) {
       return;
     }
@@ -1391,7 +1503,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   private void makeField(final PropertyInfoIndex pi,
-                         final Collection<String> vals) throws CalFacadeException {
+                         final Collection<String> vals) {
     try {
       if (Util.isEmpty(vals)) {
         return;
@@ -1409,7 +1521,7 @@ public class DocBuilder extends DocBuilderBase {
     }
   }
 
-  private void makeLocKeys(final List<BwLocation.KeyFld> vals) throws CalFacadeException {
+  private void makeLocKeys(final List<BwLocation.KeyFld> vals) {
     try {
       if (Util.isEmpty(vals)) {
         return;
@@ -1433,7 +1545,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   private void makeBwDateTimes(final PropertyInfoIndex pi,
-                               final Set<BwDateTime> vals) throws CalFacadeException {
+                               final Set<BwDateTime> vals) {
     try {
       if (Util.isEmpty(vals)) {
         return;
@@ -1451,18 +1563,8 @@ public class DocBuilder extends DocBuilderBase {
     }
   }
 
-  private static String getJname(final PropertyInfoIndex pi) {
-    final BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
-
-    if (ipie == null) {
-      return null;
-    }
-
-    return ipie.getJname();
-  }
-
   /*
-  private XContentBuilder newBuilder() throws CalFacadeException {
+  private XContentBuilder newBuilder() {
     try {
       XContentBuilder builder = XContentFactory.jsonBuilder();
 

@@ -35,6 +35,7 @@ import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwLongString;
 import org.bedework.calfacade.BwOrganizer;
+import org.bedework.calfacade.BwParticipant;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.BwRelatedTo;
@@ -42,7 +43,9 @@ import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwString;
+import org.bedework.calfacade.BwVote;
 import org.bedework.calfacade.BwXproperty;
+import org.bedework.calfacade.SchedulingInfo;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.calfacade.base.CategorisedEntity;
@@ -472,8 +475,6 @@ public class EntityBuilder extends EntityBuilderBase {
     ev.setStatus(getString(PropertyInfoIndex.STATUS));
     ev.setCost(getString(PropertyInfoIndex.COST));
 
-    ev.setOrganizer(restoreOrganizer());
-
     ev.setDtstamp(getString(PropertyInfoIndex.DTSTAMP));
     ev.setLastmod(getString(PropertyInfoIndex.LAST_MODIFIED));
     ev.setCreated(getString(PropertyInfoIndex.CREATED));
@@ -497,9 +498,18 @@ public class EntityBuilder extends EntityBuilderBase {
     ev.setAttendeeSchedulingObject(
             getBoolean(PropertyInfoIndex.ATTENDEE_SCHEDULING_OBJECT));
 
+    ev.setOrganizer(restoreOrganizer());
+    restoreParticipants(ev.getSchedulingInfo());
+
     ev.setRelatedTo(restoreRelatedTo());
 
-    ev.setXproperties(restoreXprops());
+    final var xps = restoreXprops();
+    if (ev.getXproperties() != null) {
+      ev.getXproperties().addAll(xps);
+    } else {
+      ev.setXproperties(xps);
+    }
+
     restoreReqStat(ev);
 
     ev.setCtoken(getString(PropertyInfoIndex.CTOKEN));
@@ -524,7 +534,6 @@ public class EntityBuilder extends EntityBuilderBase {
 
     final boolean vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
 
-    ev.setAttendees(restoreAttendees(vpoll));
     ev.setRecipients(getStringSet(PropertyInfoIndex.RECIPIENT));
     ev.setComments(restoreBwStringSet(PropertyInfoIndex.COMMENT,
                                       BwString.class));
@@ -642,15 +651,8 @@ public class EntityBuilder extends EntityBuilderBase {
     return atts;
   }
 
-  private Set<BwAttendee> restoreAttendees(final boolean vpoll) {
-    final PropertyInfoIndex pi;
-
-    if (vpoll) {
-      pi = PropertyInfoIndex.VOTER;
-    } else {
-      pi = PropertyInfoIndex.ATTENDEE;
-    }
-    final List<Object> vals = getFieldValues(pi);
+  private Set<BwAttendee> restoreAttendees() {
+    final List<Object> vals = getFieldValues(PropertyInfoIndex.ATTENDEE);
 
     if (Util.isEmpty(vals)) {
       return null;
@@ -661,42 +663,125 @@ public class EntityBuilder extends EntityBuilderBase {
     for (final Object o: vals) {
       try {
         pushFields(o);
-
-        final BwAttendee att = new BwAttendee();
-
-        if (pushFields(PropertyInfoIndex.PARAMETERS)) {
-          try {
-            att.setRsvp(getBool(ParameterInfoIndex.RSVP));
-            att.setCn(getString(ParameterInfoIndex.CN));
-            att.setPartstat(getString(ParameterInfoIndex.PARTSTAT));
-            att.setScheduleStatus(getString(ParameterInfoIndex.SCHEDULE_STATUS));
-            att.setCuType(getString(ParameterInfoIndex.CUTYPE));
-            att.setDelegatedFrom(getString(ParameterInfoIndex.DELEGATED_FROM));
-            att.setDelegatedTo(getString(ParameterInfoIndex.DELEGATED_TO));
-            att.setDir(getString(ParameterInfoIndex.DIR));
-            att.setEmail(getString(ParameterInfoIndex.EMAIL));
-            att.setLanguage(getString(ParameterInfoIndex.LANGUAGE));
-            att.setMember(getString(ParameterInfoIndex.MEMBER));
-            att.setRole(getString(ParameterInfoIndex.ROLE));
-            att.setSentBy(getString(ParameterInfoIndex.SENT_BY));
-
-            if (vpoll) {
-              att.setStayInformed(getBool(ParameterInfoIndex.STAY_INFORMED));
-            }
-          } finally {
-            popFields();
-          }
-        }
-
-        att.setAttendeeUri(getString(PropertyInfoIndex.URI));
-
-        atts.add(att);
+        atts.add(restoreAttendee());
       } finally {
         popFields();
       }
     }
 
     return atts;
+  }
+
+  private void restoreParticipants(final SchedulingInfo si) {
+    final List<Object> vals = getFieldValues(PropertyInfoIndex.PARTICIPANT);
+
+    if (Util.isEmpty(vals)) {
+      return;
+    }
+
+    for (final Object o: vals) {
+      try {
+        pushFields(o);
+
+        BwAttendee att = null;
+        if (pushFields(PropertyInfoIndex.ATTENDEE)) {
+          try {
+            att = restoreAttendee();
+          } finally {
+            popFields();
+          }
+        }
+
+        // Restore participant fields.
+
+        BwParticipant part = null;
+        if (pushFields("bwparticipant")) {
+          try {
+            part = restoreParticipant(si);
+          } finally {
+            popFields();
+          }
+        }
+
+        si.makeParticipant(att, part);
+      } finally {
+        popFields();
+      }
+    }
+  }
+
+  private BwAttendee restoreAttendee() {
+    final BwAttendee att = new BwAttendee();
+
+    if (pushFields(PropertyInfoIndex.PARAMETERS)) {
+      try {
+        att.setRsvp(getBool(ParameterInfoIndex.RSVP));
+        att.setCn(getString(ParameterInfoIndex.CN));
+        att.setPartstat(getString(ParameterInfoIndex.PARTSTAT));
+        att.setScheduleStatus(getString(ParameterInfoIndex.SCHEDULE_STATUS));
+        att.setCuType(getString(ParameterInfoIndex.CUTYPE));
+        att.setDelegatedFrom(getString(ParameterInfoIndex.DELEGATED_FROM));
+        att.setDelegatedTo(getString(ParameterInfoIndex.DELEGATED_TO));
+        att.setDir(getString(ParameterInfoIndex.DIR));
+        att.setEmail(getString(ParameterInfoIndex.EMAIL));
+        att.setLanguage(getString(ParameterInfoIndex.LANGUAGE));
+        att.setMember(getString(ParameterInfoIndex.MEMBER));
+        att.setRole(getString(ParameterInfoIndex.ROLE));
+        att.setSentBy(getString(ParameterInfoIndex.SENT_BY));
+      } finally {
+        popFields();
+      }
+    }
+
+    att.setAttendeeUri(getString(PropertyInfoIndex.URI));
+
+    return att;
+  }
+
+  private BwParticipant restoreParticipant(final SchedulingInfo si) {
+    final BwParticipant part = new BwParticipant(si);
+
+    part.setCalendarAddress(getString(PropertyInfoIndex.URI));
+    part.setExpectReply(getBool("expect-reply"));
+    part.setName(getString("name"));
+    part.setParticipationStatus(
+            getString(ParameterInfoIndex.PARTSTAT));
+    part.setScheduleStatus(getString(ParameterInfoIndex.SCHEDULE_STATUS));
+    part.setKind(getString("kind"));
+    part.setDelegatedFrom(getString(ParameterInfoIndex.DELEGATED_FROM));
+    part.setDelegatedTo(getString(ParameterInfoIndex.DELEGATED_TO));
+    //part.setDir(getString(ParameterInfoIndex.DIR));
+    part.setEmail(getString(ParameterInfoIndex.EMAIL));
+    part.setLanguage(getString(ParameterInfoIndex.LANGUAGE));
+    part.setMemberOf(getString("member-of"));
+    part.setParticipantType(getString(ParameterInfoIndex.ROLE));
+    part.setInvitedBy(getString("invited-by"));
+
+    restoreVotes(part);
+
+    return part;
+  }
+
+  private void restoreVotes(final BwParticipant part) {
+    final List<Object> vals = getFieldValues("votes");
+
+    if (Util.isEmpty(vals)) {
+      return;
+    }
+
+    for (final Object o: vals) {
+      try {
+        pushFields(o);
+        final var vote = new BwVote(part, null);
+
+        vote.setPollItemId(getInt("poll-item-id"));
+        vote.setResponse(getInt("response"));
+
+        part.addVote(vote);
+      } finally {
+        popFields();
+      }
+    }
   }
 
   private BwRelatedTo restoreRelatedTo() {
@@ -988,7 +1073,7 @@ public class EntityBuilder extends EntityBuilderBase {
                   PropertyInfoIndex.DESCRIPTION));
           alarm.setSummary(getString(PropertyInfoIndex.SUMMARY));
 
-          alarm.setAttendees(restoreAttendees(false));
+          alarm.setAttendees(restoreAttendees());
         } else if (atype == BwAlarm.alarmTypeProcedure) {
           alarm.setAttach(getString(PropertyInfoIndex.ATTACH));
           alarm.setDescription(getString(
