@@ -958,8 +958,7 @@ class Events extends CalSvcDb implements EventsI {
         }
       }
 
-      if (pi.equals(PropertyInfoIndex.ATTENDEE) ||
-              pi.equals(PropertyInfoIndex.VOTER)) {
+      if (pi.equals(PropertyInfoIndex.ATTENDEE)) {
         updResult.deletedAttendees = cte.getRemovedValues();
 
         if (attendeeSchedulingObject) {
@@ -969,6 +968,22 @@ class Events extends CalSvcDb implements EventsI {
           updResult.reply = true;
         } else {
           if (!Util.isEmpty(updResult.deletedAttendees)) {
+            // Bump sequence as we are sending out cancels
+            updResult.sequenceChange = true;
+          }
+        }
+      }
+
+      if (pi.equals(PropertyInfoIndex.PARTICIPANT)) {
+        updResult.deletedParticipants = cte.getRemovedValues();
+
+        if (attendeeSchedulingObject) {
+          // Attendee replying?
+          /* XXX We should really check to see if the value changed here -
+           */
+          updResult.reply = true;
+        } else {
+          if (!Util.isEmpty(updResult.deletedParticipants)) {
             // Bump sequence as we are sending out cancels
             updResult.sequenceChange = true;
           }
@@ -985,6 +1000,24 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       if (pi.equals(PropertyInfoIndex.POLL_ITEM)) {
+        if (attendeeSchedulingObject) {
+          // Attendee replying?
+          /* XXX We should really check to see if the value changed here -
+           */
+          updResult.reply = true;
+        }
+      }
+
+      if (pi.equals(PropertyInfoIndex.VOTE)) {
+        if (attendeeSchedulingObject) {
+          // Attendee replying?
+          /* XXX We should really check to see if the value changed here -
+           */
+          updResult.reply = true;
+        }
+      }
+
+      if (pi.equals(PropertyInfoIndex.POLL_VOTE_RESPONSE)) {
         if (attendeeSchedulingObject) {
           // Attendee replying?
           /* XXX We should really check to see if the value changed here -
@@ -2035,7 +2068,7 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       // Delete the group
-      si.removeParticipant(att);
+      si.removeRecipientParticipant(att);
 
       for (final BwPrincipalInfo mbrPi: pi.getMembers()) {
         if (mbrPi.getCaladruri() == null) {

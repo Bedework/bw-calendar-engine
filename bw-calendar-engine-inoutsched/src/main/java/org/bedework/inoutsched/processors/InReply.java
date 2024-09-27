@@ -270,12 +270,9 @@ public class InReply extends InProcessor {
         changed = true;
 
         if (recurringInstance) {
-          calSi.removeParticipant(inPart);
-
-          calPart = calSi.addParticipant(inPart);
-        } else {
-          calPart = calSi.copyParticipant(inPart);
+          calSi.removeRecipientParticipant(inPart);
         }
+        calPart = calSi.copyParticipant(inPart);
       }
 
       calPart.setScheduleStatus(getRstat(inBoxEv));
@@ -355,7 +352,7 @@ public class InReply extends InProcessor {
         if (calPart.changedBy(ovpart)) {
           changed = true;
 
-          ocalSi.removeParticipant(ovpart);
+          ocalSi.removeRecipientParticipant(ovpart);
 
           calPart = ocalSi.addParticipant(calPart);
           calPart.setScheduleStatus(getRstat(oev));

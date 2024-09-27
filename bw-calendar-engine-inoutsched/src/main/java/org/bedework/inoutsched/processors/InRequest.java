@@ -309,8 +309,8 @@ public class InRequest extends InProcessor {
       part.setParticipationStatus(partStat);
 
       ourEvent.setScheduleMethod(ScheduleMethods.methodTypeReply);
-      ourSi.removeParticipant(part);
-      ourSi.addParticipant(part);
+      ourSi.removeRecipientParticipant(part);
+      ourSi.copyParticipant(part);
 
       return true;
     }
