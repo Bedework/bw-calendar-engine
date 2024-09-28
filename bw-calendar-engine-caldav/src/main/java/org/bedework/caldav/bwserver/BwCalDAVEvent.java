@@ -153,7 +153,8 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
 
   @Override
   public void setOrganizer(final Organizer val) {
-    final var so = getEv().getSchedulingInfo().newSchedulingOwner();
+    final var so = getEv().getSchedulingInfo()
+                          .newSchedulingOwner(val.getOrganizerUri());
 
     so.setName(val.getCn());
 //    so.setDir(val.getDir());
@@ -164,7 +165,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
 
   @Override
   public Organizer getOrganizer() {
-    final var so = getEv().getSchedulingInfo().newSchedulingOwner();
+    final var so = getEv().getSchedulingInfo().getSchedulingOwner();
     if (so.noOwner()) {
       return null;
     }

@@ -256,8 +256,7 @@ public class InRequest extends InProcessor {
       return false;
     }
 
-    final var inOwner = inSi.newSchedulingOwner();
-    inOwner.setCalendarAddress(uri);
+    final var inOwner = inSi.newSchedulingOwner(uri);
 
     final BwEvent ourEvent = ourCopy.getEvent();
     final var ourSi = ourEvent.getSchedulingInfo();
