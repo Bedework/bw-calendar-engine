@@ -21,7 +21,6 @@ package org.bedework.caldav.bwserver;
 import org.bedework.access.AccessPrincipal;
 import org.bedework.caldav.server.CalDAVEvent;
 import org.bedework.caldav.server.Organizer;
-import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwXproperty;
@@ -39,7 +38,6 @@ import org.bedework.webdav.servlet.shared.WebdavException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 import javax.xml.namespace.QName;
 
@@ -203,13 +201,8 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
 
   @Override
   public Set<String> getAttendeeUris() {
-    final Set<String> uris = new TreeSet<>();
-
-    for (final BwAttendee att: getEv().getAttendees()) {
-      uris.add(att.getAttendeeUri());
-    }
-
-    return uris;
+    return getEv().getSchedulingInfo()
+                  .getParticipantAddrs();
   }
 
   @Override

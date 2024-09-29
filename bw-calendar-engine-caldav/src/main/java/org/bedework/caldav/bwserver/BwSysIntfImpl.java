@@ -1131,7 +1131,12 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         throw new WebdavForbidden(CaldavTags.noUidConflict,
                                   ev.getParentPath());
       }
+      if (resp.getException() != null) {
+        throw new WebdavException(resp.getException());
+      }
       throw new WebdavForbidden(resp.toString());
+    } catch (final WebdavException we) {
+      throw we;
     } catch (final Throwable t) {
       throw new WebdavException(t);
     }
