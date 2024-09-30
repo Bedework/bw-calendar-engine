@@ -210,6 +210,10 @@ public class InReply extends InProcessor {
 
     inVoter.copyTo(colVoter);
     colSi.markChanged();
+    colEv.getChangeset(getSvc().getPrincipal()
+                               .getHref())
+         .changed(PropertyIndex.PropertyInfoIndex.PARTICIPANT,
+                  colVoter, null);
 
     getSvc().getEventsHandler().update(colEi, false, attUri,
                                        false); // autocreate
