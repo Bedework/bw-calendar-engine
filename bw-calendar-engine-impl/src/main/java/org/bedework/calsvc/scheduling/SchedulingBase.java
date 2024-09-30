@@ -573,11 +573,13 @@ public abstract class SchedulingBase extends CalSvcHelperRw
     //event.setSequence(event.getSequence() + 1);
 
     /* Set the PARTSTAT to needs action for all attendees - except us */
-    parts.getParticipants().stream()
-         .filter(att -> !att.equals(userParticipant)).forEach(att -> {
-      att.setParticipationStatus(IcalDefs.partstatValNeedsAction);
-      att.setExpectReply(true);
-    });
+    parts.getRecipientParticipants().values()
+         .stream()
+         .filter(att -> !att.equals(userParticipant))
+         .forEach(att -> {
+           att.setParticipationStatus(IcalDefs.partstatValNeedsAction);
+           att.setExpectReply(true);
+         });
   }
 
   protected boolean initScheduleEvent(final EventInfo ei,
@@ -612,7 +614,8 @@ public abstract class SchedulingBase extends CalSvcHelperRw
     event.assignGuid(getSvc().getSystemProperties().getSystemid()); // no-op if already set
 
     /* Ensure attendees have sequence and dtstamp of event */
-    for (final var att: event.getSchedulingInfo().getParticipants()) {
+    for (final var att: event.getSchedulingInfo()
+                             .getRecipientParticipants().values()) {
       if (!att.getScheduleAgent().equalsIgnoreCase(
               IcalDefs.scheduleAgents[scheduleAgentServer])) {
         continue;
@@ -630,7 +633,8 @@ public abstract class SchedulingBase extends CalSvcHelperRw
   }
 
   private void getRecipients(final BwEvent master, final BwEvent ev) {
-    for (final var att: ev.getSchedulingInfo().getParticipants()) {
+    for (final var att: ev.getSchedulingInfo()
+                          .getRecipientParticipants().values()) {
       if (!att.getScheduleAgent().equalsIgnoreCase(
               IcalDefs.scheduleAgents[scheduleAgentServer])) {
         continue;

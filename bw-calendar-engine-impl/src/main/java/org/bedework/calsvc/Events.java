@@ -572,7 +572,8 @@ class Events extends CalSvcDb implements EventsI {
           setScheduleState(ovev, true, schedulingInbox);
 
           final var ovParts = ovev.getSchedulingInfo();
-          final var ovAtts = ovParts.getParticipants();
+          final var ovAtts = ovParts.getRecipientParticipants()
+                                    .values();
 
           if ((maxAttendees != null) &&
                   !Util.isEmpty(ovAtts) &&
@@ -838,7 +839,8 @@ class Events extends CalSvcDb implements EventsI {
       if (organizerSchedulingObject) {
         // Set RSVP on all attendees with PARTSTAT = NEEDS_ACTION
         for (final Participant att: event.getSchedulingInfo()
-                                         .getParticipants()) {
+                                         .getRecipientParticipants()
+                                         .values()) {
           if (att.getParticipationStatus().equals(
                   IcalDefs.partstatValNeedsAction)) {
             att.setExpectReply(true);

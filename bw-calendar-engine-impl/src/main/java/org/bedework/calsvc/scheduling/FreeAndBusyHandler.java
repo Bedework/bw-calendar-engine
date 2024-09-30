@@ -385,8 +385,11 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
         continue;
       }
 
-      if (srr.freeBusy.getNumAttendees() == 1) {
-        fb.setAttendee(srr.freeBusy.getAttendees().iterator().next());
+      final var freeBusySi = srr.freeBusy.getSchedulingInfo();
+      final var freeBusyPart = freeBusySi.getOnlyParticipant();
+
+      if (freeBusyPart.isOk()) {
+        fb.setAttendee(freeBusyPart.getEntity().getAttendee());
       }
 
       granulateFreeBusy(fb, srr.freeBusy, start, end, granularity);

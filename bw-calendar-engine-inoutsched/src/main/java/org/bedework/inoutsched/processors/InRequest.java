@@ -685,7 +685,8 @@ public class InRequest extends InProcessor {
       final var ourSi = ourEv.getSchedulingInfo();
       ourSi.clearParticipants();
 
-      for (final var a: inEv.getSchedulingInfo().getParticipants()) {
+      for (final var a: inEv.getSchedulingInfo()
+                            .getRecipientParticipants().values()) {
         ourSi.copyParticipant(a);
       }
 

@@ -55,12 +55,13 @@ public class InRefresh extends InProcessor {
 
     /* Should be exactly one attendee. */
     final var si = ev.getSchedulingInfo();
+    final var recipientResp = si.getOnlyParticipant();
 
-    if (si.getParticipants().size() != 1) {
-      return null;
+    if (!recipientResp.isOk()) {
+      return Response.fromResponse(pr, recipientResp);
     }
 
-    final Participant att = si.getParticipants().iterator().next();
+    final Participant att = recipientResp.getEntity();
 
     /* We can only do this if there is an active copy */
 

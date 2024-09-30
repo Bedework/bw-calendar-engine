@@ -98,13 +98,13 @@ public class InReply extends InProcessor {
       /* Should be exactly one attendee */
       if (!ev.getSuppressed()) {
         final var si = ev.getSchedulingInfo();
+        final var recipientResp = si.getOnlyParticipant();
 
-        if (si.getParticipants().size() != 1) {
-          return Response.error(pr, new CalFacadeException(
-                  CalFacadeException.schedulingExpectOneAttendee));
+        if (!recipientResp.isOk()) {
+          return Response.fromResponse(pr, recipientResp);
         }
 
-        final Participant att = si.getParticipants().iterator().next();
+        final Participant att = recipientResp.getEntity();
 
         if (!att.getParticipationStatus().equals(acceptPartstat)) {
           pr.attendeeAccepting = false;
@@ -118,13 +118,15 @@ public class InReply extends InProcessor {
           ev = oei.getEvent();
 
           final var si = ev.getSchedulingInfo();
+          final var recipients = si.getRecipientParticipants();
 
-          if (si.getParticipants().size() != 1) {
+          if (recipients.size() != 1) {
             return Response.error(pr, new CalFacadeException(
                     CalFacadeException.schedulingExpectOneAttendee));
           }
 
-          final Participant att = si.getParticipants().iterator().next();
+          final Participant att = recipients.values()
+                                            .iterator().next();
 
           if (!att.getParticipationStatus().equals(acceptPartstat)) {
             pr.attendeeAccepting = false;
