@@ -3773,6 +3773,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                    final String recurid,
                                    final boolean waitForIt) throws CalFacadeException {
     try {
+      ei.getEvent().onSave(); // Ensure all up to date
       final DocBuilder db = getDocBuilder();
       final EsDocInfo di = db.makeDoc(ei,
                                       kind,

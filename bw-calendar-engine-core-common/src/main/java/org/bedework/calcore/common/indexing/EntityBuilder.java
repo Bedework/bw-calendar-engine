@@ -499,7 +499,7 @@ public class EntityBuilder extends EntityBuilderBase {
             getBoolean(PropertyInfoIndex.ATTENDEE_SCHEDULING_OBJECT));
 
     ev.setOrganizer(restoreOrganizer());
-    restoreParticipants(ev.getSchedulingInfo());
+    restoreParticipants(ev);
 
     ev.setRelatedTo(restoreRelatedTo());
 
@@ -672,12 +672,14 @@ public class EntityBuilder extends EntityBuilderBase {
     return atts;
   }
 
-  private void restoreParticipants(final SchedulingInfo si) {
+  private void restoreParticipants(final BwEvent ev) {
     final List<Object> vals = getFieldValues(PropertyInfoIndex.PARTICIPANT);
 
     if (Util.isEmpty(vals)) {
       return;
     }
+
+    final SchedulingInfo si = ev.getSchedulingInfo();
 
     for (final Object o: vals) {
       try {
