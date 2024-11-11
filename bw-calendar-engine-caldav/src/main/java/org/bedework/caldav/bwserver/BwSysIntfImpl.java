@@ -27,7 +27,6 @@ import org.bedework.caldav.server.CalDAVCollection;
 import org.bedework.caldav.server.CalDAVEvent;
 import org.bedework.caldav.server.CalDAVResource;
 import org.bedework.caldav.server.CalDavHeaders;
-import org.bedework.caldav.server.Organizer;
 import org.bedework.caldav.server.PropertyHandler;
 import org.bedework.caldav.server.PropertyHandler.PropertyType;
 import org.bedework.caldav.server.SysIntfReader;
@@ -93,7 +92,6 @@ import org.bedework.calsvci.SynchReport;
 import org.bedework.calsvci.SynchReportItem;
 import org.bedework.convert.IcalTranslator;
 import org.bedework.convert.Icalendar;
-import org.bedework.convert.Icalendar.TimeZoneInfo;
 import org.bedework.convert.ical.IcalMalformedException;
 import org.bedework.convert.ical.VFreeUtil;
 import org.bedework.convert.jcal.JcalTranslator;
@@ -104,7 +102,6 @@ import org.bedework.sysevents.events.HttpEvent;
 import org.bedework.sysevents.events.HttpOutEvent;
 import org.bedework.sysevents.events.SysEventBase.SysCode;
 import org.bedework.util.calendar.IcalDefs;
-import org.bedework.util.calendar.IcalDefs.IcalComponentType;
 import org.bedework.util.calendar.IcalendarUtil;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.calendar.XcalUtil;
@@ -147,7 +144,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -169,7 +165,7 @@ import static org.bedework.util.misc.response.Response.Status.ok;
 public class BwSysIntfImpl implements Logged, SysIntf {
   private boolean bedeworkExtensionsEnabled;
 
-  protected BwPrincipal currentPrincipal;
+  protected BwPrincipal<?> currentPrincipal;
 
   private CalPrincipalInfo principalInfo;
 
@@ -472,7 +468,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         (!"".equals(els[0])) ||
         (els[1] == null) ||
         (els[2] == null) ||
-        (els[2].length() == 0)) {
+        (els[2].isEmpty())) {
       return false;
     }
 
@@ -608,7 +604,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   boolean updateQuota(final AccessPrincipal principal,
                       final long inc) {
     try {
-      final BwPrincipal p = getSvci().getUsersHandler().getPrincipal(principal.getPrincipalRef());
+      final BwPrincipal<?> p =
+              getSvci().getUsersHandler()
+                       .getPrincipal(principal.getPrincipalRef());
 
       if (p == null) {
         return false;  // No quota - fail
@@ -645,7 +643,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       return principalInfo;
     }
 
-    final BwPrincipal p =
+    final BwPrincipal<?> p =
             getSvci().getUsersHandler().getPrincipal(
                     principal.getPrincipalRef());
     if (p == null) {
@@ -711,8 +709,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                                     0);
       }
 
-      final BwPrincipal p = getSvci().getDirectories().getPrincipal(
-              pi.getPrincipalHref());
+      final BwPrincipal<?> p =
+              getSvci().getDirectories()
+                       .getPrincipal(pi.getPrincipalHref());
 
       if (pi.getPrincipalHref().startsWith(BwPrincipal.userPrincipalRoot)) {
         userHomePath = Util.buildPath(true, userHomePath,
@@ -753,7 +752,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public Collection<String> getPrincipalCollectionSet(final String resourceUri) {
     try {
-      ArrayList<String> al = new ArrayList<>();
+      final ArrayList<String> al = new ArrayList<>();
 
       al.add(BwPrincipal.principalRoot);
 
@@ -821,7 +820,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       }
     }
 
-    if (props.size() != 0) {
+    if (!props.isEmpty()) {
       // Directory search
       final Holder<Boolean> truncated = new Holder<>();
       if (principals == null) {
@@ -854,7 +853,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       return newPis;
     }
 
-    if (pis.size() == 0) {
+    if (pis.isEmpty()) {
       return pis;
     }
 
@@ -923,7 +922,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
 
     try {
-      return svci.getNotificationsHandler().send((BwPrincipal)pr, val);
+      return svci.getNotificationsHandler()
+                 .send((BwPrincipal<?>)pr, val);
     } catch (final Throwable t) {
       throw new WebdavException(t);
     }
@@ -960,7 +960,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
   }
 
-  private List<NotificationType> prefix(final List<NotificationType> notes) throws Throwable {
+  private List<NotificationType> prefix(final List<NotificationType> notes) {
     for (final NotificationType n: notes) {
       n.getNotification().prefixHrefs(getUrlHandler());
     }
@@ -973,7 +973,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                                final ShareType share) {
     try {
       return svci.getSharingHandler().share(unwrap(col), share);
-    } catch (CalFacadeForbidden cf) {
+    } catch (final CalFacadeForbidden cf) {
       throw new WebdavForbidden(cf.getMessage());
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -991,7 +991,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         return null;
       }
 
-      return getUrlHandler().prefix(rr.getSharedAs().getHref());
+      return getUrlHandler().prefix(rr.getSharedAs().href());
     } catch (final CalFacadeForbidden cf) {
       throw new WebdavForbidden(cf.getMessage());
     } catch (final CalFacadeException e) {
@@ -1034,14 +1034,15 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public Collection<String> getFreebusySet() {
     try {
-      Collection<BwCalendar> cals = svci.getScheduler().getFreebusySet();
-      Collection<String> hrefs = new ArrayList<>();
+      final Collection<BwCalendar> cals = svci.getScheduler()
+                                              .getFreebusySet();
+      final Collection<String> hrefs = new ArrayList<>();
 
       if (cals == null) {
         return hrefs;
       }
 
-      for (BwCalendar cal: cals) {
+      for (final BwCalendar cal: cals) {
         hrefs.add(getUrlHandler().prefix(cal.getPath()));
         //hrefs.add(getUrlPrefix() + cal.getPath());
       }
@@ -1145,7 +1146,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public void reindexEvent(final CalDAVEvent<?> event) {
     try {
-      EventInfo ei = getEvinfo(event);
+      final EventInfo ei = getEvinfo(event);
 
       getSvci().getEventsHandler().reindex(ei);
     } catch (final Throwable t) {
@@ -1206,15 +1207,12 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
 
     if (ur.getException() != null) {
-      if (ur.getException() instanceof CalFacadeException) {
-        CalFacadeException cfe = (CalFacadeException)ur
-                .getException();
+      if (ur.getException() instanceof final CalFacadeException cfe) {
         if (CalFacadeException.duplicateGuid
                 .equals(cfe.getMessage())) {
           throw new WebdavBadRequest("Duplicate-guid");
         }
-        if (cfe instanceof CalFacadeForbidden) {
-          CalFacadeForbidden cff = (CalFacadeForbidden)cfe;
+        if (cfe instanceof final CalFacadeForbidden cff) {
           throw new WebdavForbidden(cff.getQname(), cff.getMessage());
         }
       }
@@ -1343,10 +1341,10 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                                  final String originator,
                                  final TimeRange tr,
                                  final Writer wtr) {
-    BwOrganizer org = new BwOrganizer();
+    final BwOrganizer org = new BwOrganizer();
     org.setOrganizerUri(cua);
 
-    BwEvent ev = new BwEventObj();
+    final BwEvent ev = new BwEventObj();
     ev.setDtstart(getBwDt(tr.getStart()));
     ev.setDtend(getBwDt(tr.getEnd()));
 
@@ -1417,10 +1415,11 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       final AccessPrincipal owner = col.getOwner();
       final String orgUri;
-      if (owner instanceof BwPrincipal) {
-        orgUri = getSvci().getDirectories().principalToCaladdr((BwPrincipal)owner);
+      if (owner instanceof final BwPrincipal<?> powner) {
+        orgUri = getSvci().getDirectories()
+                          .principalToCaladdr(powner);
       } else {
-        final BwPrincipal p = BwPrincipal.makeUserPrincipal();
+        final BwPrincipal<?> p = BwPrincipal.makeUserPrincipal();
         p.setAccount(owner.getAccount());
         orgUri = getSvci().getDirectories().principalToCaladdr(p);
       }
@@ -1819,7 +1818,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public Collection<CalDAVResource<?>> getFiles(final CalDAVCollection<?> coll) {
     try {
-      Collection<BwResource> bwrs =
+      final Collection<BwResource> bwrs =
             getSvci().getResourcesHandler().getAll(coll.getPath());
 
       if (bwrs == null) {
@@ -2069,15 +2068,15 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                               final Writer wtr,
                               final String contentType) {
     try {
-      Collection<EventInfo> bwevs = new ArrayList<>();
+      final Collection<EventInfo> bwevs = new ArrayList<>();
 
       int meth = ScheduleMethods.methodTypeNone;
 
       if (method == MethodEmitted.publish) {
         meth = ScheduleMethods.methodTypePublish;
       }
-      for (CalDAVEvent<?> cde: evs) {
-        BwCalDAVEvent bcde = (BwCalDAVEvent)cde;
+      for (final CalDAVEvent<?> cde: evs) {
+        final BwCalDAVEvent bcde = (BwCalDAVEvent)cde;
 
         if (method == MethodEmitted.eventMethod) {
           meth = getEvent(bcde).getScheduleMethod();
@@ -2183,7 +2182,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
           throw new WebdavForbidden("Expected one timezone");
         }
       }
-      final SysiIcalendar sic = new MySysiIcalendar(this, ic);
+      final SysiIcalendar sic = new BwSysiIcalendar(this,
+                                                    col,
+                                                    ic);
       rollback = false;
 
       return sic;
@@ -2244,7 +2245,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
           throw new WebdavBadRequest("Expected one timezone");
         }
       }
-      final SysiIcalendar sic = new MySysiIcalendar(this, ic);
+      final SysiIcalendar sic = new BwSysiIcalendar(this, col,
+                                                    ic);
       rollback = false;
 
       return sic;
@@ -2282,9 +2284,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   public String tzidFromTzdef(final String val) {
     try {
       getSvci(); // Ensure open
-      StringReader sr = new StringReader(val);
+      final StringReader sr = new StringReader(val);
 
-      Icalendar ic = trans.fromIcal(null, sr);
+      final Icalendar ic = trans.fromIcal(null, sr);
 
       if ((ic == null) ||
           (ic.size() != 0) || // No components other than timezones
@@ -2297,7 +2299,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       /* This should be the only timezone ion the Calendar object
        */
-      TimeZone tz = ic.getTimeZones().iterator().next().tz;
+      final TimeZone tz = ic.getTimeZones().iterator().next().tz;
 
       return tz.getID();
     } catch (final CalFacadeException cfe) {
@@ -2306,19 +2308,23 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   }
 
   private static final String ValidateAlarmPrefix =
-      "BEGIN:VCALENDAR\n" +
-      "VERSION:2.0\n" +
-      "PRODID:bedework-validate\n" +
-      "BEGIN:VEVENT\n" +
-      "DTSTART:20101231T230000\n" +
-      "DTEND:20110101T010000\n" +
-      "SUMMARY:Just checking\n" +
-      "UID:1234\n" +
-      "DTSTAMP:20101125T112600\n";
+          """
+                  BEGIN:VCALENDAR
+                  VERSION:2.0
+                  PRODID:bedework-validate
+                  BEGIN:VEVENT
+                  DTSTART:20101231T230000
+                  DTEND:20110101T010000
+                  SUMMARY:Just checking
+                  UID:1234
+                  DTSTAMP:20101125T112600
+                  """;
 
   private static final String ValidateAlarmSuffix =
-      "END:VEVENT\n" +
-      "END:VCALENDAR\n";
+          """
+                  END:VEVENT
+                  END:VCALENDAR
+                  """;
 
   /** Validate an alarm component
    *
@@ -2329,11 +2335,11 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   public boolean validateAlarm(final String val) {
     try {
       getSvci(); // Ensure open
-      StringReader sr = new StringReader(ValidateAlarmPrefix +
+      final StringReader sr = new StringReader(ValidateAlarmPrefix +
                                          val +
                                          ValidateAlarmSuffix);
 
-      Icalendar ic = trans.fromIcal(null, sr);
+      final Icalendar ic = trans.fromIcal(null, sr);
 
       if ((ic == null) ||
           (ic.getEventInfo() == null)) {
@@ -2346,8 +2352,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       /* There should be alarms in the Calendar object
        */
-      EventInfo ei = ic.getEventInfo();
-      BwEvent ev = ei.getEvent();
+      final EventInfo ei = ic.getEventInfo();
+      final BwEvent ev = ei.getEvent();
 
       return ((ev.getAlarms() != null) &&
           !ev.getAlarms().isEmpty());
@@ -2378,7 +2384,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
    *                         Private methods
    * ==================================================================== */
 
-  private CategoryMapInfo getCatMapping() throws Throwable {
+  private CategoryMapInfo getCatMapping() {
     final BwPreferences prefs = getPrefs();
     final CategoryMappings catMaps;
 
@@ -2435,7 +2441,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     return new CategoryMapInfo(catMaps, topicalAreas);
   }
 
-  private void mapCategories(final EventInfo ei) throws Throwable {
+  private void mapCategories(final EventInfo ei) {
     final CategoryMapInfo cm = getCatMapping();
 
     if (cm.getNoMapping()) {
@@ -2443,7 +2449,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
 
     final BwEvent ev = ei.getEvent();
-    final Iterator<BwCategory> catIt = ev.getCategories().iterator();
     final List<BwCategory> toRemove = new ArrayList<>();
 
     for (final BwCategory cat: ev.getCategories()) {
@@ -2579,16 +2584,16 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       return srrs;
     }
 
-    if (errorCode.equals(CalFacadeException.schedulingBadMethod)) {
-      throw new WebdavForbidden(CaldavTags.validCalendarData, "Bad METHOD");
-    }
-
-    if (errorCode.equals(CalFacadeException.schedulingBadAttendees)) {
-      throw new WebdavForbidden(CaldavTags.attendeeAllowed, "Bad attendees");
-    }
-
-    if (errorCode.equals(CalFacadeException.schedulingAttendeeAccessDisallowed)) {
-      throw new WebdavForbidden(CaldavTags.attendeeAllowed, "attendeeAccessDisallowed");
+    switch (errorCode) {
+      case CalFacadeException.schedulingBadMethod ->
+              throw new WebdavForbidden(CaldavTags.validCalendarData,
+                                        "Bad METHOD");
+      case CalFacadeException.schedulingBadAttendees ->
+              throw new WebdavForbidden(CaldavTags.attendeeAllowed,
+                                        "Bad attendees");
+      case CalFacadeException.schedulingAttendeeAccessDisallowed ->
+              throw new WebdavForbidden(CaldavTags.attendeeAllowed,
+                                        "attendeeAccessDisallowed");
     }
 
     throw new WebdavForbidden(errorCode);
@@ -2673,8 +2678,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         clientIdent = clientId;
       }
 
-      final var authenticated = (account != null);
-
       final CalSvcIPars pars =
               CalSvcIPars.getCaldavPars("bwcaldav",
                                         account,
@@ -2729,19 +2732,15 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       return trans;
     }
 
-    switch (contentType) {
-      case "text/calendar":
-        return trans;
-      case "application/calendar+json":
-        return getJcalTrans();
-      case "application/calendar+xml":
-        return getXmlTrans();
-      case "application/jscalendar+json":
-        return getJScalTrans();
-      default:
-        throw new RuntimeException("Unsupported content type: " +
-                contentType);
-    }
+    return switch (contentType) {
+      case "text/calendar" -> trans;
+      case "application/calendar+json" -> getJcalTrans();
+      case "application/calendar+xml" -> getXmlTrans();
+      case "application/jscalendar+json" -> getJScalTrans();
+      default -> throw new RuntimeException(
+              "Unsupported content type: " +
+                      contentType);
+    };
   }
 
   private void close(final CalSvcI svci) {
@@ -2752,7 +2751,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     try {
       svci.endTransaction();
 
-      long reqTime = System.currentTimeMillis() - reqInTime;
+      final long reqTime = System.currentTimeMillis() - reqInTime;
       svci.postNotification(new HttpOutEvent(SysCode.CALDAV_OUT, reqTime));
     } catch (final Throwable t) {
       try {
@@ -2782,10 +2781,12 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     try {
       if (rm.getExpand() != null) {
         /* expand with time range */
-        ExpandType ex = rm.getExpand();
+        final ExpandType ex = rm.getExpand();
 
-        DateTime s = new DateTime(XcalUtil.getIcalFormatDateTime(ex.getStart()));
-        DateTime e = new DateTime(XcalUtil.getIcalFormatDateTime(ex.getEnd()));
+        final DateTime s = new DateTime(
+                XcalUtil.getIcalFormatDateTime(ex.getStart()));
+        final DateTime e = new DateTime(
+                XcalUtil.getIcalFormatDateTime(ex.getEnd()));
         return new RecurringRetrievalMode(Rmode.expanded,
                                           getBwDt(s),
                                           getBwDt(e));
@@ -2793,10 +2794,12 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       if (rm.getLimitRecurrenceSet() != null) {
         /* Only return master event and overrides in range */
-        LimitRecurrenceSetType l = rm.getLimitRecurrenceSet();
+        final LimitRecurrenceSetType l = rm.getLimitRecurrenceSet();
 
-        DateTime s = new DateTime(XcalUtil.getIcalFormatDateTime(l.getStart()));
-        DateTime e = new DateTime(XcalUtil.getIcalFormatDateTime(l.getEnd()));
+        final DateTime s = new DateTime(
+                XcalUtil.getIcalFormatDateTime(l.getStart()));
+        final DateTime e = new DateTime(
+                XcalUtil.getIcalFormatDateTime(l.getEnd()));
         return new RecurringRetrievalMode(Rmode.overrides,
                                           getBwDt(s),
                                           getBwDt(e));
@@ -2807,181 +2810,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
     /* Return master + overrides */
     return RecurringRetrievalMode.overrides;
-  }
-
-  /**
-   * @author douglm
-   *
-   */
-  private static class MySysiIcalendar extends SysiIcalendar {
-    private Icalendar ic;
-    private BwSysIntfImpl sysi;
-
-    private Iterator icIterator;
-
-    private MySysiIcalendar(final BwSysIntfImpl sysi, final Icalendar ic) {
-      this.sysi = sysi;
-      this.ic = ic;
-    }
-
-    @Override
-    public String getProdid() {
-      return ic.getProdid();
-    }
-
-    @Override
-    public String getVersion() {
-      return ic.getVersion();
-    }
-
-    @Override
-    public String getCalscale() {
-      return ic.getCalscale();
-    }
-
-    @Override
-    public String getMethod() {
-      return ic.getMethod();
-    }
-
-    @Override
-    public Collection<TimeZone> getTimeZones() {
-      Collection<TimeZone> tzs = new ArrayList<>();
-
-      for (TimeZoneInfo tzi: ic.getTimeZones()) {
-        tzs.add(tzi.tz);
-      }
-
-      return tzs;
-    }
-
-    @Override
-    public Collection<?> getComponents() {
-      return ic.getComponents();
-    }
-
-    @Override
-    public IcalComponentType getComponentType() {
-      return ic.getComponentType();
-    }
-
-    @Override
-    public int getMethodType() {
-      return ic.getMethodType();
-    }
-
-    @Override
-    public int getMethodType(final String val) {
-      return Icalendar.getMethodType(val);
-    }
-
-    @Override
-    public String getMethodName(final int mt) {
-      return Icalendar.getMethodName(mt);
-    }
-
-    @Override
-    public Organizer getOrganizer() {
-      final var owner = ic.getOrganizer();
-
-      if (owner.noOwner()) {
-        return null;
-      }
-
-      return new Organizer(owner.getName(),
-                           null, //owner.getDir(),
-                           owner.getLanguage(),
-                           owner.getInvitedBy(),
-                           owner.getCalendarAddress());
-    }
-
-    @Override
-    public CalDAVEvent<?> getEvent() {
-      //if ((size() != 1) || (getComponentType() != ComponentType.event)) {
-      //  throw new RuntimeException("org.bedework.icalendar.component.not.event");
-      //}
-
-      return (CalDAVEvent<?>)iterator().next();
-    }
-
-    @Override
-    public Iterator<WdEntity> iterator() {
-      return this;
-    }
-
-    @Override
-    public int size() {
-      return ic.size();
-    }
-
-    @Override
-    public boolean validItipMethodType() {
-      return validItipMethodType(getMethodType());
-    }
-
-    @Override
-    public boolean requestMethodType() {
-      return itipRequestMethodType(getMethodType());
-    }
-
-    @Override
-    public boolean replyMethodType() {
-      return itipReplyMethodType(getMethodType());
-    }
-
-    @Override
-    public boolean itipRequestMethodType(final int mt) {
-      return Icalendar.itipRequestMethodType(mt);
-    }
-
-    @Override
-    public boolean itipReplyMethodType(final int mt) {
-      return Icalendar.itipReplyMethodType(mt);
-    }
-
-    @Override
-    public boolean validItipMethodType(final int val) {
-      return Icalendar.validItipMethodType(val);
-    }
-
-    /* ====================================================================
-     *                        Iterator methods
-     * ==================================================================== */
-
-    @Override
-	public boolean hasNext() {
-      return getIcIterator().hasNext();
-    }
-
-    @Override
-	public WdEntity<?> next() {
-      Object o = getIcIterator().next();
-
-      if (!(o instanceof EventInfo)) {
-        return null;
-      }
-
-      EventInfo ei = (EventInfo)o;
-
-      try {
-        return new BwCalDAVEvent(sysi, ei);
-      } catch (final Throwable t) {
-        throw new RuntimeException(t);
-      }
-    }
-
-    @Override
-	public void remove() {
-      throw new UnsupportedOperationException();
-    }
-
-    private Iterator getIcIterator() {
-      if (icIterator == null) {
-        icIterator = ic.iterator();
-      }
-
-      return icIterator;
-    }
   }
 
   private BwDateTime getBwDt(final DateTime dt) {
@@ -3008,9 +2836,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     return prefs;
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                   Logged methods
-   * ==================================================================== */
+   * ============================================================== */
 
   private final BwLogger logger = new BwLogger();
 
