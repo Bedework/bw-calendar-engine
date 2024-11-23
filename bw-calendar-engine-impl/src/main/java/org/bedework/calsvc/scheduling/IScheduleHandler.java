@@ -247,9 +247,11 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
       }
     }
     if (calDav == null) {
-      calDav = new IscheduleClient(new IcalTranslator(getSvc().getIcalCallback()),
-                                   new PrivateKeysGetter(),
-                                   getSvc().getDirectories().getDefaultDomain());
+      calDav = new IscheduleClient(
+              getSvc(),
+              new IcalTranslator(getSvc().getIcalCallback()),
+              new PrivateKeysGetter(),
+              getSvc().getDirectories().getDefaultDomain());
     }
 
     return calDav;

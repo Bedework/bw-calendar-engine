@@ -109,17 +109,7 @@
 
 		<dependency>
 			<groupId>org.bedework</groupId>
-			<artifactId>apache-jdkim-library</artifactId>
-      <exclusions>
-        <exclusion>
-          <artifactId>geronimo-activation_1.1_spec</artifactId>
-          <groupId>org.apache.geronimo.specs</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>geronimo-javamail_1.4_mail</artifactId>
-          <groupId>org.apache.geronimo.javamail</groupId>
-        </exclusion>
-      </exclusions>
+			<artifactId>apache-jdkim-api</artifactId>
     </dependency>
 
     <dependency>

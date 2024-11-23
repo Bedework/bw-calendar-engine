@@ -22,6 +22,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.scheduling.hosts.Response.ResponseElement;
+import org.bedework.calsvci.CalSvcI;
 import org.bedework.convert.IcalTranslator;
 import org.bedework.convert.Icalendar;
 import org.bedework.util.calendar.IcalendarUtil;
@@ -74,6 +75,8 @@ import static org.bedework.util.http.HttpUtil.setContent;
  * @author Mike Douglass
  */
 public class IscheduleClient implements Logged {
+  private final CalSvcI svci;
+
   private final transient IcalTranslator trans;
 
   private static CloseableHttpClient cio;
@@ -105,9 +108,11 @@ public class IscheduleClient implements Logged {
    * @param pkeys - null for no signing
    * @param domain
    */
-  public IscheduleClient(final IcalTranslator trans,
+  public IscheduleClient(final CalSvcI svci,
+                         final IcalTranslator trans,
                          final PrivateKeys pkeys,
                          final String domain) {
+    this.svci = svci;
     this.trans = trans;
     this.pkeys = pkeys;
     this.domain = domain;
@@ -668,7 +673,7 @@ public class IscheduleClient implements Logged {
   private IscheduleOut makeIout(final HostInfo hi,
                                 final String contentType,
                                 final String method) {
-    final IscheduleOut iout = new IscheduleOut(domain);
+    final IscheduleOut iout = new IscheduleOut(svci, domain);
 
     iout.setContentType(contentType);
     iout.setMethod(method);

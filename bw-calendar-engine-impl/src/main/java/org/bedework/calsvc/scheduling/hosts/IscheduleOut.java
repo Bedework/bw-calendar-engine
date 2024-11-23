@@ -20,11 +20,11 @@ package org.bedework.calsvc.scheduling.hosts;
 
 import org.bedework.caldav.server.IscheduleMessage;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calsvci.CalSvcI;
 import org.bedework.util.misc.Util;
 
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
-import org.apache.james.jdkim.IscheduleDKIMSigner;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -38,8 +38,10 @@ import java.util.List;
  *
  */
 public class IscheduleOut extends IscheduleMessage {
+  private final CalSvcI svci;
+  private final String domain;
+
   private String method;
-  private String domain;
 
   private List<Header> headers;
 
@@ -49,7 +51,9 @@ public class IscheduleOut extends IscheduleMessage {
   /** Constructor
    * @param domain - needed for the d= tag
    */
-  public IscheduleOut(final String domain) {
+  public IscheduleOut(final CalSvcI svci,
+                      final String domain) {
+    this.svci = svci;
     this.domain = domain;
 
     /* Add the headers we all need */
@@ -59,14 +63,14 @@ public class IscheduleOut extends IscheduleMessage {
   }
 
   /**
-   * @param hinfo
-   * @param key
-   * @throws CalFacadeException
+   * @param hinfo host info
+   * @param key our private key
    */
   public void sign(final HostInfo hinfo,
-                   final PrivateKey key) throws CalFacadeException {
+                   final PrivateKey key) {
     try {
-      StringBuilder template = new StringBuilder("v=1; s=selector; d=");
+      final StringBuilder template =
+              new StringBuilder("v=1; s=selector; d=");
 
       template.append(domain);
       template.append("; ");
@@ -84,17 +88,20 @@ public class IscheduleOut extends IscheduleMessage {
 
       template.append("a=rsa-sha256; bh=; b=;");
 
-      String dkimSig = new IscheduleDKIMSigner(template.toString(),
-                                               key).sign(this, getInputStream());
+      final String dkimSig =
+              svci.getJDKIM()
+                  .getIscheduleDKIMSigner(template.toString(),
+                                          key).sign(this,
+                                                    getInputStream());
 
       if (dkimSig == null) {
         return;
       }
 
-      int pos = dkimSig.indexOf(":");
+      final int pos = dkimSig.indexOf(":");
 
       addHeader(dkimSig.substring(0, pos), dkimSig.substring(pos + 1));
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -124,7 +131,7 @@ public class IscheduleOut extends IscheduleMessage {
    * @return String
    */
   public String getContentType() {
-    List<String> l = getFieldVals("content-type");
+    final List<String> l = getFieldVals("content-type");
 
     if (Util.isEmpty(l)) {
       return null;
@@ -147,7 +154,7 @@ public class IscheduleOut extends IscheduleMessage {
           continue;
         }
 
-        for (String hval: getFieldVals(hname)) {
+        for (final String hval: getFieldVals(hname)) {
           headers.add(new BasicHeader(hname, hval));
         }
       }
@@ -157,11 +164,11 @@ public class IscheduleOut extends IscheduleMessage {
   }
 
   /**
-   * @param val
+   * @param val content line
    */
   public void addContentLine(final String val) {
     if (contentLines == null) {
-      contentLines = new ArrayList<String>();
+      contentLines = new ArrayList<>();
     }
 
     contentLines.add(val);
@@ -170,9 +177,8 @@ public class IscheduleOut extends IscheduleMessage {
 
   /**
    * @return int content length
-   * @throws CalFacadeException
    */
-  public int getContentLength() throws CalFacadeException {
+  public int getContentLength() {
     if (contentLines == null) {
       return 0;
     }
@@ -182,9 +188,8 @@ public class IscheduleOut extends IscheduleMessage {
 
   /**
    * @return byte[]  content bytes
-   * @throws CalFacadeException
    */
-  public byte[] getContentBytes() throws CalFacadeException {
+  public byte[] getContentBytes() {
     if (contentLines == null) {
       return null;
     }
@@ -201,7 +206,7 @@ public class IscheduleOut extends IscheduleMessage {
 
   private void replaceHeader(final String name,
                             final String val) {
-    List<String> l = getFields(name.toLowerCase());
+    final List<String> l = getFields(name.toLowerCase());
 
     if (Util.isEmpty(l)) {
       super.addHeader(name, val);
@@ -212,7 +217,7 @@ public class IscheduleOut extends IscheduleMessage {
   }
 
   private int getNumRecipients() {
-    List<String> l = getFields("recipient");
+    final List<String> l = getFields("recipient");
 
     if (Util.isEmpty(l)) {
       return 0;
@@ -226,9 +231,9 @@ public class IscheduleOut extends IscheduleMessage {
       return contentBytes;
     }
 
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
-    for (String ln: contentLines) {
+    for (final String ln: contentLines) {
       sb.append(ln);
 
       if (!ln.endsWith("\n")) {

@@ -23,7 +23,7 @@ import org.bedework.util.config.ConfigurationStore;
 import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.misc.Util;
 
-import org.apache.james.jdkim.DKIMVerifier;
+import org.apache.james.jdkim.api.JDKIM;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -44,6 +44,8 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
   private static List<HostInfo> hostInfos = new ArrayList<>();
 
   private static List<BwHost> hostConfigs = new ArrayList<>();
+
+  private static JDKIM jdkim;
 
   /**
    */
@@ -215,27 +217,24 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
   /** Add a host.
    *
    * @param val host info
-   * @throws CalFacadeException
    */
-  public void add(final HostInfo val) throws CalFacadeException {
+  public void add(final HostInfo val) {
 
   }
 
   /** Update a host.
    *
    * @param val host info
-   * @throws CalFacadeException
    */
-  public void update(final HostInfo val) throws CalFacadeException {
+  public void update(final HostInfo val) {
 
   }
 
   /** Delete a host.
    *
    * @param val host info
-   * @throws CalFacadeException
    */
-  public void delete(final HostInfo val) throws CalFacadeException {
+  public void delete(final HostInfo val) {
 
   }
 
@@ -249,7 +248,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
    * @param val - a url or an email address
    * @return HostInfo - null if no service available.
    */
-  public static HostInfo getHostForRecipient(final String val) throws CalFacadeException {
+  public static HostInfo getHostForRecipient(final String val) {
     try {
       final URI uri = new URI(val);
 
@@ -303,6 +302,21 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
     return null;
   }
 
+  private static final String defaultJDKIMClass = "org.apache.james.jdkim.api.JDKIM";
+
+  public static JDKIM getJDKIM() {
+    /* should determine the class from configs and load it.
+     */
+    if (jdkim == null) {
+      jdkim = (JDKIM)loadInstance(
+              Thread.currentThread().getContextClassLoader(),
+              defaultJDKIMClass,
+              JDKIM.class);
+    }
+
+    return jdkim;
+  }
+
   /** Should be called by BwHost instances on key update
    *
    */
@@ -319,7 +333,9 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
       for (final String s: keys) {
         final String[] selKey = s.split("=");
 
-        DKIMVerifier.addStoredKey(hi.getHostname(), selKey[0], selKey[1]);
+        getJDKIM().addDKIMVerifierStoredKey(hi.getHostname(),
+                                            selKey[0],
+                                            selKey[1]);
       }
     }
   }
@@ -332,12 +348,35 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
     try {
       /* Try to load it */
 
-      final HostInfo cfg = (HostInfo)cfs.getConfig(configName);
-
-      return cfg;
+      return (HostInfo)cfs.getConfig(configName);
     } catch (final Throwable t) {
       error(t);
       return null;
+    }
+  }
+
+  private static Object loadInstance(final ClassLoader loader,
+                                     final String cname,
+                                     final Class<?> interfaceClass) {
+    try {
+      final Class<?> cl = loader.loadClass(cname);
+
+      if (cl == null) {
+        throw new CalFacadeException("Class " + cname + " not found");
+      }
+
+      final Object o = cl.getDeclaredConstructor().newInstance();
+
+      if (!interfaceClass.isInstance(o)) {
+        throw new CalFacadeException("Class " + cname +
+                                             " is not a subclass of " +
+                                             interfaceClass.getName());
+      }
+
+      return o;
+    } catch (final Throwable t) {
+      t.printStackTrace();
+      throw new CalFacadeException(t);
     }
   }
 }

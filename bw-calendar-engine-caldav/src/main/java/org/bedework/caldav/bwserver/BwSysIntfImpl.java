@@ -133,6 +133,7 @@ import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.component.VFreeBusy;
+import org.apache.james.jdkim.api.JDKIM;
 import org.oasis_open.docs.ws_calendar.ns.soap.ComponentSelectionType;
 
 import java.io.Reader;
@@ -432,6 +433,11 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       sysProperties = configs.getSystemProperties();
     }
     return sysProperties;
+  }
+
+  @Override
+  public JDKIM getJDKIM() {
+    return getSvci().getJDKIM();
   }
 
   @Override

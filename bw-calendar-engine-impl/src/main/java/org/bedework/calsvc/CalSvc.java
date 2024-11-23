@@ -72,6 +72,7 @@ import org.bedework.calfacade.svc.wrappers.BwCalSuiteWrapper;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.calsvc.scheduling.Scheduling;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
+import org.bedework.calsvc.scheduling.hosts.BwHosts;
 import org.bedework.calsvci.AdminI;
 import org.bedework.calsvci.CalSuitesI;
 import org.bedework.calsvci.CalSvcFactoryDefault;
@@ -109,6 +110,8 @@ import org.bedework.util.misc.response.Response;
 import org.bedework.util.security.PwEncryptionIntf;
 import org.bedework.util.security.keys.GenKeysMBean;
 import org.bedework.util.timezones.Timezones;
+
+import org.apache.james.jdkim.api.JDKIM;
 
 import java.io.InputStream;
 import java.sql.Blob;
@@ -380,6 +383,11 @@ public class CalSvc
   @Override
   public SystemProperties getSystemProperties() {
     return configs.getSystemProperties();
+  }
+
+  @Override
+  public JDKIM getJDKIM() {
+    return BwHosts.getJDKIM();
   }
 
   @Override
