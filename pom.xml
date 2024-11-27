@@ -21,7 +21,6 @@
     <module>bw-calendar-engine-chgnote</module>
     <module>bw-calendar-engine-core</module>
     <module>bw-calendar-engine-core-common</module>
-    <module>bw-calendar-engine-dumprestore</module>
     <module>bw-calendar-engine-impl</module>
     <module>bw-calendar-engine-indexer</module>
     <module>bw-calendar-engine-inoutsched</module>
@@ -69,12 +68,6 @@
       <dependency>
         <groupId>org.bedework.caleng</groupId>
         <artifactId>bw-calendar-engine-core-common</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.bedework.caleng</groupId>
-        <artifactId>bw-calendar-engine-dumprestore</artifactId>
         <version>${project.version}</version>
       </dependency>
 
