@@ -34,9 +34,9 @@ public interface BwHostMBean extends ConfBaseMBean {
    */
   String getHostname();
 
-  /** Set the port for the current entry.
+  /**
    *
-   * @param val
+   * @param val  the port for the current entry.
    */
   void setPort(int val);
 
@@ -46,9 +46,9 @@ public interface BwHostMBean extends ConfBaseMBean {
    */
   int getPort();
 
-  /** Set the secure flag for the current entry.
+  /**
    *
-   * @param val
+   * @param val the secure flag for the current entry.
    */
   void setSecure(boolean val);
 

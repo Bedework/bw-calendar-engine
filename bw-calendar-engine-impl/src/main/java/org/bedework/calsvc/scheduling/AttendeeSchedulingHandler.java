@@ -154,7 +154,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     //  outEv.addComment(null, comment);
     //}
 
-    var sowner = ei.getSchedulingOwner();
+    final var sowner = ei.getSchedulingOwner();
     if (sowner == null) {
       throw new CalFacadeException("No organizer");
     }

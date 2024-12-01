@@ -113,7 +113,7 @@ public class HostInfo extends ConfigBase<HostInfo>
   }
 
   /**
-   * @param val
+   * @param val port
    */
   public void setPort(final int val) {
     port = val;
@@ -128,7 +128,7 @@ public class HostInfo extends ConfigBase<HostInfo>
   }
 
   /**
-   * @param val
+   * @param val true for ssh
    */
   public void setSecure(final boolean val) {
     secure = val;
@@ -252,9 +252,9 @@ public class HostInfo extends ConfigBase<HostInfo>
     iScheduleCredentials = val;
   }
 
-  /** Set the dkim public keys
+  /**
    *
-   * @param val
+   * @param val the dkim public keys
    */
   public void setDkimPublicKeys(final List<String> val) {
     dkimPublicKeys = val;
@@ -281,8 +281,8 @@ public class HostInfo extends ConfigBase<HostInfo>
 
   /** Add a dkim public key
    *
-   * @param selector
-   * @param val
+   * @param selector key selector
+   * @param val the key
    */
   public void addDkimPublicKey(final String selector,
                                final String val) {
@@ -292,7 +292,7 @@ public class HostInfo extends ConfigBase<HostInfo>
 
   /** Get a dkim public key
    *
-   * @param selector
+   * @param selector for the key
    * @return value or null
    */
   public String getDkimPublicKey(final String selector) {
@@ -301,7 +301,7 @@ public class HostInfo extends ConfigBase<HostInfo>
 
   /** Remove a dkim public key
    *
-   * @param selector
+   * @param selector for the key
    */
   public void removeDkimPublicKey(final String selector) {
     removeProperty(getDkimPublicKeys(), selector);
@@ -309,15 +309,15 @@ public class HostInfo extends ConfigBase<HostInfo>
 
   /** Set a dkim public key
    *
-   * @param selector
-   * @param val
+   * @param selector for the key
+   * @param val the key
    */
   public void setDkimPublicKey(final String selector,
                                final String val) {
     try {
       removeDkimPublicKey(selector);
       addDkimPublicKey(selector, val);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
   }
@@ -456,7 +456,7 @@ public class HostInfo extends ConfigBase<HostInfo>
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
 
