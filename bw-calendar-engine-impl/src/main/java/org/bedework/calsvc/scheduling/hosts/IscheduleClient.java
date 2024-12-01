@@ -43,7 +43,6 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -94,19 +93,19 @@ public class IscheduleClient implements Logged {
      * be unsigned. An exception will be thrown if we should not attempt to
      * communicate with the site or for some other error.
      *
-     * @param domain
-     * @param service
+     * @param domain name
+     * @param service name
      * @return key or null for unsigned.
      */
-    public abstract PrivateKey getKey(final String domain,
-                                      final String service);
+    public abstract PrivateKey getKey(String domain,
+                                      String service);
   }
 
   /** Constructor
    *
-   * @param trans
+   * @param trans iCalendar translator
    * @param pkeys - null for no signing
-   * @param domain
+   * @param domain name
    */
   public IscheduleClient(final CalSvcI svci,
                          final IcalTranslator trans,
@@ -125,9 +124,8 @@ public class IscheduleClient implements Logged {
         return;
       }
 
+      /*  Might need this for authenticated ischedule
       final HttpClientBuilder clb = HttpClients.custom();
-
-      /* Might need this for authenticated ischedule
       if (user != null) {
         final CredentialsProvider credsProvider = new BasicCredentialsProvider();
         credsProvider.setCredentials(
@@ -139,17 +137,16 @@ public class IscheduleClient implements Logged {
       }
       */
 
-      cio = clb.create().disableRedirectHandling().build();
+      cio = HttpClientBuilder.create().disableRedirectHandling().build();
     }
   }
 
   /** Get the freebusy for the recipients specified in the event object,
    * e.g. start, end, organizer etc.
    *
-   * @param hi
-   * @param ei
+   * @param hi host info
+   * @param ei event
    * @return Response
-   * @throws CalFacadeException
    */
   public Response getFreeBusy(final HostInfo hi,
                               final EventInfo ei) {
@@ -218,10 +215,9 @@ public class IscheduleClient implements Logged {
 
   /** Schedule a meeting with the recipients specified in the event object,
    *
-   * @param hi
-   * @param ei
+   * @param hi host info
+   * @param ei event
    * @return Response
-   * @throws CalFacadeException
    */
   public Response scheduleMeeting(final HostInfo hi,
                                   final EventInfo ei) {
@@ -241,7 +237,7 @@ public class IscheduleClient implements Logged {
 
   /** See if we have a url for the service. If not discover the real one.
    *
-   * @param hi
+   * @param hi host info
    */
   private void discover(final HostInfo hi) {
     if (hi.getIScheduleUrl() != null) {
@@ -420,9 +416,9 @@ public class IscheduleClient implements Logged {
       final InputStream in = entity.getContent();
 
       return builder.parse(new InputSource(new InputStreamReader(in)));
-    } catch (SAXException e) {
+    } catch (final SAXException e) {
       throw new CalFacadeException(e.getMessage());
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -541,10 +537,9 @@ public class IscheduleClient implements Logged {
   }
 
   /**
-   * @param iout
-   * @param hi
+   * @param iout outgoing message
+   * @param hi host info
    * @param resp Response
-   * @throws CalFacadeException
    */
   public void send(final IscheduleOut iout,
                    final HostInfo hi,
