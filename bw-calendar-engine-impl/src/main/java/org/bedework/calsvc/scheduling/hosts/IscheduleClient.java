@@ -413,6 +413,7 @@ public class IscheduleClient implements Logged {
 
       final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       factory.setNamespaceAware(true);
+      factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 
       final DocumentBuilder builder = factory.newDocumentBuilder();
 
