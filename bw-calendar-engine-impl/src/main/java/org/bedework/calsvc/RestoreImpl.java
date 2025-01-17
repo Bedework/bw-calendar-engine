@@ -397,7 +397,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public BwPrincipal<?> getPrincipal(final String href) throws CalFacadeException {
+  public BwPrincipal<?> getPrincipal(final String href) {
     startTransaction();
 
     return getSvc().getUsersHandler().getPrincipal(href);
@@ -435,7 +435,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   @Override
   public FixAliasResult fixSharee(final BwCalendar col,
                                   final String shareeHref,
-                                  final AccessType a) throws CalFacadeException {
+                                  final AccessType a) {
     /* First ensure this alias is not circular */
 
     final Set<String> paths = new TreeSet<>();
@@ -502,7 +502,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
    *                       Private methods
    * ==================================================================== */
 
-  private void startTransaction() throws CalFacadeException {
+  private void startTransaction() {
     if (transactionStarted) {
       return;
     }

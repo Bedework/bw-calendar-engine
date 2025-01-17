@@ -42,14 +42,14 @@ public class Admin extends CalSvcDb implements AdminI {
   @Override
   public Collection<String> getChildCollections(final String parentPath,
                                                 final int start,
-                                                final int count) throws CalFacadeException {
+                                                final int count) {
     return getCal().getChildCollections(parentPath, start, count);
   }
 
   @Override
   public Collection<String> getChildEntities(final String parentPath,
                                              final int start,
-                                             final int count) throws CalFacadeException {
+                                             final int count) {
     return getCal().getChildEntities(parentPath, start, count);
   }
 
@@ -58,14 +58,12 @@ public class Admin extends CalSvcDb implements AdminI {
    * ==================================================================== */
 
   @Override
-  public Collection<BwAlarm> getUnexpiredAlarms(final long triggerTime)
-          throws CalFacadeException {
+  public Collection<BwAlarm> getUnexpiredAlarms(final long triggerTime) {
     return getCal().getUnexpiredAlarms(triggerTime);
   }
 
   @Override
-  public Collection<BwEvent> getEventsByAlarm(final BwAlarm alarm)
-          throws CalFacadeException {
+  public Collection<BwEvent> getEventsByAlarm(final BwAlarm alarm) {
     return getCal().getEventsByAlarm(alarm);
   }
 }

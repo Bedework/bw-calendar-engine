@@ -19,7 +19,6 @@
 
 package org.bedework.calcorei;
 
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAuthUser;
 
 import java.util.List;
@@ -32,26 +31,22 @@ import java.util.List;
 public interface CoreUserAuthI {
   /**
    * @param val auth user object
-   * @throws CalFacadeException
    */
-  void addAuthUser(BwAuthUser val) throws CalFacadeException;
+  void addAuthUser(BwAuthUser val);
 
   /**
    * @param href - principal href for the entry
    * @return auth user with preferences or null
-   * @throws CalFacadeException
    */
-  BwAuthUser getAuthUser(final String href) throws CalFacadeException;
+  BwAuthUser getAuthUser(final String href);
 
   /**
    * @param val auth user object
-   * @throws CalFacadeException
    */
-  void updateAuthUser(BwAuthUser val) throws CalFacadeException;
+  void updateAuthUser(BwAuthUser val);
 
   /**
    * @return list of all auth user entries
-   * @throws CalFacadeException
    */
-  List<BwAuthUser> getAll() throws CalFacadeException;
+  List<BwAuthUser> getAll();
 }

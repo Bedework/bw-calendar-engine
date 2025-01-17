@@ -60,15 +60,14 @@ public class CoreEventProperties <T extends BwEventProperty>
   }
 
   @Override
-  public <T> T throwException(final CalFacadeException cfe)
-          throws CalFacadeException {
+  public <T> T throwException(final CalFacadeException cfe) {
     dao.rollback();
     throw cfe;
   }
 
   @SuppressWarnings("unchecked")
   @Override
-  public Collection<T> getAll(final String ownerHref) throws CalFacadeException {
+  public Collection<T> getAll(final String ownerHref) {
     final List eps = dao.getAll(ownerHref);
 
     final Collection c = ac.getAccessUtil().checkAccess(eps, privRead, true);
@@ -82,14 +81,14 @@ public class CoreEventProperties <T extends BwEventProperty>
 
   @SuppressWarnings("unchecked")
   @Override
-  public T get(final String uid) throws CalFacadeException {
+  public T get(final String uid) {
     return check((T)dao.get(uid));
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public T find(final BwString val,
-                final String ownerHref) throws CalFacadeException {
+                final String ownerHref) {
     final BwEventProperty p = dao.find(val, ownerHref);
 
     return check((T)p);
@@ -97,23 +96,22 @@ public class CoreEventProperties <T extends BwEventProperty>
 
   @Override
   public void checkUnique(final BwString val,
-                          final String ownerHref) throws CalFacadeException {
+                          final String ownerHref) {
     dao.checkUnique(val, ownerHref);
   }
 
   @Override
-  public void deleteProp(final T val) throws CalFacadeException {
+  public void deleteProp(final T val) {
     dao.delete(val);
   }
 
   @Override
-  public List<EventPropertiesReference> getRefs(final T val)
-                          throws CalFacadeException {
+  public List<EventPropertiesReference> getRefs(final T val) {
     return dao.getRefs(val);
   }
 
   @Override
-  public long getRefsCount(final T val) throws CalFacadeException {
+  public long getRefsCount(final T val) {
     return dao.getRefsCount(val);
   }
 
@@ -121,7 +119,7 @@ public class CoreEventProperties <T extends BwEventProperty>
    *                   Private methods
    * ==================================================================== */
 
-  private T check(final T ent) throws CalFacadeException {
+  private T check(final T ent) {
     if (ent == null) {
       return null;
     }

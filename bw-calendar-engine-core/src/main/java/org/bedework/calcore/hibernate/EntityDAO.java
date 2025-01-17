@@ -8,6 +8,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -44,7 +45,7 @@ public class EntityDAO extends DAOBase {
           "from org.bedework.calfacade.svc.BwCalSuite cal " +
                   "where cal.group=:group";
 
-  public BwCalSuite get(final BwAdminGroup group) throws CalFacadeException {
+  public BwCalSuite get(final BwAdminGroup group) {
     final HibSession sess = getSess();
 
     sess.createQuery(getCalSuiteByGroupQuery);
@@ -65,7 +66,7 @@ public class EntityDAO extends DAOBase {
           "from org.bedework.calfacade.svc.BwCalSuite cal " +
                   "where cal.name=:name";
 
-  public BwCalSuite getCalSuite(final String name) throws CalFacadeException {
+  public BwCalSuite getCalSuite(final String name) {
     final HibSession sess = getSess();
 
     sess.createQuery(getCalSuiteQuery);
@@ -80,7 +81,7 @@ public class EntityDAO extends DAOBase {
           "from " + BwCalSuite.class.getName();
 
   @SuppressWarnings("unchecked")
-  public Collection<BwCalSuite> getAllCalSuites() throws CalFacadeException {
+  public Collection<BwCalSuite> getAllCalSuites() {
     final HibSession sess = getSess();
 
     sess.createQuery(getAllCalSuitesQuery);
@@ -105,8 +106,7 @@ public class EntityDAO extends DAOBase {
                   "al.triggerTime <= :tt";
 
   @SuppressWarnings("unchecked")
-  public Collection<BwAlarm> getUnexpiredAlarms(final long triggerTime)
-          throws CalFacadeException {
+  public Collection<BwAlarm> getUnexpiredAlarms(final long triggerTime) {
     final HibSession sess = getSess();
 
     if (triggerTime == 0) {
@@ -124,8 +124,7 @@ public class EntityDAO extends DAOBase {
                   "where ev.tombstoned=false and :alarm in alarms";
 
   @SuppressWarnings("unchecked")
-  public Collection<BwEvent> getEventsByAlarm(final BwAlarm alarm)
-          throws CalFacadeException {
+  public Collection<BwEvent> getEventsByAlarm(final BwAlarm alarm) {
     final HibSession sess = getSess();
 
     sess.createQuery(eventByAlarmQuery);
@@ -145,7 +144,7 @@ public class EntityDAO extends DAOBase {
 
   public BwResource getResource(final String name,
                                 final String colPath,
-                                final int desiredAccess) throws CalFacadeException {
+                                final int desiredAccess) {
     final HibSession sess = getSess();
 
     sess.createQuery(getResourceQuery);
@@ -162,7 +161,7 @@ public class EntityDAO extends DAOBase {
           "from " + BwResourceContent.class.getName() +
                   " as rc where rc.colPath=:path and rc.name=:name";
 
-  public void getResourceContent(final BwResource val) throws CalFacadeException {
+  public void getResourceContent(final BwResource val) {
     final HibSession sess = getSess();
 
     sess.createQuery(getResourceContentQuery);
@@ -172,7 +171,7 @@ public class EntityDAO extends DAOBase {
 
     final BwResourceContent rc = (BwResourceContent)sess.getUnique();
     if (rc == null) {
-      throw new CalFacadeException(CalFacadeException.missingResourceContent);
+      throw new CalFacadeException(CalFacadeErrorCode.missingResourceContent);
     }
 
     val.setContent(rc);
@@ -196,7 +195,7 @@ public class EntityDAO extends DAOBase {
   public List<BwResource> getAllResources(final String path,
                                           final boolean forSynch,
                                           final String token,
-                                          final int count) throws CalFacadeException {
+                                          final int count) {
     final HibSession sess = getSess();
 
     if (forSynch && (token != null)) {

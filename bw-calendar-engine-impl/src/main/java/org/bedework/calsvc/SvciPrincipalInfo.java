@@ -62,7 +62,7 @@ final class SvciPrincipalInfo extends PrincipalInfo {
    * @see org.bedework.calfacade.util.AccessUtilI.CallBack#getPrincipal(java.lang.String)
    */
   @Override
-  public AccessPrincipal getPrincipal(final String href) throws CalFacadeException {
+  public AccessPrincipal getPrincipal(final String href) {
     return svci.getUsersHandler().getPrincipal(href);
   }
 
@@ -85,7 +85,7 @@ final class SvciPrincipalInfo extends PrincipalInfo {
     maxAllowedPrivs = null;
   }
 
-  void popPrincipal() throws CalFacadeException {
+  void popPrincipal() {
     final SvciPrincipalInfo.StackedState ss = stack.pop();
 
     if (ss == null) {

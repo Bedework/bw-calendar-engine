@@ -22,6 +22,7 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.BwEventKey;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.BwDateTimeUtil;
 import org.bedework.calsvci.TimeZonesStoreI;
@@ -112,7 +113,7 @@ public class TimeZonesStoreImpl implements Logged, TimeZonesStoreI {
                                                      final int limit,
                                                      final boolean checkOnly,
                                                      final UpdateFromTimeZonesInfo info
-                                                     ) throws CalFacadeException {
+                                                     ) {
     /* Versions < 3.3 don't have recurrences fully implemented so we'll
      * ignore those.
      *
@@ -123,7 +124,7 @@ public class TimeZonesStoreImpl implements Logged, TimeZonesStoreI {
      *
      */
     if ((info != null) && !(info instanceof UpdateFromTimeZonesInfoInternal)) {
-      throw new CalFacadeException(CalFacadeException.illegalObjectClass);
+      throw new CalFacadeException(CalFacadeErrorCode.illegalObjectClass);
     }
 
     boolean redo = false;

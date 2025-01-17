@@ -18,8 +18,6 @@
 */
 package org.bedework.indexer;
 
-import org.bedework.calfacade.exc.CalFacadeException;
-
 /** This class represents something which crawls a part of the bedework storage.
  * A user process will crawl /user and a public crawler will crawl /public.
  *
@@ -38,9 +36,8 @@ import org.bedework.calfacade.exc.CalFacadeException;
 public interface Processor {
   /** Start crawling
    *
-   * @throws CalFacadeException on fatal error
    */
-  void start() throws CalFacadeException;
+  void start();
 
   /** Wait for any processes to stop.
    *
@@ -52,20 +49,17 @@ public interface Processor {
    * call to restart will restart with the last entry being processed. A call to
    * restartNext will drop the last entry and restart.
    *
-   * @throws CalFacadeException on fatal error
    */
-  void stop() throws CalFacadeException;
+  void stop();
 
   /** Start from where we left off
    *
-   * @throws CalFacadeException on fatal error
    */
-  void restart() throws CalFacadeException;
+  void restart();
 
   /** Start with the next entry on the list
-   * @throws CalFacadeException on fatal error
    */
-  void restartNext() throws CalFacadeException;
+  void restartNext();
 
   /** Do whatever this processor is supposed to do. usually called from a
    * Thread object.

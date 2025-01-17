@@ -60,19 +60,18 @@ public class CategoriesImpl
 
   @Override
   Collection<BwCategory> fetchAllIndexed(final boolean publick,
-                                         final String ownerHref)
-          throws CalFacadeException {
+                                         final String ownerHref) {
     return filterDeleted(getIndexer(publick,
                                     ownerHref).fetchAllCats());
   }
 
   @Override
-  BwCategory fetchIndexedByUid(final String uid) throws CalFacadeException {
+  BwCategory fetchIndexedByUid(final String uid) {
     return getIndexer().fetchCat(uid, PropertyInfoIndex.UID);
   }
 
   @Override
-  BwCategory fetchIndexed(final String href) throws CalFacadeException {
+  BwCategory fetchIndexed(final String href) {
     return getIndexer().fetchCat(href, PropertyInfoIndex.HREF);
   }
 
@@ -97,7 +96,7 @@ public class CategoriesImpl
   }
 
   @Override
-  public BwCategory find(final BwString val) throws CalFacadeException {
+  public BwCategory find(final BwString val) {
     return getIndexer()
             .fetchCat(val.getValue(),
                       PropertyInfoIndex.CATEGORIES,

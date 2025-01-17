@@ -20,7 +20,6 @@ package org.bedework.calcorei;
 
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -35,43 +34,37 @@ public interface CoreFilterDefsI extends Serializable {
    *
    * @param  val       filter definition
    * @param owner
-   * @throws CalFacadeException for errrors including duplicate name
    */
   void save(BwFilterDef val,
-            BwPrincipal<?> owner) throws CalFacadeException;
+            BwPrincipal<?> owner);
 
   /** Get a filter given the name
    *
    * @param  name     String internal name of filter
    * @param owner
    * @return BwFilter null for unknown filter
-   * @throws CalFacadeException
    */
   BwFilterDef getFilterDef(String name,
-                           BwPrincipal<?> owner) throws CalFacadeException;
+                           BwPrincipal<?> owner);
 
   /** Get filter definitions to which this user has access
    *
    * @param owner
    * @return Collection     of BwCalSuiteWrapper
-   * @throws CalFacadeException
    */
-  Collection<BwFilterDef> getAllFilterDefs(BwPrincipal<?> owner) throws CalFacadeException;
+  Collection<BwFilterDef> getAllFilterDefs(BwPrincipal<?> owner);
 
   /** Update a filter definition.
    *
    * @param  val        filter definition
-   * @throws CalFacadeException for errors including duplicate name
    */
-  void update(BwFilterDef val) throws CalFacadeException;
+  void update(BwFilterDef val);
 
   /** Delete a filter given the name
    *
    * @param  name     String name of filter
    * @param owner
-   * @throws CalFacadeException
    */
   void deleteFilterDef(String name,
-                       BwPrincipal<?> owner)
-          throws CalFacadeException;
+                       BwPrincipal<?> owner);
 }

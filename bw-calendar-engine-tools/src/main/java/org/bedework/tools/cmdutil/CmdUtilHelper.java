@@ -25,6 +25,7 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.DirectoryInfo;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.indexing.BwIndexer;
@@ -78,15 +79,15 @@ public abstract class CmdUtilHelper implements Logged {
     return pstate.getSvci();
   }
 
-  protected CalendarsI getCols() throws CalFacadeException {
+  protected CalendarsI getCols() {
     return pstate.getSvci().getCalendarsHandler();
   }
 
-  protected EventsI getEvents() throws CalFacadeException {
+  protected EventsI getEvents() {
     return pstate.getSvci().getEventsHandler();
   }
 
-  public DirectoryInfo getDirectoryInfo() throws CalFacadeException {
+  public DirectoryInfo getDirectoryInfo() {
     return getSvci().getDirectories().getDirectoryInfo();
   }
 
@@ -415,12 +416,12 @@ public abstract class CmdUtilHelper implements Logged {
     try {
       getSvci().getCalendarsHandler().add(cal, parentPath);
     } catch (final CalFacadeException cfe) {
-      if (CalFacadeException.duplicateCalendar.equals(cfe.getMessage())) {
+      if (CalFacadeErrorCode.duplicateCalendar.equals(cfe.getMessage())) {
         error("Collection " + calName + " already exists on path " + parentPath);
         return null;
       }
 
-      if (CalFacadeException.collectionNotFound.equals(cfe.getMessage())) {
+      if (CalFacadeErrorCode.collectionNotFound.equals(cfe.getMessage())) {
         error("Collection " + parentPath + " does not exist");
         return null;
       }
@@ -621,7 +622,7 @@ public abstract class CmdUtilHelper implements Logged {
   }
 
   @SuppressWarnings("unused")
-  protected int nextToken() throws CalFacadeException {
+  protected int nextToken() {
     final int tkn = pstate.getTokenizer().next();
 
     if (!debug()) {
@@ -639,15 +640,15 @@ public abstract class CmdUtilHelper implements Logged {
     return tkn;
   }
 
-  protected boolean testToken(final String token) throws CalFacadeException {
+  protected boolean testToken(final String token) {
     return pstate.getTokenizer().testToken(token);
   }
 
-  protected boolean testToken(final int token) throws CalFacadeException {
+  protected boolean testToken(final int token) {
     return pstate.getTokenizer().testToken(token);
   }
 
-  protected void assertToken(final int token) throws CalFacadeException {
+  protected void assertToken(final int token) {
     pstate.getTokenizer().assertToken(token);
   }
 

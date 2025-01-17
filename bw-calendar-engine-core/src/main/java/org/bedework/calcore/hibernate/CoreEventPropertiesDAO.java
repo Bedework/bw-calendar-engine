@@ -155,7 +155,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
   private String getAllQuery;
 
   @SuppressWarnings("unchecked")
-  public List<BwEventProperty> getAll(final String ownerHref) throws CalFacadeException {
+  public List<BwEventProperty> getAll(final String ownerHref) {
     if (getAllQuery == null) {
       getAllQuery = "from " + className + " ent where " +
               " ent.ownerHref=:ownerHref" +
@@ -178,7 +178,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
   private String getQuery;
 
   @SuppressWarnings("unchecked")
-  public BwEventProperty get(final String uid) throws CalFacadeException {
+  public BwEventProperty get(final String uid) {
     if (getQuery == null) {
       getQuery = "from " + className + " ent where uid=:uid";
     }
@@ -192,7 +192,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
     return (BwEventProperty)sess.getUnique();
   }
 
-  public void delete(final BwEventProperty val) throws CalFacadeException {
+  public void delete(final BwEventProperty val) {
     final HibSession sess = getSess();
 
     @SuppressWarnings("unchecked")
@@ -205,8 +205,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
     sess.delete(v);
   }
 
-  public List<EventPropertiesReference> getRefs(final BwEventProperty val)
-                          throws CalFacadeException {
+  public List<EventPropertiesReference> getRefs(final BwEventProperty val) {
     final List<EventPropertiesReference> refs = getRefs(val,
                                                   refsQuery.get(className));
 
@@ -223,7 +222,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
     return refs;
   }
 
-  public long getRefsCount(final BwEventProperty val) throws CalFacadeException {
+  public long getRefsCount(final BwEventProperty val) {
     long total = getRefsCount(val, refsCountQuery.get(className));
 
     /* The parameterization doesn't quite cut it for categories. They can appear
@@ -242,7 +241,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
   private String findCountQuery;
 
   public BwEventProperty find(final BwString val,
-                              final String ownerHref) throws CalFacadeException {
+                              final String ownerHref) {
     if (findQuery == null) {
       findQuery = "from " + className + " ent where ";
     }
@@ -252,7 +251,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
   }
 
   public void checkUnique(final BwString val,
-                          final String ownerHref) throws CalFacadeException {
+                          final String ownerHref) {
     if (findCountQuery == null) {
       findCountQuery = "select count(*) from " + className + " ent where ";
     }
@@ -275,7 +274,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
 
   private void doFind(final String qpfx,
                       final BwString val,
-                      final String ownerHref) throws CalFacadeException {
+                      final String ownerHref) {
     if (val == null) {
       throw new CalFacadeException("Missing key value");
     }
@@ -300,8 +299,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
 
   @SuppressWarnings("unchecked")
   private List<EventPropertiesReference> getRefs(final BwEventProperty val,
-                                                 final String query)
-          throws CalFacadeException {
+                                                 final String query) {
     final HibSession sess = getSess();
 
     sess.createQuery(query);
@@ -318,7 +316,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
   }
 
   private long getRefsCount(final BwEventProperty val,
-                            final String query) throws CalFacadeException {
+                            final String query) {
     final HibSession sess = getSess();
 
     sess.createQuery(query);
@@ -346,7 +344,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
 
   private void addBwStringKeyTerms(final BwString key,
                                    final String keyName,
-                                   final StringBuilder sb) throws CalFacadeException {
+                                   final StringBuilder sb) {
     sb.append("((ent.");
     sb.append(keyName);
     sb.append(".lang");
@@ -368,7 +366,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
     }
   }
 
-  private void addBwStringKeyvals(final BwString key) throws CalFacadeException {
+  private void addBwStringKeyvals(final BwString key) {
     final HibSession sess = getSess();
 
     if (key.getLang() != null) {

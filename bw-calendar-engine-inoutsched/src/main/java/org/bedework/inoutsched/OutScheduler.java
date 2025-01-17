@@ -110,7 +110,7 @@ public class OutScheduler extends AbstractScheduler {
   /* Process pending messages in outbox.
    *
    */
-  private ProcessMessageResult processOutBox() throws CalFacadeException {
+  private ProcessMessageResult processOutBox() {
     final IcalTranslator trans =
             new IcalTranslator(getSvc().getIcalCallback());
 
@@ -270,7 +270,7 @@ public class OutScheduler extends AbstractScheduler {
     return ProcessMessageResult.FAILED;
   }
 
-  private Collection<EventInfo> getOutboxEvents() throws CalFacadeException {
+  private Collection<EventInfo> getOutboxEvents() {
     final BwCalendar outbox =
             getSvc().getCalendarsHandler()
                     .getSpecial(BwCalendar.calTypeOutbox, false);

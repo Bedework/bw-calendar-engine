@@ -21,7 +21,6 @@ package org.bedework.calcorei;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
-import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -48,18 +47,16 @@ public interface CoreEventPropertiesI <T extends BwEventProperty> extends Serial
    *
    * @param ownerHref   String principal href, null for current user
    * @return Collection     of objects
-   * @throws CalFacadeException
    */
-  Collection<T> getAll(String ownerHref) throws CalFacadeException;
+  Collection<T> getAll(String ownerHref);
 
   /** Return an entity given the uid if the user has access
    *
    * @param uid       String uid
    * @return BwEventProperty object representing the entity in question
    *                     null if it doesn't exist.
-   * @throws CalFacadeException
    */
-  T get(String uid) throws CalFacadeException;
+  T get(String uid);
 
   /** Return one or more entities matching the given BwString to which the
    * user has access.
@@ -72,41 +69,36 @@ public interface CoreEventPropertiesI <T extends BwEventProperty> extends Serial
    * @param val          BwString value
    * @param ownerHref   String principal href, null for current user
    * @return matching BwEventProperty object
-   * @throws CalFacadeException
    */
   T find(final BwString val,
-         final String ownerHref) throws CalFacadeException;
+         final String ownerHref);
 
   /** Check that the given property is unique.
    *
    * @param val          BwString value
    * @param ownerHref   String principal href, null for current user
-   * @throws CalFacadeException if non unique.- rolls back transaction
    */
   void checkUnique(BwString val,
-                   String ownerHref) throws CalFacadeException;
+                   String ownerHref);
 
   /** Delete an entity
    *
    * @param val      BwEventProperty object to be deleted
-   * @throws CalFacadeException
    */
-  void deleteProp(T val) throws CalFacadeException;
+  void deleteProp(T val);
 
   /**
    * @param val
    * @return list of references
-   * @throws CalFacadeException
    */
-  List<EventPropertiesReference> getRefs(final T val) throws CalFacadeException;
+  List<EventPropertiesReference> getRefs(final T val);
 
 
   /** Return count of events referencing the given entity
    *
    * @param val      BwEventProperty object to be checked
    * @return long count
-   * @throws CalFacadeException
    */
-  long getRefsCount(final T val) throws CalFacadeException;
+  long getRefsCount(final T val);
 }
 

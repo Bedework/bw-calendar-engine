@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.indexing.BwIndexer;
@@ -51,41 +52,40 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     super(svci);
   }
 
-  public boolean saveNotification(final BwResource val)
-          throws CalFacadeException {
+  public boolean saveNotification(final BwResource val) {
     return save(val, true, true);
   }
 
   @Override
   public boolean save(final BwResource val,
-                      final boolean returnIfExists) throws CalFacadeException {
+                      final boolean returnIfExists) {
     return save(val, false, returnIfExists);
   }
 
   @Override
-  public BwResource get(final String path) throws CalFacadeException {
+  public BwResource get(final String path) {
     return getCal().getResource(path, PrivilegeDefs.privRead);
   }
 
   @Override
-  public void getContent(final BwResource val) throws CalFacadeException {
+  public void getContent(final BwResource val) {
     getCal().getResourceContent(val);
   }
 
   @Override
-  public List<BwResource> getAll(final String path) throws CalFacadeException {
+  public List<BwResource> getAll(final String path) {
     return getCal().getResources(path, false, null, -1);
   }
 
   @Override
   public List<BwResource> get(final String path,
-                              final int count) throws CalFacadeException {
+                              final int count) {
     return getCal().getResources(path, false, null, count);
   }
 
   @Override
   public void update(final BwResource val,
-                     final boolean updateContent) throws CalFacadeException {
+                     final boolean updateContent) {
     checkAccess(val, PrivilegeDefs.privWrite, false);
 
     try {
@@ -109,7 +109,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
   }
 
   @Override
-  public void delete(final String path) throws CalFacadeException {
+  public void delete(final String path) {
     getCal().deleteResource(path);
   }
 
@@ -118,19 +118,19 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
                           final String to,
                           final String name,
                           final boolean copy,
-                          final boolean overwrite) throws CalFacadeException {
+                          final boolean overwrite) {
     try {
       getSvc().setupSharableEntity(val, getPrincipal().getPrincipalRef());
 
       final BwCalendar collTo = getCols().get(to);
 
       if (collTo == null) {
-        throw new CalFacadeException(CalFacadeException.collectionNotFound, to);
+        throw new CalFacadeException(CalFacadeErrorCode.collectionNotFound, to);
       }
 
       if (collTo.getCalType() != BwCalendar.calTypeFolder) {
         // Only allowed into a folder.
-        throw new CalFacadeException(CalFacadeException.badRequest, to);
+        throw new CalFacadeException(CalFacadeErrorCode.badRequest, to);
       }
 
       final int access;
@@ -152,7 +152,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       if (r != null) {
         /* Update of the target from the source */
         if (!overwrite) {
-          throw new CalFacadeException(CalFacadeException.targetExists,
+          throw new CalFacadeException(CalFacadeErrorCode.targetExists,
                                        val.getName());
         }
 
@@ -221,7 +221,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
   @Override
   public ReindexCounts reindex(final BwIndexer indexer,
                                final BwIndexer contentIndexer,
-                               final BwIndexer collectionIndexer) throws CalFacadeException {
+                               final BwIndexer collectionIndexer) {
     final Iterator<BwResource> ents;
     final ReindexCounts res = new ReindexCounts();
 
@@ -314,13 +314,13 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
   }
 
   List<BwResource> getSynchResources(final String path,
-                                     final String lastmod) throws CalFacadeException {
+                                     final String lastmod) {
     return getCal().getResources(path, true, lastmod, -1);
   }
 
   private boolean save(final BwResource val,
                        final boolean forNotification,
-                       final boolean returnIfExists) throws CalFacadeException {
+                       final boolean returnIfExists) {
     try {
       final String path = val.getColPath();
       if (path == null) {
@@ -331,13 +331,13 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       final BwCalendar coll = getCols().get(path);
 
       if (coll == null) {
-        throw new CalFacadeException(CalFacadeException.collectionNotFound, path);
+        throw new CalFacadeException(CalFacadeErrorCode.collectionNotFound, path);
       }
 
       if (forNotification) {
         // We allow this for subscription only
         if (coll.getCalType() != BwCalendar.calTypeNotifications) {
-          throw new CalFacadeException(CalFacadeException.badRequest, path);
+          throw new CalFacadeException(CalFacadeErrorCode.badRequest, path);
         }
       } else if (getSvc().getPrincipalInfo().getSubscriptionsOnly()) {
         throw new CalFacadeForbidden("User has read only access");
@@ -351,14 +351,14 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
           return false;
         }
 
-        throw new CalFacadeException(CalFacadeException.duplicateResource,
+        throw new CalFacadeException(CalFacadeErrorCode.duplicateResource,
                                      val.getName());
       }
 
       final BwResourceContent rc = val.getContent();
 
       if (rc == null) {
-        throw new CalFacadeException(CalFacadeException.missingResourceContent);
+        throw new CalFacadeException(CalFacadeErrorCode.missingResourceContent);
       }
 
       getSvc().setupSharableEntity(val, getPrincipal().getPrincipalRef());
@@ -367,7 +367,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
       if ((coll.getCalType() == BwCalendar.calTypeCalendarCollection) ||
               (coll.getCalType() == BwCalendar.calTypeExtSub)) {
-        throw new CalFacadeException(CalFacadeException.badRequest, path);
+        throw new CalFacadeException(CalFacadeErrorCode.badRequest, path);
       }
 
       checkAccess(coll, PrivilegeDefs.privBind, false);
@@ -402,8 +402,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
   /* Split the uri so that result.path is the path up to the name part result.name
    *
    */
-  private SplitResult splitUri(final String uri)
-          throws CalFacadeException {
+  private SplitResult splitUri(final String uri) {
     int end = uri.length();
     if (uri.endsWith("/")) {
       end--;

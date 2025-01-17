@@ -60,19 +60,18 @@ public class ContactsImpl
 
   @Override
   Collection<BwContact> fetchAllIndexed(final boolean publick,
-                                        final String ownerHref)
-          throws CalFacadeException {
+                                        final String ownerHref) {
     return filterDeleted(getIndexer(publick,
                                     ownerHref).fetchAllContacts());
   }
 
   @Override
-  BwContact fetchIndexedByUid(final String uid) throws CalFacadeException {
+  BwContact fetchIndexedByUid(final String uid) {
     return getIndexer().fetchContact(uid, PropertyInfoIndex.UID);
   }
 
   @Override
-  BwContact fetchIndexed(final String href) throws CalFacadeException {
+  BwContact fetchIndexed(final String href) {
     return getIndexer().fetchContact(href, PropertyInfoIndex.HREF);
   }
 
@@ -97,7 +96,7 @@ public class ContactsImpl
   }
 
   @Override
-  public BwContact find(final BwString val) throws CalFacadeException {
+  public BwContact find(final BwString val) {
     return getIndexer().fetchContact(val.getValue(),
                                      PropertyInfoIndex.CN,
                                      PropertyInfoIndex.VALUE);

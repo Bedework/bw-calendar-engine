@@ -54,6 +54,7 @@ import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeConstraintViolationException;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.Directories;
@@ -396,7 +397,7 @@ public class CalSvc
   }
 
   @Override
-  public void setCalSuite(final String name) throws CalFacadeException {
+  public void setCalSuite(final String name) {
     final BwCalSuiteWrapper cs = getCalSuitesHandler().get(name);
 
     if (cs == null) {
@@ -404,8 +405,8 @@ public class CalSvc
       error("Unable to fetch calendar suite " + name);
       error("Is the database correctly initialised?");
       error("******************************************************");
-      throw new CalFacadeException(CalFacadeException.unknownCalsuite,
-          name);
+      throw new CalFacadeException(CalFacadeErrorCode.unknownCalsuite,
+                                   name);
     }
 
     getCalSuitesHandler().set(cs);
@@ -433,7 +434,7 @@ public class CalSvc
 
   @Override
   public byte[] getPublicKey(final String domain,
-                             final String service) throws CalFacadeException {
+                             final String service) {
     try {
       return getEncrypter().getPublicKey();
     } catch (final Throwable t) {
@@ -459,7 +460,7 @@ public class CalSvc
   }
 
   @Override
-  public void setDbStatsEnabled(final boolean enable) throws CalFacadeException {
+  public void setDbStatsEnabled(final boolean enable) {
     //if (!pars.getPublicAdmin()) {
     //  throw new CalFacadeAccessException();
     //}
@@ -538,12 +539,12 @@ public class CalSvc
   }
 
   @Override
-  public void flushAll() throws CalFacadeException {
+  public void flushAll() {
     getCal().flush();
   }
 
   @Override
-  public void open() throws CalFacadeException {
+  public void open() {
     //TimeZoneRegistryImpl.setThreadCb(getIcalCallback());
 
     if (open) {
@@ -591,7 +592,7 @@ public class CalSvc
   }
 
   @Override
-  public boolean isRolledback() throws CalFacadeException {
+  public boolean isRolledback() {
     return open && getCal().isRolledback();
 
   }
@@ -607,12 +608,12 @@ public class CalSvc
   }
 
   @Override
-  public void beginTransaction() throws CalFacadeException {
+  public void beginTransaction() {
     getCal().beginTransaction();
   }
 
   @Override
-  public void endTransaction() throws CalFacadeException {
+  public void endTransaction() {
     getCal().endTransaction();
   }
 
@@ -637,12 +638,12 @@ public class CalSvc
   }
 
   @Override
-  public void reAttach(final BwDbentity<?> val) throws CalFacadeException {
+  public void reAttach(final BwDbentity<?> val) {
     getCal().reAttach(val);
   }
 
   @Override
-  public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) throws CalFacadeException {
+  public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) {
     if (val instanceof final CalendarWrapper w) {
       w.putEntity((BwCalendar)getCal().merge(w.fetchEntity()));
       return w;
@@ -674,12 +675,12 @@ public class CalSvc
    * ==================================================================== */
 
   @Override
-  public DumpIntf getDumpHandler() throws CalFacadeException {
+  public DumpIntf getDumpHandler() {
     return new DumpImpl(this);
   }
 
   @Override
-  public RestoreIntf getRestoreHandler() throws CalFacadeException {
+  public RestoreIntf getRestoreHandler() {
     return new RestoreImpl(this);
   }
 
@@ -688,8 +689,7 @@ public class CalSvc
                                                              100);
 
     @Override
-    public BwCalendar getCollection(final String path)
-            throws CalFacadeException {
+    public BwCalendar getCollection(final String path) {
       BwCalendar col = cols.get(path);
       if (col != null) {
         return col;
@@ -703,14 +703,12 @@ public class CalSvc
 
     @Override
     public BwCalendar resolveAlias(final BwCalendar val,
-                                   final boolean resolveSubAlias)
-            throws CalFacadeException {
+                                   final boolean resolveSubAlias) {
       return getCalendarsHandler().resolveAlias(val, resolveSubAlias, false);
     }
 
     @Override
-    public Collection<BwCalendar> getChildren(final BwCalendar col)
-            throws CalFacadeException {
+    public Collection<BwCalendar> getChildren(final BwCalendar col) {
       final String path = col.getPath();
       BwCalendar cachedCol = cols.get(path);
 
@@ -733,7 +731,7 @@ public class CalSvc
     }
 
     @Override
-    public BwCategory getCategoryByName(final String name) throws CalFacadeException {
+    public BwCategory getCategoryByName(final String name) {
       return getCategoriesHandler().find(new BwString(null, name));
     }
 
@@ -743,14 +741,12 @@ public class CalSvc
     }
 
     @Override
-    public BwView getView(final String path)
-            throws CalFacadeException {
+    public BwView getView(final String path) {
       return getViewsHandler().find(path);
     }
 
     @Override
-    public Collection<BwCalendar> decomposeVirtualPath(final String vpath)
-            throws CalFacadeException {
+    public Collection<BwCalendar> decomposeVirtualPath(final String vpath) {
       return getCalendarsHandler().decomposeVirtualPath(vpath);
     }
 
@@ -1093,7 +1089,7 @@ public class CalSvc
   }
 
   @Override
-  public UserAuth getUserAuth() throws CalFacadeException {
+  public UserAuth getUserAuth() {
     if (userAuth != null) {
       return userAuth;
     }
@@ -1120,7 +1116,7 @@ public class CalSvc
   }
 
   @Override
-  public BwPreferences getPreferences(final String principalHref) throws CalFacadeException {
+  public BwPreferences getPreferences(final String principalHref) {
     return getCal().getPreferences(principalHref);
   }
 
@@ -1129,7 +1125,7 @@ public class CalSvc
    * ==================================================================== */
 
   @Override
-  public void removeFromAllPrefs(final BwShareableDbentity<?> val) throws CalFacadeException {
+  public void removeFromAllPrefs(final BwShareableDbentity<?> val) {
     getCal().removeFromAllPrefs(val);
   }
 
@@ -1182,7 +1178,7 @@ public class CalSvc
 
   @Override
   public void defaultAccess(ShareableEntity ent,
-                            final AceWho who) throws CalFacadeException {
+                            final AceWho who) {
     if (ent instanceof BwCalSuiteWrapper) {
       ent = ((BwCalSuiteWrapper)ent).fetchEntity();
     }
@@ -1192,7 +1188,7 @@ public class CalSvc
   @Override
   public CurrentAccess checkAccess(final ShareableEntity ent,
                                    final int desiredAccess,
-                                   final boolean returnResult) throws CalFacadeException {
+                                   final boolean returnResult) {
     return getCal().checkAccess(ent, desiredAccess, returnResult);
   }
 
@@ -1200,7 +1196,7 @@ public class CalSvc
   public SynchReport getSynchReport(final String path,
                                     final String token,
                                     final int limit,
-                                    final boolean recurse) throws CalFacadeException {
+                                    final boolean recurse) {
     final BwCalendar col = getCalendarsHandler().get(path);
     if (col == null) {
       return null;
@@ -1260,7 +1256,7 @@ public class CalSvc
                                                      final int limit,
                                                      final boolean checkOnly,
                                                      final UpdateFromTimeZonesInfo info
-                                                     ) throws CalFacadeException {
+                                                     ) {
     return tzstore.updateFromTimeZones(colHref, limit, checkOnly, info);
   }
 
@@ -1357,7 +1353,7 @@ public class CalSvc
           error("Is the database correctly initialised?");
           error("******************************************************");
           throw new CalFacadeException(
-                  CalFacadeException.unknownCalsuite,
+                  CalFacadeErrorCode.unknownCalsuite,
                   pars.getCalSuite());
         }
 
@@ -1673,7 +1669,7 @@ public class CalSvc
     }
   }
 
-  void initPrincipal(final BwPrincipal<?> p) throws CalFacadeException {
+  void initPrincipal(final BwPrincipal<?> p) {
     getCal().addNewCalendars(p);
   }
 
@@ -1727,7 +1723,7 @@ public class CalSvc
    *
    * @param principal a principal object
    */
-  void pushPrincipal(final BwPrincipal<?> principal) throws CalFacadeException {
+  void pushPrincipal(final BwPrincipal<?> principal) {
     BwPrincipal<?> pr = getUsersHandler().getUser(principal.getPrincipalRef());
 
     if (pr == null) {
@@ -1759,9 +1755,8 @@ public class CalSvc
 
   /** Switch back to the previous principal.
    *
-   * @throws CalFacadeException on fatal error
    */
-  void popPrincipal() throws CalFacadeException {
+  void popPrincipal() {
     ((SvciPrincipalInfo)principalInfo).popPrincipal();
     getCal().principalChanged();
   }
@@ -2164,11 +2159,11 @@ public class CalSvc
    *                   Package private methods
    * ==================================================================== */
 
-  void touchCalendar(final String href) throws CalFacadeException {
+  void touchCalendar(final String href) {
     getCal().touchCalendar(href);
   }
 
-  void touchCalendar(final BwCalendar col) throws CalFacadeException {
+  void touchCalendar(final BwCalendar col) {
     getCal().touchCalendar(col);
   }
 

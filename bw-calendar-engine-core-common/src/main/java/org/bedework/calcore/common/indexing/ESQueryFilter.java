@@ -38,6 +38,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.BwCollectionFilter;
 import org.bedework.calfacade.filter.BwHrefFilter;
@@ -289,7 +290,7 @@ public class ESQueryFilter extends ESQueryFilterBase
   public QueryBuilder syncFilter(final String path,
                                  final String lastmod,
                                  final int lastmodSeq,
-                                 final boolean events) throws CalFacadeException {
+                                 final boolean events) {
     final BwCollectionFilter cf =
             new BwCollectionFilter(null, path);
 
@@ -340,7 +341,7 @@ public class ESQueryFilter extends ESQueryFilterBase
    * @return a filter builder
    */
   public QueryBuilder locationKeyFilter(final String name,
-                                         final String val) throws CalFacadeException {
+                                         final String val) {
     final ObjectFilter<String> kf =
             new ObjectFilter<>(null,
                                PropertyInfoIndex.LOC_KEYS_FLD,
@@ -395,7 +396,7 @@ public class ESQueryFilter extends ESQueryFilterBase
     return and;
   }
 
-  public QueryBuilder buildQuery(final FilterBase f) throws CalFacadeException {
+  public QueryBuilder buildQuery(final FilterBase f) {
     QueryBuilder qb = makeQuery(f);
 
     if (qb instanceof TermOrTermsQuery) {
@@ -413,7 +414,7 @@ public class ESQueryFilter extends ESQueryFilterBase
                                 final Integer intKey,
                                 final String strKey,
                                 final OperationType opType,
-                                final boolean negate) throws CalFacadeException {
+                                final boolean negate) {
     /* Work backwards through the property list building a path.
        When the head of the path is a nested type:
          If it's the first we found:
@@ -575,12 +576,11 @@ public class ESQueryFilter extends ESQueryFilterBase
    * @param defaultFilterContext set if we have one
    * @param forEvents true if this is an events index we are searching
    * @return augmented filter
-   * @throws CalFacadeException on error
    */
   public QueryBuilder addLimits(final QueryBuilder q,
                                  final FilterBase defaultFilterContext,
                                  final DeletedState delState,
-                                 final boolean forEvents) throws CalFacadeException {
+                                 final boolean forEvents) {
     if (q instanceof MatchNoneQueryBuilder) {
       return q;
     }
@@ -788,12 +788,11 @@ public class ESQueryFilter extends ESQueryFilterBase
    * @param start of range
    * @param end of range
    * @return the query or a query with anded date range
-   * @throws CalFacadeException on error
    */
   public QueryBuilder addDateRangeQuery(final QueryBuilder query,
                                           final int entityType,
                                           final String start,
-                                          final String end) throws CalFacadeException {
+                                          final String end) {
     if ((start == null) && (end == null)) {
       return query;
     }
@@ -846,10 +845,9 @@ public class ESQueryFilter extends ESQueryFilterBase
    * @param q - or null
    * @param href to match
    * @return a filter
-   * @throws CalFacadeException on fatal error
    */
   public QueryBuilder hrefFilter(final QueryBuilder q,
-                                  final String href) throws CalFacadeException {
+                                  final String href) {
     return and(q,
                termQuery(hrefJname, href),
                null);
@@ -860,10 +858,9 @@ public class ESQueryFilter extends ESQueryFilterBase
    * @param q - or null
    * @param colPath to match
    * @return a filter
-   * @throws CalFacadeException on error
    */
   public QueryBuilder colPathFilter(final QueryBuilder q,
-                                     final String colPath) throws CalFacadeException {
+                                     final String colPath) {
     return and(q,
                termQuery(colpathJname, colPath),
                null);
@@ -875,12 +872,10 @@ public class ESQueryFilter extends ESQueryFilterBase
    * @param pi of field
    * @param val to match
    * @return a filter
-   * @throws CalFacadeException on error
    */
   public QueryBuilder termFilter(final QueryBuilder q,
                                   final PropertyInfoIndex pi,
-                                  final String val)
-          throws CalFacadeException {
+                                  final String val) {
     return and(q,
                termQuery(getJname(pi), val),
                null);
@@ -891,9 +886,8 @@ public class ESQueryFilter extends ESQueryFilterBase
    *
    * @param q - or null
    * @return a filter
-   * @throws CalFacadeException on error
    */
-  public QueryBuilder principalQuery(final QueryBuilder q) throws CalFacadeException {
+  public QueryBuilder principalQuery(final QueryBuilder q) {
     if (publick) {
       return and(q,
                  termQuery(publicJname, String.valueOf(true)),
@@ -986,7 +980,7 @@ public class ESQueryFilter extends ESQueryFilterBase
                                  final Object val,
                                  final OperationType opType,
                                  final float boost,
-                                 final boolean negate) throws CalFacadeException {
+                                 final boolean negate) {
     final BwIcalPropertyInfoEntry bwPie = BwIcalPropertyInfo.getPinfo(pii);
     QueryBuilder qb;
 
@@ -1000,7 +994,7 @@ public class ESQueryFilter extends ESQueryFilterBase
               final Collection<?> valsC = (Collection<?>)val;
               vals = valsC.toArray(new String[valsC.size()]);
             } catch (final Throwable t) {
-              throw new CalFacadeException(CalFacadeException.filterBadOperator,
+              throw new CalFacadeException(CalFacadeErrorCode.filterBadOperator,
                                            "Invalid query. Multi match only allowed on strings");
             }
             qb = new MultiMatchQueryBuilder(path, vals);
@@ -1090,7 +1084,7 @@ public class ESQueryFilter extends ESQueryFilterBase
         break;
 
       default:
-        throw new CalFacadeException(CalFacadeException.filterBadOperator,
+        throw new CalFacadeException(CalFacadeErrorCode.filterBadOperator,
                                      opType.toString());
     }
 
@@ -1224,7 +1218,7 @@ public class ESQueryFilter extends ESQueryFilterBase
   }
 
   /*
-  private FilterBuilder makeFilter(final TermOrTermsQuery tort) throws CalFacadeException {
+  private FilterBuilder makeFilter(final TermOrTermsQuery tort) {
     final boolean hrefOrPath = tort.fldName.equals(hrefJname) ||
             tort.fldName.equals(colpathJname);
     
@@ -1238,7 +1232,7 @@ public class ESQueryFilter extends ESQueryFilterBase
   }
   */
 
-  private QueryBuilder makeQuery(final FilterBase f) throws CalFacadeException {
+  private QueryBuilder makeQuery(final FilterBase f) {
     if (f == null) {
       return null;
     }
@@ -1400,7 +1394,7 @@ public class ESQueryFilter extends ESQueryFilterBase
   }
 
   private List<QueryBuilder> makeQueries(final List<FilterBase> fs,
-                                         final boolean anding) throws CalFacadeException {
+                                         final boolean anding) {
     final List<QueryBuilder> qbs = new ArrayList<>();
 
         /* We'll try to compact the queries - if we have a whole bunch of
@@ -1454,7 +1448,7 @@ public class ESQueryFilter extends ESQueryFilterBase
     return qbs;
   }
 
-  private Object getValue(final ObjectFilter<?> of) throws CalFacadeException {
+  private Object getValue(final ObjectFilter<?> of) {
     Object o = of.getEntity();
     Collection<?> c = null;
 

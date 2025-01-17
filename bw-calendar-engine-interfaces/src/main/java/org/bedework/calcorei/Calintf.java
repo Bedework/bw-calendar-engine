@@ -36,7 +36,6 @@ import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.ShareableEntity;
 import org.bedework.calfacade.configs.Configurations;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
@@ -81,9 +80,8 @@ public interface Calintf
   /** Must be called once we know the principal.
    *
    * @param principalInfo    Required for access evaluation.
-   * @throws CalFacadeException on fatal error
    */
-  void initPinfo(PrincipalInfo principalInfo) throws CalFacadeException;
+  void initPinfo(PrincipalInfo principalInfo);
 
   /**
    * 
@@ -153,9 +151,8 @@ public interface Calintf
   /** Enable/disable db statistics
    *
    * @param enable       boolean true to turn on db statistics collection
-   * @throws CalFacadeException if not admin
    */
-  void setDbStatsEnabled(boolean enable) throws CalFacadeException;
+  void setDbStatsEnabled(boolean enable);
 
   /**
    *
@@ -199,7 +196,6 @@ public interface Calintf
    * @param sessionless true if this is a sessionless client
    * @param authenticated true for an authenticated user
    * @param dontKill true if this is a system process
-   * @throws CalFacadeException on error
    */
   void open(FilterParserFetcher filterParserFetcher,
             String logId,
@@ -212,7 +208,7 @@ public interface Calintf
             boolean publicSubmission,
             boolean authenticated,
             boolean sessionless,
-            boolean dontKill) throws CalFacadeException;
+            boolean dontKill);
 
   /** Call on the way out after handling a request..
    *
@@ -224,17 +220,15 @@ public interface Calintf
    * check version numbers to detect concurrent updates and fail with an
    * exception.
    *
-   * @throws CalFacadeException on error
    */
-  void beginTransaction() throws CalFacadeException;
+  void beginTransaction();
 
   /** End a (possibly long-running) transaction. In the web environment
    * this should in some way check version numbers to detect concurrent updates
    * and fail with an exception.
    *
-   * @throws CalFacadeException on error - rollback has been called
    */
-  void endTransaction() throws CalFacadeException;
+  void endTransaction();
 
   /** Call if there has been an error during an update process.
    *
@@ -248,21 +242,18 @@ public interface Calintf
 
   /** Flush queued operations.
    *
-   * @throws CalFacadeException
    */
-  void flush() throws CalFacadeException;
+  void flush();
 
   /** Clear session - probably need to flush first.
    *
-   * @throws CalFacadeException on hibernate error
    */
-  void clear() throws CalFacadeException;
+  void clear();
 
   /* * Replace session with a clean one - probably need to flush first.
    *
-   * @throws CalFacadeException on hibernate error
    * /
-  void replaceSession() throws CalFacadeException;
+  void replaceSession();
   */
 
   /**
@@ -291,11 +282,10 @@ public interface Calintf
   /** Call to reassociate an entity with the current database session
    *
    * @param val the entity
-   * @throws CalFacadeException
    */
-  void reAttach(BwDbentity<?> val) throws CalFacadeException;
+  void reAttach(BwDbentity<?> val);
 
-  String getCalendarNameFromType(int calType) throws CalFacadeException;
+  String getCalendarNameFromType(int calType);
 
   /**
    * @param docType type of entity
@@ -381,20 +371,18 @@ public interface Calintf
    * @param ent      BwShareableDbentity
    * @param aces     Collection of ace
    * @param replaceAll true to replace the entire access list.
-   * @throws CalFacadeException
    */
   void changeAccess(ShareableEntity ent,
                     Collection<Ace> aces,
-                    boolean replaceAll) throws CalFacadeException;
+                    boolean replaceAll);
 
   /** Remove any explicit access for the given who to the given calendar entity.
    *
    * @param ent      A shareable entity
    * @param who      AceWho
-   * @throws CalFacadeException
    */
   void defaultAccess(ShareableEntity ent,
-                     AceWho who) throws CalFacadeException;
+                     AceWho who);
 
   /** Return a Collection of the objects after checking access
    *
@@ -402,13 +390,11 @@ public interface Calintf
    * @param desiredAccess access we want
    * @param alwaysReturn boolean flag behaviour on no access
    * @return Collection   of checked objects
-   * @throws CalFacadeException for no access or other failure
    */
   Collection<? extends ShareableEntity>
   checkAccess(Collection<? extends ShareableEntity> ents,
               int desiredAccess,
-              boolean alwaysReturn)
-          throws CalFacadeException;
+              boolean alwaysReturn);
 
   /** Check the access for the given entity. Returns the current access
    * or null or optionally throws a no access exception.
@@ -417,12 +403,10 @@ public interface Calintf
    * @param desiredAccess access we want
    * @param returnResult true to return rather than throw exception
    * @return CurrentAccess
-   * @throws CalFacadeException if returnResult false and no access
    */
   CurrentAccess checkAccess(ShareableEntity ent,
                             int desiredAccess,
-                            boolean returnResult)
-          throws CalFacadeException;
+                            boolean returnResult);
 
   /* ====================================================================
    *                   Alarms
@@ -438,19 +422,15 @@ public interface Calintf
    *
    * @param triggerTime
    * @return Collection of unexpired alarms.
-   * @throws CalFacadeException
    */
-  Collection<BwAlarm> getUnexpiredAlarms(long triggerTime)
-          throws CalFacadeException;
+  Collection<BwAlarm> getUnexpiredAlarms(long triggerTime);
 
   /** Given an alarm return the associated event(s)
    *
    * @param alarm
    * @return an event.
-   * @throws CalFacadeException
    */
-  Collection<BwEvent> getEventsByAlarm(BwAlarm alarm)
-          throws CalFacadeException;
+  Collection<BwEvent> getEventsByAlarm(BwAlarm alarm);
 
   /* ====================================================================
    *                   Some general helpers
@@ -460,9 +440,8 @@ public interface Calintf
    *
    * @param uid
    * @return BwCategory
-   * @throws CalFacadeException on error
    */
-  BwCategory getCategory(String uid) throws CalFacadeException;
+  BwCategory getCategory(String uid);
 
   /* ====================================================================
    *                   Free busy
@@ -478,13 +457,11 @@ public interface Calintf
    * @param ignoreTransparency
    * @return  BwFreeBusy object representing the calendar (or principal's)
    *          free/busy
-   * @throws CalFacadeException
    */
   BwEvent getFreeBusy(Collection<BwCalendar> cals, BwPrincipal<?> who,
                       BwDateTime start, BwDateTime end,
                       boolean returnAll,
-                      boolean ignoreTransparency)
-          throws CalFacadeException;
+                      boolean ignoreTransparency);
 
   /* ====================================================================
    *                   Events
@@ -493,8 +470,7 @@ public interface Calintf
   Collection<CoreEventInfo> postGetEvents(
           Collection<?> evs,
           int desiredAccess,
-          boolean nullForNoAccess)
-          throws CalFacadeException;
+          boolean nullForNoAccess);
 
   /* Post processing of event access has been checked
    */
@@ -505,7 +481,7 @@ public interface Calintf
    */
   CoreEventInfo postGetEvent(BwEvent ev,
                              int desiredAccess,
-                             boolean nullForNoAccess) throws CalFacadeException;
+                             boolean nullForNoAccess);
 
   /* ====================================================================
    *                       Restore methods
@@ -513,9 +489,8 @@ public interface Calintf
 
   /**
    * @param val an entity to restore
-   * @throws CalFacadeException on fatal error
    */
-  void saveOrUpdate(BwUnversionedDbentity<?> val) throws CalFacadeException;
+  void saveOrUpdate(BwUnversionedDbentity<?> val);
 
   /* ====================================================================
    *                       General db methods
@@ -523,52 +498,44 @@ public interface Calintf
 
   /**
    * @param val principal
-   * @throws CalFacadeException on fatal error
    */
-  void saveOrUpdate(BwPrincipal<?> val) throws CalFacadeException;
+  void saveOrUpdate(BwPrincipal<?> val);
 
   /**
    * @param val the event property
-   * @throws CalFacadeException on fatal error
    */
-  void saveOrUpdate(BwEventProperty<?> val) throws CalFacadeException;
+  void saveOrUpdate(BwEventProperty<?> val);
 
   /**
    * @param val the preferences
-   * @throws CalFacadeException on fatal error
    */
-  void saveOrUpdate(BwPreferences val) throws CalFacadeException;
+  void saveOrUpdate(BwPreferences val);
 
   /**
    * @param val to save/update/index
-   * @throws CalFacadeException on fatal error
    */
-  void saveOrUpdate(BwCalSuite val) throws CalFacadeException;
+  void saveOrUpdate(BwCalSuite val);
 
   /**
    * @param val auth user entry to delete
-   * @throws CalFacadeException on fatal error
    */
-  void delete(BwAuthUser val) throws CalFacadeException;
+  void delete(BwAuthUser val);
 
   /**
    * @param val the preferences
-   * @throws CalFacadeException on fatal error
    */
-  void delete(BwPreferences val) throws CalFacadeException;
+  void delete(BwPreferences val);
 
   /**
    * @param val calsuite to delete and unindex
-   * @throws CalFacadeException on fatal error
    */
-  void delete(BwCalSuite val) throws CalFacadeException;
+  void delete(BwCalSuite val);
 
   /**
    * @param val the entity
    * @return - merged entity
-   * @throws CalFacadeException on fatal error
    */
-  BwUnversionedDbentity<?> merge(BwUnversionedDbentity<?> val) throws CalFacadeException;
+  BwUnversionedDbentity<?> merge(BwUnversionedDbentity<?> val);
 
   /**
    * @return a blob
@@ -632,27 +599,24 @@ public interface Calintf
    *
    * @param href          String principal hierarchy path
    * @return BwPrincipal  representing the principal or null if not there
-   * @throws CalFacadeException
    */
-  BwPrincipal<?> getPrincipal(String href) throws CalFacadeException;
+  BwPrincipal<?> getPrincipal(String href);
 
   /** Get a partial list of principal hrefs.
    *
    * @param start         Position to start
    * @param count         Number we want
    * @return list of hrefs - null for no more
-   * @throws CalFacadeException
    */
   List<String> getPrincipalHrefs(int start,
-                                 int count) throws CalFacadeException;
+                                 int count);
 
   /** Fetch the preferences for the given principal.
    *
    * @param principalHref
    * @return the preferences for the principal
-   * @throws CalFacadeException
    */
-  BwPreferences getPreferences(String principalHref) throws CalFacadeException;
+  BwPreferences getPreferences(String principalHref);
 
   /* ====================================================================
    *                       adminprefs
@@ -664,9 +628,8 @@ public interface Calintf
   /** Remove any refs to this object
    *
    * @param val the entity
-   * @throws CalFacadeException
    */
-  void removeFromAllPrefs(BwShareableDbentity<?> val) throws CalFacadeException;
+  void removeFromAllPrefs(BwShareableDbentity<?> val);
 
   /* ====================================================================
    *                       groups
@@ -681,85 +644,75 @@ public interface Calintf
    * @param  account           String group name
    * @param admin          true for an admin group
    * @return BwGroup        group object
-   * @exception CalFacadeException If there's a problem
    */
   BwGroup<?> findGroup(final String account,
-                       boolean admin) throws CalFacadeException;
+                       boolean admin);
 
   /**
    * @param group the group
    * @param admin          true for an admin group
    * @return Collection
-   * @throws CalFacadeException on error
    */
   Collection<BwGroup<?>> findGroupParents(
           BwGroup<?> group,
-          boolean admin) throws CalFacadeException;
+          boolean admin);
 
   /**
    * @param group
    * @param admin          true for an admin group
-   * @throws CalFacadeException
    */
   void updateGroup(BwGroup<?> group,
-                   boolean admin) throws CalFacadeException;
+                   boolean admin);
 
   /** Delete a group
    *
    * @param  group           BwGroup group object to delete
    * @param admin          true for an admin group
-   * @exception CalFacadeException If there's a problem
    */
   void removeGroup(BwGroup<?> group,
-                   boolean admin) throws CalFacadeException;
+                   boolean admin);
 
   /** Add a member to a group
    *
    * @param group          a group principal
    * @param val             BwPrincipal new member
    * @param admin          true for an admin group
-   * @exception CalFacadeException   For invalid usertype values.
    */
   void addMember(BwGroup<?> group,
                  BwPrincipal<?> val,
-                 boolean admin) throws CalFacadeException;
+                 boolean admin);
 
   /** Remove a member from a group
    *
    * @param group          a group principal
    * @param val            BwPrincipal new member
    * @param admin          true for an admin group
-   * @exception CalFacadeException   For invalid usertype values.
    */
   void removeMember(BwGroup<?> group,
                     BwPrincipal<?> val,
-                    boolean admin) throws CalFacadeException;
+                    boolean admin);
 
   /** Get the direct members of the given group.
    *
    * @param  group           BwGroup group object to add
    * @param admin          true for an admin group
    * @return list of members
-   * @throws CalFacadeException
    */
   Collection<BwPrincipal<?>> getMembers(BwGroup<?> group,
-                                        boolean admin) throws CalFacadeException;
+                                        boolean admin);
 
   /** Return all groups to which this user has some access. Never returns null.
    *
    * @param admin          true for an admin group
    * @return Collection    of BwGroup
-   * @throws CalFacadeException
    */
-  Collection<BwGroup<?>> getAllGroups(boolean admin)
-          throws CalFacadeException;
+  Collection<BwGroup<?>> getAllGroups(boolean admin);
 
   /** Return all admin groups to which this user has some access. Never returns null.
    *
    * @return Collection    of BwAdminGroup
-   * @throws CalFacadeException
    */
-  Collection<BwAdminGroup> getAdminGroups() throws CalFacadeException;
+  Collection<BwAdminGroup> getAdminGroups();
 
   /** Return all groups of which the given principal is a member. Never returns null.
    *
@@ -768,10 +721,9 @@ public interface Calintf
    * @param val            a principal
    * @param admin          true for an admin group
    * @return Collection    of BwGroup
-   * @throws CalFacadeException
    */
   Collection<BwGroup<?>> getGroups(BwPrincipal<?> val,
-                                   boolean admin) throws CalFacadeException;
+                                   boolean admin);
 
   /** Return all admin groups of which the given principal is a member. Never returns null.
    *
@@ -779,10 +731,9 @@ public interface Calintf
    *
    * @param val            a principal
    * @return Collection    of BwGroup
-   * @throws CalFacadeException
    */
   Collection<BwAdminGroup> getAdminGroups(
-          BwPrincipal<?> val) throws CalFacadeException;
+          BwPrincipal<?> val);
 
   /* ====================================================================
    *                       calendar suites
@@ -792,24 +743,21 @@ public interface Calintf
    *
    * @param  group     BwAdminGroup
    * @return BwCalSuite null for unknown calendar suite
-   * @throws CalFacadeException
    */
-  BwCalSuite get(BwAdminGroup group) throws CalFacadeException;
+  BwCalSuite get(BwAdminGroup group);
 
   /** Get a (live) calendar suite given the name
    *
    * @param  name     String name of calendar suite
    * @return BwCalSuiteWrapper null for unknown calendar suite
-   * @throws CalFacadeException
    */
-  BwCalSuite getCalSuite(String name) throws CalFacadeException;
+  BwCalSuite getCalSuite(String name);
 
   /** Get calendar suites to which this user has access
    *
    * @return Collection     of BwCalSuiteWrapper
-   * @throws CalFacadeException
    */
-  Collection<BwCalSuite> getAllCalSuites() throws CalFacadeException;
+  Collection<BwCalSuite> getAllCalSuites();
 
    /* ====================================================================
     *                   Event Properties Factories

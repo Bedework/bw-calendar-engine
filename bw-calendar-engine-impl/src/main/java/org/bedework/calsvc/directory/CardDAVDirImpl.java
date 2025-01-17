@@ -24,6 +24,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.configs.LdapConfigProperties;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeUnimplementedException;
 
@@ -97,12 +98,12 @@ public class CardDAVDirImpl extends AbstractDirImpl {
   }
 
   @Override
-  public Collection<BwGroup<?>> getGroups(final BwPrincipal<?> val) throws CalFacadeException {
+  public Collection<BwGroup<?>> getGroups(final BwPrincipal<?> val) {
     return getGroups(getProps(), val);
   }
 
   @Override
-  public Collection<BwGroup<?>> getAllGroups(final BwPrincipal<?> val) throws CalFacadeException {
+  public Collection<BwGroup<?>> getAllGroups(final BwPrincipal<?> val) {
     final var groups = getGroups(getProps(), val);
     final var allGroups = new TreeSet<>(groups);
 
@@ -127,7 +128,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
   }
 
   @Override
-  public Collection<BwGroup<?>> getAll(final boolean populate) throws CalFacadeException {
+  public Collection<BwGroup<?>> getAll(final boolean populate) {
     final var gs = getGroups(getProps(), null);
 
     if (!populate) {
@@ -142,7 +143,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
   }
 
   @Override
-  public void getMembers(final BwGroup<?> group) throws CalFacadeException {
+  public void getMembers(final BwGroup<?> group) {
     getGroupMembers(getProps(), group);
   }
 
@@ -151,9 +152,9 @@ public class CardDAVDirImpl extends AbstractDirImpl {
    * ==================================================================== */
 
   @Override
-  public void addGroup(final BwGroup<?> group) throws CalFacadeException {
+  public void addGroup(final BwGroup<?> group) {
     if (findGroup(group.getAccount()) != null) {
-      throw new CalFacadeException(CalFacadeException.duplicateAdminGroup);
+      throw new CalFacadeException(CalFacadeErrorCode.duplicateAdminGroup);
     }
     throw new CalFacadeUnimplementedException();
   }
@@ -164,7 +165,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
   }
 
   @Override
-  public void addMember(final BwGroup<?> group, final BwPrincipal<?> val) throws CalFacadeException {
+  public void addMember(final BwGroup<?> group, final BwPrincipal<?> val) {
     final var ag = findGroup(group.getAccount());
 
     if (ag == null) {
@@ -176,7 +177,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
      */
 
     if (!checkPathForSelf(group, val)) {
-      throw new CalFacadeException(CalFacadeException.alreadyOnGroupPath);
+      throw new CalFacadeException(CalFacadeErrorCode.alreadyOnGroupPath);
     }
 
     /*
@@ -196,7 +197,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
    * @see org.bedework.calfacade.svc.AdminGroups#removeMember(org.bedework.calfacade.BwGroup, org.bedework.calfacade.BwPrincipal)
    */
   @Override
-  public void removeMember(final BwGroup<?> group, final BwPrincipal<?> val) throws CalFacadeException {
+  public void removeMember(final BwGroup<?> group, final BwPrincipal<?> val) {
     final var ag = findGroup(group.getAccount());
 
     if (ag == null) {
@@ -234,7 +235,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
    * @see org.bedework.calfacade.svc.AdminGroups#removeGroup(org.bedework.calfacade.BwGroup)
    */
   @Override
-  public void removeGroup(final BwGroup<?> group) throws CalFacadeException {
+  public void removeGroup(final BwGroup<?> group) {
     // Remove all group members
     /*
     HibSession sess = getSess();
@@ -263,13 +264,13 @@ public class CardDAVDirImpl extends AbstractDirImpl {
    * @see org.bedework.calfacade.svc.AdminGroups#updateGroup(org.bedework.calfacade.svc.BwAdminGroup)
    */
   @Override
-  public void updateGroup(final BwGroup<?> group) throws CalFacadeException {
+  public void updateGroup(final BwGroup<?> group) {
     //getSess().saveOrUpdate(group);
     throw new CalFacadeUnimplementedException();
   }
 
   @Override
-  public Collection<BwGroup<?>> findGroupParents(final BwGroup<?> group) throws CalFacadeException {
+  public Collection<BwGroup<?>> findGroupParents(final BwGroup<?> group) {
     throw new CalFacadeUnimplementedException();
   }
 
@@ -287,7 +288,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
    * ==================================================================== */
 
   private boolean checkPathForSelf(final BwGroup<?> group,
-                                   final BwPrincipal<?> val) throws CalFacadeException {
+                                   final BwPrincipal<?> val) {
     if (group.equals(val)) {
       return false;
     }
@@ -322,8 +323,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
     throw new CalFacadeUnimplementedException();
   }
 
-  private InitialLdapContext createLdapInitContext(final LdapConfigProperties props)
-          throws CalFacadeException {
+  private InitialLdapContext createLdapInitContext(final LdapConfigProperties props) {
     final Properties env = new Properties();
 
     // Map all options into the JNDI InitialLdapContext env
@@ -421,8 +421,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
    *
    */
   private Collection<BwGroup<?>> getGroups(final DirConfigProperties dirProps,
-                                        final BwPrincipal<?> principal)
-          throws CalFacadeException {
+                                        final BwPrincipal<?> principal) {
     final var props = (LdapConfigProperties)dirProps;
     InitialLdapContext ctx = null;
     String member = null;
@@ -483,8 +482,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
   /* Find members for given group
    *
    */
-  private void getGroupMembers(final DirConfigProperties dirProps, final BwGroup<?> group)
-          throws CalFacadeException {
+  private void getGroupMembers(final DirConfigProperties dirProps, final BwGroup<?> group) {
     final var props = (LdapConfigProperties)dirProps;
     InitialLdapContext ctx = null;
 

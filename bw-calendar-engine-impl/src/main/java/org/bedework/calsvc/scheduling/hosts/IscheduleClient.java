@@ -19,6 +19,7 @@
 package org.bedework.calsvc.scheduling.hosts;
 
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.scheduling.hosts.Response.ResponseElement;
@@ -428,7 +429,7 @@ public class IscheduleClient implements Logged {
     try {
       final Document doc = parseContent(resp);
       if (doc == null){
-        throw new CalFacadeException(CalFacadeException.badResponse);
+        throw new CalFacadeException(CalFacadeErrorCode.badResponse);
       }
 
       final QName sresponseTag;
@@ -460,14 +461,14 @@ public class IscheduleClient implements Logged {
       final Element root = doc.getDocumentElement();
 
       if (!XmlUtil.nodeMatches(root, sresponseTag)) {
-        throw new CalFacadeException(CalFacadeException.badResponse);
+        throw new CalFacadeException(CalFacadeErrorCode.badResponse);
       }
 
       for (final Element el: getChildren(root)) {
         final ResponseElement fbel = new ResponseElement();
 
         if (!XmlUtil.nodeMatches(el, responseTag)) {
-          throw new CalFacadeException(CalFacadeException.badResponse);
+          throw new CalFacadeException(CalFacadeErrorCode.badResponse);
         }
 
         /* ========================================================
@@ -493,7 +494,7 @@ public class IscheduleClient implements Logged {
         Element respel = respels.next();
 
         if (!XmlUtil.nodeMatches(respel, recipientTag)) {
-          throw new CalFacadeException(CalFacadeException.badResponse);
+          throw new CalFacadeException(CalFacadeErrorCode.badResponse);
         }
 
         fbel.setRecipient(getElementContent(respel));
@@ -501,7 +502,7 @@ public class IscheduleClient implements Logged {
         respel = respels.next();
 
         if (!XmlUtil.nodeMatches(respel, requestStatusTag)) {
-          throw new CalFacadeException(CalFacadeException.badResponse);
+          throw new CalFacadeException(CalFacadeErrorCode.badResponse);
         }
 
         fbel.setReqStatus(getElementContent(respel));
@@ -521,7 +522,7 @@ public class IscheduleClient implements Logged {
           } else if (XmlUtil.nodeMatches(respel, descriptionTag)) {
             // XXX Not processed yet
           } else {
-            throw new CalFacadeException(CalFacadeException.badResponse);
+            throw new CalFacadeException(CalFacadeErrorCode.badResponse);
           }
         }
 
@@ -608,7 +609,7 @@ public class IscheduleClient implements Logged {
     final BwEvent ev = ei.getEvent();
 
     //if (!iSchedule && (recipients.size() > 1)) {
-    //  throw new CalFacadeException(CalFacadeException.schedulingBadRecipients);
+    //  throw new CalFacadeException(CalFacadeErrorCode.schedulingBadRecipients);
     //}
 
     final IscheduleOut iout = makeIout(hi, "text/calendar", "POST");
@@ -689,7 +690,7 @@ public class IscheduleClient implements Logged {
         error(t);
       }
 
-      throw new CalFacadeException(CalFacadeException.badResponse);
+      throw new CalFacadeException(CalFacadeErrorCode.badResponse);
     }
   }
 
@@ -701,7 +702,7 @@ public class IscheduleClient implements Logged {
         error(t);
       }
 
-      throw new CalFacadeException(CalFacadeException.badResponse);
+      throw new CalFacadeException(CalFacadeErrorCode.badResponse);
     }
   }
 

@@ -140,10 +140,9 @@ public class Filters extends FiltersCommon {
    * @param intf - needed until we change the schema - we need to get the
    *             persistent copy of the category for searches.
    * @param filter
-   * @throws CalFacadeException
    */
   public Filters(final Calintf intf,
-                 final FilterBase filter) throws CalFacadeException {
+                 final FilterBase filter) {
     super(filter);
     this.intf = intf;
   }
@@ -177,10 +176,8 @@ public class Filters extends FiltersCommon {
    * clauses. It gives the method the opportunity to add any join clauses.
    *
    * @param retrieveListFields
-   * @throws CalFacadeException
    */
-  public void joinPass(final List<BwIcalPropertyInfoEntry> retrieveListFields)
-          throws CalFacadeException {
+  public void joinPass(final List<BwIcalPropertyInfoEntry> retrieveListFields) {
     if (getFilter() == null) {
       return;
     }
@@ -223,9 +220,8 @@ public class Filters extends FiltersCommon {
    * Generate a where clause for a query which selects the events for the
    * given filter.
    *
-   * @throws CalFacadeException
    */
-  public void addWhereFilters() throws CalFacadeException {
+  public void addWhereFilters() {
     if (getFilter() == null) {
       return;
     }
@@ -243,9 +239,8 @@ public class Filters extends FiltersCommon {
    * parameters
    *
    * @param sess
-   * @throws CalFacadeException
    */
-  public void parPass(final HibSession sess) throws CalFacadeException {
+  public void parPass(final HibSession sess) {
     if (getFilter() == null) {
       return;
     }
@@ -295,7 +290,7 @@ public class Filters extends FiltersCommon {
    *
    * @param f         Filter element.
    */
-  private void makeWhere(final FilterBase f) throws CalFacadeException {
+  private void makeWhere(final FilterBase f) {
     if ((f instanceof AndFilter) || (f instanceof OrFilter)) {
       boolean itsAnd = (f instanceof AndFilter);
 
@@ -713,7 +708,7 @@ public class Filters extends FiltersCommon {
 
   /* Fill in the parameters after we generated the query.
    */
-  private void parReplace(final FilterBase f) throws CalFacadeException {
+  private void parReplace(final FilterBase f) {
     if (f instanceof AndFilter) {
       AndFilter fb = (AndFilter)f;
 
@@ -847,7 +842,7 @@ public class Filters extends FiltersCommon {
     }
   }
 
-  private void doEntityTimeRangeReplace(final EntityTimeRangeFilter trf) throws CalFacadeException {
+  private void doEntityTimeRangeReplace(final EntityTimeRangeFilter trf) {
     TimeRange tr = trf.getEntity();
 
     if ((tr.getEnd() == null) && (tr.getStart() == null)) {
@@ -862,7 +857,7 @@ public class Filters extends FiltersCommon {
   }
 
   private void drReplace(final boolean floatingTest,
-                         final TimeRange tr) throws CalFacadeException {
+                         final TimeRange tr) {
     String startVal = null;
     String endVal = null;
     DateTime start = tr.getStart();
@@ -925,7 +920,7 @@ public class Filters extends FiltersCommon {
     throw new RuntimeException("Bad date " + dt);
   }*/
 
-  private void addJoins(final FilterBase f) throws CalFacadeException {
+  private void addJoins(final FilterBase f) {
     if ((f instanceof AndFilter) ||
         (f instanceof OrFilter)) {
       for (FilterBase flt: f.getChildren()) {
@@ -1003,7 +998,7 @@ public class Filters extends FiltersCommon {
     qi++;
   }
 
-  protected BwCalendar unwrap(final BwCalendar val) throws CalFacadeException {
+  protected BwCalendar unwrap(final BwCalendar val) {
     if (val == null) {
       return null;
     }

@@ -90,17 +90,14 @@ public abstract class CalintfHelper
     collectTimeStats = isMetricsDebugEnabled();
   }
 
-  public abstract <T> T throwException(CalFacadeException cfe)
-          throws CalFacadeException;
+  public abstract <T> T throwException(CalFacadeException cfe);
 
-  public <T> T throwException(final String err)
-          throws CalFacadeException {
+  public <T> T throwException(final String err) {
     return throwException(new CalFacadeException(err));
   }
 
   public <T> T throwException(final String err,
-                             final String extra)
-          throws CalFacadeException {
+                             final String extra) {
     return throwException(new CalFacadeException(err, extra));
   }
 
@@ -110,11 +107,10 @@ public abstract class CalintfHelper
    * @param desiredAccess we need
    * @param alwaysReturn false to throw an exception if not accessible
    * @return BwCalendar
-   * @throws CalFacadeException on fatal error
    */
   public BwCalendar getCollection(final String path,
                                   final int desiredAccess,
-                                  final boolean alwaysReturn) throws CalFacadeException {
+                                  final boolean alwaysReturn) {
     return intf.getCollection(path, desiredAccess,
                             alwaysReturn);
   }
@@ -161,7 +157,7 @@ public abstract class CalintfHelper
     return intf.getCurrentTimestamp();
   }
 
-  public BwCalendar getCollection(final String path) throws CalFacadeException {
+  public BwCalendar getCollection(final String path) {
     return intf.getCollection(path, PrivilegeDefs.privAny, true);
   }
 
@@ -234,7 +230,7 @@ public abstract class CalintfHelper
   }
 
   /*
-  protected ESQueryFilter getFilters() throws CalFacadeException {
+  protected ESQueryFilter getFilters() {
     return ((BwIndexEsImpl)getIndexer()).getFilters();
   }*/
 
@@ -260,7 +256,7 @@ public abstract class CalintfHelper
     intf.indexEntityNow(col);
   }
 
-  protected void unindex(final BwCalendar col) throws CalFacadeException {
+  protected void unindex(final BwCalendar col) {
     getIndexer(col).unindexEntity(col.getHref());
   }
 
@@ -291,7 +287,7 @@ public abstract class CalintfHelper
   protected BwCalendar getEntityCollection(final String path,
                                            final int nonSchedAccess,
                                            final boolean scheduling,
-                                           final boolean alwaysReturn) throws CalFacadeException {
+                                           final boolean alwaysReturn) {
     final int desiredAccess;
 
     if (!scheduling) {

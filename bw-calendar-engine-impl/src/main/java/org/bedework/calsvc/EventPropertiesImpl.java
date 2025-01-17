@@ -77,11 +77,11 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
 
   /* fetch from indexer */
   abstract Collection<T> fetchAllIndexed(boolean publick,
-                                         String ownerHref) throws CalFacadeException;
+                                         String ownerHref);
 
-  abstract T fetchIndexedByUid(String uid) throws CalFacadeException;
+  abstract T fetchIndexedByUid(String uid);
 
-  abstract T fetchIndexed(String href) throws CalFacadeException;
+  abstract T fetchIndexed(String href);
 
   /** Find a persistent entry like the one given or return null.
    *
@@ -121,8 +121,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
   }
 
   @Override
-  public Collection<T> getPublic()
-          throws CalFacadeException {
+  public Collection<T> getPublic() {
     return get(true, null);
   }
 
@@ -137,12 +136,12 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
   }
 
   @Override
-  public Collection<T> get() throws CalFacadeException {
+  public Collection<T> get() {
     return get(isPublicAdmin(), null);
   }
 
   @Override
-  public Collection<T> getEditable() throws CalFacadeException {
+  public Collection<T> getEditable() {
     if (!isPublicAdmin()) {
       return get(false, null);
     }
@@ -181,7 +180,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
   }
 
   @Override
-  public T get(final String href) throws CalFacadeException {
+  public T get(final String href) {
     return fetchIndexed(href);
   }
 
@@ -211,7 +210,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
   }
 
   @Override
-  public T getPersistent(final String uid) throws CalFacadeException {
+  public T getPersistent(final String uid) {
     return getCoreHdlr().get(uid);
   }
 
@@ -287,7 +286,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
   }
 
   @Override
-  public void update(final T val) throws CalFacadeException {
+  public void update(final T val) {
     if ((val.getCreatorHref() == null) ||
         (val.getOwnerHref() == null)) {
       throw new RuntimeException("Owner and creator must be set");
@@ -314,7 +313,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
   }
 
   @Override
-  public int delete(final T val) throws CalFacadeException {
+  public int delete(final T val) {
     T ent = val;
 
     if (val.unsaved()) {
@@ -349,7 +348,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
   }
 
   @Override
-  public Collection<EventPropertiesReference> getRefs(final T val) throws CalFacadeException {
+  public Collection<EventPropertiesReference> getRefs(final T val) {
     final T persistent = getPersistent(val.getUid());
 
     if (persistent == null) {
@@ -407,7 +406,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
   }
 
   @Override
-  public int reindex(final BwIndexer indexer) throws CalFacadeException {
+  public int reindex(final BwIndexer indexer) {
     final BwPrincipal owner = getSvc().getEntityOwner();
 
     final Collection<T> ents =
@@ -536,7 +535,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
   }
 
   private Collection<T> get(final boolean publick,
-                            final String creatorHref) throws CalFacadeException {
+                            final String creatorHref) {
     final String ownerHref;
 
     if (publick) {
@@ -601,7 +600,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
     return ent;
   }
 
-  private void deleteOK(final T o) throws CalFacadeException {
+  private void deleteOK(final T o) {
     if (o == null) {
       return;
     }

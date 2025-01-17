@@ -95,7 +95,7 @@ public class ProcessReindex extends CmdUtilHelper {
   }
 
   protected int indexCollection(final String path,
-                                final BwIndexer indexer) throws CalFacadeException {
+                                final BwIndexer indexer) {
     int reindexed = 0;
 
     try {
@@ -164,10 +164,9 @@ public class ProcessReindex extends CmdUtilHelper {
    * @param path to parent
    * @param refs - null on first call.
    * @return next batch of hrefs or null for no more.
-   * @throws CalFacadeException on error
    */
   protected Refs getChildCollections(final String path,
-                                     final Refs refs) throws CalFacadeException {
+                                     final Refs refs) {
     Refs r = refs;
 
     if (r == null) {

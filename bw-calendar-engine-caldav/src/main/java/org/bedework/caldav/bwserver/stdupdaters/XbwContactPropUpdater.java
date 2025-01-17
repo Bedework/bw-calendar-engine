@@ -158,7 +158,7 @@ public class XbwContactPropUpdater implements PropertyUpdater {
                                final BwEvent ev,
                                final Set<BwContact> contacts,
                                final String lang,
-                               final String val) throws CalFacadeException {
+                               final String val) {
     final BwString sval = new BwString(lang, val);
 
     final var resp = ui.getIcalCallback().findContact(sval);

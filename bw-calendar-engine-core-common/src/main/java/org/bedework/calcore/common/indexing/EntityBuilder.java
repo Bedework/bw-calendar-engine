@@ -397,10 +397,9 @@ public class EntityBuilder extends EntityBuilderBase {
    * @param expanded true if we are doing this for an expanded retrieval
    *                 that is, treat everything as instances.
    * @return an event object
-   * @throws CalFacadeException on error
    */
   EventInfo makeEvent(final String id,
-                      final boolean expanded) throws CalFacadeException {
+                      final boolean expanded) {
     final boolean override = !expanded &&
             getBool(PropertyInfoIndex.OVERRIDE);
 
@@ -977,8 +976,7 @@ public class EntityBuilder extends EntityBuilderBase {
     return sb;
   }
 
-  private Set<BwDateTime> restoreBwDateTimeSet(final PropertyInfoIndex pi)
-          throws CalFacadeException {
+  private Set<BwDateTime> restoreBwDateTimeSet(final PropertyInfoIndex pi) {
     final List<Object> vals = getFieldValues(pi);
 
     if (Util.isEmpty(vals)) {

@@ -30,6 +30,7 @@ import org.bedework.calfacade.configs.CalAddrPrefixes;
 import org.bedework.calfacade.configs.CardDavInfo;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.DirConfigProperties;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -272,7 +273,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   }
 
   @Override
-  public BwPrincipalInfo getDirInfo(final BwPrincipal<?> p) throws CalFacadeException {
+  public BwPrincipalInfo getDirInfo(final BwPrincipal<?> p) {
     BwPrincipalInfo pi = principalInfoMap.get(p.getPrincipalRef());
 
     if (pi != null) {
@@ -667,7 +668,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     final String root = fromWho.get(whoType);
 
     if (root == null) {
-      throw new RuntimeException(CalFacadeException.unknownPrincipalType);
+      throw new RuntimeException(CalFacadeErrorCode.unknownPrincipalType);
     }
 
     return Util.buildPath(colPathEndsWithSlash, root, "/", id);
@@ -675,7 +676,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
   @Override
   public Collection<String> getGroups(final String rootUrl,
-                                      final String principalUrl) throws CalFacadeException {
+                                      final String principalUrl) {
     final Collection<String> urls = new TreeSet<>();
 
     if (principalUrl == null) {
@@ -823,7 +824,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   @Override
   public BwPrincipal<?> caladdrToPrincipal(final String caladdr) {
     if (caladdr == null) {
-      throw new RuntimeException(CalFacadeException.nullCalendarUserAddr);
+      throw new RuntimeException(CalFacadeErrorCode.nullCalendarUserAddr);
     }
 
     BwPrincipal<?> p = calAddrToPrincipalMap.get(caladdr);
@@ -941,9 +942,9 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   }
 
   @Override
-  public String normalizeCua(final String val) throws CalFacadeException {
+  public String normalizeCua(final String val) {
     if (val == null) {
-      throw new CalFacadeException(CalFacadeException.badCalendarUserAddr);
+      throw new CalFacadeException(CalFacadeErrorCode.badCalendarUserAddr);
     }
 
     if (val.startsWith("/")) {
@@ -955,7 +956,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
     if (colonPos > 0) {
       if (atPos < colonPos) {
-        throw new CalFacadeException(CalFacadeException.badCalendarUserAddr);
+        throw new CalFacadeException(CalFacadeErrorCode.badCalendarUserAddr);
       }
 
       /* Ensure mailto is lower case. */
@@ -971,7 +972,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   @Override
   public String getDefaultDomain() {
     if (defaultDomain == null) {
-      throw new RuntimeException(CalFacadeException.noDefaultDomain);
+      throw new RuntimeException(CalFacadeErrorCode.noDefaultDomain);
     }
 
     return defaultDomain;
@@ -1269,10 +1270,9 @@ public abstract class AbstractDirImpl implements Logged, Directories {
    *
   * @param p - who we want card for
   * @return card or null
-  * @throws CalFacadeException
   */
   private String getCard(final PooledHttpClient cl,
-                         final AccessPrincipal p) throws CalFacadeException {
+                         final AccessPrincipal p) {
     /* Try a propfind on the principal */
 
     try {

@@ -52,7 +52,7 @@ public class CoreEventsDAO extends DAOBase {
       "where ev.name = :name and ev.tombstoned=false and ev.colPath = :colPath";
 
   protected List<BwEvent> getEventsByName(final String colPath,
-                                          final String name) throws CalFacadeException {
+                                          final String name) {
     final HibSession sess = getSess();
 
     sess.createQuery(eventsByNameQuery);
@@ -71,8 +71,7 @@ public class CoreEventsDAO extends DAOBase {
                   "ev.override=false";
 
   protected BwEventAnnotation getEventsAnnotationName(final String colPath,
-                                                      final String name)
-          throws CalFacadeException {
+                                                      final String name) {
     final HibSession sess = getSess();
 
     sess.createQuery(eventAnnotationsByNameQuery);
@@ -99,7 +98,7 @@ public class CoreEventsDAO extends DAOBase {
                   "ev.uid = :uid";
 
   protected void deleteTombstonedEvent(final String colPath,
-                                     final String uid) throws CalFacadeException {
+                                     final String uid) {
     final HibSession sess = getSess();
 
     sess.createQuery(deleteTombstonedEventQuery);
@@ -123,7 +122,7 @@ public class CoreEventsDAO extends DAOBase {
                   "ev.tombstoned = false";
 
   protected List<?> getSynchEventObjects(final String path,
-                                         final String token) throws CalFacadeException {
+                                         final String token) {
     final HibSession sess = getSess();
     
     if (token != null) {
@@ -154,7 +153,7 @@ public class CoreEventsDAO extends DAOBase {
 
   public List<String> getChildrenEntities(final String parentPath,
                                           final int start,
-                                          final int count) throws CalFacadeException {
+                                          final int count) {
     final HibSession sess = getSess();
 
     sess.createQuery(getChildEntitiesQuery);
@@ -176,7 +175,7 @@ public class CoreEventsDAO extends DAOBase {
           "from " + BwEventAnnotation.class.getName() +
                   " where recurrenceId=null";
 
-  public Iterator<BwEventAnnotation> getEventAnnotations() throws CalFacadeException {
+  public Iterator<BwEventAnnotation> getEventAnnotations() {
     final HibSession sess = getSess();
 
     sess.createQuery(getEventAnnotationsQuery);
@@ -194,7 +193,7 @@ public class CoreEventsDAO extends DAOBase {
                   " and target=:target";
 
   @SuppressWarnings("unchecked")
-  public Collection<BwEventAnnotation> getEventOverrides(final BwEvent ev) throws CalFacadeException {
+  public Collection<BwEventAnnotation> getEventOverrides(final BwEvent ev) {
     final HibSession sess = getSess();
 
     sess.createQuery(getEventOverridesQuery);
@@ -219,7 +218,7 @@ public class CoreEventsDAO extends DAOBase {
    */
   protected String calendarGuidExists(final BwEvent val,
                                       final boolean annotation,
-                                      final boolean adding) throws CalFacadeException {
+                                      final boolean adding) {
     final HibSession sess = getSess();
 
     final StringBuilder sb = new StringBuilder();
@@ -297,7 +296,7 @@ public class CoreEventsDAO extends DAOBase {
 
   protected boolean calendarNameExists(final BwEvent val,
                                        final boolean annotation,
-                                       final boolean adding) throws CalFacadeException {
+                                       final boolean adding) {
     final HibSession sess = getSess();
 
     final StringBuilder sb = new StringBuilder();
@@ -383,7 +382,7 @@ public class CoreEventsDAO extends DAOBase {
                             final String colPath,
                             final String guid,
                             final BwEvent master,
-                            final Boolean overrides) throws CalFacadeException {
+                            final Boolean overrides) {
     final HibSession sess = getSess();
     final EventQueryBuilder qb = new EventQueryBuilder();
     final String qevName = "ev";

@@ -67,7 +67,6 @@ public class CalSvcHelperRw extends CalSvcDb {
    * @param recurRetrieval expanded etc
    * @param freeBusy is this for freebusy
    * @return Collection of matching events
-   * @throws CalFacadeException on fatal error
    */
   protected Collection<EventInfo> getEvents(
           final Collection<BwCalendar> cols,

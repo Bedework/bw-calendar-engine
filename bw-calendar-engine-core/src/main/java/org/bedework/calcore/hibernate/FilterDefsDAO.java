@@ -32,10 +32,8 @@ class FilterDefsDAO extends DAOBase {
   /** Constructor
   *
    * @param sess the session
-   * @throws CalFacadeException on fatal error
   */
- public FilterDefsDAO(final HibSession sess)
-         throws CalFacadeException {
+ public FilterDefsDAO(final HibSession sess) {
    super(sess);
  }
 
@@ -49,7 +47,7 @@ class FilterDefsDAO extends DAOBase {
                   " where ownerHref=:ownerHref";
 
   @SuppressWarnings("unchecked")
-  public Collection<BwFilterDef> getAllFilterDefs(final BwPrincipal owner) throws CalFacadeException {
+  public Collection<BwFilterDef> getAllFilterDefs(final BwPrincipal owner) {
     final HibSession sess = getSess();
 
     sess.createQuery(getAllFilterDefsQuery);
@@ -64,7 +62,7 @@ class FilterDefsDAO extends DAOBase {
                   " where ownerHref=:ownerHref and name=:name";
 
   public BwFilterDef fetch(final String name,
-                           final BwPrincipal owner) throws CalFacadeException {
+                           final BwPrincipal owner) {
     final HibSession sess = getSess();
 
     sess.createQuery(fetchFilterDefQuery);

@@ -136,7 +136,7 @@ public class NotificationClient implements Logged {
     }
   }
 
-  private PooledHttpClient getClient() throws CalFacadeException {
+  private PooledHttpClient getClient() {
     if (cl != null) {
       return cl;
     }

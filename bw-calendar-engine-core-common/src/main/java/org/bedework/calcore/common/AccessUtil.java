@@ -75,9 +75,8 @@ public class AccessUtil implements Logged, AccessUtilI {
      *
      * @param  path          String path of calendar
      * @return BwCalendar null for unknown calendar
-     * @throws CalFacadeException on error
-     */
-    BwCalendar getCollectionNoCheck(String path) throws CalFacadeException;
+       */
+    BwCalendar getCollectionNoCheck(String path);
   }
 
   private CollectionGetter cg;
@@ -117,8 +116,7 @@ public class AccessUtil implements Logged, AccessUtilI {
    * @return parent calendar or null.
    */
   @Override
-  public BwCalendar getParent(final BwShareableContainedDbentity<?> val)
-          throws CalFacadeException {
+  public BwCalendar getParent(final BwShareableContainedDbentity<?> val) {
     return cg.getCollectionNoCheck(val.getColPath());
   }
 
@@ -141,7 +139,7 @@ public class AccessUtil implements Logged, AccessUtilI {
   @Override
   public void changeAccess(final ShareableEntity ent,
                            final Collection<Ace> aces,
-                           final boolean replaceAll) throws CalFacadeException {
+                           final boolean replaceAll) {
     try {
       final Acl acl = checkAccess(ent,
                                   PrivilegeDefs.privWriteAcl,
@@ -168,7 +166,7 @@ public class AccessUtil implements Logged, AccessUtilI {
 
   @Override
   public void defaultAccess(final ShareableEntity ent,
-                            final AceWho who) throws CalFacadeException {
+                            final AceWho who) {
     try {
       final Acl acl = checkAccess(ent,
                                   PrivilegeDefs.privWriteAcl,
@@ -192,8 +190,7 @@ public class AccessUtil implements Logged, AccessUtilI {
   public Collection<? extends ShareableEntity>
                 checkAccess(final Collection<? extends ShareableEntity> ents,
                                 final int desiredAccess,
-                                final boolean alwaysReturn)
-          throws CalFacadeException {
+                                final boolean alwaysReturn) {
     final List<ShareableEntity> out = new ArrayList<>();
 
     for (final var sdbe: ents) {
@@ -208,7 +205,7 @@ public class AccessUtil implements Logged, AccessUtilI {
   @Override
   public CurrentAccess checkAccess(final ShareableEntity ent,
                                    final int desiredAccess,
-                        final boolean alwaysReturnResult) throws CalFacadeException {
+                        final boolean alwaysReturnResult) {
     if (ent == null) {
       return null;
     }
@@ -420,7 +417,7 @@ public class AccessUtil implements Logged, AccessUtilI {
    * The calendar/container access might be cached in the pathInfoTable.
    */
   private char[] getAclChars(final ShareableEntity ent,
-                             final boolean isSuperUser) throws CalFacadeException {
+                             final boolean isSuperUser) {
     if ((!(ent instanceof BwEventProperty)) &&
         (ent instanceof BwShareableContainedDbentity)) {
       final BwCalendar container;
@@ -532,7 +529,7 @@ public class AccessUtil implements Logged, AccessUtilI {
 
   private char[] merged(final char[] parentAccess,
                         final String path,
-                        final String access) throws CalFacadeException {
+                        final String access) {
     try {
       Acl acl = null;
 
@@ -555,7 +552,7 @@ public class AccessUtil implements Logged, AccessUtilI {
   /* Create a merged Acl for the given calendar. Progresses up to the root of
    * the system merging acls as it goes.
    * /
-  private PathInfo getPathInfo(BwCalendar cal) throws CalFacadeException {
+  private PathInfo getPathInfo(BwCalendar cal) {
     PathInfo pi = new PathInfo();
     Collection<Ace> aces = new ArrayList<Ace>();
 
@@ -609,7 +606,7 @@ public class AccessUtil implements Logged, AccessUtilI {
 
   /* Update the merged Acl for the given calendar.
    * Doesn't work because any children in the table need the access changing.
-  private void updatePathInfo(BwCalendar cal, Acl acl) throws CalFacadeException {
+  private void updatePathInfo(BwCalendar cal, Acl acl) {
     try {
       String path = cal.getPath();
       PathInfo pi = pathInfoMap.getInfo(path);

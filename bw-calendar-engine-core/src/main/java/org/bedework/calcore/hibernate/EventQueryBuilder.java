@@ -170,12 +170,10 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
    * @param publick   true for public access
    * @param ignoreCreator  true if we can ignore the creator (owner)
    * @return boolean  true if we need to set the :user term
-   * @throws CalFacadeException
    */
   public boolean appendPublicOrOwnerTerm(final String entName,
                                          final boolean publick,
-                                         final boolean ignoreCreator)
-            throws CalFacadeException {
+                                         final boolean ignoreCreator) {
     boolean all = publick || ignoreCreator;
     boolean setUser = false;
 
@@ -297,14 +295,14 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
     sb.append(".colPath in (:colPaths))");
   }
 
-  public void createQuery(final HibSession sess) throws CalFacadeException {
+  public void createQuery(final HibSession sess) {
     this.sess = sess;
 
     sess.createQuery(sb.toString());
   }
 
   public void setDateTermValues(final BwDateTime startDate,
-                         final BwDateTime endDate) throws CalFacadeException {
+                         final BwDateTime endDate) {
     if (startDate != null) {
       sess.setString("fromDate", startDate.getDate());
       sess.setString("fromFltDate", makeUtcformat(startDate.getDtval()));
@@ -378,8 +376,7 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
 
   public void doCalendarEntities(final boolean setUser,
                                  final BwPrincipal pr,
-                                 final EventsQueryResult eqr)
-          throws CalFacadeException {
+                                 final EventsQueryResult eqr) {
     if (setUser) {
       sess.setString("userHref", pr.getPrincipalRef());
     }

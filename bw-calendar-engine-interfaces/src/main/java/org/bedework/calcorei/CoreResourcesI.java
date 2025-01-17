@@ -2,7 +2,6 @@ package org.bedework.calcorei;
 
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.misc.response.GetEntityResponse;
 
 import java.util.List;
@@ -16,10 +15,9 @@ public interface CoreResourcesI {
    * @param href of resource
    * @param desiredAccess we need
    * @return BwResource object or null
-   * @throws CalFacadeException on fatal error
    */
   BwResource getResource(String href,
-                         int desiredAccess) throws CalFacadeException;
+                         int desiredAccess);
 
   /** Fetch a resource object.
    *
@@ -34,9 +32,8 @@ public interface CoreResourcesI {
    * object
    *
    * @param  val BwResource
-   * @throws CalFacadeException on fatal error
    */
-  void getResourceContent(BwResource val) throws CalFacadeException;
+  void getResourceContent(BwResource val);
 
   /** Get resources to which this user has access - content is not fetched.
    *
@@ -45,40 +42,35 @@ public interface CoreResourcesI {
    * @param token synch token or null
    * @param count   return this many < 0 for all
    * @return List     of BwResource or null/empty if done
-   * @throws CalFacadeException on fatal error
    */
   List<BwResource> getResources(String path,
                                 boolean forSynch,
                                 String token,
-                                int count) throws CalFacadeException;
+                                int count);
 
   /**
    * @param val resource to add
-   * @throws CalFacadeException on error
    */
-  void add(BwResource val) throws CalFacadeException;
+  void add(BwResource val);
 
   /**
    * @param r resource owning content
    * @param rc content to add
-   * @throws CalFacadeException on error
    */
   void addContent(BwResource r,
-                  BwResourceContent rc) throws CalFacadeException;
+                  BwResourceContent rc);
 
   /**
    * @param val resource
-   * @throws CalFacadeException on fatal error
    */
-  void saveOrUpdate(BwResource val) throws CalFacadeException;
+  void saveOrUpdate(BwResource val);
 
   /**
    * @param r resource owning content
    * @param val resource content
-   * @throws CalFacadeException on fatal error
    */
   void saveOrUpdateContent(BwResource r,
-                           BwResourceContent val) throws CalFacadeException;
+                           BwResourceContent val);
 
   /**
    * @param href of resource to delete
@@ -88,15 +80,13 @@ public interface CoreResourcesI {
 
   /**
    * @param val resource to delete
-   * @throws CalFacadeException on fatal error
    */
-  void delete(BwResource val) throws CalFacadeException;
+  void delete(BwResource val);
 
   /**
    * @param r resource owning content
    * @param val resource content to delete
-   * @throws CalFacadeException on fatal error
    */
   void deleteContent(BwResource r,
-                     BwResourceContent val) throws CalFacadeException;
+                     BwResourceContent val);
 }

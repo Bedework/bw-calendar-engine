@@ -62,9 +62,8 @@ public final class CoreConfigurations extends ConfBase {
   }
 
   /**
-   * @throws CalFacadeException on fatal error
    */
-  private CoreConfigurations() throws CalFacadeException {
+  private CoreConfigurations() {
     super("org.bedework.bwengine.core:service=Conf",
           confDirName,
           null);

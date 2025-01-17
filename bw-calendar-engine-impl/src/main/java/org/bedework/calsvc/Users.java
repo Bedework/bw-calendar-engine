@@ -69,7 +69,7 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   @Override
-  public BwPrincipal<?> getAlways(String account) throws CalFacadeException {
+  public BwPrincipal<?> getAlways(String account) {
     if (account == null) {
       // Return guest user
       return BwPrincipal.makeUserPrincipal();
@@ -181,12 +181,12 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   @Override
-  public void add(final String val) throws CalFacadeException {
+  public void add(final String val) {
     principalMap.clear();
     getSvc().addUser(val);
   }
 
-  BwPrincipal<?> initUserObject(final String val) throws CalFacadeException {
+  BwPrincipal<?> initUserObject(final String val) {
     String account = val;
     if (account.endsWith("/")) {
       account = account.substring(0, account.length() - 1);
@@ -217,7 +217,7 @@ class Users extends CalSvcDb implements UsersI {
     return user;
   }
 
-  void createUser(final String val) throws CalFacadeException {
+  void createUser(final String val) {
     final BwPrincipal<?> user = initUserObject(val);
 
     setRoots(getSvc());
@@ -244,12 +244,12 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   @Override
-  public void update(final BwPrincipal<?> principal) throws CalFacadeException {
+  public void update(final BwPrincipal<?> principal) {
     getCal().saveOrUpdate(principal);
   }
 
   @Override
-  public void remove(final BwPrincipal<?> pr) throws CalFacadeException {
+  public void remove(final BwPrincipal<?> pr) {
     final String userRoot = getSvc().getPrincipalInfo().getCalendarHomePath(pr);
 
     /* views */
@@ -281,7 +281,7 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   @Override
-  public void logon(final BwPrincipal<?> val) throws CalFacadeException {
+  public void logon(final BwPrincipal<?> val) {
     //final Timestamp now = new Timestamp(System.currentTimeMillis());
 
     /* TODO - add unversioned login table
@@ -302,7 +302,7 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   /*
-  public void deleteUser(BwUser user) throws CalFacadeException {
+  public void deleteUser(BwUser user) {
     checkOpen();
     throw new CalFacadeException("Unimplemented");
   }*/
@@ -387,7 +387,7 @@ class Users extends CalSvcDb implements UsersI {
 
   @Override
   public List<String> getPrincipalHrefs(final int start,
-                                        final int count) throws CalFacadeException {
+                                        final int count) {
     return getCal().getPrincipalHrefs(start, count);
   }
 

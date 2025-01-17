@@ -41,7 +41,7 @@ class Views extends CalSvcDb implements ViewsI {
 
   @Override
   public boolean add(final BwView val,
-                     final boolean makeDefault) throws CalFacadeException {
+                     final boolean makeDefault) {
     if (val == null) {
       return false;
     }
@@ -92,7 +92,7 @@ class Views extends CalSvcDb implements ViewsI {
   }
 
   @Override
-  public BwView find(String val) throws CalFacadeException {
+  public BwView find(String val) {
     if (val == null) {
       final BwPreferences prefs = getPrefs();
 
@@ -158,7 +158,7 @@ class Views extends CalSvcDb implements ViewsI {
 
   @Override
   public boolean addCollection(final String name,
-                               final String path) throws CalFacadeException {
+                               final String path) {
     final BwPreferences prefs = getPrefs();
     checkOwnerOrSuper(prefs);
 
@@ -177,7 +177,7 @@ class Views extends CalSvcDb implements ViewsI {
 
   @Override
   public boolean removeCollection(final String name,
-                                  final String path) throws CalFacadeException {
+                                  final String path) {
     final BwPreferences prefs = getPrefs(getPrincipal());
     checkOwnerOrSuper(prefs);
 
@@ -216,7 +216,7 @@ class Views extends CalSvcDb implements ViewsI {
    * supplied object. This is used to limit access to objects not normally
    * shared such as preferences and related objects like views and subscriptions.
    */
-  private void checkOwnerOrSuper(final Object o) throws CalFacadeException {
+  private void checkOwnerOrSuper(final Object o) {
     if (isGuest()) {
       throw new CalFacadeAccessException();
     }

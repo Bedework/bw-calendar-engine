@@ -19,13 +19,14 @@
 package org.bedework.calsvc.scheduling;
 
 import org.bedework.access.PrivilegeDefs;
-import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
+import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.ScheduleResult;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
@@ -59,14 +60,14 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
     if (ev.getScheduleMethod() != ScheduleMethods.methodTypeRequest) {
       return Response.error(sr, new CalFacadeException(
-              CalFacadeException.schedulingBadMethod));
+              CalFacadeErrorCode.schedulingBadMethod));
     }
 
     final Participant att = findUserAttendee(ei);
 
     if (att == null) {
       return Response.error(sr, new CalFacadeException(
-              CalFacadeException.schedulingNotAttendee));
+              CalFacadeErrorCode.schedulingNotAttendee));
     }
 
     final BwEvent outEv = new BwEventObj();
@@ -130,12 +131,12 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
     if (att == null) {
       return Response.error(sr, new CalFacadeException(
-              CalFacadeException.schedulingNotAttendee));
+              CalFacadeErrorCode.schedulingNotAttendee));
     }
 
     if (ev.getOriginator() == null) {
       return Response.error(sr, new CalFacadeException(
-              CalFacadeException.schedulingNoOriginator));
+              CalFacadeErrorCode.schedulingNoOriginator));
     }
 
     final EventInfo outEi = copyEventInfo(ei, getPrincipal());
@@ -261,7 +262,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
   }
 
   /*
-  public ScheduleResult processCancel(final EventInfo ei) throws CalFacadeException {
+  public ScheduleResult processCancel(final EventInfo ei) {
     /* We, as an attendee, received a CANCEL from the organizer.
      *
      * /
@@ -274,12 +275,12 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
     check: {
       if (inbox.getCalType() != BwCalendar.calTypeInbox) {
-        sr.errorCode = CalFacadeException.schedulingBadSourceCalendar;
+        sr.errorCode = CalFacadeErrorCode.schedulingBadSourceCalendar;
         break check;
       }
 
       if (ev.getOriginator() == null) {
-        sr.errorCode = CalFacadeException.schedulingNoOriginator;
+        sr.errorCode = CalFacadeErrorCode.schedulingNoOriginator;
         break check;
       }
 
@@ -336,7 +337,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
       if (!Icalendar.itipReplyMethodType(smethod)) {
         return Response.error(sr, new CalFacadeException(
-                CalFacadeException.schedulingBadMethod));
+                CalFacadeErrorCode.schedulingBadMethod));
       }
 
       /* For each recipient within this system add the event to their inbox.
@@ -350,7 +351,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       /* There should only be one attendee for a reply */
       if (ei.getMaxAttendees() > 1) {
         return Response.error(sr, new CalFacadeException(
-                CalFacadeException.schedulingBadAttendees));
+                CalFacadeErrorCode.schedulingBadAttendees));
       }
 
       if (!initScheduleEvent(ei, true, false)) {

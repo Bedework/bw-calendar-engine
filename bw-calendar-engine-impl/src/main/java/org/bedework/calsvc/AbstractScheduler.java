@@ -68,9 +68,8 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
 
   /** Make popPrincipal visible to sub-classes
    *
-   * @throws CalFacadeException on fatal error
    */
-  protected void popPrincipal() throws CalFacadeException {
+  protected void popPrincipal() {
     getSvc().popPrincipal();
   }
 
@@ -87,10 +86,9 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
    * @param principalHref of user
    * @param logId for log messages
    * @return CalSvcI
-   * @throws CalFacadeException on fatal error
    */
   protected CalSvcI getSvci(final String principalHref,
-                            final String logId) throws CalFacadeException {
+                            final String logId) {
     final CalSvcI svci;
 
     /* account is what we authenticated with.
@@ -126,7 +124,7 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
     svci.rollbackTransaction();
   }
 
-  protected void closeSvci(final CalSvcI svci) throws CalFacadeException {
+  protected void closeSvci(final CalSvcI svci) {
     if ((svci == null) || !svci.isOpen()) {
       return;
     }

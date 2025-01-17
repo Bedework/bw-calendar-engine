@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc.scheduling.hosts;
 
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.config.ConfigurationStore;
 import org.bedework.util.jmx.ConfBase;
@@ -264,7 +265,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
       }
 
       if (domain == null) {
-        throw new CalFacadeException(CalFacadeException.badCalendarUserAddr);
+        throw new CalFacadeException(CalFacadeErrorCode.badCalendarUserAddr);
       }
 
       //  Don't iuse db at all return findClosest(domain);
@@ -284,7 +285,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
        */
       return getHostInfo(domain);
     } catch (final URISyntaxException use) {
-      throw new CalFacadeException(CalFacadeException.badCalendarUserAddr);
+      throw new CalFacadeException(CalFacadeErrorCode.badCalendarUserAddr);
     }
   }
 

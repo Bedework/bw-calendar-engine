@@ -46,36 +46,35 @@ public abstract class DAOBase implements Logged {
    */
   public abstract String getName();
 
-  public void setSess(final HibSession val) throws CalFacadeException {
+  public void setSess(final HibSession val) {
     sess = val;
   }
 
-  protected HibSession getSess() throws CalFacadeException {
+  protected HibSession getSess() {
     return sess;
   }
 
-  protected void rollback() throws CalFacadeException {
+  protected void rollback() {
     getSess().rollback();
   }
 
-  protected void saveOrUpdate(final BwUnversionedDbentity val) throws CalFacadeException {
+  protected void saveOrUpdate(final BwUnversionedDbentity val) {
     getSess().saveOrUpdate(val);
   }
 
-  protected void save(final BwUnversionedDbentity val)
-          throws CalFacadeException {
+  protected void save(final BwUnversionedDbentity val) {
     getSess().save(val);
   }
 
-  protected void update(final BwUnversionedDbentity val) throws CalFacadeException {
+  protected void update(final BwUnversionedDbentity val) {
     getSess().update(val);
   }
 
-  protected void delete(final BwUnversionedDbentity val) throws CalFacadeException {
+  protected void delete(final BwUnversionedDbentity val) {
     getSess().delete(val);
   }
 
-  public BwUnversionedDbentity merge(final BwUnversionedDbentity val) throws CalFacadeException {
+  public BwUnversionedDbentity merge(final BwUnversionedDbentity val) {
     return (BwUnversionedDbentity)sess.merge(val);
   }
 
@@ -88,17 +87,17 @@ public abstract class DAOBase implements Logged {
     return sess.getBlob(val, length);
   }
 
-  protected void throwException(final CalFacadeException cfe) throws CalFacadeException {
+  protected void throwException(final CalFacadeException cfe) {
     getSess().rollback();
     throw cfe;
   }
 
-  protected void throwException(final String pname) throws CalFacadeException {
+  protected void throwException(final String pname) {
     getSess().rollback();
     throw new CalFacadeException(pname);
   }
 
-  protected void throwException(final String pname, final String extra) throws CalFacadeException {
+  protected void throwException(final String pname, final String extra) {
     getSess().rollback();
     throw new CalFacadeException(pname, extra);
   }

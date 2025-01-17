@@ -25,7 +25,6 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.calfacade.svc.EventInfo;
@@ -57,11 +56,9 @@ public interface CoreEventsI extends Serializable {
    * @param colPath   String collection path or null.
    * @param guid      String guid for the event
    * @return  Collection of CoreEventInfo objects representing event(s).
-   * @throws CalFacadeException
    */
   Collection<CoreEventInfo> getEvent(String colPath,
-                                     String guid)
-          throws CalFacadeException;
+                                     String guid);
 
   /** Get an event given href. Return null for not
    * found. For non-recurring there should be only one event. For recurring
@@ -69,10 +66,8 @@ public interface CoreEventsI extends Serializable {
    *
    * @param href   String path
    * @return CoreEventInfo or null
-   * @throws CalFacadeException on error
    */
-  CoreEventInfo getEvent(String href)
-          throws CalFacadeException;
+  CoreEventInfo getEvent(String href);
 
   /** Return the events for the current user within the given date/time
    * range.
@@ -88,7 +83,6 @@ public interface CoreEventsI extends Serializable {
    * @param freeBusy     Return skeleton events with date/times and skip
    *                     transparent events.
    * @return Collection  of CoreEventInfo objects
-   * @throws CalFacadeException
    */
   Collection<CoreEventInfo> getEvents(
           Collection<BwCalendar> calendars,
@@ -97,7 +91,7 @@ public interface CoreEventsI extends Serializable {
           List<BwIcalPropertyInfoEntry> retrieveList,
           DeletedState delState,
           RecurringRetrievalMode recurRetrieval,
-          boolean freeBusy) throws CalFacadeException;
+          boolean freeBusy);
 
   /** Result from add or update event
    * We need to know what instances and overrrides were added or removed for
@@ -167,11 +161,10 @@ public interface CoreEventsI extends Serializable {
    * @param scheduling   True if we are adding an event to an inbox for scheduling.
    * @param rollbackOnError true if we rollback and throw an exception on error
    * @return UpdateEventResult
-   * @throws CalFacadeException
    */
   UpdateEventResult addEvent(EventInfo ei,
                              boolean scheduling,
-                             boolean rollbackOnError) throws CalFacadeException;
+                             boolean rollbackOnError);
 
   /** Reindex an event by sending an async notification. May be called
    * when an update fails or the system suspects there is an index
@@ -189,10 +182,9 @@ public interface CoreEventsI extends Serializable {
    *
    * @param ei   EventInfo object to be replaced
    * @return indication of changes made to overrides.
-   * @exception CalFacadeException If there's a db problem or problem with
    *     the event
    */
-  UpdateEventResult updateEvent(EventInfo ei) throws CalFacadeException;
+  UpdateEventResult updateEvent(EventInfo ei);
 
   /** This class allows the implementations to pass back some information
    * about what happened. If possible it should fill in the supplied fields.
@@ -229,22 +221,20 @@ public interface CoreEventsI extends Serializable {
    * @param scheduling   True if we are deleting an event from an inbox for scheduling.
    * @param reallyDelete Really delete it - otherwise it's tombstoned
    * @return DelEventResult    result.
-   * @exception CalFacadeException If there's a database access problem
    */
   DelEventResult deleteEvent(EventInfo ei,
                              boolean scheduling,
-                             boolean reallyDelete) throws CalFacadeException;
+                             boolean reallyDelete);
 
   /** Move an event. Allows us to keep track for synch-report
    *
    * @param ei             object to be moved
    * @param from           current collection
    * @param to             Where it's going
-   * @exception CalFacadeException If there's a database access problem
    */
   void moveEvent(EventInfo ei,
                  BwCalendar from,
-                 BwCalendar to) throws CalFacadeException;
+                 BwCalendar to);
 
   /** Return all events on the given path with a lastmod GREATER
    * THAN that supplied. The path may not be null. A null lastmod will
@@ -253,10 +243,9 @@ public interface CoreEventsI extends Serializable {
    * @param path - must be non-null
    * @param lastmod - limit search, may be null
    * @return list of events.
-   * @throws CalFacadeException
    */
   Set<CoreEventInfo> getSynchEvents(String path,
-                                    String lastmod) throws CalFacadeException;
+                                    String lastmod);
 
   /* ====================================================================
    *                  Admin support
@@ -270,11 +259,10 @@ public interface CoreEventsI extends Serializable {
    * @param start start index in the batch - 0 for the first
    * @param count count of results we want
    * @return collection of String names or null for no more
-   * @throws CalFacadeException
    */
   Collection<String> getChildEntities(String parentPath,
                                       int start,
-                                      int count) throws CalFacadeException;
+                                      int count);
 
   /* ====================================================================
    *                       dump/restore methods
@@ -285,16 +273,14 @@ public interface CoreEventsI extends Serializable {
 
   /**
    * @return annotations - not recurrence overrides
-   * @throws CalFacadeException on error
    * @deprecated - remove in 4.0 with new dump process
    */
-  Iterator<BwEventAnnotation> getEventAnnotations() throws CalFacadeException;
+  Iterator<BwEventAnnotation> getEventAnnotations();
 
   /**
    * @param ev the master
    * @return overrides for event
-   * @throws CalFacadeException on error
    * @deprecated - remove in 4.0 with new dump process
    */
-  Collection<BwEventAnnotation> getEventOverrides(BwEvent ev) throws CalFacadeException;
+  Collection<BwEventAnnotation> getEventOverrides(BwEvent ev);
 }

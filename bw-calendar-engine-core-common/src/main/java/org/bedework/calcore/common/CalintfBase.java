@@ -135,21 +135,18 @@ public abstract class CalintfBase implements Logged, Calintf {
     @Override
     public CurrentAccess checkAccess(final BwShareableDbentity<?> ent,
                                          final int desiredAccess,
-                                         final boolean returnResult)
-            throws CalFacadeException {
+                                         final boolean returnResult) {
       return access.checkAccess(ent, desiredAccess, returnResult);
     }
 
     @Override
-    public CalendarWrapper checkAccess(final BwCalendar val)
-            throws CalFacadeException {
+    public CalendarWrapper checkAccess(final BwCalendar val) {
       return checkAccess(val, PrivilegeDefs.privAny);
     }
 
     @Override
     public CalendarWrapper checkAccess(final BwCalendar val,
-                                       final int desiredAccess)
-            throws CalFacadeException {
+                                       final int desiredAccess) {
       if (val == null) {
         return null;
       }
@@ -201,7 +198,7 @@ public abstract class CalintfBase implements Logged, Calintf {
   }
 
   @Override
-  public void initPinfo(final PrincipalInfo principalInfo) throws CalFacadeException {
+  public void initPinfo(final PrincipalInfo principalInfo) {
     this.principalInfo = principalInfo;
 
     try {
@@ -556,8 +553,7 @@ public abstract class CalintfBase implements Logged, Calintf {
   @Override
   public Collection<CoreEventInfo> postGetEvents(final Collection<?> evs,
                                                  final int desiredAccess,
-                                                 final boolean nullForNoAccess)
-          throws CalFacadeException {
+                                                 final boolean nullForNoAccess) {
     final TreeSet<CoreEventInfo> outevs = new TreeSet<>();
 
     for (final Object ev1 : evs) {
@@ -599,7 +595,7 @@ public abstract class CalintfBase implements Logged, Calintf {
   @Override
   public CoreEventInfo postGetEvent(final BwEvent ev,
                                     final int desiredAccess,
-                                    final boolean nullForNoAccess) throws CalFacadeException {
+                                    final boolean nullForNoAccess) {
     if (ev == null) {
       return null;
     }

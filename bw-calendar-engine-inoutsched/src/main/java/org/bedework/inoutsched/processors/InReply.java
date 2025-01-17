@@ -25,6 +25,7 @@ import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.ScheduleResult;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
@@ -90,7 +91,7 @@ public class InReply extends InProcessor {
 
       if (ev.getOriginator() == null) {
         return Response.error(pr, new CalFacadeException(
-                CalFacadeException.schedulingNoOriginator));
+                CalFacadeErrorCode.schedulingNoOriginator));
       }
 
       String attUri = null;
@@ -122,7 +123,7 @@ public class InReply extends InProcessor {
 
           if (recipients.size() != 1) {
             return Response.error(pr, new CalFacadeException(
-                    CalFacadeException.schedulingExpectOneAttendee));
+                    CalFacadeErrorCode.schedulingExpectOneAttendee));
           }
 
           final Participant att = recipients.values()
@@ -136,14 +137,14 @@ public class InReply extends InProcessor {
             attUri = att.getCalendarAddress();
           } else if (!attUri.equals(att.getCalendarAddress())) {
             return Response.error(pr, new CalFacadeException(
-                    CalFacadeException.schedulingExpectOneAttendee));
+                    CalFacadeErrorCode.schedulingExpectOneAttendee));
           }
         }
       }
 
       if (attUri == null) {
         return Response.error(pr, new CalFacadeException(
-                CalFacadeException.schedulingExpectOneAttendee));
+                CalFacadeErrorCode.schedulingExpectOneAttendee));
       }
 
       /*TODO If the sequence of the incoming event is lower than the sequence on the
@@ -240,7 +241,7 @@ public class InReply extends InProcessor {
 
     if (inBoxEv.getScheduleMethod() != ScheduleMethods.methodTypeReply) {
       Response.error(sr, new CalFacadeException(
-              CalFacadeException.schedulingExpectOneAttendee));
+              CalFacadeErrorCode.schedulingExpectOneAttendee));
       return false;
     }
 
@@ -263,7 +264,7 @@ public class InReply extends InProcessor {
           debug("Not an attendee of " + calEv);
         }
         Response.error(sr, new CalFacadeException(
-                CalFacadeException.schedulingUnknownAttendee,
+                CalFacadeErrorCode.schedulingUnknownAttendee,
                 attUri));
         return false;
       }

@@ -135,6 +135,10 @@
            uses-template="caldefaults">
     </cache>
 
+    <cache alias="calendardb.org.bedework.calfacade.BwFilterDef.displayNames"
+           uses-template="caldefaults">
+    </cache>
+
     <!-- locations cache - these change infrequently
         -->
     <cache alias="calendardb.org.bedework.calfacade.BwLocation"
@@ -162,7 +166,7 @@
            uses-template="caldefaults">
     </cache>
 
-    <cache alias="calendardb.org.bedework.calfacade.svc.BwResource"
+    <cache alias="calendardb.org.bedework.calfacade.BwResource"
            uses-template="caldefaults">
     </cache>
 

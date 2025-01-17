@@ -158,9 +158,8 @@ public abstract class CalSys implements Logged {
      * object.
      *
      * @return svci object
-     * @throws CalFacadeException on fatal error
-     */
-    public CalSvcI getSvci() throws CalFacadeException {
+       */
+    public CalSvcI getSvci() {
       if ((svci != null) && svci.isOpen()) {
         // We shouldn't need to check if it's the same account.
         return svci;
@@ -389,7 +388,6 @@ public abstract class CalSys implements Logged {
    * @param col - parent
    * @param refs - null on first call.
    * @return next batch of hrefs or null for no more.
-   * @throws CalFacadeException on fatal error
    */
   protected Refs getChildEntities(final BwCalendar col,
                                   final Refs refs) {
@@ -437,7 +435,7 @@ public abstract class CalSys implements Logged {
 
   protected EventInfo getEvent(final CalSvcI svci,
                                final String colPath,
-                               final String name) throws CalFacadeException {
+                               final String name) {
     final EventsI evhandler = svci.getEventsHandler();
 
     return evhandler.get(colPath, name);

@@ -46,7 +46,7 @@ public class UserAuthUWDbImpl implements Logged, UserAuth {
    * ==================================================================== */
 
   @Override
-  public void initialise(final CallBack cb) throws CalFacadeException {
+  public void initialise(final CallBack cb) {
     this.cb = cb;
   }
 
@@ -56,7 +56,7 @@ public class UserAuthUWDbImpl implements Logged, UserAuth {
    *  =================================================================== */
 
   @Override
-  public void addUser(final BwAuthUser val) throws CalFacadeException {
+  public void addUser(final BwAuthUser val) {
     if (val.isUnauthorized()) {
       // We don't need an entry for a user with no special rights
       return;
@@ -71,7 +71,7 @@ public class UserAuthUWDbImpl implements Logged, UserAuth {
   }
 
   @Override
-  public void updateUser(final BwAuthUser val) throws CalFacadeException {
+  public void updateUser(final BwAuthUser val) {
     if (val.isUnauthorized()) {
       // We don't need an entry for a user with no special rights
       cb.delete(val);
@@ -83,7 +83,7 @@ public class UserAuthUWDbImpl implements Logged, UserAuth {
   }
 
   @Override
-  public BwAuthUser getUser(final String account) throws CalFacadeException {
+  public BwAuthUser getUser(final String account) {
     if (debug()) {
       debug("getUserEntry for " + account);
     }
@@ -98,7 +98,7 @@ public class UserAuthUWDbImpl implements Logged, UserAuth {
   }
 
   @Override
-  public Collection<BwAuthUser> getAll() throws CalFacadeException {
+  public Collection<BwAuthUser> getAll() {
     return cb.getAll();
   }
 

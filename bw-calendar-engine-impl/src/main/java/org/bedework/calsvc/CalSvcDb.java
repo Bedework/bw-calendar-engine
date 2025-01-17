@@ -132,7 +132,7 @@ public class CalSvcDb implements Logged, Serializable {
     return svci.getIndexer(docType);
   }
 
-  protected BwPrincipal getPrincipal(final String href) throws CalFacadeException {
+  protected BwPrincipal getPrincipal(final String href) {
     return svci.getUsersHandler().getPrincipal(href);
   }
 
@@ -193,7 +193,7 @@ public class CalSvcDb implements Logged, Serializable {
 
   protected CurrentAccess checkAccess(
           final ShareableEntity ent, final int desiredAccess,
-          final boolean returnResult) throws CalFacadeException {
+          final boolean returnResult) {
     return svci.checkAccess(ent, desiredAccess, returnResult);
   }
 

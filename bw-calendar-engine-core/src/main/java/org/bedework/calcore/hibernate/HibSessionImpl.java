@@ -91,7 +91,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public boolean isOpen() throws CalFacadeException {
+  public boolean isOpen() {
     try {
       if (sess == null) {
         return false;
@@ -109,7 +109,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void disconnect() throws CalFacadeException {
+  public void disconnect() {
     if (exc != null) {
       // Didn't hear me last time?
       if (exc instanceof CalFacadeException) {
@@ -126,7 +126,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void setFlushMode(final FlushMode val) throws CalFacadeException {
+  public void setFlushMode(final FlushMode val) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -145,7 +145,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void beginTransaction() throws CalFacadeException {
+  public void beginTransaction() {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -176,7 +176,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void commit() throws CalFacadeException {
+  public void commit() {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -216,7 +216,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void rollback() throws CalFacadeException {
+  public void rollback() {
 /*    if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -252,7 +252,7 @@ public class HibSessionImpl implements Logged, HibSession {
       "select current_timestamp() from " + BwSystem.class.getName();
 
   @Override
-  public Timestamp getCurrentTimestamp() throws CalFacadeException {
+  public Timestamp getCurrentTimestamp() {
     try {
       final List<?> l = sess.createQuery(getCurrentTimestampQuery).list();
 
@@ -277,7 +277,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void evict(final Object val) throws CalFacadeException {
+  public void evict(final Object val) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -291,7 +291,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void createQuery(final String s) throws CalFacadeException {
+  public void createQuery(final String s) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -305,7 +305,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void createNoFlushQuery(final String s) throws CalFacadeException {
+  public void createNoFlushQuery(final String s) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -320,7 +320,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public String getQueryString() throws CalFacadeException {
+  public String getQueryString() {
     if (q == null) {
       return "*** no query ***";
     }
@@ -334,7 +334,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void cacheableQuery() throws CalFacadeException {
+  public void cacheableQuery() {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -348,7 +348,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void setString(final String parName, final String parVal) throws CalFacadeException {
+  public void setString(final String parName, final String parVal) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -362,7 +362,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void setBool(final String parName, final boolean parVal) throws CalFacadeException {
+  public void setBool(final String parName, final boolean parVal) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -376,7 +376,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void setInt(final String parName, final int parVal) throws CalFacadeException {
+  public void setInt(final String parName, final int parVal) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -390,7 +390,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void setLong(final String parName, final long parVal) throws CalFacadeException {
+  public void setLong(final String parName, final long parVal) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -404,7 +404,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void setEntity(final String parName, final Object parVal) throws CalFacadeException {
+  public void setEntity(final String parName, final Object parVal) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -418,7 +418,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void setParameter(final String parName, final Object parVal) throws CalFacadeException {
+  public void setParameter(final String parName, final Object parVal) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -433,7 +433,7 @@ public class HibSessionImpl implements Logged, HibSession {
 
   @Override
   public void setParameterList(final String parName,
-                               final Collection<?> parVal) throws CalFacadeException {
+                               final Collection<?> parVal) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -447,7 +447,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void setFirstResult(final int val) throws CalFacadeException {
+  public void setFirstResult(final int val) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -461,7 +461,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void setMaxResults(final int val) throws CalFacadeException {
+  public void setMaxResults(final int val) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -475,7 +475,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public Object getUnique() throws CalFacadeException {
+  public Object getUnique() {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -490,7 +490,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public List<?> getList() throws CalFacadeException {
+  public List<?> getList() {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -511,7 +511,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public int executeUpdate() throws CalFacadeException {
+  public int executeUpdate() {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -530,7 +530,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void update(final Object obj) throws CalFacadeException {
+  public void update(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -554,7 +554,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public Object merge(Object obj) throws CalFacadeException {
+  public Object merge(Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -574,7 +574,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void saveOrUpdate(final Object obj) throws CalFacadeException {
+  public void saveOrUpdate(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -598,7 +598,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public Object saveOrUpdateCopy(final Object obj) throws CalFacadeException {
+  public Object saveOrUpdateCopy(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -614,7 +614,7 @@ public class HibSessionImpl implements Logged, HibSession {
 
   @Override
   public Object get(final Class<?> cl,
-                    final Serializable id) throws CalFacadeException {
+                    final Serializable id) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -629,12 +629,12 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public Object get(final Class<?> cl, final int id) throws CalFacadeException {
+  public Object get(final Class<?> cl, final int id) {
     return get(cl, Integer.valueOf(id));
   }
 
   @Override
-  public void save(final Object obj) throws CalFacadeException {
+  public void save(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -654,9 +654,8 @@ public class HibSessionImpl implements Logged, HibSession {
    *
    * @param obj
    * @param id
-   * @throws CalFacadeException
    * /
-  public void save(Object obj, Serializable id) throws CalFacadeException {
+  public void save(Object obj, Serializable id) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -670,7 +669,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }*/
 
   @Override
-  public void delete(final Object obj) throws CalFacadeException {
+  public void delete(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -688,7 +687,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void restore(final Object obj) throws CalFacadeException {
+  public void restore(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -702,7 +701,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void reAttach(final BwUnversionedDbentity<?> val) throws CalFacadeException {
+  public void reAttach(final BwUnversionedDbentity<?> val) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -719,7 +718,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void lockRead(final Object o) throws CalFacadeException {
+  public void lockRead(final Object o) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -734,7 +733,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void lockUpdate(final Object o) throws CalFacadeException {
+  public void lockUpdate(final Object o) {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -749,7 +748,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void flush() throws CalFacadeException {
+  public void flush() {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -766,7 +765,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void clear() throws CalFacadeException {
+  public void clear() {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -783,10 +782,9 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   /**
-   * @throws CalFacadeException on fatal error
    */
   @Override
-  public void close() throws CalFacadeException {
+  public void close() {
     if (sess == null) {
       return;
     }
@@ -819,12 +817,12 @@ public class HibSessionImpl implements Logged, HibSession {
 //    */
   }
 
-  private void handleException(final Throwable t) throws CalFacadeException {
+  private void handleException(final Throwable t) {
     handleException(t, null);
   }
 
   private void handleException(final Throwable t,
-                               final Object o) throws CalFacadeException {
+                               final Object o) {
     try {
       if (debug()) {
         debug("handleException called");
@@ -868,7 +866,7 @@ public class HibSessionImpl implements Logged, HibSession {
     throw new CalFacadeException(t);
   }
 
-  private void beforeSave(final Object o) throws CalFacadeException {
+  private void beforeSave(final Object o) {
     if (!(o instanceof BwDbentity)) {
       return;
     }
@@ -878,7 +876,7 @@ public class HibSessionImpl implements Logged, HibSession {
     ent.beforeSave();
   }
 
-  private void beforeDelete(final Object o) throws CalFacadeException {
+  private void beforeDelete(final Object o) {
     if (!(o instanceof BwDbentity)) {
       return;
     }
@@ -888,7 +886,7 @@ public class HibSessionImpl implements Logged, HibSession {
     ent.beforeDeletion();
   }
 
-  private void deleteSubs(final Object o) throws CalFacadeException {
+  private void deleteSubs(final Object o) {
     if (!(o instanceof BwDbentity)) {
       return;
     }

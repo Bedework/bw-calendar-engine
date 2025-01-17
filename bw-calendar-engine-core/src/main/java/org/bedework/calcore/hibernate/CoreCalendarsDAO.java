@@ -63,7 +63,7 @@ class CoreCalendarsDAO extends DAOBase {
                   " lm where path=:path";
 
   protected CollectionSynchInfo getSynchInfo(final String path,
-                                          final String token) throws CalFacadeException {
+                                          final String token) {
     final HibSession sess = getSess();
 
     sess.createQuery(getSynchInfoQuery);
@@ -94,7 +94,7 @@ class CoreCalendarsDAO extends DAOBase {
                   " and (cal.filterExpr = null or cal.filterExpr <> :tsfilter)";
           
   public List<BwCalendar> findCollectionAlias(final String aliasPath,
-                                              final String ownerHref) throws CalFacadeException {
+                                              final String ownerHref) {
     final HibSession sess = getSess();
 
     sess.createQuery(findAliasQuery);
@@ -115,7 +115,7 @@ class CoreCalendarsDAO extends DAOBase {
            "where cal.path=:path and " +
            "(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')";
 
-  public BwCalendar getCollection(final String path) throws CalFacadeException {
+  public BwCalendar getCollection(final String path) {
     final HibSession sess = getSess();
 
     sess.createQuery(getCalendarByPathQuery);
@@ -130,7 +130,7 @@ class CoreCalendarsDAO extends DAOBase {
                   "where col.path=:path and " +
                   "(col.filterExpr = null or col.filterExpr <> '--TOMBSTONED--')";
 
-  public boolean collectionExists(final String path) throws CalFacadeException {
+  public boolean collectionExists(final String path) {
     final HibSession sess = getSess();
 
     sess.createQuery(collectionExistsQuery);
@@ -159,7 +159,7 @@ class CoreCalendarsDAO extends DAOBase {
                   " where path=:path";
           
   protected void touchCollection(final BwCalendar col,
-                                 final Timestamp ts) throws CalFacadeException {
+                                 final Timestamp ts) {
     // CALWRAPPER - if we're not cloning can we avoid this?
     //val = (BwCalendar)getSess().merge(val);
 
@@ -179,16 +179,16 @@ class CoreCalendarsDAO extends DAOBase {
     sess.executeUpdate();
   }
 
-  public void updateCollection(final BwCalendar val) throws CalFacadeException {
+  public void updateCollection(final BwCalendar val) {
     getSess().update(val);
   }
 
-  protected void saveOrUpdateCollection(final BwCalendar val) throws CalFacadeException {
+  protected void saveOrUpdateCollection(final BwCalendar val) {
     // TODO Is this needed? Are these action only on preexisting 
     getSess().saveOrUpdate(val);
   }
 
-  protected void saveCollection(final BwCalendar val) throws CalFacadeException {
+  protected void saveCollection(final BwCalendar val) {
     getSess().save(val);
   }
 
@@ -196,7 +196,7 @@ class CoreCalendarsDAO extends DAOBase {
       "delete from " + BwAuthUserPrefsCalendar.class.getName() +
          " where calendarid=:id";
 
-  protected void removeCalendarFromAuthPrefs(final BwCalendar val) throws CalFacadeException {
+  protected void removeCalendarFromAuthPrefs(final BwCalendar val) {
     final HibSession sess = getSess();
 
     sess.createQuery(removeCalendarPrefForAllQuery);
@@ -205,7 +205,7 @@ class CoreCalendarsDAO extends DAOBase {
     sess.executeUpdate();
   }
 
-  protected void deleteCalendar(final BwCalendar col) throws CalFacadeException {
+  protected void deleteCalendar(final BwCalendar col) {
     final HibSession sess = getSess();
 
     sess.delete(col);
@@ -220,7 +220,7 @@ class CoreCalendarsDAO extends DAOBase {
         "where cal.colPath = :colPath and " +
         "(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')";
 
-  public boolean isEmptyCollection(final BwCalendar val) throws CalFacadeException {
+  public boolean isEmptyCollection(final BwCalendar val) {
     final HibSession sess = getSess();
 
     sess.createQuery(countCalendarEventRefsQuery);
@@ -250,7 +250,7 @@ class CoreCalendarsDAO extends DAOBase {
 
   protected List<BwCalendar> getSynchCollections(
           final String path,
-          final String token) throws CalFacadeException {
+          final String token) {
     final HibSession sess = getSess();
 
     if (path == null) {
@@ -303,8 +303,7 @@ class CoreCalendarsDAO extends DAOBase {
           "from " + BwCalendar.class.getName() + " col " +
                   "where col.path like :path ";
           
-  public List<BwCalendar> getPathPrefix(final String path)
-          throws CalFacadeException {
+  public List<BwCalendar> getPathPrefix(final String path) {
     final HibSession sess = getSess();
 
     sess.createQuery(getPathPrefixQuery);
@@ -327,8 +326,7 @@ class CoreCalendarsDAO extends DAOBase {
           
   public List<String> getChildrenCollections(final String parentPath,
                                              final int start,
-                                             final int count)
-          throws CalFacadeException {
+                                             final int count) {
     final HibSession sess = getSess();
 
     if (parentPath == null) {
@@ -361,7 +359,7 @@ class CoreCalendarsDAO extends DAOBase {
                   "col.colPath";
 
   @SuppressWarnings("unchecked")
-  protected List<BwCalendar> getChildCollections(final String parentPath) throws CalFacadeException {
+  protected List<BwCalendar> getChildCollections(final String parentPath) {
     final HibSession sess = getSess();
 
     if (parentPath == null) {
@@ -400,7 +398,7 @@ class CoreCalendarsDAO extends DAOBase {
     }
   }
   
-  protected List<LastModAndPath> getChildLastModsAndPaths(final String parentPath) throws CalFacadeException {
+  protected List<LastModAndPath> getChildLastModsAndPaths(final String parentPath) {
     final HibSession sess = getSess();
 
     sess.createQuery(getChildLastModsAndPathsQuery);
@@ -433,8 +431,7 @@ class CoreCalendarsDAO extends DAOBase {
           "from " + BwCalendar.class.getName() +" col " +
                   "where path in (:paths)";
   
-  protected List<BwCalendar> getCollections(final List<String> paths)
-          throws CalFacadeException {
+  protected List<BwCalendar> getCollections(final List<String> paths) {
     final HibSession sess = getSess();
     sess.createQuery(getCollectionsQuery);
 
@@ -459,7 +456,7 @@ class CoreCalendarsDAO extends DAOBase {
                   // XXX tombstone-schema
                   "col.filterExpr = :tsfilter";
           
-  protected void removeTombstoned(final String path) throws CalFacadeException {
+  protected void removeTombstoned(final String path) {
     final HibSession sess = getSess();
 
     sess.createQuery(removeTombstonedCollectionEventsQuery);
@@ -483,7 +480,7 @@ class CoreCalendarsDAO extends DAOBase {
     }
   }
 
-  protected void removeTombstonedVersion(final BwCalendar val) throws CalFacadeException {
+  protected void removeTombstonedVersion(final BwCalendar val) {
     final BwCalendar col =
             getTombstonedCollection(val.getPath());
 
@@ -500,7 +497,7 @@ class CoreCalendarsDAO extends DAOBase {
                   "col.filterExpr = :tsfilter";
 
 
-  public BwCalendar getTombstonedCollection(final String path) throws CalFacadeException {
+  public BwCalendar getTombstonedCollection(final String path) {
     final HibSession sess = getSess();
 
     sess.createQuery(getTombstonedCollectionByPathQuery);

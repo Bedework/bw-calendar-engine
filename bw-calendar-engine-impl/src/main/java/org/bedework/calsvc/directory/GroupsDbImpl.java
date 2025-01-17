@@ -20,6 +20,7 @@ package org.bedework.calsvc.directory;
 
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.util.Collection;
@@ -37,7 +38,7 @@ public class GroupsDbImpl extends AbstractDirImpl {
    * @see org.bedework.calfacade.ifs.Groups#getGroups(org.bedework.calfacade.BwPrincipal)
    */
   @Override
-  public Collection<BwGroup<?>> getGroups(final BwPrincipal<?> val) throws CalFacadeException {
+  public Collection<BwGroup<?>> getGroups(final BwPrincipal<?> val) {
     return new TreeSet<>(cb.getGroups(val, false));
   }
 
@@ -45,7 +46,7 @@ public class GroupsDbImpl extends AbstractDirImpl {
    * @see org.bedework.calfacade.ifs.Groups#getAllGroups(org.bedework.calfacade.BwPrincipal)
    */
   @Override
-  public Collection<BwGroup<?>>  getAllGroups(final BwPrincipal<?> val) throws CalFacadeException {
+  public Collection<BwGroup<?>>  getAllGroups(final BwPrincipal<?> val) {
     final var groups = getGroups(val);
     final var allGroups = new TreeSet<>(groups);
 
@@ -65,7 +66,7 @@ public class GroupsDbImpl extends AbstractDirImpl {
   }
 
   @Override
-  public Collection<BwGroup<?>> getAll(final boolean populate) throws CalFacadeException {
+  public Collection<BwGroup<?>> getAll(final boolean populate) {
     final var gs = cb.getAll(false);
 
     if (!populate) {
@@ -80,14 +81,14 @@ public class GroupsDbImpl extends AbstractDirImpl {
   }
 
   @Override
-  public void getMembers(final BwGroup<?> group) throws CalFacadeException {
+  public void getMembers(final BwGroup<?> group) {
     group.setGroupMembers(cb.getMembers(group, false));
   }
 
   @Override
-  public void addGroup(final BwGroup<?> group) throws CalFacadeException {
+  public void addGroup(final BwGroup<?> group) {
     if (findGroup(group.getAccount()) != null) {
-      throw new CalFacadeException(CalFacadeException.duplicateAdminGroup);
+      throw new CalFacadeException(CalFacadeErrorCode.duplicateAdminGroup);
     }
     cb.updateGroup(group, false);
   }
@@ -99,7 +100,7 @@ public class GroupsDbImpl extends AbstractDirImpl {
 
   @Override
   public void addMember(final BwGroup<?> group,
-                        final BwPrincipal<?> val) throws CalFacadeException {
+                        final BwPrincipal<?> val) {
     final var g = findGroup(group.getAccount());
 
     if (g == null) {
@@ -107,7 +108,7 @@ public class GroupsDbImpl extends AbstractDirImpl {
     }
 
     if (!checkPathForSelf(group, val)) {
-      throw new CalFacadeException(CalFacadeException.alreadyOnGroupPath);
+      throw new CalFacadeException(CalFacadeErrorCode.alreadyOnGroupPath);
     }
 
     g.addGroupMember(val);
@@ -120,7 +121,7 @@ public class GroupsDbImpl extends AbstractDirImpl {
    */
   @Override
   public void removeMember(final BwGroup<?> group,
-                           final BwPrincipal<?> val) throws CalFacadeException {
+                           final BwPrincipal<?> val) {
     final var g = findGroup(group.getAccount());
 
     if (g == null) {
@@ -136,7 +137,7 @@ public class GroupsDbImpl extends AbstractDirImpl {
    * @see org.bedework.calfacade.ifs.Groups#removeGroup(org.bedework.calfacade.BwGroup)
    */
   @Override
-  public void removeGroup(final BwGroup<?> group) throws CalFacadeException {
+  public void removeGroup(final BwGroup<?> group) {
     cb.removeGroup(group, false);
  }
 

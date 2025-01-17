@@ -163,7 +163,7 @@ public class MessageProcessor extends CalSys {
   @SuppressWarnings("rawtypes")
   private BwIndexer getIndexer(final CalSvcI svci,
                                final Object val,
-                               final String docType) throws CalFacadeException {
+                               final String docType) {
     boolean publick = false;
 
     String principal = null;
@@ -196,7 +196,7 @@ public class MessageProcessor extends CalSys {
   private BwIndexer getIndexer(final CalSvcI svci,
                                final boolean publick,
                                final String principal,
-                               final String docType) throws CalFacadeException {
+                               final String docType) {
     try {
       if (publick) {
         if (publicIndexer == null) {

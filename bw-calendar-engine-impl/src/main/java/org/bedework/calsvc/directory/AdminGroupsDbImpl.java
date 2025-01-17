@@ -22,6 +22,7 @@ import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.DirectoryInfo;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeUnimplementedException;
 import org.bedework.calfacade.svc.AdminGroups;
@@ -94,12 +95,12 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   }
 
   @Override
-  public Collection<BwGroup> getGroups(final BwPrincipal val) throws CalFacadeException {
+  public Collection<BwGroup> getGroups(final BwPrincipal val) {
     return new TreeSet<>(cb.getGroups(val, true));
   }
 
   @Override
-  public Collection<BwGroup> getAllGroups(final BwPrincipal val) throws CalFacadeException {
+  public Collection<BwGroup> getAllGroups(final BwPrincipal val) {
     final Collection<BwGroup> groups = getGroups(val);
     final Collection<BwGroup> allGroups = new TreeSet<>(groups);
 
@@ -126,7 +127,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   }
 
   @Override
-  public Collection<BwGroup<?>> getAll(final boolean populate) throws CalFacadeException {
+  public Collection<BwGroup<?>> getAll(final boolean populate) {
     final Collection<BwGroup<?>> gs = cb.getAll(true);
 
     if (!populate) {
@@ -141,7 +142,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   }
 
   @Override
-  public void getMembers(final BwGroup<?> group) throws CalFacadeException {
+  public void getMembers(final BwGroup<?> group) {
     group.setGroupMembers(cb.getMembers(group, true));
   }
 
@@ -155,9 +156,9 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
    * ==================================================================== */
 
   @Override
-  public void addGroup(final BwGroup<?> group) throws CalFacadeException {
+  public void addGroup(final BwGroup<?> group) {
     if (findGroup(group.getAccount()) != null) {
-      throw new CalFacadeException(CalFacadeException.duplicateAdminGroup);
+      throw new CalFacadeException(CalFacadeErrorCode.duplicateAdminGroup);
     }
     cb.updateGroup(group, true);
   }
@@ -175,11 +176,11 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
 
   @Override
   public void addMember(final BwGroup<?> group,
-                        final BwPrincipal<?> val) throws CalFacadeException {
+                        final BwPrincipal<?> val) {
     final BwGroup<?> ag = findGroup(group.getAccount());
 
     if (ag == null) {
-      throw new CalFacadeException(CalFacadeException.groupNotFound,
+      throw new CalFacadeException(CalFacadeErrorCode.groupNotFound,
                                    group.getAccount());
     }
 
@@ -196,7 +197,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
      */
 
     if (!checkPathForSelf(group, val)) {
-      throw new CalFacadeException(CalFacadeException.alreadyOnGroupPath);
+      throw new CalFacadeException(CalFacadeErrorCode.alreadyOnGroupPath);
     }
 
     ag.addGroupMember(val);
@@ -206,11 +207,11 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
 
   @Override
   public void removeMember(final BwGroup<?> group,
-                           final BwPrincipal<?> val) throws CalFacadeException {
+                           final BwPrincipal<?> val) {
     final var ag = findGroup(group.getAccount());
 
     if (ag == null) {
-      throw new CalFacadeException(CalFacadeException.groupNotFound,
+      throw new CalFacadeException(CalFacadeErrorCode.groupNotFound,
                                    group.getAccount());
     }
 
@@ -223,7 +224,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
    * @see org.bedework.calfacade.svc.AdminGroups#removeGroup(org.bedework.calfacade.BwGroup)
    */
   @Override
-  public void removeGroup(final BwGroup<?> group) throws CalFacadeException {
+  public void removeGroup(final BwGroup<?> group) {
     cb.removeGroup(group, true);
   }
 
@@ -231,8 +232,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
    * @see org.bedework.calfacade.svc.AdminGroups#findGroupByEventOwner(org.bedework.calfacade.BwUser)
    * /
   @Override
-  public BwAdminGroup findGroupByEventOwner(final BwUser owner)
-      throws CalFacadeException {
+  public BwAdminGroup findGroupByEventOwner(final BwUser owner) {
     HibSession sess = getSess();
 
     sess.createQuery("from " + BwAdminGroup.class.getName() + " ag " +
@@ -254,7 +254,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
 
   @Override
   public Collection<String>getGroups(final String rootUrl,
-                                     final String principalUrl) throws CalFacadeException {
+                                     final String principalUrl) {
     // Not needed for admin
     throw new CalFacadeUnimplementedException();
   }

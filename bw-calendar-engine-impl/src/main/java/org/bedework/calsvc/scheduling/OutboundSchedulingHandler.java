@@ -27,6 +27,7 @@ import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
@@ -355,7 +356,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
       sr.externalRcs.add(recip);
     } else if (ui.getStatus() == ScheduleStates.scheduleNoAccess) {
       Response.error(sr, new CalFacadeException(
-              CalFacadeException.schedulingAttendeeAccessDisallowed));
+              CalFacadeErrorCode.schedulingAttendeeAccessDisallowed));
 
       if (att != null) {
         att.setScheduleStatus(IcalDefs.deliveryStatusNoAccess);

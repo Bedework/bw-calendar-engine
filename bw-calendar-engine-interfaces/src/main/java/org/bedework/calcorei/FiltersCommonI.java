@@ -4,7 +4,6 @@
 package org.bedework.calcorei;
 
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.io.Serializable;
 
@@ -17,8 +16,7 @@ public interface FiltersCommonI extends Serializable {
    * @param ev an event
    * @param userHref - current user for whom we are filtering
    * @return true for a match
-   * @throws CalFacadeException on fatal error
    */
   boolean postFilter(final BwEvent ev,
-                     final String userHref) throws CalFacadeException;
+                     final String userHref);
 }

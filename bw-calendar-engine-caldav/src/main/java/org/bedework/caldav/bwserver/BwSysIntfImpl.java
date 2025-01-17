@@ -68,6 +68,7 @@ import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.exc.CalFacadeInvalidSynctoken;
@@ -554,7 +555,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       final Directories dir = getSvci().getDirectories();
       return dir.getPrincipal(dir.makePrincipalUri(account, WhoDefs.whoTypeUser));
     } catch (final CalFacadeException cfe) {
-      if (cfe.getMessage().equals(CalFacadeException.principalNotFound)) {
+      if (cfe.getMessage().equals(CalFacadeErrorCode.principalNotFound)) {
         throw new WebdavNotFound(account);
       }
       throw new WebdavException(cfe);
@@ -566,7 +567,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     try {
       return getSvci().getDirectories().getPrincipal(href);
     } catch (final CalFacadeException cfe) {
-      if (cfe.getMessage().equals(CalFacadeException.principalNotFound)) {
+      if (cfe.getMessage().equals(CalFacadeErrorCode.principalNotFound)) {
         throw new WebdavNotFound(href);
       }
       throw new WebdavException(cfe);
@@ -1116,13 +1117,13 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       }
 
       if (resp.getStatus() == limitExceeded) {
-        if (CalFacadeException.schedulingTooManyAttendees
+        if (CalFacadeErrorCode.schedulingTooManyAttendees
                 .equals(resp.getMessage())) {
           throw new WebdavForbidden(
                   CaldavTags.maxAttendeesPerInstance,
                   ev.getParentPath());
         }
-        if (CalFacadeException.invalidOverride
+        if (CalFacadeErrorCode.invalidOverride
                 .equals(resp.getMessage())) {
           throw new WebdavForbidden(CaldavTags.validCalendarData,
                                     ev.getParentPath());
@@ -1130,11 +1131,11 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         throw new WebdavForbidden(resp.getMessage());
       }
 
-      if (CalFacadeException.duplicateGuid.equals(resp.getMessage())) {
+      if (CalFacadeErrorCode.duplicateGuid.equals(resp.getMessage())) {
         throw new WebdavForbidden(CaldavTags.noUidConflict,
                                   ev.getParentPath());
       }
-      if (CalFacadeException.duplicateName.equals(resp.getMessage())) {
+      if (CalFacadeErrorCode.duplicateName.equals(resp.getMessage())) {
         throw new WebdavForbidden(CaldavTags.noUidConflict,
                                   ev.getParentPath());
       }
@@ -1214,7 +1215,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
     if (ur.getException() != null) {
       if (ur.getException() instanceof final CalFacadeException cfe) {
-        if (CalFacadeException.duplicateGuid
+        if (CalFacadeErrorCode.duplicateGuid
                 .equals(cfe.getMessage())) {
           throw new WebdavBadRequest("Duplicate-guid");
         }
@@ -1274,7 +1275,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
     } catch (final CalFacadeException cfe) {
-      if (CalFacadeException.unknownProperty.equals(cfe.getMessage())) {
+      if (CalFacadeErrorCode.unknownProperty.equals(cfe.getMessage())) {
         throw new WebdavBadRequest("Unknown property " + cfe.getExtra());
       }
       throw new WebdavException(cfe);
@@ -1542,10 +1543,10 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       throw new WebdavForbidden();
     } catch (final CalFacadeException cfe) {
       final String msg = cfe.getMessage();
-      if (CalFacadeException.duplicateCalendar.equals(msg)) {
+      if (CalFacadeErrorCode.duplicateCalendar.equals(msg)) {
         throw new WebdavForbidden(WebdavTags.resourceMustBeNull);
       }
-      if (CalFacadeException.illegalCalendarCreation.equals(msg)) {
+      if (CalFacadeErrorCode.illegalCalendarCreation.equals(msg)) {
         throw new WebdavForbidden();
       }
       throw new WebdavException(cfe);
@@ -1642,7 +1643,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
     } catch (final CalFacadeException cfe) {
-      if (CalFacadeException.duplicateGuid.equals(cfe.getMessage())) {
+      if (CalFacadeErrorCode.duplicateGuid.equals(cfe.getMessage())) {
         throw new WebdavBadRequest("Duplicate-guid");
       }
       throw new WebdavException(cfe);
@@ -1662,8 +1663,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     } catch (final CalFacadeException ce) {
       final String msg = ce.getMessage();
 
-      if (CalFacadeException.cannotDeleteDefaultCalendar.equals(msg) ||
-          CalFacadeException.cannotDeleteCalendarRoot.equals(msg)) {
+      if (CalFacadeErrorCode.cannotDeleteDefaultCalendar.equals(msg) ||
+          CalFacadeErrorCode.cannotDeleteCalendarRoot.equals(msg)) {
         throw new WebdavForbidden();
       } else {
         throw new WebdavException(ce);
@@ -2197,7 +2198,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     } catch (final IcalMalformedException ime) {
       throw new WebdavForbidden(ime, CaldavTags.validCalendarData);
     } catch (final CalFacadeException cfe) {
-      if (CalFacadeException.unknownTimezone.equals(
+      if (CalFacadeErrorCode.unknownTimezone.equals(
               cfe.getDetailMessage())) {
         throw new WebdavForbidden(CaldavTags.validTimezone,
                                   cfe.getMessage());
@@ -2571,7 +2572,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
 
     if ((errorCode == null) ||
-        (errorCode.equals(CalFacadeException.schedulingNoRecipients))) {
+        (errorCode.equals(CalFacadeErrorCode.schedulingNoRecipients))) {
       final Collection<SchedRecipientResult> srrs = new ArrayList<>();
 
       for (final ScheduleRecipientResult bwsrr: sr.recipientResults.values()) {
@@ -2591,13 +2592,13 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
 
     switch (errorCode) {
-      case CalFacadeException.schedulingBadMethod ->
+      case CalFacadeErrorCode.schedulingBadMethod ->
               throw new WebdavForbidden(CaldavTags.validCalendarData,
                                         "Bad METHOD");
-      case CalFacadeException.schedulingBadAttendees ->
+      case CalFacadeErrorCode.schedulingBadAttendees ->
               throw new WebdavForbidden(CaldavTags.attendeeAllowed,
                                         "Bad attendees");
-      case CalFacadeException.schedulingAttendeeAccessDisallowed ->
+      case CalFacadeErrorCode.schedulingAttendeeAccessDisallowed ->
               throw new WebdavForbidden(CaldavTags.attendeeAllowed,
                                         "attendeeAccessDisallowed");
     }

@@ -499,7 +499,7 @@ public class InRequest extends InProcessor {
                               final Collection<Recurrence> recurrences,
                               final SchedulingOwner org,
                               final String uid,
-                              final boolean doubleBookOk) throws CalFacadeException {
+                              final boolean doubleBookOk) {
     /* TODO
      * We should chunk up the freebusy into fewer requests over longer periods.
      * That means we have to figure out the overlaps with the returned info ourselves.
@@ -532,7 +532,7 @@ public class InRequest extends InProcessor {
                             final BwDateTime start,
                             final BwDateTime end,
                             final SchedulingOwner org,
-                            final String uid) throws CalFacadeException {
+                            final String uid) {
     final BwEvent fb = svci.getScheduler()
                            .getFreeBusy(null, svci.getPrincipal(),
                                         start, end,
@@ -635,7 +635,7 @@ public class InRequest extends InProcessor {
 
   private boolean updateAttendeePollCopy(final EventInfo ourCopy,
                                          final EventInfo inCopy,
-                                         final String attUri) throws CalFacadeException {
+                                         final String attUri) {
     /* Copy VPOLL status into our copy.
        Copy VPOLL winner if set
        Update the actual items in case they changed

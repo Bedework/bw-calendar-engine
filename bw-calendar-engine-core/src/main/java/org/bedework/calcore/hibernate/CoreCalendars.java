@@ -37,6 +37,7 @@ import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.base.BwLastMod;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.util.AccessChecker;
@@ -364,7 +365,7 @@ class CoreCalendars extends CalintfHelper
     ac.checkAccess(newParent, privBind, false);
 
     if (newParent.getCalType() != BwCalendar.calTypeFolder) {
-      throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
+      throw new CalFacadeException(CalFacadeErrorCode.illegalCalendarCreation);
     }
 
     val = unwrap(val);
@@ -467,23 +468,23 @@ class CoreCalendars extends CalintfHelper
 
     final String parentPath = val.getColPath();
     if (parentPath == null) {
-      throw new CalFacadeException(CalFacadeException.cannotDeleteCalendarRoot);
+      throw new CalFacadeException(CalFacadeErrorCode.cannotDeleteCalendarRoot);
     }
 
     /* Ensure the parent exists and we have writeContent on the parent.
      */
     final BwCalendar parent = getCalendar(parentPath, privWriteContent, false);
     if (parent == null) {
-      throw new CalFacadeException(CalFacadeException.collectionNotFound);
+      throw new CalFacadeException(CalFacadeErrorCode.collectionNotFound);
     }
 
     val = getCalendar(val.getPath(), privUnbind, false);
     if (val == null) {
-      throw new CalFacadeException(CalFacadeException.collectionNotFound);
+      throw new CalFacadeException(CalFacadeErrorCode.collectionNotFound);
     }
 
     if (!isEmpty(val)) {
-      throw new CalFacadeException(CalFacadeException.collectionNotEmpty);
+      throw new CalFacadeException(CalFacadeErrorCode.collectionNotEmpty);
     }
 
     /* See if this is a no-op after all. We do this now to ensure the caller
@@ -943,13 +944,13 @@ class CoreCalendars extends CalintfHelper
       switch (name) {
         case BasicSystemProperties.userInbox ->
                 throw new CalFacadeException(
-                        CalFacadeException.illegalCalendarCreation);
+                        CalFacadeErrorCode.illegalCalendarCreation);
         case BasicSystemProperties.userOutbox ->
                 throw new CalFacadeException(
-                        CalFacadeException.illegalCalendarCreation);
+                        CalFacadeErrorCode.illegalCalendarCreation);
         case BasicSystemProperties.defaultNotificationsName ->
                 throw new CalFacadeException(
-                        CalFacadeException.illegalCalendarCreation);
+                        CalFacadeErrorCode.illegalCalendarCreation);
       }
 
     }
@@ -958,7 +959,7 @@ class CoreCalendars extends CalintfHelper
      */
     if ((name == null) ||
         name.contains("/")) {
-      throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
+      throw new CalFacadeException(CalFacadeErrorCode.illegalCalendarCreation);
     }
 
     /* Ensure the new path is unique */
@@ -974,7 +975,7 @@ class CoreCalendars extends CalintfHelper
 
     if (col != null) {
       if (!col.getTombstoned()) {
-        throw new CalFacadeException(CalFacadeException.duplicateCalendar);
+        throw new CalFacadeException(CalFacadeErrorCode.duplicateCalendar);
       }
 
       dao.deleteCalendar(unwrap(col));
@@ -995,7 +996,7 @@ class CoreCalendars extends CalintfHelper
       parent = getCalendar(parentPath, access, false);
 
       if (parent == null) {
-        throw new CalFacadeException(CalFacadeException.collectionNotFound,
+        throw new CalFacadeException(CalFacadeErrorCode.collectionNotFound,
                                      parentPath);
       }
 
@@ -1006,14 +1007,14 @@ class CoreCalendars extends CalintfHelper
         if (val.getAlias() ||
             ((val.getCalType() != BwCalendar.calTypeFolder) &&
             (val.getCalType() != BwCalendar.calTypeResourceCollection))) {
-          throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
+          throw new CalFacadeException(CalFacadeErrorCode.illegalCalendarCreation);
         }
 
         if (val.getCalType() == BwCalendar.calTypeFolder) {
           val.setCalType(BwCalendar.calTypeResourceCollection);
         }
       } else if (parent.getCalType() != BwCalendar.calTypeFolder) {
-        throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
+        throw new CalFacadeException(CalFacadeErrorCode.illegalCalendarCreation);
       }
 
       newPath = Util.buildPath(colPathEndsWithSlash, parent.getPath(), 

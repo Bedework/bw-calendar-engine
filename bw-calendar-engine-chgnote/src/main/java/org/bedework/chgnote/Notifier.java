@@ -334,14 +334,14 @@ public class Notifier extends AbstractScheduler {
    *
    */
   @SuppressWarnings("UnusedParameters")
-  private ProcessMessageResult processCollection(final SysEvent msg) throws CalFacadeException {
+  private ProcessMessageResult processCollection(final SysEvent msg) {
     return ProcessMessageResult.FAILED_NORETRIES;
   }
 
   /* Process an entity change event.
    *
    */
-  private ProcessMessageResult processEntity(final OwnedHrefEvent msg) throws CalFacadeException {
+  private ProcessMessageResult processEntity(final OwnedHrefEvent msg) {
     try {
       final NotificationType note = getNotification(msg);
 
@@ -362,7 +362,7 @@ public class Notifier extends AbstractScheduler {
   }
 
   private ProcessMessageResult doChangeNotification(final OwnedHrefEvent msg,
-                                                    final NotificationType note) throws CalFacadeException {
+                                                    final NotificationType note) {
     var before = System.currentTimeMillis();
     try {
       getSvci(msg.getOwnerHref(), "notifier-chg");
@@ -433,7 +433,7 @@ public class Notifier extends AbstractScheduler {
 
   private boolean processAliasInfo(final AliasesInfo ai,
                                    final String authHref,
-                                   final ResourceChangeType rc) throws CalFacadeException {
+                                   final ResourceChangeType rc) {
     /* We have to notify the sharee of the change. We do not notify the
        * sharee that made the change.
        */
@@ -618,7 +618,7 @@ public class Notifier extends AbstractScheduler {
 
   private boolean checkAliases(final AliasesInfo ai,
                                final String authHref,
-                               final ResourceChangeType rc) throws CalFacadeException {
+                               final ResourceChangeType rc) {
     boolean processed = false;
 
     for (final AliasesInfo aai: ai.getAliases()) {
@@ -630,7 +630,7 @@ public class Notifier extends AbstractScheduler {
     return processed;
   }
 
-  private NotificationType getNotification(final SysEvent msg) throws CalFacadeException {
+  private NotificationType getNotification(final SysEvent msg) {
     try {
       if (msg instanceof NotificationEvent) {
         return Parser.fromXml(((NotificationEvent)msg).getNotification());
@@ -641,7 +641,7 @@ public class Notifier extends AbstractScheduler {
     return null;
   }
 
-  private Set<String> adminGroupOwners() throws CalFacadeException {
+  private Set<String> adminGroupOwners() {
     final Set<String> hrefs = new TreeSet<>();
     adminGroupOwners(hrefs,
                      getSvc().getAdminDirectories().getAll(true));
@@ -650,7 +650,7 @@ public class Notifier extends AbstractScheduler {
   }
 
   private void adminGroupOwners(final Set<String> hrefs,
-                                final Collection<? extends BwPrincipal> prs) throws CalFacadeException {
+                                final Collection<? extends BwPrincipal> prs) {
     if (Util.isEmpty(prs)) {
       return;
     }

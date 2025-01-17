@@ -36,6 +36,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
@@ -69,19 +70,18 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
 
   /* *
    * @param sysRoots
-   * @throws CalFacadeException
    * /
-  public DumpImpl(final SystemRoots sysRoots) throws CalFacadeException {
+  public DumpImpl(final SystemRoots sysRoots) {
     this.sysRoots = sysRoots;
   }
   */
 
-  DumpImpl(final CalSvc svci) throws CalFacadeException {
+  DumpImpl(final CalSvc svci) {
     super(svci);
   }
 
   @Override
-  public Iterator<BwAdminGroup> getAdminGroups() throws CalFacadeException {
+  public Iterator<BwAdminGroup> getAdminGroups() {
     final Collection<BwAdminGroup> c = getCal().getAdminGroups();
 
     for (final BwGroup grp: c) {
@@ -92,12 +92,12 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   }
 
   @Override
-  public Iterator<BwAuthUser> getAuthUsers() throws CalFacadeException {
+  public Iterator<BwAuthUser> getAuthUsers() {
     return getObjects(BwAuthUser.class);
   }
 
   @Override
-  public Iterator<BwCalendar> getCalendars() throws CalFacadeException {
+  public Iterator<BwCalendar> getCalendars() {
     final Collection<BwCalendar> cols = new ArrayList<>();
 
     cols.add(getCal().getCalendar(
@@ -111,7 +111,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   }
 
   @Override
-  public Collection<BwCalendar> getChildren(final BwCalendar val) throws CalFacadeException {
+  public Collection<BwCalendar> getChildren(final BwCalendar val) {
     return getCal().getCalendars(val, null);
   }
 
@@ -275,7 +275,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   }
 
   @Override
-  public Iterator<BwEventAnnotation> getEventAnnotations() throws CalFacadeException {
+  public Iterator<BwEventAnnotation> getEventAnnotations() {
     return getCal().getEventAnnotations();
   }
 
@@ -310,11 +310,11 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   }
 
   @Override
-  public void getResourceContent(final BwResource res) throws CalFacadeException {
+  public void getResourceContent(final BwResource res) {
     try {
       getCal().getResourceContent(res);
     } catch (final CalFacadeException cfe){
-      if (cfe.getMessage().equals(CalFacadeException.missingResourceContent)) {
+      if (cfe.getMessage().equals(CalFacadeErrorCode.missingResourceContent)) {
         return; // Caller will flag this.
       }
 
@@ -329,14 +329,12 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   }
 
   @Override
-  public void startPrincipal(final BwPrincipal val)
-          throws CalFacadeException {
+  public void startPrincipal(final BwPrincipal val) {
     getSvc().pushPrincipal(val);
   }
 
   @Override
-  public void endPrincipal(final BwPrincipal val)
-          throws CalFacadeException {
+  public void endPrincipal(final BwPrincipal val) {
     getSvc().popPrincipal();
   }
 
@@ -344,16 +342,16 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     return (Iterator<T>)getCal().getObjectIterator(cl);
   }
 
-  private void getAdminMembers(final BwGroup group) throws CalFacadeException {
+  private void getAdminMembers(final BwGroup group) {
     group.setGroupMembers(getCal().getMembers(group, true));
   }
 
   @SuppressWarnings("unused")
-  private void getMembers(final BwGroup group) throws CalFacadeException {
+  private void getMembers(final BwGroup group) {
     group.setGroupMembers(getCal().getMembers(group, false));
   }
 
-  private Collection<BwEventAnnotation> getOverrides(final BwEvent ev) throws CalFacadeException {
+  private Collection<BwEventAnnotation> getOverrides(final BwEvent ev) {
     return getCal().getEventOverrides(ev);
   }
 
@@ -384,7 +382,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
    }
 
     @Override
-    public AccessPrincipal getPrincipal(final String href) throws CalFacadeException {
+    public AccessPrincipal getPrincipal(final String href) {
       BwPrincipal p = principals.get(href);
 
       if (p == null) {
@@ -419,7 +417,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
       maxAllowedPrivs = null;
     }
 
-    void popPrincipal() throws CalFacadeException {
+    void popPrincipal() {
       final StackedState ss = stack.pop();
 
       if (ss == null) {

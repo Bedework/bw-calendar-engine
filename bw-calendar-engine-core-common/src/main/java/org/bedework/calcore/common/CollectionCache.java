@@ -21,7 +21,6 @@ package org.bedework.calcore.common;
 import org.bedework.calcorei.CoreCalendarsI;
 import org.bedework.calfacade.BwStats.CacheStats;
 import org.bedework.calfacade.CollectionSynchInfo;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 
 import java.io.Serializable;
@@ -85,7 +84,7 @@ public class CollectionCache implements Serializable {
     cache.remove(path);
   }
 
-  public CalendarWrapper get(final String path) throws CalFacadeException {
+  public CalendarWrapper get(final String path) {
     CacheInfo ci = cache.get(path);
 
     if (ci == null) {
@@ -116,7 +115,7 @@ public class CollectionCache implements Serializable {
     return null;  // force refetch
   }
 
-  public CalendarWrapper get(final String path, final String token) throws CalFacadeException {
+  public CalendarWrapper get(final String path, final String token) {
     CacheInfo ci = cache.get(path);
 
     if (ci == null) {
@@ -132,7 +131,7 @@ public class CollectionCache implements Serializable {
     return ci.col;
   }
 
-  public void flushAccess(final CoreCalendarsI cc) throws CalFacadeException {
+  public void flushAccess(final CoreCalendarsI cc) {
     for (CacheInfo ci: cache.values()) {
 
       Set<Integer> accesses = ci.col.evaluatedAccesses();

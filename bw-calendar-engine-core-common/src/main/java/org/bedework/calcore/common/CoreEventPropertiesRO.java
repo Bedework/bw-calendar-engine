@@ -56,14 +56,13 @@ public class CoreEventPropertiesRO<T extends BwEventProperty>
   }
 
   @Override
-  public <T> T throwException(final CalFacadeException cfe)
-          throws CalFacadeException {
+  public <T> T throwException(final CalFacadeException cfe) {
     throw cfe;
   }
 
   @SuppressWarnings("unchecked")
   @Override
-  public Collection<T> getAll(final String ownerHref) throws CalFacadeException {
+  public Collection<T> getAll(final String ownerHref) {
     final BwIndexer indexer = intf.getIndexer(ownerHref);
 
     final List eps;
@@ -89,36 +88,35 @@ public class CoreEventPropertiesRO<T extends BwEventProperty>
 
   @SuppressWarnings("unchecked")
   @Override
-  public T get(final String uid) throws CalFacadeException {
+  public T get(final String uid) {
     throw new RuntimeException("Read only version");
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public T find(final BwString val,
-                final String ownerHref) throws CalFacadeException {
+                final String ownerHref) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public void checkUnique(final BwString val,
-                          final String ownerHref) throws CalFacadeException {
+                          final String ownerHref) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void deleteProp(final T val) throws CalFacadeException {
+  public void deleteProp(final T val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public List<EventPropertiesReference> getRefs(final T val)
-                          throws CalFacadeException {
+  public List<EventPropertiesReference> getRefs(final T val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public long getRefsCount(final T val) throws CalFacadeException {
+  public long getRefsCount(final T val) {
     throw new RuntimeException("Read only version");
   }
 

@@ -164,7 +164,7 @@ public class XbwLocPropUpdater implements Logged, PropertyUpdater {
   private boolean checkLocation(final UpdateInfo ui,
                                 final BwEvent ev,
                                 final String val,
-                                final String keyName) throws CalFacadeException {
+                                final String keyName) {
     final boolean locPresent = ev.getLocation() != null;
 
     final GetEntityResponse<BwLocation> resp;

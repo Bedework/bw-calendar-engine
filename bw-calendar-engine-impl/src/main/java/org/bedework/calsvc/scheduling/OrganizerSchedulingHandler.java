@@ -24,6 +24,7 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.ScheduleResult;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
@@ -91,7 +92,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
     try {
       if (!Icalendar.itipRequestMethodType(ev.getScheduleMethod())) {
         return Response.error(sr, new CalFacadeException(
-                CalFacadeException.schedulingBadMethod));
+                CalFacadeErrorCode.schedulingBadMethod));
       }
 
       /* For each recipient within this system add the event to their inbox.
@@ -204,12 +205,12 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
       }
 
       if (inbox.getCalType() != BwCalendar.calTypeInbox) {
-        sr.errorCode = CalFacadeException.schedulingBadSourceCalendar;
+        sr.errorCode = CalFacadeErrorCode.schedulingBadSourceCalendar;
         break check;
       }
 
       if (ev.getOriginator() == null) {
-        sr.errorCode = CalFacadeException.schedulingNoOriginator;
+        sr.errorCode = CalFacadeErrorCode.schedulingNoOriginator;
         break check;
       }
 
@@ -219,7 +220,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
       if (!ev.getSuppressed()) {
         Collection<BwAttendee> atts = ev.getAttendees();
         if ((atts == null) || (atts.size() != 1)) {
-          sr.errorCode = CalFacadeException.schedulingExpectOneAttendee;
+          sr.errorCode = CalFacadeErrorCode.schedulingExpectOneAttendee;
           break check;
         }
 
@@ -236,7 +237,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
           ev = oei.getEvent();
           Collection<BwAttendee> atts = ev.getAttendees();
           if ((atts == null) || (atts.size() != 1)) {
-            sr.errorCode = CalFacadeException.schedulingExpectOneAttendee;
+            sr.errorCode = CalFacadeErrorCode.schedulingExpectOneAttendee;
             break check;
           }
 
@@ -248,14 +249,14 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
           if (attUri == null) {
             attUri = att.getAttendeeUri();
           } else if (!attUri.equals(att.getAttendeeUri())) {
-            sr.errorCode = CalFacadeException.schedulingExpectOneAttendee;
+            sr.errorCode = CalFacadeErrorCode.schedulingExpectOneAttendee;
             break check;
           }
         }
       }
 
       if (attUri == null) {
-        sr.errorCode = CalFacadeException.schedulingExpectOneAttendee;
+        sr.errorCode = CalFacadeErrorCode.schedulingExpectOneAttendee;
         break check;
       }
 
@@ -300,7 +301,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
     }
 
     if (inBoxEv.getScheduleMethod() != Icalendar.methodTypeReply) {
-      sr.errorCode = CalFacadeException.schedulingBadMethod;
+      sr.errorCode = CalFacadeErrorCode.schedulingBadMethod;
       return false;
     }
 
@@ -317,7 +318,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
         if (debug()) {
           debug("Not an attendee of " + calEv);
         }
-        sr.errorCode = CalFacadeException.schedulingUnknownAttendee;
+        sr.errorCode = CalFacadeErrorCode.schedulingUnknownAttendee;
         sr.extraInfo = attUri;
         return false;
       }

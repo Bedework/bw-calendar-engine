@@ -25,6 +25,7 @@ import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.base.StartEndComponent;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.calfacade.svc.EventInfo;
@@ -713,7 +714,7 @@ public class BwUpdates implements Logged {
           // Apple is sending both - duration indicates the minimum
           // freebusy duration. Ignore for now.
         } else {
-          return new UpdateResult(CalFacadeException.endAndDuration);
+          return new UpdateResult(CalFacadeErrorCode.endAndDuration);
         }
       }
 

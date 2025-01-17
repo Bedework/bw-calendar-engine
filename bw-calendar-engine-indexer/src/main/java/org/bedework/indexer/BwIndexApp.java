@@ -19,7 +19,6 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.configs.IndexProperties;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer.IndexInfo;
 import org.bedework.calfacade.indexing.IndexStatsResponse;
 import org.bedework.calfacade.indexing.ReindexResponse;
@@ -108,9 +107,8 @@ public class BwIndexApp extends JmsSysEventListener {
 
   /**
    * @return info on indexes maintained by indexer.
-   * @throws CalFacadeException on fatal error
    */
-  public Set<IndexInfo> getIndexInfo() throws CalFacadeException {
+  public Set<IndexInfo> getIndexInfo() {
     return getCrawler().getIndexInfo();
   }
 
@@ -142,19 +140,19 @@ public class BwIndexApp extends JmsSysEventListener {
     }
   }
 
-  public Map<String, String> newIndexes() throws CalFacadeException {
+  public Map<String, String> newIndexes() {
     return getCrawler().newIndexes();
   }
 
-  public ReindexResponse reindex(final String docType) throws CalFacadeException {
+  public ReindexResponse reindex(final String docType) {
     return getCrawler().reindex(docType);
   }
 
-  public IndexStatsResponse getIndexStats(final String indexName) throws CalFacadeException {
+  public IndexStatsResponse getIndexStats(final String indexName) {
     return getCrawler().getIndexStats(indexName);
   }
 
-  public List<ContextInfo> getContextInfo() throws CalFacadeException {
+  public List<ContextInfo> getContextInfo() {
     return getCrawler().getContextInfo();
   }
 
@@ -162,18 +160,16 @@ public class BwIndexApp extends JmsSysEventListener {
    *
    * @param indexName name of index to be aliased
    * @return status code- 0 for OK
-   * @throws CalFacadeException on error
    */
-  public int setProdAlias(final String indexName) throws CalFacadeException {
+  public int setProdAlias(final String indexName) {
     return getCrawler().setProdAlias(indexName);
   }
 
   /** Move the production index aliases to the latest indexes
    *
    * @return status code- 0 for OK
-   * @throws CalFacadeException on error
    */
-  public int makeAllProd() throws CalFacadeException {
+  public int makeAllProd() {
     final Set<IndexInfo> is = getIndexInfo();
     final Map<String, String> names = new HashMap<>();
 
@@ -204,7 +200,7 @@ public class BwIndexApp extends JmsSysEventListener {
     return 0;
   }
 
-  void crawl() throws CalFacadeException {
+  void crawl() {
     final Crawl c = getCrawler();
 
     c.crawl();
@@ -212,7 +208,7 @@ public class BwIndexApp extends JmsSysEventListener {
     c.checkThreads();
   }
 
-  void indexEntity(final String docType) throws CalFacadeException {
+  void indexEntity(final String docType) {
     final Crawl c = getCrawler();
 
     c.setDocType(docType);

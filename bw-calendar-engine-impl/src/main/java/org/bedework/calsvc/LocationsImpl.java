@@ -94,19 +94,18 @@ public class LocationsImpl
 
   @Override
   Collection<BwLocation> fetchAllIndexed(final boolean publick,
-                                         final String ownerHref)
-          throws CalFacadeException {
+                                         final String ownerHref) {
     return filterDeleted(getIndexer(publick,
                                     ownerHref).fetchAllLocations());
   }
 
   @Override
-  BwLocation fetchIndexedByUid(final String uid) throws CalFacadeException {
+  BwLocation fetchIndexedByUid(final String uid) {
     return getIndexer().fetchLocation(uid, PropertyInfoIndex.UID);
   }
 
   @Override
-  BwLocation fetchIndexed(final String href) throws CalFacadeException {
+  BwLocation fetchIndexed(final String href) {
     return getIndexer().fetchLocation(href, PropertyInfoIndex.HREF);
   }
 
@@ -131,7 +130,7 @@ public class LocationsImpl
   }
 
   @Override
-  public BwLocation find(final BwString val) throws CalFacadeException {
+  public BwLocation find(final BwString val) {
     return getIndexer(docTypeLocation).fetchLocation(val.getValue(),
                                       PropertyInfoIndex.ADDRESS,
                                       PropertyInfoIndex.VALUE);

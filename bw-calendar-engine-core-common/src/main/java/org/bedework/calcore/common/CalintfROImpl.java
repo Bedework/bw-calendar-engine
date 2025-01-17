@@ -160,7 +160,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void initPinfo(final PrincipalInfo principalInfo) throws CalFacadeException {
+  public void initPinfo(final PrincipalInfo principalInfo) {
     super.initPinfo(principalInfo);
 
     access.setCollectionGetter(this);
@@ -185,7 +185,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void setDbStatsEnabled(final boolean enable) throws CalFacadeException {
+  public void setDbStatsEnabled(final boolean enable) {
     throw new RuntimeException("Read only version");
   }
 
@@ -245,7 +245,7 @@ public class CalintfROImpl extends CalintfBase
                    final boolean publicSubmission,
                    final boolean authenticated,
                    final boolean sessionless,
-                   final boolean dontKill) throws CalFacadeException {
+                   final boolean dontKill) {
     if (isOpen) {
       throw new CalFacadeException("Already open");
     }
@@ -304,7 +304,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void beginTransaction() throws CalFacadeException {
+  public void beginTransaction() {
     checkOpen();
 
     if (debug()) {
@@ -333,7 +333,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void endTransaction() throws CalFacadeException {
+  public void endTransaction() {
     try {
       if (killed) {
         return;
@@ -365,11 +365,11 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void flush() throws CalFacadeException {
+  public void flush() {
   }
 
   @Override
-  public void clear() throws CalFacadeException {
+  public void clear() {
   }
 
   @Override
@@ -417,7 +417,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void reAttach(final BwDbentity<?> val) throws CalFacadeException {
+  public void reAttach(final BwDbentity<?> val) {
   }
 
   /* ====================================================================
@@ -427,26 +427,26 @@ public class CalintfROImpl extends CalintfBase
   @Override
   public void changeAccess(final ShareableEntity ent,
                            final Collection<Ace> aces,
-                           final boolean replaceAll) throws CalFacadeException {
+                           final boolean replaceAll) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public void changeAccess(final BwCalendar cal,
                            final Collection<Ace> aces,
-                           final boolean replaceAll) throws CalFacadeException {
+                           final boolean replaceAll) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public void defaultAccess(final ShareableEntity ent,
-                            final AceWho who) throws CalFacadeException {
+                            final AceWho who) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public void defaultAccess(final BwCalendar cal,
-                            final AceWho who) throws CalFacadeException {
+                            final AceWho who) {
     throw new RuntimeException("Read only version");
   }
 
@@ -454,23 +454,20 @@ public class CalintfROImpl extends CalintfBase
   public Collection<? extends ShareableEntity>
                   checkAccess(final Collection<? extends ShareableEntity> ents,
                                          final int desiredAccess,
-                                         final boolean alwaysReturn)
-                                         throws CalFacadeException {
+                                         final boolean alwaysReturn) {
     return access.checkAccess(ents, desiredAccess, alwaysReturn);
   }
 
   @Override
   public CurrentAccess checkAccess(final ShareableEntity ent,
                                    final int desiredAccess,
-                                   final boolean returnResult)
-          throws CalFacadeException {
+                                   final boolean returnResult) {
     return access.checkAccess(ent, desiredAccess, returnResult);
   }
 
   public BwCalendar checkAccess(final CalendarWrapper col,
                          final int desiredAccess,
-                         final boolean alwaysReturnResult)
-          throws CalFacadeException {
+                         final boolean alwaysReturnResult) {
     if (col == null) {
       return null;
     }
@@ -493,8 +490,7 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public Collection<BwAlarm> getUnexpiredAlarms(final long triggerTime)
-          throws CalFacadeException {
+  public Collection<BwAlarm> getUnexpiredAlarms(final long triggerTime) {
     checkOpen();
     throw new RuntimeException("Read only version");
 
@@ -502,8 +498,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public Collection<BwEvent> getEventsByAlarm(final BwAlarm alarm)
-          throws CalFacadeException {
+  public Collection<BwEvent> getEventsByAlarm(final BwAlarm alarm) {
     checkOpen();
     throw new RuntimeException("Read only version");
 
@@ -521,7 +516,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public CollectionSynchInfo getSynchInfo(final String path,
-                                          final String token) throws CalFacadeException {
+                                          final String token) {
     checkOpen();
 
     throw new RuntimeException("Read only version");
@@ -529,7 +524,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public Collection<BwCalendar> getCalendars(final BwCalendar cal,
-                                             final BwIndexer indexer) throws CalFacadeException {
+                                             final BwIndexer indexer) {
     checkOpen();
 
     return getColIndexer(indexer).fetchChildren(cal.getHref());
@@ -539,7 +534,7 @@ public class CalintfROImpl extends CalintfBase
   public BwCalendar resolveAlias(final BwCalendar val,
                                  final boolean resolveSubAlias,
                                  final boolean freeBusy,
-                                 final BwIndexer indexer) throws CalFacadeException {
+                                 final BwIndexer indexer) {
     checkOpen();
 
     if ((val == null) || !val.getInternalAlias()) {
@@ -572,7 +567,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public List<BwCalendar> findAlias(final String val) throws CalFacadeException {
+  public List<BwCalendar> findAlias(final String val) {
     throw new RuntimeException("Read only version");
   }
 
@@ -587,14 +582,14 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public BwCalendar getCollectionNoCheck(final String path) throws CalFacadeException {
+  public BwCalendar getCollectionNoCheck(final String path) {
     checkOpen();
 
     return getCollectionIdx(getColIndexer(),
                             path, -1, true);
   }
 
-  public BwCalendar getCollection(final String path) throws CalFacadeException {
+  public BwCalendar getCollection(final String path) {
     checkOpen();
 
     return getCollectionIdx(getColIndexer(),
@@ -604,7 +599,7 @@ public class CalintfROImpl extends CalintfBase
   @Override
   public BwCalendar getCollection(final String path,
                                   final int desiredAccess,
-                                  final boolean alwaysReturnResult) throws CalFacadeException {
+                                  final boolean alwaysReturnResult) {
     return getCollectionIdx(getColIndexer(), path, desiredAccess, alwaysReturnResult);
   }
 
@@ -624,7 +619,7 @@ public class CalintfROImpl extends CalintfBase
   public BwCalendar getCollectionIdx(final BwIndexer indexer,
                                      final String path,
                                      final int desiredAccess,
-                                     final boolean alwaysReturnResult) throws CalFacadeException {
+                                     final boolean alwaysReturnResult) {
     checkOpen();
 
     if ("/".equals(path)) {
@@ -660,7 +655,7 @@ public class CalintfROImpl extends CalintfBase
           final BwPrincipal<?> owner,
           final int calType,
           final boolean create,
-          final int access) throws CalFacadeException {
+          final int access) {
     final String name = getCalendarNameFromType(calType);
     if (name == null) {
       // Not supported
@@ -707,69 +702,69 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public BwCalendar add(final BwCalendar val,
-                        final String parentPath) throws CalFacadeException {
+                        final String parentPath) {
     checkOpen();
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void touchCalendar(final String path) throws CalFacadeException {
+  public void touchCalendar(final String path) {
     checkOpen();
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void touchCalendar(final BwCalendar col) throws CalFacadeException {
+  public void touchCalendar(final BwCalendar col) {
     checkOpen();
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void updateCalendar(final BwCalendar val) throws CalFacadeException {
+  public void updateCalendar(final BwCalendar val) {
     checkOpen();
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public void renameCalendar(final BwCalendar val,
-                             final String newName) throws CalFacadeException {
+                             final String newName) {
     checkOpen();
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public void moveCalendar(final BwCalendar val,
-                           final BwCalendar newParent) throws CalFacadeException {
+                           final BwCalendar newParent) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public boolean deleteCalendar(final BwCalendar val,
-                                final boolean reallyDelete) throws CalFacadeException {
+                                final boolean reallyDelete) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public boolean isEmpty(final BwCalendar val) throws CalFacadeException {
+  public boolean isEmpty(final BwCalendar val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void addNewCalendars(final BwPrincipal<?> user) throws CalFacadeException {
+  public void addNewCalendars(final BwPrincipal<?> user) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public Collection<String> getChildCollections(final String parentPath,
                                         final int start,
-                                        final int count) throws CalFacadeException {
+                                        final int count) {
     // Only for reindex
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public Set<BwCalendar> getSynchCols(final String path,
-                                      final String token) throws CalFacadeException {
+                                      final String token) {
     final Collection<BwCalendar> cols;
 
     final Collection<BwCalendar> icols =
@@ -837,7 +832,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public String getSyncToken(final String path) throws CalFacadeException {
+  public String getSyncToken(final String path) {
     final BwCalendar thisCol = getCalendar(path, privAny, false);
 
     if (thisCol == null) {
@@ -897,7 +892,7 @@ public class CalintfROImpl extends CalintfBase
   @Override
   public Collection<String> getChildEntities(final String parentPath,
                                              final int start,
-                                             final int count) throws CalFacadeException {
+                                             final int count) {
     // Only for updates
     throw new RuntimeException("Read only version");
   }
@@ -911,8 +906,7 @@ public class CalintfROImpl extends CalintfBase
                              final BwPrincipal<?> who,
                              final BwDateTime start, final BwDateTime end,
                              final boolean returnAll,
-                             final boolean ignoreTransparency)
-          throws CalFacadeException {
+                             final boolean ignoreTransparency) {
     if (who.getKind() != WhoDefs.whoTypeUser) {
       throw new CalFacadeException("Unsupported: non user principal for free-busy");
     }
@@ -1040,7 +1034,7 @@ public class CalintfROImpl extends CalintfBase
           final List<BwIcalPropertyInfoEntry> retrieveList,
           final DeletedState delState,
           final RecurringRetrievalMode rrm,
-          final boolean freeBusy) throws CalFacadeException {
+          final boolean freeBusy) {
     /* Ensure dates are limited explicitly or implicitly */
     final RecurringRetrievalMode recurRetrieval =
             defaultRecurringRetrieval(rrm,
@@ -1125,8 +1119,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public Collection<CoreEventInfo> getEvent(final String colPath,
-                                            final String guid)
-           throws CalFacadeException {
+                                            final String guid) {
     final List<CoreEventInfo> res = new ArrayList<>(1);
 
     checkOpen();
@@ -1179,7 +1172,7 @@ public class CalintfROImpl extends CalintfBase
   @Override
   public UpdateEventResult addEvent(final EventInfo ei,
                                     final boolean scheduling,
-                                    final boolean rollbackOnError) throws CalFacadeException {
+                                    final boolean rollbackOnError) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1200,27 +1193,27 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public UpdateEventResult updateEvent(final EventInfo ei) throws CalFacadeException {
+  public UpdateEventResult updateEvent(final EventInfo ei) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public DelEventResult deleteEvent(final EventInfo ei,
                                     final boolean scheduling,
-                                    final boolean reallyDelete) throws CalFacadeException {
+                                    final boolean reallyDelete) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public void moveEvent(final EventInfo ei,
                         final BwCalendar from,
-                        final BwCalendar to) throws CalFacadeException {
+                        final BwCalendar to) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public Set<CoreEventInfo> getSynchEvents(final String path,
-                                           final String token) throws CalFacadeException {
+                                           final String token) {
     if (path == null) {
       throw new CalFacadeBadRequest("Missing path");
     }
@@ -1256,8 +1249,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public CoreEventInfo getEvent(final String href)
-          throws CalFacadeException {
+  public CoreEventInfo getEvent(final String href) {
     checkOpen();
     final GetEntityResponse<EventInfo> ger =
             getEvIndexer().fetchEvent(href);
@@ -1284,7 +1276,7 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public void saveOrUpdate(final BwUnversionedDbentity<?> val) throws CalFacadeException {
+  public void saveOrUpdate(final BwUnversionedDbentity<?> val) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1293,12 +1285,12 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public void saveOrUpdate(final BwEventProperty<?> val) throws CalFacadeException {
+  public void saveOrUpdate(final BwEventProperty<?> val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) throws CalFacadeException {
+  public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1338,12 +1330,12 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public Iterator<BwEventAnnotation> getEventAnnotations() throws CalFacadeException {
+  public Iterator<BwEventAnnotation> getEventAnnotations() {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public Collection<BwEventAnnotation> getEventOverrides(final BwEvent ev) throws CalFacadeException {
+  public Collection<BwEventAnnotation> getEventOverrides(final BwEvent ev) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1353,13 +1345,13 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public void save(final BwFilterDef val,
-                   final BwPrincipal<?> owner) throws CalFacadeException {
+                   final BwPrincipal<?> owner) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public BwFilterDef getFilterDef(final String name,
-                                  final BwPrincipal<?> owner) throws CalFacadeException {
+                                  final BwPrincipal<?> owner) {
     return getIndexer(owner.getPrincipalRef(),
                       BwIndexer.docTypeFilter).fetchFilter(
             makeHref(owner,
@@ -1370,20 +1362,19 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public Collection<BwFilterDef> getAllFilterDefs(
-          final BwPrincipal<?> owner) throws CalFacadeException {
+          final BwPrincipal<?> owner) {
     return getIndexer(owner.getPrincipalRef(),
                       BwIndexer.docTypeFilter).fetchFilters(null, -1);
   }
 
   @Override
-  public void update(final BwFilterDef val) throws CalFacadeException {
+  public void update(final BwFilterDef val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public void deleteFilterDef(final String name,
-                              final BwPrincipal<?> owner)
-          throws CalFacadeException {
+                              final BwPrincipal<?> owner) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1392,27 +1383,27 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public void addAuthUser(final BwAuthUser val) throws CalFacadeException {
+  public void addAuthUser(final BwAuthUser val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public BwAuthUser getAuthUser(final String href) throws CalFacadeException {
+  public BwAuthUser getAuthUser(final String href) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void updateAuthUser(final BwAuthUser val) throws CalFacadeException {
+  public void updateAuthUser(final BwAuthUser val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public List<BwAuthUser> getAll() throws CalFacadeException {
+  public List<BwAuthUser> getAll() {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void delete(final BwAuthUser val) throws CalFacadeException {
+  public void delete(final BwAuthUser val) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1421,33 +1412,33 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public BwPrincipal<?> getPrincipal(final String href) throws CalFacadeException {
+  public BwPrincipal<?> getPrincipal(final String href) {
     return getIndexer(docTypePrincipal).fetchPrincipal(href);
   }
 
   @Override
-  public void saveOrUpdate(final BwPrincipal<?> val) throws CalFacadeException {
+  public void saveOrUpdate(final BwPrincipal<?> val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public List<String> getPrincipalHrefs(final int start,
-                                        final int count) throws CalFacadeException {
+                                        final int count) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public BwPreferences getPreferences(final String principalHref) throws CalFacadeException {
+  public BwPreferences getPreferences(final String principalHref) {
     return getIndexer(BwIndexer.docTypePreferences).fetchPreferences(principalHref);
   }
 
   @Override
-  public void saveOrUpdate(final BwPreferences val) throws CalFacadeException {
+  public void saveOrUpdate(final BwPreferences val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void delete(final BwPreferences val) throws CalFacadeException {
+  public void delete(final BwPreferences val) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1456,7 +1447,7 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
   
   @Override
-  public void removeFromAllPrefs(final BwShareableDbentity<?> val) throws CalFacadeException {
+  public void removeFromAllPrefs(final BwShareableDbentity<?> val) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1466,8 +1457,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public BwGroup<?> findGroup(final String account,
-                              final boolean admin)
-          throws CalFacadeException {
+                              final boolean admin) {
     final String href;
 
     if (admin) {
@@ -1485,41 +1475,41 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public Collection<BwGroup<?>> findGroupParents(final BwGroup<?> group,
-                                       final boolean admin) throws CalFacadeException {
+                                       final boolean admin) {
     // Only admin?
     throw new RuntimeException("Read only version");
  }
  
   @Override
   public void updateGroup(final BwGroup<?> group,
-                          final boolean admin) throws CalFacadeException {
+                          final boolean admin) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public void removeGroup(final BwGroup<?> group,
-                          final boolean admin) throws CalFacadeException {
+                          final boolean admin) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public void addMember(final BwGroup<?> group,
                         final BwPrincipal<?> val,
-                        final boolean admin) throws CalFacadeException {
+                        final boolean admin) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public void removeMember(final BwGroup<?> group,
                            final BwPrincipal<?> val,
-                           final boolean admin) throws CalFacadeException {
+                           final boolean admin) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public Collection<BwPrincipal<?>> getMembers(
           final BwGroup<?> group,
-          final boolean admin) throws CalFacadeException {
+          final boolean admin) {
     final List<BwPrincipal<?>> members = new ArrayList<>();
     final BwIndexer idx = getIndexer(docTypePrincipal);
 
@@ -1534,7 +1524,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public Collection<BwGroup<?>> getAllGroups(final boolean admin) throws CalFacadeException {
+  public Collection<BwGroup<?>> getAllGroups(final boolean admin) {
     final GetEntitiesResponse<BwGroup<?>> resp =
             getIndexer(docTypePrincipal).fetchGroups(admin);
 
@@ -1549,7 +1539,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public Collection<BwAdminGroup> getAdminGroups() throws CalFacadeException {
+  public Collection<BwAdminGroup> getAdminGroups() {
     final GetEntitiesResponse<BwAdminGroup> resp =
             getIndexer(docTypePrincipal).fetchAdminGroups();
 
@@ -1566,7 +1556,7 @@ public class CalintfROImpl extends CalintfBase
   @Override
   public Collection<BwGroup<?>> getGroups(
           final BwPrincipal<?> val,
-          final boolean admin) throws CalFacadeException {
+          final boolean admin) {
     final GetEntitiesResponse<BwGroup<?>> resp =
             getIndexer(docTypePrincipal).fetchGroups(admin,
                                                      val.getHref());
@@ -1583,7 +1573,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public Collection<BwAdminGroup> getAdminGroups(
-          final BwPrincipal<?> val) throws CalFacadeException {
+          final BwPrincipal<?> val) {
     final GetEntitiesResponse<BwAdminGroup> resp =
             getIndexer(docTypePrincipal).fetchAdminGroups(val.getHref());
 
@@ -1602,12 +1592,12 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public BwCalSuite get(final BwAdminGroup group) throws CalFacadeException {
+  public BwCalSuite get(final BwAdminGroup group) {
     throw new RuntimeException("Read only version");
   }
   
   @Override
-  public BwCalSuite getCalSuite(final String name) throws CalFacadeException {
+  public BwCalSuite getCalSuite(final String name) {
     final String href = Util.buildPath(true, BwPrincipal.calsuitePrincipalRoot,
                                        "/", name);
 
@@ -1616,17 +1606,17 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public Collection<BwCalSuite> getAllCalSuites() throws CalFacadeException {
+  public Collection<BwCalSuite> getAllCalSuites() {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void saveOrUpdate(final BwCalSuite val) throws CalFacadeException {
+  public void saveOrUpdate(final BwCalSuite val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void delete(final BwCalSuite val) throws CalFacadeException {
+  public void delete(final BwCalSuite val) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1635,7 +1625,7 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public BwCategory getCategory(final String uid) throws CalFacadeException {
+  public BwCategory getCategory(final String uid) {
     try {
       return getIndexer(BwIndexer.docTypeCategory)
               .fetchCat(uid, PropertyInfoIndex.UID);
@@ -1686,7 +1676,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public BwResource getResource(final String href,
-                                final int desiredAccess) throws CalFacadeException {
+                                final int desiredAccess) {
     final BwResource res = getIndexer(BwIndexer.docTypeResource).fetchResource(href);
     if (res == null) {
       return null;
@@ -1702,7 +1692,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void getResourceContent(final BwResource val) throws CalFacadeException {
+  public void getResourceContent(final BwResource val) {
     val.setContent(getIndexer(BwIndexer.docTypeResourceContent).fetchResourceContent(val.getHref()));
   }
 
@@ -1710,7 +1700,7 @@ public class CalintfROImpl extends CalintfBase
   public List<BwResource> getResources(final String path,
                                        final boolean forSynch,
                                        final String token,
-                                       final int count) throws CalFacadeException {
+                                       final int count) {
     String lastmod = null;
     int seq = 0;
 
@@ -1724,24 +1714,24 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void add(final BwResource val) throws CalFacadeException {
+  public void add(final BwResource val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public void addContent(final BwResource r,
-                         final BwResourceContent rc) throws CalFacadeException {
+                         final BwResourceContent rc) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void saveOrUpdate(final BwResource val) throws CalFacadeException {
+  public void saveOrUpdate(final BwResource val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public void saveOrUpdateContent(final BwResource r,
-                                  final BwResourceContent val) throws CalFacadeException {
+                                  final BwResourceContent val) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1751,13 +1741,13 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void delete(final BwResource val) throws CalFacadeException {
+  public void delete(final BwResource val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
   public void deleteContent(final BwResource r,
-                            final BwResourceContent val) throws CalFacadeException {
+                            final BwResourceContent val) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1856,13 +1846,12 @@ public class CalintfROImpl extends CalintfBase
    * @param cai for information on chain of aliases
    * @param indexer we use this one
    * @return targeted collection
-   * @throws CalFacadeException on fatal error
    */
   private BwCalendar resolveAlias(final BwCalendar val,
                                   final boolean resolveSubAlias,
                                   final boolean freeBusy,
                                   final CollectionAliasesImpl cai,
-                                  final BwIndexer indexer) throws CalFacadeException {
+                                  final BwIndexer indexer) {
     if ((val == null) || !val.getInternalAlias()) {
       return val;
     }
@@ -1934,7 +1923,7 @@ public class CalintfROImpl extends CalintfBase
     return res;
   }
 
-  private List<BwResource> postProcess(final Collection<BwResource> ress) throws CalFacadeException {
+  private List<BwResource> postProcess(final Collection<BwResource> ress) {
     final List<BwResource> resChecked = new ArrayList<>();
 
     for (final BwResource res: ress) {
@@ -1948,8 +1937,7 @@ public class CalintfROImpl extends CalintfBase
 
   private Collection<CoreEventInfo> getFreeBusyEntities(final Collection <BwCalendar> cals,
                                          final BwDateTime start, final BwDateTime end,
-                                         final boolean ignoreTransparency)
-          throws CalFacadeException {
+                                         final boolean ignoreTransparency) {
     /* Only events and freebusy for freebusy reports. */
     final FilterBase filter = new OrFilter();
     try {

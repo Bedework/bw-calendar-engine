@@ -41,32 +41,32 @@ public class UserAuthCallBack extends UserAuth.CallBack {
   }
 
   @Override
-  public UserAuth getUserAuth() throws CalFacadeException {
+  public UserAuth getUserAuth() {
     return svci.getUserAuth();
   }
 
   @Override
-  public void delete(final BwAuthUser val) throws CalFacadeException {
+  public void delete(final BwAuthUser val) {
     svci.getCal().delete(val);
   }
 
   @Override
-  public void add(final BwAuthUser val) throws CalFacadeException {
+  public void add(final BwAuthUser val) {
     svci.getCal().addAuthUser(val);
   }
 
   @Override
-  public void update(final BwAuthUser val) throws CalFacadeException {
+  public void update(final BwAuthUser val) {
     svci.getCal().updateAuthUser(val);
   }
 
   @Override
-  public BwAuthUser getAuthUser(final String href) throws CalFacadeException {
+  public BwAuthUser getAuthUser(final String href) {
     return svci.getCal().getAuthUser(href);
   }
 
   @Override
-  public List<BwAuthUser> getAll() throws CalFacadeException {
+  public List<BwAuthUser> getAll() {
     return svci.getCal().getAll();
   }
 }

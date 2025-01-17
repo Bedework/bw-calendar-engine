@@ -24,7 +24,6 @@ import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
 import org.bedework.caldav.util.filter.BooleanFilter;
 import org.bedework.caldav.util.filter.FilterBase;
-import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
@@ -42,10 +41,12 @@ import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.EventListEntry;
+import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.configs.AuthProperties;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.filter.RetrieveList;
@@ -314,7 +315,7 @@ class Events extends CalSvcDb implements EventsI {
                        final List<String> retrieveList)
           {
     if ((col == null) || (name == null)) {
-      throw new RuntimeException(CalFacadeException.badRequest);
+      throw new RuntimeException(CalFacadeErrorCode.badRequest);
     }
 
     if (col.getInternalAlias()) {
@@ -554,7 +555,7 @@ class Events extends CalSvcDb implements EventsI {
               !Util.isEmpty(atts) &&
               (atts.size() > maxAttendees)) {
         return notOk(updResult, limitExceeded,
-                              CalFacadeException.schedulingTooManyAttendees);
+                              CalFacadeErrorCode.schedulingTooManyAttendees);
       }
 
       final var currentTimestamp = getCurrentTimestamp();
@@ -579,7 +580,7 @@ class Events extends CalSvcDb implements EventsI {
                   !Util.isEmpty(ovAtts) &&
                   (ovAtts.size() > maxAttendees)) {
             return notOk(updResult, limitExceeded,
-                                  CalFacadeException.schedulingTooManyAttendees);
+                                  CalFacadeErrorCode.schedulingTooManyAttendees);
           }
 
           ovev.setDtstamps(currentTimestamp);
@@ -1210,7 +1211,7 @@ class Events extends CalSvcDb implements EventsI {
       resp.setMessage("created");
       return resp;
     } catch (final CalFacadeException cfe) {
-      if (cfe.getMessage().equals(CalFacadeException.duplicateGuid)) {
+      if (cfe.getMessage().equals(CalFacadeErrorCode.duplicateGuid)) {
         return Response.notOk(resp, forbidden, "duplicate uid");
       }
 
@@ -1556,7 +1557,6 @@ class Events extends CalSvcDb implements EventsI {
    * @param recurRetrieval How recurring event is returned.
    * @param freeBusy      true for a freebusy request
    * @return Collection  populated matching event value objects
-   * @throws CalFacadeException on fatal error
    */
   Collection<EventInfo> getMatching(
           final Collection<BwCalendar> cals,
@@ -1793,37 +1793,37 @@ class Events extends CalSvcDb implements EventsI {
                               final boolean schedulingInbox,
                               final boolean autoCreateCollection) {
     if (ev.getColPath() == null) {
-      throw new CalFacadeException(CalFacadeException.noEventCalendar);
+      throw new CalFacadeException(CalFacadeErrorCode.noEventCalendar);
     }
 
     if (ev.getNoStart() == null) {
-      throw new CalFacadeException(CalFacadeException.missingEventProperty,
+      throw new CalFacadeException(CalFacadeErrorCode.missingEventProperty,
                                    "noStart");
     }
 
     if (ev.getDtstart() == null) {
-      throw new CalFacadeException(CalFacadeException.missingEventProperty,
+      throw new CalFacadeException(CalFacadeErrorCode.missingEventProperty,
                                    "dtstart");
     }
 
     if (ev.getDtend() == null) {
-      throw new CalFacadeException(CalFacadeException.missingEventProperty,
+      throw new CalFacadeException(CalFacadeErrorCode.missingEventProperty,
                                    "dtend");
     }
 
     if (ev.getDuration() == null) {
-      throw new CalFacadeException(CalFacadeException.missingEventProperty,
+      throw new CalFacadeException(CalFacadeErrorCode.missingEventProperty,
                                    "duration");
     }
 
     if (ev.getRecurring() == null) {
-      throw new CalFacadeException(CalFacadeException.missingEventProperty,
+      throw new CalFacadeException(CalFacadeErrorCode.missingEventProperty,
                                    "recurring");
     }
 
     if ((ev.getEntityType() != IcalDefs.entityTypeFreeAndBusy) &&
             (ev.getSummary() == null)) {
-      throw new CalFacadeException(CalFacadeException.missingEventProperty,
+      throw new CalFacadeException(CalFacadeErrorCode.missingEventProperty,
                                    "summary");
     }
 
@@ -1844,7 +1844,7 @@ class Events extends CalSvcDb implements EventsI {
     if (col == null) {
       if (!autoCreateCollection) {
         throw new CalFacadeException(
-                CalFacadeException.collectionNotFound);
+                CalFacadeErrorCode.collectionNotFound);
       }
 
       // TODO - need a configurable default display name
@@ -1858,7 +1858,7 @@ class Events extends CalSvcDb implements EventsI {
         case Component.VTODO -> BwCalendar.calTypeTasks;
         case Component.VPOLL -> BwCalendar.calTypePoll;
         default -> throw new CalFacadeException(
-                CalFacadeException.noEventCalendar);
+                CalFacadeErrorCode.noEventCalendar);
       };
 
       final GetSpecialCalendarResult gscr =
@@ -1867,7 +1867,7 @@ class Events extends CalSvcDb implements EventsI {
                                           PrivilegeDefs.privAny);
 
       if (gscr.cal == null) {
-        throw new CalFacadeException(CalFacadeException.noEventCalendar);
+        throw new CalFacadeException(CalFacadeErrorCode.noEventCalendar);
       }
 
       col = gscr.cal;

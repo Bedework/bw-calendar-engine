@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.configs.LdapConfigProperties;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeUnimplementedException;
 
@@ -141,7 +142,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
   @Override
   public void addGroup(final BwGroup<?> group) {
     if (findGroup(group.getAccount()) != null) {
-      throw new CalFacadeException(CalFacadeException.duplicateAdminGroup);
+      throw new CalFacadeException(CalFacadeErrorCode.duplicateAdminGroup);
     }
     throw new CalFacadeUnimplementedException();
   }
@@ -165,7 +166,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
      */
 
     if (!checkPathForSelf(group, val)) {
-      throw new CalFacadeException(CalFacadeException.alreadyOnGroupPath);
+      throw new CalFacadeException(CalFacadeErrorCode.alreadyOnGroupPath);
     }
 
     /*

@@ -37,6 +37,7 @@ import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
 import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.EventPeriod;
@@ -359,7 +360,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
     final FbResponses resps = new FbResponses();
 
     if (start.getDateType() || end.getDateType()) {
-      throw new CalFacadeException(CalFacadeException.schedulingBadGranulatorDt);
+      throw new CalFacadeException(CalFacadeErrorCode.schedulingBadGranulatorDt);
     }
 
     resps.setResponses(new ArrayList<>());
@@ -422,7 +423,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
         // Validity check
         if (!allEp.getStart().equals(respEp.getStart()) ||
             !allEp.getEnd().equals(respEp.getEnd())) {
-          throw new CalFacadeException(CalFacadeException.schedulingBadResponse);
+          throw new CalFacadeException(CalFacadeErrorCode.schedulingBadResponse);
         }
 
         if ((respEp.getType() == BwFreeBusyComponent.typeBusy) ||

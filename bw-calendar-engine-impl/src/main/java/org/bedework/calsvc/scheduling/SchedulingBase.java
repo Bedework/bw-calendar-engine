@@ -18,7 +18,6 @@
 */
 package org.bedework.calsvc.scheduling;
 
-import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
@@ -28,6 +27,8 @@ import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwXproperty;
+import org.bedework.calfacade.Participant;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTableEntry;
@@ -511,12 +512,12 @@ public abstract class SchedulingBase extends CalSvcHelperRw
         return resp;
       }
 
-      if (CalFacadeException.duplicateName.equals(resp.getMessage())) {
+      if (CalFacadeErrorCode.duplicateName.equals(resp.getMessage())) {
         prefix += suffixValue.getAndIncrement();
         continue;    // Try again
       }
 
-      if (CalFacadeException.duplicateGuid.equals(resp.getMessage())) {
+      if (CalFacadeErrorCode.duplicateGuid.equals(resp.getMessage())) {
         getSvc().rollbackTransaction();
       }
 
@@ -528,7 +529,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
     getSvc().rollbackTransaction();
 
     return Response.notOk(new Response(), Response.Status.failed,
-                          CalFacadeException.duplicateName);
+                          CalFacadeErrorCode.duplicateName);
   }
 
   /** Find the attendee in this event which corresponds to the current user
@@ -567,7 +568,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
 
     final Participant userParticipant = findUserAttendee(ei);
     if (userParticipant == null) {
-      throw new CalFacadeException(CalFacadeException.schedulingNotAttendee);
+      throw new CalFacadeException(CalFacadeErrorCode.schedulingNotAttendee);
     }
 
     //event.setSequence(event.getSequence() + 1);

@@ -21,6 +21,7 @@ package org.bedework.calsvc;
 import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwSystem;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.SysparsI;
 
@@ -39,12 +40,12 @@ class Syspars extends CalSvcDb implements SysparsI {
   }
 
   @Override
-  public BwSystem get() throws CalFacadeException {
+  public BwSystem get() {
     return new BwSystem();
   }
 
   @Override
-  public BwSystem get(final String name) throws CalFacadeException {
+  public BwSystem get(final String name) {
     return new BwSystem();
   }
 
@@ -52,7 +53,7 @@ class Syspars extends CalSvcDb implements SysparsI {
    * @see org.bedework.calsvci.SysparsI#getRootUsers()
    */
   @Override
-  public Collection<String> getRootUsers() throws CalFacadeException {
+  public Collection<String> getRootUsers() {
     if (rootUsers != null) {
       return rootUsers;
     }
@@ -79,7 +80,7 @@ class Syspars extends CalSvcDb implements SysparsI {
         pos = nextPos + 1;
       }
     } catch (Throwable t) {
-      throw new CalFacadeException(CalFacadeException.badRootUsersList,
+      throw new CalFacadeException(CalFacadeErrorCode.badRootUsersList,
                                    rus);
     }
 
@@ -90,7 +91,7 @@ class Syspars extends CalSvcDb implements SysparsI {
    * @see org.bedework.calsvci.SysparsI#isRootUser(org.bedework.calfacade.BwPrincipal)
    */
   @Override
-  public boolean isRootUser(final BwPrincipal val) throws CalFacadeException {
+  public boolean isRootUser(final BwPrincipal val) {
     if ((val == null) || val.getUnauthenticated()) {
       return false;
     }
@@ -105,7 +106,7 @@ class Syspars extends CalSvcDb implements SysparsI {
   }
 
   @Override
-  public boolean present() throws CalFacadeException {
+  public boolean present() {
     return false;
   }
 }

@@ -20,7 +20,6 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.configs.BasicSystemProperties;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -193,7 +192,7 @@ public class PublicProcessor extends Crawler {
     }
   }
 
-  public Iterator<BwAdminGroup> getAdminGroups(final CalSvcI svc) throws CalFacadeException {
+  public Iterator<BwAdminGroup> getAdminGroups(final CalSvcI svc) {
     return svc.getDumpHandler().getAdminGroups();
   }
 

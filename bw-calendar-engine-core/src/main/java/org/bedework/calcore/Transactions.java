@@ -31,27 +31,22 @@ import org.bedework.calfacade.exc.CalFacadeException;
 public interface Transactions {
   /** Called to allow setup
    *
-   * @throws CalFacadeException on error
    */
-  void startTransaction() throws CalFacadeException;
+  void startTransaction();
 
   /** Called to allow cleanup
    *
-   * @throws CalFacadeException on error
    */
-  void endTransaction() throws CalFacadeException;
+  void endTransaction();
 
   /** Called to cleanup
    *
-   * @throws CalFacadeException on error
    */
-  void rollback() throws CalFacadeException;
+  void rollback();
 
   /** Rollback and throw
    * 
    * @param cfe the error
-   * @throws CalFacadeException always
    */
-  <T> T throwException(final CalFacadeException cfe)
-          throws CalFacadeException;
+  <T> T throwException(final CalFacadeException cfe);
 }

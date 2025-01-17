@@ -78,40 +78,40 @@ public class GroupsCallBack extends Directories.CallBack {
 
   @Override
   public void removeGroup(final BwGroup<?> group,
-                          final boolean admin) throws CalFacadeException {
+                          final boolean admin) {
     svci.getCal().removeGroup(group, admin);
   }
 
   @Override
   public void addMember(final BwGroup<?> group,
                         final BwPrincipal<?> val,
-                        final boolean admin) throws CalFacadeException {
+                        final boolean admin) {
     svci.getCal().addMember(group, val, admin);
   }
 
   @Override
   public void removeMember(final BwGroup<?> group,
                            final BwPrincipal<?> val,
-                           final boolean admin) throws CalFacadeException {
+                           final boolean admin) {
     svci.getCal().removeMember(group, val, admin);
   }
 
   @Override
   public Collection<BwPrincipal<?>> getMembers(
           final BwGroup<?> group,
-          final boolean admin) throws CalFacadeException {
+          final boolean admin) {
     return svci.getCal().getMembers(group, admin);
   }
 
   @Override
-  public Collection<BwGroup<?>> getAll(final boolean admin) throws CalFacadeException {
+  public Collection<BwGroup<?>> getAll(final boolean admin) {
     return svci.getCal().getAllGroups(admin);
   }
 
   @Override
   public Collection<BwGroup<?>> getGroups(
           final BwPrincipal<?> val,
-          final boolean admin) throws CalFacadeException {
+          final boolean admin) {
     return svci.getCal().getGroups(val, admin);
   }
 }

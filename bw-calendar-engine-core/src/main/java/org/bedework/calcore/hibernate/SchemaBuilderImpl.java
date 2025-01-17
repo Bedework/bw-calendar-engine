@@ -41,7 +41,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
   public void execute(final Properties props,
                       final String outputFile,
                       final boolean export,
-                      final String delimiter) throws CalFacadeException {
+                      final String delimiter) {
     try {
       SchemaExport se = new SchemaExport();
 

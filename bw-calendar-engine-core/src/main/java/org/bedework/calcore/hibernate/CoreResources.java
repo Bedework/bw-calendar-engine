@@ -48,16 +48,14 @@ public class CoreResources extends CalintfHelper
   }
 
   @Override
-  public <T> T throwException(final CalFacadeException cfe)
-          throws CalFacadeException {
+  public <T> T throwException(final CalFacadeException cfe) {
     entityDao.rollback();
     throw cfe;
   }
 
   @Override
   public BwResource getResource(final String href,
-                                final int desiredAccess)
-          throws CalFacadeException {
+                                final int desiredAccess) {
     final int pos = href.lastIndexOf("/");
     if (pos <= 0) {
       throw new RuntimeException("Bad href: " + href);
@@ -127,7 +125,7 @@ public class CoreResources extends CalintfHelper
   }
 
   @Override
-  public void getResourceContent(final BwResource val) throws CalFacadeException {
+  public void getResourceContent(final BwResource val) {
     entityDao.getResourceContent(val);
   }
 
@@ -135,7 +133,7 @@ public class CoreResources extends CalintfHelper
   public List<BwResource> getResources(final String path,
                                        final boolean forSynch,
                                        final String token,
-                                       final int count) throws CalFacadeException {
+                                       final int count) {
     return postProcess(entityDao.getAllResources(path,
                                                  forSynch,
                                                  token,
@@ -143,7 +141,7 @@ public class CoreResources extends CalintfHelper
   }
 
   @Override
-  public void add(final BwResource val) throws CalFacadeException {
+  public void add(final BwResource val) {
     entityDao.save(val);
 
     intf.indexEntity(val);
@@ -151,7 +149,7 @@ public class CoreResources extends CalintfHelper
 
   @Override
   public void addContent(final BwResource r,
-                         final BwResourceContent rc) throws CalFacadeException {
+                         final BwResourceContent rc) {
     removeTombstoned(r);
 
     entityDao.save(rc);
@@ -160,14 +158,14 @@ public class CoreResources extends CalintfHelper
   }
 
   @Override
-  public void saveOrUpdate(final BwResource val) throws CalFacadeException {
+  public void saveOrUpdate(final BwResource val) {
     entityDao.saveOrUpdate(val);
     intf.indexEntity(val);
   }
 
   @Override
   public void saveOrUpdateContent(final BwResource r,
-                                  final BwResourceContent val) throws CalFacadeException {
+                                  final BwResourceContent val) {
     entityDao.saveOrUpdate(val);
     intf.indexEntity(val);
   }
@@ -207,7 +205,7 @@ public class CoreResources extends CalintfHelper
   }
 
   @Override
-  public void delete(final BwResource r) throws CalFacadeException {
+  public void delete(final BwResource r) {
     removeTombstoned(r);
 
     // Have to unindex - the name gets changed with a suffix.
@@ -231,7 +229,7 @@ public class CoreResources extends CalintfHelper
 
   @Override
   public void deleteContent(final BwResource r,
-                            final BwResourceContent val) throws CalFacadeException {
+                            final BwResourceContent val) {
     entityDao.delete(val);
     intf.getIndexer(docTypeResourceContent).unindexEntity(val.getHref());
   }
@@ -240,8 +238,7 @@ public class CoreResources extends CalintfHelper
    *                   Private methods
    * ==================================================================== */
 
-  private void removeTombstoned(final BwResource r)
-          throws CalFacadeException {
+  private void removeTombstoned(final BwResource r) {
     final BwResource tr =
             getResource(r.getHref() + BwResource.tombstonedSuffix,
                         PrivilegeDefs.privUnbind);
@@ -253,8 +250,7 @@ public class CoreResources extends CalintfHelper
     }
   }
 
-  private List<BwResource> postProcess(final Collection<BwResource> ress)
-          throws CalFacadeException {
+  private List<BwResource> postProcess(final Collection<BwResource> ress) {
     final List<BwResource> resChecked = new ArrayList<>();
 
     for (final BwResource res: ress) {

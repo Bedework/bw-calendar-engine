@@ -36,6 +36,7 @@ import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeDupNameException;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.svc.EventInfo;
@@ -217,16 +218,14 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   }
 
   @Override
-  public <T> T throwException(final CalFacadeException cfe)
-          throws CalFacadeException {
+  public <T> T throwException(final CalFacadeException cfe) {
     dao.rollback();
     throw cfe;
   }
 
   @Override
   public Collection<CoreEventInfo> getEvent(final String colPath,
-                                            final String uid)
-          throws CalFacadeException {
+                                            final String uid) {
     final TreeSet<CoreEventInfo> ts = new TreeSet<>();
 
     /*
@@ -299,7 +298,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         for (final String auid : master.getAvailableUids()) {
           final Collection<CoreEventInfo> aceis = getEvent(colPath, auid);
           if (aceis.size() != 1) {
-            throwException(CalFacadeException.badResponse);
+            throwException(CalFacadeErrorCode.badResponse);
           }
 
           cei.addContainedItem(aceis.iterator().next());
@@ -318,8 +317,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   }
 
   @Override
-  public CoreEventInfo getEvent(final String href)
-          throws CalFacadeException {
+  public CoreEventInfo getEvent(final String href) {
     final HrefRecurrenceId hr = getHrefRecurrenceId(href);
 
     final PathAndName pn = new PathAndName(hr.hrefNorid);
@@ -346,13 +344,13 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
           avails.add(lev);
         } else if (etype == IcalDefs.entityTypeVavailability) {
           if (ev != null) {
-            throwException(new CalFacadeException(CalFacadeException.duplicateName));
+            throwException(new CalFacadeException(CalFacadeErrorCode.duplicateName));
             return null;
           }
 
           ev = lev;
         } else {
-          throwException(new CalFacadeException(CalFacadeException.duplicateName));
+          throwException(new CalFacadeException(CalFacadeErrorCode.duplicateName));
           return null;
         }
       }
@@ -432,14 +430,14 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
           final List<BwIcalPropertyInfoEntry> retrieveList,
           final DeletedState delState,
           final RecurringRetrievalMode recurRetrieval,
-          final boolean freeBusy) throws CalFacadeException {
+          final boolean freeBusy) {
     throw new CalFacadeException("Implemented in the interface class");
   }
 
   @Override
   public UpdateEventResult addEvent(final EventInfo ei,
                                     final boolean scheduling,
-                                    final boolean rollbackOnError) throws CalFacadeException {
+                                    final boolean rollbackOnError) {
     final BwEvent val = ei.getEvent();
     final Collection<BwEventProxy> overrides = ei.getOverrideProxies();
     final long startTime = System.currentTimeMillis();
@@ -450,7 +448,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
                                                scheduling, false);
 
     if (cal == null) {
-      uer.errorCode = CalFacadeException.noEventCalendar;
+      uer.errorCode = CalFacadeErrorCode.noEventCalendar;
       return uer;
     }
 
@@ -463,18 +461,18 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
     if (!Util.isEmpty(overrides)) {
       if (!val.isRecurringEntity()) {
-        throwException(CalFacadeException.overridesForNonRecurring);
+        throwException(CalFacadeErrorCode.overridesForNonRecurring);
       }
 
       recurids = new RecuridTable(overrides);
     }
 
     if (val.getUid() == null) {
-      throwException(CalFacadeException.noEventGuid);
+      throwException(CalFacadeErrorCode.noEventGuid);
     }
 
     if (val.getName() == null) {
-      throwException(CalFacadeException.noEventName);
+      throwException(CalFacadeErrorCode.noEventName);
     }
 
     /* The guid must not exist in the same calendar. We assign a guid if
@@ -490,7 +488,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       }
 
       if (name != null) {
-        throwException(CalFacadeException.duplicateGuid, name);
+        throwException(CalFacadeErrorCode.duplicateGuid, name);
       }
     }
 
@@ -501,7 +499,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     if ((val.getEntityType() != IcalDefs.entityTypeAvailable) &&
         (calendarNameExists(val, false, true) ||
           calendarNameExists(val, true, true))) {
-      throwException(CalFacadeException.duplicateName, val.getName());
+      throwException(CalFacadeErrorCode.duplicateName, val.getName());
     }
 
     setupDependentEntities(val);
@@ -538,12 +536,12 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     if (rp.instances.isEmpty()) {
       // No instances for an alleged recurring event.
       if (rollbackOnError) {
-        throwException(CalFacadeException.noRecurrenceInstances,
+        throwException(CalFacadeErrorCode.noRecurrenceInstances,
                        val.getUid());
       }
 
       uer.addedUpdated = false;
-      uer.errorCode = CalFacadeException.noRecurrenceInstances;
+      uer.errorCode = CalFacadeErrorCode.noRecurrenceInstances;
 
       stat(StatsEvent.createTime, startTime);
 
@@ -617,7 +615,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
        * with recurrence ids that don't match.
        */
       if (rollbackOnError) {
-        throwException(CalFacadeException.invalidOverride);
+        throwException(CalFacadeErrorCode.invalidOverride);
       }
 
       uer.failedOverrides = recurids.values();
@@ -640,7 +638,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   }
 
   @Override
-  public UpdateEventResult updateEvent(final EventInfo ei) throws CalFacadeException {
+  public UpdateEventResult updateEvent(final EventInfo ei) {
     final BwEvent val = ei.getEvent();
     final Collection<BwEventProxy> overrides = ei.getOverrideProxies();
     final Collection<BwEventProxy> deletedOverrides =
@@ -695,7 +693,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         }
 
         if (name != null) {
-          throwException(CalFacadeException.duplicateGuid, name);
+          throwException(CalFacadeErrorCode.duplicateGuid, name);
         }
       }
 
@@ -835,7 +833,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   @Override
   public DelEventResult deleteEvent(final EventInfo ei,
                                     final boolean scheduling,
-                                    final boolean reallyDelete) throws CalFacadeException {
+                                    final boolean reallyDelete) {
     final DelEventResult der = new DelEventResult(false, 0);
     BwEvent ev = ei.getEvent();
 
@@ -1002,7 +1000,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     return der;
   }
 
-  private void unindexEntity(final EventInfo ei) throws CalFacadeException {
+  private void unindexEntity(final EventInfo ei) {
     final BwEvent ev = ei.getEvent();
 
     if (ev.getRecurrenceId() != null) {
@@ -1017,7 +1015,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   @Override
   public void moveEvent(final EventInfo ei,
                         final BwCalendar from,
-                        final BwCalendar to) throws CalFacadeException {
+                        final BwCalendar to) {
     final var ev = ei.getEvent();
 
     if (ev.getRecurrenceId() != null) {
@@ -1072,9 +1070,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   /** Remove much of the data associated with the event and then tombstone it.
    *
    * @param val the event
-   * @throws CalFacadeException on error
    */
-  private void tombstoneEvent(final BwEvent val) throws CalFacadeException {
+  private void tombstoneEvent(final BwEvent val) {
     tombstoneEntity(val);
 
     /* - do the bits not done by tombstoneEntity
@@ -1103,13 +1100,13 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   }
 
   private void deleteTombstoned(final String colPath,
-                                final String uid) throws CalFacadeException {
+                                final String uid) {
     dao.deleteTombstonedEvent(fixPath(colPath), uid);
   }
 
   @Override
   public Set<CoreEventInfo> getSynchEvents(final String path,
-                                           final String token) throws CalFacadeException {
+                                           final String token) {
     if (path == null) {
       dao.rollback();
       throw new CalFacadeBadRequest("Missing path");
@@ -1146,7 +1143,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   @Override
   public Collection<String> getChildEntities(final String parentPath,
                                              final int start,
-                                             final int count) throws CalFacadeException {
+                                             final int count) {
     final Collection<String> res = dao.getChildrenEntities(parentPath, 
                                                            start, 
                                                            count);
@@ -1159,12 +1156,12 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   }
 
   @Override
-  public Iterator<BwEventAnnotation> getEventAnnotations() throws CalFacadeException {
+  public Iterator<BwEventAnnotation> getEventAnnotations() {
     return dao.getEventAnnotations();
   }
 
   @Override
-  public Collection<BwEventAnnotation> getEventOverrides(final BwEvent ev) throws CalFacadeException {
+  public Collection<BwEventAnnotation> getEventOverrides(final BwEvent ev) {
     return dao.getEventOverrides(ev);
   }
 
@@ -1184,7 +1181,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   /* Called by updateEvent to update a proxied event (annotation) or an
    * override.
    */
-  private void updateProxy(final BwEventProxy proxy) throws CalFacadeException {
+  private void updateProxy(final BwEventProxy proxy) {
     /* if this is a proxy for a recurrence instance of our own event
        then the recurrence instance should point at this override.
        Otherwise we just update the event annotation.
@@ -1226,8 +1223,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
   /* Retrieves the overrides for a recurring event.
    */
-  private void getOverrides(final CoreEventInfo cei)
-          throws CalFacadeException {
+  private void getOverrides(final CoreEventInfo cei) {
     final BwEvent master = cei.getEvent();
     final CurrentAccess ca = cei.getCurrentAccess();
 
@@ -1250,7 +1246,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   /* Called when adding an event with overrides
    */
   private void addOverride(final BwEventProxy proxy,
-                           final BwEvent master) throws CalFacadeException {
+                           final BwEvent master) {
     final BwEventAnnotation override = proxy.getRef();
     if (override.getOwnerHref() == null) {
       override.setOwnerHref(master.getOwnerHref());
@@ -1319,7 +1315,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
       // XXX Mark the master as non-recurring to stop it disappearing
       val.setRecurring(false);
-      //throwException(CalFacadeException.noRecurrenceInstances);
+      //throwException(CalFacadeErrorCode.noRecurrenceInstances);
     }
 
     final String stzid = val.getDtstart().getTzid();
@@ -1440,7 +1436,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   }
 
   private void fixReferringAnnotations(final BwEvent val,
-                                       final boolean shared) throws CalFacadeException {
+                                       final boolean shared) {
     /* We may have annotations to annotations so we hunt them all down deleting
      * the leaf entries first.
      */
@@ -1475,7 +1471,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
   private boolean calendarNameExists(final BwEvent val,
                                      final boolean annotation,
-                                     final boolean adding) throws CalFacadeException {
+                                     final boolean adding) {
     final long startTime = System.currentTimeMillis();
     try {
       return dao.calendarNameExists(val, annotation, adding);
@@ -1486,7 +1482,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
   private String calendarGuidExists(final BwEvent val,
                                      final boolean annotation,
-                                     final boolean adding) throws CalFacadeException {
+                                     final boolean adding) {
     final long startTime = System.currentTimeMillis();
     try {
       return dao.calendarGuidExists(val, annotation, adding);

@@ -19,6 +19,7 @@
 package org.bedework.inoutsched.processors;
 
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
@@ -58,7 +59,7 @@ public class InCancel extends InProcessor {
       if (ev.getOriginator() == null) {
         return Response.error(pr,
                               new CalFacadeException(
-                                      CalFacadeException.schedulingNoOriginator));
+                                      CalFacadeErrorCode.schedulingNoOriginator));
       }
 
       final BwPreferences prefs = getPrefs();

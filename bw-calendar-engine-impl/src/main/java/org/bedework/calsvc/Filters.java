@@ -89,7 +89,7 @@ class Filters extends CalSvcDb implements FiltersI {
 
 
   @Override
-  public void validate(final String val) throws CalFacadeException {
+  public void validate(final String val) {
     try {
       org.bedework.caldav.util.filter.parse.Filters.parse(val);
     } catch (final Throwable t) {
@@ -98,7 +98,7 @@ class Filters extends CalSvcDb implements FiltersI {
   }
 
   @Override
-  public void save(final BwFilterDef val) throws CalFacadeException {
+  public void save(final BwFilterDef val) {
     getSvc().setupOwnedEntity(val,
                               getPrincipal().getPrincipalRef());
     validate(val.getDefinition());
@@ -128,14 +128,14 @@ class Filters extends CalSvcDb implements FiltersI {
   }
 
   @Override
-  public Collection<BwFilterDef> getAll() throws CalFacadeException {
+  public Collection<BwFilterDef> getAll() {
     final BwPrincipal owner = getSvc().getEntityOwner(); // This can affect the query if done later
 
     return getCal().getAllFilterDefs(owner);
   }
 
   @Override
-  public void update(final BwFilterDef val) throws CalFacadeException {
+  public void update(final BwFilterDef val) {
     if (!getSvc().getSuperUser() &&
             !getPrincipal().getPrincipalRef().equals(val.getOwnerHref())) {
       throw new CalFacadeAccessException();
@@ -145,7 +145,7 @@ class Filters extends CalSvcDb implements FiltersI {
   }
 
   @Override
-  public void delete(final String name) throws CalFacadeException {
+  public void delete(final String name) {
     getCal().deleteFilterDef(name, getSvc().getEntityOwner());
   }
 
@@ -155,7 +155,7 @@ class Filters extends CalSvcDb implements FiltersI {
   }
 
   @Override
-  public int reindex(final BwIndexer indexer) throws CalFacadeException {
+  public int reindex(final BwIndexer indexer) {
     final Collection<BwFilterDef> filters = getAll();
     if (Util.isEmpty(filters)) {
       return 0;
