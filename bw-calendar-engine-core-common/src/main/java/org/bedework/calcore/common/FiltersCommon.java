@@ -3,6 +3,7 @@
 */
 package org.bedework.calcore.common;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcorei.FiltersCommonI;
 import org.bedework.caldav.util.TimeRange;
 import org.bedework.caldav.util.filter.AndFilter;
@@ -17,7 +18,6 @@ import org.bedework.caldav.util.filter.TimeRangeFilter;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.base.StartEndComponent;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.BwCategoryFilter;
 import org.bedework.calfacade.filter.BwObjectFilter;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
@@ -115,8 +115,8 @@ public class FiltersCommon implements Logged, FiltersCommonI {
     /* Not AND/OR */
 
     if (!(f instanceof final PropertyFilter pf)) {
-      throw new CalFacadeException("org.bedework.filters.unknownfilter",
-                                   String.valueOf(f));
+      throw new BedeworkException("org.bedework.filters.unknownfilter",
+                                  String.valueOf(f));
     }
 
     if (pf.getPropertyIndex() == PropertyInfoIndex.HREF) {
@@ -125,7 +125,7 @@ public class FiltersCommon implements Logged, FiltersCommonI {
     }
 
     if (BwIcalPropertyInfo.getPinfo(pf.getPropertyIndex()) == null) {
-      throw new CalFacadeException("org.bedework.filters.unknownproperty",
+      throw new BedeworkException("org.bedework.filters.unknownproperty",
                                    String.valueOf(pf.getPropertyIndex()));
     }
 
@@ -183,7 +183,7 @@ public class FiltersCommon implements Logged, FiltersCommonI {
                                                                   "available",
                                                                   false));
             } catch (final Throwable t) {
-              throw new CalFacadeException(t);
+              throw new BedeworkException(t);
             }
 
             return both;
@@ -203,7 +203,7 @@ public class FiltersCommon implements Logged, FiltersCommonI {
     } else {
       /* We assume we can't handle this one as a query.
        */
-      throw new CalFacadeException("org.bedework.filters.unknownfilter",
+      throw new BedeworkException("org.bedework.filters.unknownfilter",
                                    String.valueOf(f));
     }
   }
@@ -250,14 +250,14 @@ public class FiltersCommon implements Logged, FiltersCommonI {
     if (!(f instanceof final PropertyFilter pf)) {
       /* We assume we can't handle this one as a query.
        */
-      throw new CalFacadeException("org.bedework.filters.unknownfilter",
+      throw new BedeworkException("org.bedework.filters.unknownfilter",
                                    String.valueOf(f));
     }
 
     final BwIcalPropertyInfoEntry pi = BwIcalPropertyInfo.getPinfo(pf.getPropertyIndex());
 
     if (pi == null) {
-      throw new CalFacadeException("org.bedework.filters.unknownproperty",
+      throw new BedeworkException("org.bedework.filters.unknownproperty",
                                    String.valueOf(pf.getPropertyIndex()));
     }
 
@@ -288,10 +288,10 @@ public class FiltersCommon implements Logged, FiltersCommonI {
         return traceMatch(pf.match(ev, userHref));
       }
     } catch (final WebdavException wde) {
-      throw new CalFacadeException(wde);
+      throw new BedeworkException(wde);
     }
 
-    throw new CalFacadeException("org.bedework.filters.unknownfilter",
+    throw new BedeworkException("org.bedework.filters.unknownfilter",
                                  String.valueOf(f));
   }
 

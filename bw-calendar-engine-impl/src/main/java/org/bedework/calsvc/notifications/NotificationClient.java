@@ -18,8 +18,8 @@
 */
 package org.bedework.calsvc.notifications;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.configs.NotificationProperties;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.http.PooledHttpClient;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
@@ -149,7 +149,7 @@ public class NotificationClient implements Logged {
       if (debug()) {
         error(t);
       }
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -157,7 +157,7 @@ public class NotificationClient implements Logged {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

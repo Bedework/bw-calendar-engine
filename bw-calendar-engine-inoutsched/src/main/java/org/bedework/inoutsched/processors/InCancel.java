@@ -18,9 +18,9 @@
 */
 package org.bedework.inoutsched.processors;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
@@ -58,7 +58,7 @@ public class InCancel extends InProcessor {
     check: {
       if (ev.getOriginator() == null) {
         return Response.error(pr,
-                              new CalFacadeException(
+                              new BedeworkException(
                                       CalFacadeErrorCode.schedulingNoOriginator));
       }
 

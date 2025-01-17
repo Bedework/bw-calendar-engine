@@ -18,12 +18,12 @@
 */
 package org.bedework.calsvc.scheduling;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvc.scheduling.hosts.HostInfo;
@@ -46,7 +46,7 @@ import java.util.TreeSet;
  * we will build up a full implementation by progressively implementing abstract
  * classes.
  *
- * <p>That allows us to split up some rather complex code into appropriate peices.
+ * <p>That allows us to split up some rather complex code into appropriate pieces.
  *
  * <p>This piece handles the iSchedule low-level methods
  *
@@ -184,8 +184,8 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
     if (freeBusyRequest) {
       try {
         r = getCalDavClient().getFreeBusy(hi, cei);
-      } catch (final CalFacadeException cfe) {
-        error(cfe);
+      } catch (final BedeworkException be) {
+        error(be);
         return;
       }
 
@@ -217,8 +217,8 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
 
     try {
       r = getCalDavClient().scheduleMeeting(hi, cei);
-    } catch (final CalFacadeException cfe) {
-      error(cfe);
+    } catch (final BedeworkException be) {
+      error(be);
       return;
     }
 
@@ -242,7 +242,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
         try {
           return getEncrypter().getPrivateKey();
         } catch (final Throwable t) {
-          throw new CalFacadeException(t);
+          throw new BedeworkException(t);
         }
       }
     }

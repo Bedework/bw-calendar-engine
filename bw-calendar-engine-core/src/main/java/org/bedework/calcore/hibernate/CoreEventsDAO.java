@@ -23,7 +23,6 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProxy;
-import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.util.Collection;
 import java.util.Iterator;

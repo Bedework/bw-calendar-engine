@@ -21,7 +21,6 @@ package org.bedework.calcore.hibernate;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.misc.Util;
@@ -35,7 +34,7 @@ import java.util.List;
  * @author Mike Douglass
  */
 public class EventQueryBuilder implements Serializable, CalintfDefs {
-  private StringBuilder sb = new StringBuilder();
+  private final StringBuilder sb = new StringBuilder();
   private HibSession sess;
 
   public void fields(final List<BwIcalPropertyInfoEntry> retrieveListFields,
@@ -48,7 +47,7 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
     }
 
     String delim = "";
-    for (BwIcalPropertyInfoEntry ipie: retrieveListFields) {
+    for (final BwIcalPropertyInfoEntry ipie: retrieveListFields) {
       sb.append(delim);
 
       if (ipie.getMultiValued()) {

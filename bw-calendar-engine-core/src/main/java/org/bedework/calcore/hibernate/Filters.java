@@ -18,6 +18,7 @@
 */
 package org.bedework.calcore.hibernate;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.common.FiltersCommon;
 import org.bedework.calcorei.Calintf;
 import org.bedework.caldav.util.TimeRange;
@@ -34,7 +35,6 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.BwDbentity;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.BwCategoryFilter;
 import org.bedework.calfacade.filter.BwHrefFilter;
 import org.bedework.calfacade.filter.BwObjectFilter;
@@ -333,17 +333,17 @@ public class Filters extends FiltersCommon {
 
       queryLimited = true;
     } else if (f instanceof PropertyFilter) {
-      PropertyFilter pf = (PropertyFilter)f;
+      final PropertyFilter pf = (PropertyFilter)f;
 
-      BwIcalPropertyInfoEntry pi = BwIcalPropertyInfo.getPinfo(pf.getPropertyIndex());
+      final BwIcalPropertyInfoEntry pi = BwIcalPropertyInfo.getPinfo(pf.getPropertyIndex());
 
       if (pi == null) {
-        throw new CalFacadeException("org.bedework.filters.unknownproperty",
-                                     String.valueOf(pf.getPropertyIndex()));
+        throw new BedeworkException("org.bedework.filters.unknownproperty",
+                                    String.valueOf(pf.getPropertyIndex()));
       }
 
       String fieldName = pi.getDbFieldName();
-      boolean multi = pi.getMultiValued();
+      final boolean multi = pi.getMultiValued();
       boolean param = pi.getParam();
 
       if (param) {
@@ -447,7 +447,7 @@ public class Filters extends FiltersCommon {
       } else {
         /* We assume we can't handle this one as a query.
          */
-        throw new CalFacadeException("org.bedework.filters.unknownfilter",
+        throw new BedeworkException("org.bedework.filters.unknownfilter",
                                      String.valueOf(f));
       }
     }
@@ -946,7 +946,7 @@ public class Filters extends FiltersCommon {
     BwIcalPropertyInfoEntry pi = BwIcalPropertyInfo.getPinfo(pf.getPropertyIndex());
 
     if (pi == null) {
-      throw new CalFacadeException("org.bedework.filters.unknownproperty",
+      throw new BedeworkException("org.bedework.filters.unknownproperty",
                                    String.valueOf(pf.getPropertyIndex()));
     }
 
@@ -1006,7 +1006,7 @@ public class Filters extends FiltersCommon {
     if (!(val instanceof CalendarWrapper)) {
       // We get these at the moment - getEvents at svci level
       return val;
-      // CALWRAPPER throw new CalFacadeException("org.bedework.not.wrapped");
+      // CALWRAPPER throw new BedeworkException("org.bedework.not.wrapped");
     }
 
     return ((CalendarWrapper)val).fetchEntity();

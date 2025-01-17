@@ -19,13 +19,13 @@
 
 package org.bedework.caldav.bwserver.stdupdaters;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.caldav.bwserver.PropertyUpdater;
 import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.BwXproperty.Xpar;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.calendar.PropertyIndex;
@@ -151,8 +151,8 @@ public class XbwLocPropUpdater implements Logged, PropertyUpdater {
       }
 
       return UpdateResult.getOkResult();
-    } catch (final CalFacadeException cfe) {
-      throw new WebdavException(cfe);
+    } catch (final BedeworkException be) {
+      throw new WebdavException(be);
     }
   }
 

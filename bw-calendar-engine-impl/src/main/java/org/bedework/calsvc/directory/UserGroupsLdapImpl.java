@@ -19,13 +19,13 @@
 package org.bedework.calsvc.directory;
 
 import org.bedework.access.WhoDefs;
+import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.exc.BedeworkUnimplementedException;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.configs.LdapConfigProperties;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.exc.CalFacadeUnimplementedException;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -142,9 +142,9 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
   @Override
   public void addGroup(final BwGroup<?> group) {
     if (findGroup(group.getAccount()) != null) {
-      throw new CalFacadeException(CalFacadeErrorCode.duplicateAdminGroup);
+      throw new BedeworkException(CalFacadeErrorCode.duplicateAdminGroup);
     }
-    throw new CalFacadeUnimplementedException();
+    throw new BedeworkUnimplementedException();
   }
 
   @Override
@@ -158,7 +158,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
     final BwGroup<?> ag = findGroup(group.getAccount());
 
     if (ag == null) {
-      throw new CalFacadeException("Group " + group + " does not exist");
+      throw new BedeworkException("Group " + group + " does not exist");
     }
 
     /* val must not already be present on any paths to the root.
@@ -166,7 +166,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
      */
 
     if (!checkPathForSelf(group, val)) {
-      throw new CalFacadeException(CalFacadeErrorCode.alreadyOnGroupPath);
+      throw new BedeworkException(CalFacadeErrorCode.alreadyOnGroupPath);
     }
 
     /*
@@ -179,7 +179,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
     getSess().save(ent);
     */
-    throw new CalFacadeUnimplementedException();
+    throw new BedeworkUnimplementedException();
   }
 
   @Override
@@ -188,7 +188,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
     final BwGroup<?> ag = findGroup(group.getAccount());
 
     if (ag == null) {
-      throw new CalFacadeException("Group " + group + " does not exist");
+      throw new BedeworkException("Group " + group + " does not exist");
     }
 
     /*
@@ -215,7 +215,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
     getSess().delete(ent);
     */
-    throw new CalFacadeUnimplementedException();
+    throw new BedeworkUnimplementedException();
   }
 
   @Override
@@ -241,19 +241,19 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
     sess.delete(group);
     */
-    throw new CalFacadeUnimplementedException();
+    throw new BedeworkUnimplementedException();
   }
 
   @Override
   public void updateGroup(final BwGroup<?> group) {
     //getSess().saveOrUpdate(group);
-    throw new CalFacadeUnimplementedException();
+    throw new BedeworkUnimplementedException();
   }
 
   @Override
   public Collection<BwGroup<?>> findGroupParents(
           final BwGroup<?> group) {
-    throw new CalFacadeUnimplementedException();
+    throw new BedeworkUnimplementedException();
   }
 
   /* ==============================================================
@@ -302,7 +302,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
     return true;
     */
-    throw new CalFacadeUnimplementedException();
+    throw new BedeworkUnimplementedException();
   }
 
   private InitialLdapContext createLdapInitContext(final LdapConfigProperties props) {
@@ -348,7 +348,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
       if (debug()) {
         error(t);
       }
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -377,7 +377,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 //        Attributes attrs = sr.getAttributes();
 
         if (group != null) {
-          throw new CalFacadeException("org.bedework.ldap.groups.multiple.result");
+          throw new BedeworkException("org.bedework.ldap.groups.multiple.result");
         }
 
         group = new BwGroup<>();
@@ -453,7 +453,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
         final Attribute nmAttr = attrs.get(props.getGroupIdAttr());
         if (nmAttr.size() != 1) {
-          throw new CalFacadeException("org.bedework.ldap.groups.multiple.result");
+          throw new BedeworkException("org.bedework.ldap.groups.multiple.result");
         }
 
         final BwGroup<?> group = new BwGroup<>();
@@ -469,7 +469,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
       if (debug()) {
         error(t);
       }
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       // Close the context to release the connection
       if (ctx != null) {
@@ -506,7 +506,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
         final Attributes attrs = sr.getAttributes();
 
         if (beenHere) {
-          throw new CalFacadeException("org.bedework.ldap.groups.multiple.result");
+          throw new BedeworkException("org.bedework.ldap.groups.multiple.result");
         }
 
         beenHere = true;
@@ -533,7 +533,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
                         props.getGroupMemberUserIdAttr()) ||
           !checkNotNull("groupMemberGroupIdAttr",
                         props.getGroupMemberGroupIdAttr())) {
-        throw new CalFacadeException("Group search not configured");
+        throw new BedeworkException("Group search not configured");
       }
 
       final String[] idAttr = {groupMemberUserIdAttr,
@@ -582,7 +582,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
           }
 
           if (attr.size() != 1) {
-            throw new CalFacadeException("org.bedework.ldap.groups.multiple.result");
+            throw new BedeworkException("org.bedework.ldap.groups.multiple.result");
           }
 
           p.setAccount(attr.get(0).toString());
@@ -594,7 +594,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
       if (debug()) {
         error(t);
       }
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       // Close the context to release the connection
       if (ctx != null) {

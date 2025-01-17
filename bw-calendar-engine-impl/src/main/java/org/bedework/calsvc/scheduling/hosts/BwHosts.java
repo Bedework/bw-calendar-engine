@@ -18,8 +18,8 @@
 */
 package org.bedework.calsvc.scheduling.hosts;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.config.ConfigurationStore;
 import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.misc.Util;
@@ -265,7 +265,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
       }
 
       if (domain == null) {
-        throw new CalFacadeException(CalFacadeErrorCode.badCalendarUserAddr);
+        throw new BedeworkException(CalFacadeErrorCode.badCalendarUserAddr);
       }
 
       //  Don't iuse db at all return findClosest(domain);
@@ -285,7 +285,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
        */
       return getHostInfo(domain);
     } catch (final URISyntaxException use) {
-      throw new CalFacadeException(CalFacadeErrorCode.badCalendarUserAddr);
+      throw new BedeworkException(CalFacadeErrorCode.badCalendarUserAddr);
     }
   }
 
@@ -363,13 +363,13 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
       final Class<?> cl = loader.loadClass(cname);
 
       if (cl == null) {
-        throw new CalFacadeException("Class " + cname + " not found");
+        throw new BedeworkException("Class " + cname + " not found");
       }
 
       final Object o = cl.getDeclaredConstructor().newInstance();
 
       if (!interfaceClass.isInstance(o)) {
-        throw new CalFacadeException("Class " + cname +
+        throw new BedeworkException("Class " + cname +
                                              " is not a subclass of " +
                                              interfaceClass.getName());
       }
@@ -377,7 +377,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
       return o;
     } catch (final Throwable t) {
       t.printStackTrace();
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 }

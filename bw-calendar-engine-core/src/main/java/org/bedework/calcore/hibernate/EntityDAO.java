@@ -3,13 +3,13 @@
 */
 package org.bedework.calcore.hibernate;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.util.misc.Util;
@@ -171,7 +171,7 @@ public class EntityDAO extends DAOBase {
 
     final BwResourceContent rc = (BwResourceContent)sess.getUnique();
     if (rc == null) {
-      throw new CalFacadeException(CalFacadeErrorCode.missingResourceContent);
+      throw new BedeworkException(CalFacadeErrorCode.missingResourceContent);
     }
 
     val.setContent(rc);

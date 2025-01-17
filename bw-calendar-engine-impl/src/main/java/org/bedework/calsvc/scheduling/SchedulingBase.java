@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc.scheduling;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
@@ -29,7 +30,6 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calsvc.CalSvc;
@@ -568,7 +568,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
 
     final Participant userParticipant = findUserAttendee(ei);
     if (userParticipant == null) {
-      throw new CalFacadeException(CalFacadeErrorCode.schedulingNotAttendee);
+      throw new BedeworkException(CalFacadeErrorCode.schedulingNotAttendee);
     }
 
     //event.setSequence(event.getSequence() + 1);

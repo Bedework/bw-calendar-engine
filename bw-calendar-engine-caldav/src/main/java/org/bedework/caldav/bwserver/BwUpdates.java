@@ -18,6 +18,7 @@
 */
 package org.bedework.caldav.bwserver;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.caldav.bwserver.PropertyUpdater.Component;
 import org.bedework.caldav.bwserver.stdupdaters.DateDatetimePropUpdater.DatesState;
 import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
@@ -26,7 +27,6 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.CalFacadeUtil;
@@ -381,15 +381,15 @@ public class BwUpdates implements Logged {
       }
 
       if (prop.getName().equals(XcalTags.recurrenceId)) {
-        RecurrenceIdPropType rid = (RecurrenceIdPropType)prop.getValue();
-        XcalUtil.DtTzid dtTzid = XcalUtil.getDtTzid(rid);
+        final RecurrenceIdPropType rid = (RecurrenceIdPropType)prop.getValue();
+        final XcalUtil.DtTzid dtTzid = XcalUtil.getDtTzid(rid);
 
         try {
           cs.recurrenceId = BwDateTime.makeBwDateTime(dtTzid.dateOnly,
                                                       dtTzid.dt,
                                                       dtTzid.tzid);
-        } catch (RuntimeException cfe) {
-          throw new WebdavException(cfe);
+        } catch (final BedeworkException be) {
+          throw new WebdavException(be);
         }
 
         if (cs.uid != null) {
@@ -443,8 +443,8 @@ public class BwUpdates implements Logged {
       }
 
       return new UpdateResult("Invalid entity type for add");
-    } catch (CalFacadeException cfe) {
-      throw new WebdavException(cfe);
+    } catch (final BedeworkException be) {
+      throw new WebdavException(be);
     }
   }
 
@@ -503,8 +503,8 @@ public class BwUpdates implements Logged {
       }
 
       return null;
-    } catch (CalFacadeException cfe) {
-      throw new WebdavException(cfe);
+    } catch (final BedeworkException be) {
+      throw new WebdavException(be);
     }
   }
 

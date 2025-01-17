@@ -23,6 +23,8 @@ import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
 import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeSet;
+import org.bedework.base.exc.BedeworkConstraintViolationException;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfFactory;
 import org.bedework.caldav.util.notifications.admin.AdminNoteParsers;
@@ -53,9 +55,7 @@ import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.configs.SystemProperties;
-import org.bedework.calfacade.exc.CalFacadeConstraintViolationException;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.ifs.IcalCallback;
@@ -293,7 +293,7 @@ public class CalSvc
         tzserverUri = sp.getTzServeruri();
 
         if (tzserverUri == null) {
-          throw new CalFacadeException("No timezones server URI defined");
+          throw new BedeworkException("No timezones server URI defined");
         }
 
         Timezones.initTimezones(tzserverUri);
@@ -405,8 +405,8 @@ public class CalSvc
       error("Unable to fetch calendar suite " + name);
       error("Is the database correctly initialised?");
       error("******************************************************");
-      throw new CalFacadeException(CalFacadeErrorCode.unknownCalsuite,
-                                   name);
+      throw new BedeworkException(CalFacadeErrorCode.unknownCalsuite,
+                                  name);
     }
 
     getCalSuitesHandler().set(cs);
@@ -438,7 +438,7 @@ public class CalSvc
     try {
       return getEncrypter().getPublicKey();
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -462,7 +462,7 @@ public class CalSvc
   @Override
   public void setDbStatsEnabled(final boolean enable) {
     //if (!pars.getPublicAdmin()) {
-    //  throw new CalFacadeAccessException();
+    //  throw new BedeworkAccessException();
     //}
 
     getCal().setDbStatsEnabled(enable);
@@ -476,7 +476,7 @@ public class CalSvc
   @Override
   public void dumpDbStats() {
     //if (!pars.getPublicAdmin()) {
-    //  throw new CalFacadeAccessException();
+    //  throw new BedeworkAccessException();
     //}
 
     trace(getStats().toString());
@@ -486,7 +486,7 @@ public class CalSvc
   @Override
   public Collection<StatsEntry> getDbStats() {
     //if (!pars.getPublicAdmin()) {
-    //  throw new CalFacadeAccessException();
+    //  throw new BedeworkAccessException();
     //}
 
     return getCal().getDbStats();
@@ -1081,11 +1081,7 @@ public class CalSvc
 
   @Override
   public BwPrincipal<?> getPrincipal(final String href) {
-    try {
-      return getCal().getPrincipal(href);
-    } catch (final CalFacadeException cfe) {
-      throw new RuntimeException(cfe);
-    }
+    return getCal().getPrincipal(href);
   }
 
   @Override
@@ -1352,7 +1348,7 @@ public class CalSvc
                   .getCalSuite());
           error("Is the database correctly initialised?");
           error("******************************************************");
-          throw new CalFacadeException(
+          throw new BedeworkException(
                   CalFacadeErrorCode.unknownCalsuite,
                   pars.getCalSuite());
         }
@@ -1492,7 +1488,7 @@ public class CalSvc
           }
 
           if (currentPrincipal == null) {
-            //              throw new CalFacadeException("User " + runAsUser + " does not exist.");
+            //              throw new BedeworkException("User " + runAsUser + " does not exist.");
             /* Add the user to the database. Presumably this is first logon
                */
             debug("Add new run-as-user " + runAsUser);
@@ -1791,8 +1787,8 @@ public class CalSvc
 
     try {
       users.createUser(val);
-    } catch (final CalFacadeException cfe) {
-      if (cfe instanceof CalFacadeConstraintViolationException) {
+    } catch (final BedeworkException be) {
+      if (be instanceof BedeworkConstraintViolationException) {
         // We'll assume it was created by another process.
         warn("ConstraintViolationException trying to create " + val);
 
@@ -1800,16 +1796,16 @@ public class CalSvc
       } else {
         rollbackTransaction();
         if (debug()) {
-          cfe.printStackTrace();
+          error(be);
         }
-        throw cfe;
+        throw be;
       }
     } catch (final Throwable t) {
       rollbackTransaction();
       if (debug()) {
-        t.printStackTrace();
+        error(t);
       }
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
 
     final var principal = users.getUser(val);
@@ -2193,7 +2189,7 @@ public class CalSvc
       }
 
       if (privKeys == null) {
-        throw new CalFacadeException(
+        throw new BedeworkException(
                 "Unable to get keyfile locations. Is genkeys service installed?");
       }
 
@@ -2202,7 +2198,7 @@ public class CalSvc
       return pwEncrypt;
     } catch (final Throwable t) {
       error(t);
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 

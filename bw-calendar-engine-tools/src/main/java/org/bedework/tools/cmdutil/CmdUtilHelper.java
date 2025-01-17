@@ -18,6 +18,7 @@
 */
 package org.bedework.tools.cmdutil;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
@@ -26,7 +27,6 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.DirectoryInfo;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.BwAdminGroup;
@@ -415,18 +415,18 @@ public abstract class CmdUtilHelper implements Logged {
 
     try {
       getSvci().getCalendarsHandler().add(cal, parentPath);
-    } catch (final CalFacadeException cfe) {
-      if (CalFacadeErrorCode.duplicateCalendar.equals(cfe.getMessage())) {
+    } catch (final BedeworkException be) {
+      if (CalFacadeErrorCode.duplicateCalendar.equals(be.getMessage())) {
         error("Collection " + calName + " already exists on path " + parentPath);
         return null;
       }
 
-      if (CalFacadeErrorCode.collectionNotFound.equals(cfe.getMessage())) {
+      if (CalFacadeErrorCode.collectionNotFound.equals(be.getMessage())) {
         error("Collection " + parentPath + " does not exist");
         return null;
       }
 
-      throw cfe;
+      throw be;
     }
 
     return cal;

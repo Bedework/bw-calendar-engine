@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.caldav.util.notifications.NotificationType;
 import org.bedework.caldav.util.notifications.NotificationType.NotificationInfo;
 import org.bedework.caldav.util.notifications.parse.Parser;
@@ -26,7 +27,6 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calsvc.notifications.NotificationClient;
 import org.bedework.calsvci.NotificationsI;
@@ -69,10 +69,10 @@ class Notifications extends CalSvcDb implements NotificationsI {
     try {
       getSvc().pushPrincipal(pr);
       return add(val);
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       getSvc().popPrincipal();
     }
@@ -116,7 +116,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
       noteRsrc.setContentLength(xmlData.length);
       noteRsrc.setContentType(val.getContentType());
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
 
     for (int i = 0; i <= 100; i++) {
@@ -130,7 +130,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
       noteRsrc.setName(val.getName() + "-" + i);
     }
 
-    throw new CalFacadeException(CalFacadeErrorCode.duplicateResource,
+    throw new BedeworkException(CalFacadeErrorCode.duplicateResource,
                                  val.getName());
   }
 
@@ -184,10 +184,10 @@ class Notifications extends CalSvcDb implements NotificationsI {
       getNoteClient().informNotifier(getPrincipalHref(), noteRsrc.getName());
 
       return true;
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 

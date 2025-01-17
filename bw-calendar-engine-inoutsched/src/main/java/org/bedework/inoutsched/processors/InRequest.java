@@ -18,6 +18,7 @@
 */
 package org.bedework.inoutsched.processors;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -31,7 +32,6 @@ import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.SchedulingOwner;
 import org.bedework.calfacade.configs.AuthProperties;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -699,7 +699,7 @@ public class InRequest extends InProcessor {
         }
       }
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
     return true;
   }

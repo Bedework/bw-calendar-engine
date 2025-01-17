@@ -23,6 +23,10 @@ import org.bedework.access.Acl;
 import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.WhoDefs;
+import org.bedework.base.exc.BedeworkAccessException;
+import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.exc.BedeworkForbidden;
+import org.bedework.base.exc.BedeworkStaleStateException;
 import org.bedework.caldav.server.CalDAVCollection;
 import org.bedework.caldav.server.CalDAVEvent;
 import org.bedework.caldav.server.CalDAVResource;
@@ -67,12 +71,8 @@ import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.configs.SystemProperties;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.exc.CalFacadeInvalidSynctoken;
-import org.bedework.calfacade.exc.CalFacadeStaleStateException;
 import org.bedework.calfacade.filter.RetrieveList;
 import org.bedework.calfacade.filter.SfpTokenizer;
 import org.bedework.calfacade.filter.SimpleFilterParser;
@@ -554,11 +554,11 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     try {
       final Directories dir = getSvci().getDirectories();
       return dir.getPrincipal(dir.makePrincipalUri(account, WhoDefs.whoTypeUser));
-    } catch (final CalFacadeException cfe) {
-      if (cfe.getMessage().equals(CalFacadeErrorCode.principalNotFound)) {
+    } catch (final BedeworkException be) {
+      if (be.getMessage().equals(CalFacadeErrorCode.principalNotFound)) {
         throw new WebdavNotFound(account);
       }
-      throw new WebdavException(cfe);
+      throw new WebdavException(be);
     }
   }
   
@@ -566,11 +566,11 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   public AccessPrincipal getPrincipal(final String href) {
     try {
       return getSvci().getDirectories().getPrincipal(href);
-    } catch (final CalFacadeException cfe) {
-      if (cfe.getMessage().equals(CalFacadeErrorCode.principalNotFound)) {
+    } catch (final BedeworkException be) {
+      if (be.getMessage().equals(CalFacadeErrorCode.principalNotFound)) {
         throw new WebdavNotFound(href);
       }
-      throw new WebdavException(cfe);
+      throw new WebdavException(be);
     }
   }
 
@@ -588,8 +588,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     try {
       return getSvci().getDirectories().getGroups(rootUrl,
                                                   principalUrl);
-    } catch (final CalFacadeException cfe) {
-      throw new WebdavException(cfe);
+    } catch (final BedeworkException be) {
+      throw new WebdavException(be);
     }
   }
 
@@ -633,8 +633,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       return (inc < 0) ||  // Decreasing usage - let it pass
           (used <= p.getQuota());
-    } catch (final CalFacadeException cfe) {
-      throw new WebdavException(cfe);
+    } catch (final BedeworkException be) {
+      throw new WebdavException(be);
     }
   }
 
@@ -914,8 +914,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       svci.getNotificationsHandler().subscribe(principalHref, emails);
       return true;
-    } catch (final CalFacadeException cfe) {
-      throw new WebdavException(cfe);
+    } catch (final BedeworkException be) {
+      throw new WebdavException(be);
     }
   }
 
@@ -980,8 +980,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                                final ShareType share) {
     try {
       return svci.getSharingHandler().share(unwrap(col), share);
-    } catch (final CalFacadeForbidden cf) {
-      throw new WebdavForbidden(cf.getMessage());
+    } catch (final BedeworkForbidden bf) {
+      throw new WebdavForbidden(bf.getMessage());
     } catch (final Throwable t) {
       throw new WebdavException(t);
     }
@@ -999,9 +999,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       }
 
       return getUrlHandler().prefix(rr.getSharedAs().href());
-    } catch (final CalFacadeForbidden cf) {
-      throw new WebdavForbidden(cf.getMessage());
-    } catch (final CalFacadeException e) {
+    } catch (final BedeworkForbidden bf) {
+      throw new WebdavForbidden(bf.getMessage());
+    } catch (final BedeworkException e) {
       throw new WebdavException(e);
     }
   }
@@ -1027,9 +1027,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       }
 
       return inv;
-    } catch (final CalFacadeForbidden cf) {
-      throw new WebdavForbidden(cf.getMessage());
-    } catch (final CalFacadeException t) {
+    } catch (final BedeworkForbidden bf) {
+      throw new WebdavForbidden(bf.getMessage());
+    } catch (final BedeworkException t) {
       throw new WebdavException(t);
     }
   }
@@ -1214,13 +1214,13 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
 
     if (ur.getException() != null) {
-      if (ur.getException() instanceof final CalFacadeException cfe) {
+      if (ur.getException() instanceof final BedeworkException be) {
         if (CalFacadeErrorCode.duplicateGuid
-                .equals(cfe.getMessage())) {
+                .equals(be.getMessage())) {
           throw new WebdavBadRequest("Duplicate-guid");
         }
-        if (cfe instanceof final CalFacadeForbidden cff) {
-          throw new WebdavForbidden(cff.getQname(), cff.getMessage());
+        if (be instanceof final BedeworkForbidden bf) {
+          throw new WebdavForbidden(bf.getQname(), bf.getMessage());
         }
       }
       throw new WebdavException(ur.getException());
@@ -1272,13 +1272,13 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       }
 
       return evs;
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
-    } catch (final CalFacadeException cfe) {
-      if (CalFacadeErrorCode.unknownProperty.equals(cfe.getMessage())) {
-        throw new WebdavBadRequest("Unknown property " + cfe.getExtra());
+    } catch (final BedeworkException be) {
+      if (CalFacadeErrorCode.unknownProperty.equals(be.getMessage())) {
+        throw new WebdavBadRequest("Unknown property " + be.getExtra());
       }
-      throw new WebdavException(cfe);
+      throw new WebdavException(be);
     } catch (final WebdavException wde) {
       throw wde;
     } catch (final Throwable t) {
@@ -1482,8 +1482,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       }
 
       throw new WebdavBadRequest();
-    } catch (final CalFacadeException cfe) {
-      throw new WebdavException(cfe);
+    } catch (final BedeworkException be) {
+      throw new WebdavException(be);
     }
   }
 
@@ -1492,7 +1492,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                            final Acl acl) throws WebdavException{
     try {
       getSvci().changeAccess(getEvent(ev), acl.getAces(), true);
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1525,7 +1525,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                            final Acl acl) {
     try {
       getSvci().changeAccess(unwrap(col), acl.getAces(), true);
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1539,17 +1539,17 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     try {
       getSvci().getCalendarsHandler().add(bwCol, bwCol.getColPath());
       return HttpServletResponse.SC_CREATED;
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
-    } catch (final CalFacadeException cfe) {
-      final String msg = cfe.getMessage();
+    } catch (final BedeworkException be) {
+      final String msg = be.getMessage();
       if (CalFacadeErrorCode.duplicateCalendar.equals(msg)) {
         throw new WebdavForbidden(WebdavTags.resourceMustBeNull);
       }
       if (CalFacadeErrorCode.illegalCalendarCreation.equals(msg)) {
         throw new WebdavForbidden();
       }
-      throw new WebdavException(cfe);
+      throw new WebdavException(be);
     } catch (final Throwable t) {
       throw new WebdavException(t);
     }
@@ -1578,7 +1578,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
           return;
         }
       }
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1629,7 +1629,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       getSvci().getCalendarsHandler().resolveAlias(col, true, false);
 
       return new BwCalDAVCollection(this, col);
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1640,13 +1640,13 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   public void updateCollection(final CalDAVCollection<?> col) {
     try {
       getSvci().getCalendarsHandler().update(unwrap(col));
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
-    } catch (final CalFacadeException cfe) {
-      if (CalFacadeErrorCode.duplicateGuid.equals(cfe.getMessage())) {
+    } catch (final BedeworkException be) {
+      if (CalFacadeErrorCode.duplicateGuid.equals(be.getMessage())) {
         throw new WebdavBadRequest("Duplicate-guid");
       }
-      throw new WebdavException(cfe);
+      throw new WebdavException(be);
     } catch (final Throwable t) {
       throw new WebdavException(t);
     }
@@ -1658,16 +1658,16 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     try {
       getSvci().getCalendarsHandler().delete(unwrap(col), true,
                                              sendSchedulingMessage);
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
-    } catch (final CalFacadeException ce) {
-      final String msg = ce.getMessage();
+    } catch (final BedeworkException be) {
+      final String msg = be.getMessage();
 
       if (CalFacadeErrorCode.cannotDeleteDefaultCalendar.equals(msg) ||
           CalFacadeErrorCode.cannotDeleteCalendarRoot.equals(msg)) {
         throw new WebdavForbidden();
       } else {
-        throw new WebdavException(ce);
+        throw new WebdavException(be);
       }
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1736,7 +1736,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       }
 
       return ch;
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1755,7 +1755,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                           final boolean resolveSubAlias) {
     try {
       return getSvci().getCalendarsHandler().resolveAlias(col, resolveSubAlias, false);
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1786,7 +1786,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       getSvci().getResourcesHandler().save(rsrc,
                                            false);
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1806,7 +1806,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       return new BwCalDAVResource(this,
                                   rsrc);
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1840,7 +1840,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       }
 
       return rs;
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1852,7 +1852,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                          final boolean updateContent) {
     try {
       getSvci().getResourcesHandler().update(getRsrc(val), updateContent);
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1866,7 +1866,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       getSvci().getResourcesHandler().delete(Util.buildPath(false, val.getParentPath(),
                                                             "/",
                                                             val.getName()));
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1884,7 +1884,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                                                       toPath, name,
                                                       copy,
                                                       overwrite);
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1902,7 +1902,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       }
 
       return "data:," + getSvci().getCalendarsHandler().getSyncToken(path);
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1979,7 +1979,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       }
 
       return srd;
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final CalFacadeInvalidSynctoken cist) {
       throw new WebdavBadRequest(WebdavTags.validSyncToken);
@@ -2197,17 +2197,17 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       return sic;
     } catch (final IcalMalformedException ime) {
       throw new WebdavForbidden(ime, CaldavTags.validCalendarData);
-    } catch (final CalFacadeException cfe) {
+    } catch (final BedeworkException be) {
       if (CalFacadeErrorCode.unknownTimezone.equals(
-              cfe.getDetailMessage())) {
+              be.getDetailMessage())) {
         throw new WebdavForbidden(CaldavTags.validTimezone,
-                                  cfe.getMessage());
+                                  be.getMessage());
       }
       if (debug()) {
-        error(cfe);
+        error(be);
       }
       throw new WebdavForbidden(CaldavTags.validCalendarObjectResource,
-                                cfe.getMessage());
+                                be.getMessage());
     } catch (final WebdavException wde) {
       if (debug()) {
         error(wde);
@@ -2309,8 +2309,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       final TimeZone tz = ic.getTimeZones().iterator().next().tz;
 
       return tz.getID();
-    } catch (final CalFacadeException cfe) {
-      throw new WebdavException(cfe);
+    } catch (final BedeworkException be) {
+      throw new WebdavException(be);
     }
   }
 
@@ -2364,9 +2364,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       return ((ev.getAlarms() != null) &&
           !ev.getAlarms().isEmpty());
-    } catch (final CalFacadeException cfe) {
+    } catch (final BedeworkException be) {
       if (debug()) {
-        error(cfe);
+        error(be);
       }
 
       return false;
@@ -2766,7 +2766,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       } catch (final Throwable ignored) {
       }
 
-      if (t instanceof CalFacadeStaleStateException) {
+      if (t instanceof BedeworkStaleStateException) {
         throw new WebdavException(HttpServletResponse.SC_CONFLICT);
       }
 

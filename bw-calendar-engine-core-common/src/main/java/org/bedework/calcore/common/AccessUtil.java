@@ -26,6 +26,8 @@ import org.bedework.access.Acl;
 import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.PrivilegeSet;
+import org.bedework.base.exc.BedeworkAccessException;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -36,8 +38,6 @@ import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.ShareableEntity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
@@ -157,10 +157,10 @@ public class AccessUtil implements Logged, AccessUtilI {
       ent.setAccess(new Acl(allAces).encodeStr());
 
 //      pathInfoMap.flush();
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -179,10 +179,10 @@ public class AccessUtil implements Logged, AccessUtilI {
 
 //        pathInfoMap.flush();
       }
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -226,7 +226,7 @@ public class AccessUtil implements Logged, AccessUtilI {
         }
 
         if (!ca.getAccessAllowed() && !alwaysReturnResult) {
-          throw new CalFacadeAccessException();
+          throw new BedeworkAccessException();
         }
 
         return ca;
@@ -262,7 +262,7 @@ public class AccessUtil implements Logged, AccessUtilI {
         error("Principal(owner) " + ent.getOwnerHref() +
                       " does not exist");
         if (!alwaysReturnResult) {
-          throw new CalFacadeAccessException();
+          throw new BedeworkAccessException();
         }
         return new CurrentAccess(false);
       }
@@ -344,7 +344,7 @@ public class AccessUtil implements Logged, AccessUtilI {
           } else {
             error("Unable to fetch aclchars for " + ent);
             if (!alwaysReturnResult) {
-              throw new CalFacadeAccessException();
+              throw new BedeworkAccessException();
             }
             return new CurrentAccess(false);
           }
@@ -393,14 +393,14 @@ public class AccessUtil implements Logged, AccessUtilI {
       }
 
       if (!ca.getAccessAllowed() && !alwaysReturnResult) {
-        throw new CalFacadeAccessException();
+        throw new BedeworkAccessException();
       }
 
       return ca;
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -451,7 +451,7 @@ public class AccessUtil implements Logged, AccessUtilI {
       } else if (wcol.getColPath() == null) {
         // At root
         if (!isSuperUser) {
-          throw new CalFacadeException(
+          throw new BedeworkException(
                   "Collections must have default access set at root: " +
                           wcol.getPath());
         }
@@ -461,7 +461,7 @@ public class AccessUtil implements Logged, AccessUtilI {
         return null;
       } else {
         // Missing collection in hierarchy
-        throw new CalFacadeException("Missing collection in hierarchy for " +
+        throw new BedeworkException("Missing collection in hierarchy for " +
                                              wcol.getPath());
       }
 
@@ -523,7 +523,7 @@ public class AccessUtil implements Logged, AccessUtilI {
 
       return acl.getEncoded();
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -545,7 +545,7 @@ public class AccessUtil implements Logged, AccessUtilI {
 
       return acl.encodeAll();
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -576,7 +576,7 @@ public class AccessUtil implements Logged, AccessUtilI {
         if (aclString == null) {
           if (cal.getColPath() == null) {
             // At root
-            throw new CalFacadeException("Calendars must have default access set at root");
+            throw new BedeworkException("Calendars must have default access set at root");
           }
         } else if (aces.isEmpty()) {
           aces.addAll(Acl.decode(aclString).getAces());
@@ -597,10 +597,10 @@ public class AccessUtil implements Logged, AccessUtilI {
       pi.encoded = pi.pathAcl.encodeAll();
 
       return pi;
-    } catch (CalFacadeException cfe) {
-      throw cfe;
+    } catch (BedeworkException be) {
+      throw be;
     } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   } */
 
@@ -622,7 +622,7 @@ public class AccessUtil implements Logged, AccessUtilI {
 
       pathInfoMap.putInfo(path, pi);
     } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
    */

@@ -21,6 +21,8 @@ package org.bedework.calcore.common;
 import org.bedework.access.Ace;
 import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
+import org.bedework.base.exc.BedeworkClosed;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.common.indexing.BwIndexerFactory;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfDefs;
@@ -42,8 +44,6 @@ import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
-import org.bedework.calfacade.exc.CalFacadeClosed;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexFetcher;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexerParams;
@@ -205,7 +205,7 @@ public abstract class CalintfBase implements Logged, Calintf {
       access = new AccessUtil();
       access.init(principalInfo);
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -256,29 +256,28 @@ public abstract class CalintfBase implements Logged, Calintf {
 
   @Override
   public String getCalendarNameFromType(final int calType) {
-    switch (calType) {
-      case BwCalendar.calTypeInbox:
-        return BasicSystemProperties.userInbox;
-      case  BwCalendar.calTypePendingInbox:
-        return BasicSystemProperties.userPendingInbox;
-      case  BwCalendar.calTypeOutbox:
-        return BasicSystemProperties.userOutbox;
-      case  BwCalendar.calTypeNotifications:
-        return BasicSystemProperties.defaultNotificationsName;
-      case  BwCalendar.calTypeEventList:
-        return BasicSystemProperties.defaultReferencesName;
-      case  BwCalendar.calTypePoll:
-        return BasicSystemProperties.userDefaultPollsCalendar;
-      case  BwCalendar.calTypeAttachments:
-        return BasicSystemProperties.defaultAttachmentsName;
-      case  BwCalendar.calTypeCalendarCollection:
-        return BasicSystemProperties.userDefaultCalendar;
-      case  BwCalendar.calTypeTasks:
-        return BasicSystemProperties.userDefaultTasksCalendar;
-      default:
+    return switch (calType) {
+      case BwCalendar.calTypeInbox -> BasicSystemProperties.userInbox;
+      case BwCalendar.calTypePendingInbox ->
+              BasicSystemProperties.userPendingInbox;
+      case BwCalendar.calTypeOutbox ->
+              BasicSystemProperties.userOutbox;
+      case BwCalendar.calTypeNotifications ->
+              BasicSystemProperties.defaultNotificationsName;
+      case BwCalendar.calTypeEventList ->
+              BasicSystemProperties.defaultReferencesName;
+      case BwCalendar.calTypePoll ->
+              BasicSystemProperties.userDefaultPollsCalendar;
+      case BwCalendar.calTypeAttachments ->
+              BasicSystemProperties.defaultAttachmentsName;
+      case BwCalendar.calTypeCalendarCollection ->
+              BasicSystemProperties.userDefaultCalendar;
+      case BwCalendar.calTypeTasks ->
+              BasicSystemProperties.userDefaultTasksCalendar;
+      default ->
         // Not supported
-        return null;
-    }
+              null;
+    };
   }
 
   public CalendarWrapper wrap(final BwCalendar val) {
@@ -689,7 +688,7 @@ public abstract class CalintfBase implements Logged, Calintf {
 
   protected void checkOpen() {
     if (!killed && !isOpen) {
-      throw new CalFacadeClosed();
+      throw new BedeworkClosed();
     }
   }
 

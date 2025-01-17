@@ -20,7 +20,6 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.util.Collection;
 

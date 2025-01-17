@@ -19,6 +19,7 @@
 package org.bedework.calsvc.scheduling;
 
 import org.bedework.access.PrivilegeDefs;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
@@ -27,7 +28,6 @@ import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.convert.Icalendar;
@@ -59,14 +59,14 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     final BwEvent ev = ei.getEvent();
 
     if (ev.getScheduleMethod() != ScheduleMethods.methodTypeRequest) {
-      return Response.error(sr, new CalFacadeException(
+      return Response.error(sr, new BedeworkException(
               CalFacadeErrorCode.schedulingBadMethod));
     }
 
     final Participant att = findUserAttendee(ei);
 
     if (att == null) {
-      return Response.error(sr, new CalFacadeException(
+      return Response.error(sr, new BedeworkException(
               CalFacadeErrorCode.schedulingNotAttendee));
     }
 
@@ -130,12 +130,12 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     final Participant att = findUserAttendee(ei);
 
     if (att == null) {
-      return Response.error(sr, new CalFacadeException(
+      return Response.error(sr, new BedeworkException(
               CalFacadeErrorCode.schedulingNotAttendee));
     }
 
     if (ev.getOriginator() == null) {
-      return Response.error(sr, new CalFacadeException(
+      return Response.error(sr, new BedeworkException(
               CalFacadeErrorCode.schedulingNoOriginator));
     }
 
@@ -157,7 +157,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
     final var sowner = ei.getSchedulingOwner();
     if (sowner == null) {
-      throw new CalFacadeException("No organizer");
+      throw new BedeworkException("No organizer");
     }
 
     outEv.addRecipient(sowner.getCalendarAddress());
@@ -245,7 +245,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
          */
       outEv.setScheduleMethod(ScheduleMethods.methodTypeCounter);
     } else {
-      throw new CalFacadeException("Never get here");
+      throw new BedeworkException("Never get here");
     }
 
     outEv.addRequestStatus(new BwRequestStatus(
@@ -336,7 +336,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       final int smethod = ei.getEvent().getScheduleMethod();
 
       if (!Icalendar.itipReplyMethodType(smethod)) {
-        return Response.error(sr, new CalFacadeException(
+        return Response.error(sr, new BedeworkException(
                 CalFacadeErrorCode.schedulingBadMethod));
       }
 
@@ -350,7 +350,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
       /* There should only be one attendee for a reply */
       if (ei.getMaxAttendees() > 1) {
-        return Response.error(sr, new CalFacadeException(
+        return Response.error(sr, new BedeworkException(
                 CalFacadeErrorCode.schedulingBadAttendees));
       }
 
@@ -418,7 +418,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
       outEv.getSchedulingInfo().copyParticipant(v);
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 }

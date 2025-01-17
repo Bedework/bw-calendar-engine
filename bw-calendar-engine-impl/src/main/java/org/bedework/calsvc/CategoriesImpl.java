@@ -20,7 +20,6 @@ package org.bedework.calsvc;
 
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwString;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calsvci.Categories;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;

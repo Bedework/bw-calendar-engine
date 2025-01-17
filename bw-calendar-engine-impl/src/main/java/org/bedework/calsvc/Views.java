@@ -18,11 +18,10 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.base.exc.BedeworkAccessException;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calsvci.ViewsI;
@@ -63,7 +62,7 @@ class Views extends CalSvcDb implements ViewsI {
   }
 
   @Override
-  public boolean remove(final BwView val) throws CalFacadeException{
+  public boolean remove(final BwView val) {
     if (val == null) {
       return false;
     }
@@ -218,7 +217,7 @@ class Views extends CalSvcDb implements ViewsI {
    */
   private void checkOwnerOrSuper(final Object o) {
     if (isGuest()) {
-      throw new CalFacadeAccessException();
+      throw new BedeworkAccessException();
     }
 
     if (isSuper()) {
@@ -227,7 +226,7 @@ class Views extends CalSvcDb implements ViewsI {
     }
 
     if (!(o instanceof BwOwnedDbentity)) {
-      throw new CalFacadeAccessException();
+      throw new BedeworkAccessException();
     }
 
     final BwOwnedDbentity<?> ent = (BwOwnedDbentity<?>)o;
@@ -241,6 +240,6 @@ class Views extends CalSvcDb implements ViewsI {
       return;
     }
 
-    throw new CalFacadeAccessException();
+    throw new BedeworkAccessException();
   }
 }

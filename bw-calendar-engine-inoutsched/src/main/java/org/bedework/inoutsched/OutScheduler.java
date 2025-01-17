@@ -18,11 +18,11 @@
 */
 package org.bedework.inoutsched;
 
+import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.exc.BedeworkStaleStateException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.exc.CalFacadeStaleStateException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.AbstractScheduler;
@@ -85,7 +85,7 @@ public class OutScheduler extends AbstractScheduler {
       svci = getSvci(msg.getOwnerHref(), "out-scheduler");
 
       return processOutBox();
-    } catch (final CalFacadeStaleStateException csse) {
+    } catch (final BedeworkStaleStateException ignored) {
       if (debug()) {
         debug("Stale state exception");
       }
@@ -255,9 +255,9 @@ public class OutScheduler extends AbstractScheduler {
             allOk = false;
           }
         }
-      } catch (final CalFacadeException cfe) {
+      } catch (final BedeworkException be) {
         // Should count the exceptions and discard after a number of retries.
-        error(cfe);
+        error(be);
         allOk = false;
       }
 

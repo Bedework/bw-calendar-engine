@@ -18,7 +18,7 @@
 */
 package org.bedework.calcore;
 
-import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.base.exc.BedeworkException;
 
 /** Allow transaction support. This is implemented by modules which
  * may want to do some cleanup at start and end of transactions.
@@ -48,5 +48,5 @@ public interface Transactions {
    * 
    * @param cfe the error
    */
-  <T> T throwException(final CalFacadeException cfe);
+  <T> T throwException(final BedeworkException cfe);
 }

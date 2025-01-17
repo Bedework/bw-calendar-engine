@@ -20,7 +20,6 @@ package org.bedework.calsvc;
 
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwString;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calsvci.Contacts;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -84,8 +83,8 @@ public class ContactsImpl
   @Override
   public boolean exists(final Response resp,
                         final BwContact val) {
-    var getResp = findPersistent(val.getFinderKeyValue(),
-                                 val.getOwnerHref());
+    final var getResp = findPersistent(val.getFinderKeyValue(),
+                                       val.getOwnerHref());
 
     if (getResp.isError()) {
       Response.fromResponse(resp, getResp);

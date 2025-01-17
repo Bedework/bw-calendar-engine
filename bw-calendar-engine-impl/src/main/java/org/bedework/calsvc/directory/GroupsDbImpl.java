@@ -18,10 +18,10 @@
 */
 package org.bedework.calsvc.directory;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.util.Collection;
 import java.util.TreeSet;
@@ -88,7 +88,7 @@ public class GroupsDbImpl extends AbstractDirImpl {
   @Override
   public void addGroup(final BwGroup<?> group) {
     if (findGroup(group.getAccount()) != null) {
-      throw new CalFacadeException(CalFacadeErrorCode.duplicateAdminGroup);
+      throw new BedeworkException(CalFacadeErrorCode.duplicateAdminGroup);
     }
     cb.updateGroup(group, false);
   }
@@ -104,11 +104,11 @@ public class GroupsDbImpl extends AbstractDirImpl {
     final var g = findGroup(group.getAccount());
 
     if (g == null) {
-      throw new CalFacadeException("Group " + group + " does not exist");
+      throw new BedeworkException("Group " + group + " does not exist");
     }
 
     if (!checkPathForSelf(group, val)) {
-      throw new CalFacadeException(CalFacadeErrorCode.alreadyOnGroupPath);
+      throw new BedeworkException(CalFacadeErrorCode.alreadyOnGroupPath);
     }
 
     g.addGroupMember(val);
@@ -125,7 +125,7 @@ public class GroupsDbImpl extends AbstractDirImpl {
     final var g = findGroup(group.getAccount());
 
     if (g == null) {
-      throw new CalFacadeException("Group " + group + " does not exist");
+      throw new BedeworkException("Group " + group + " does not exist");
     }
 
     g.removeGroupMember(val);

@@ -9,7 +9,6 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.base.BwShareableDbentity;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.misc.Util;
 import org.bedework.util.misc.response.GetEntitiesResponse;

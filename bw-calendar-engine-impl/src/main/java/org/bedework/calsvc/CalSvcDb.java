@@ -23,7 +23,6 @@ import org.bedework.calcorei.Calintf;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.ShareableEntity;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.CalSvcIPars;

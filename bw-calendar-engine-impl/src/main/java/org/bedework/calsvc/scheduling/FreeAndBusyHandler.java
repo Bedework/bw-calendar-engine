@@ -19,6 +19,8 @@
 package org.bedework.calsvc.scheduling;
 
 import org.bedework.access.PrivilegeDefs;
+import org.bedework.base.exc.BedeworkAccessException;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.caldav.util.filter.EntityTypeFilter;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.caldav.util.filter.OrFilter;
@@ -36,9 +38,7 @@ import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
 import org.bedework.calfacade.base.StartEndComponent;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.EventPeriod;
 import org.bedework.calfacade.util.EventPeriods;
@@ -115,7 +115,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
 
       cal = getCal().getCalendars(u, PrivilegeDefs.privReadFreeBusy);
       if (cal == null) {
-        throw new CalFacadeAccessException();
+        throw new BedeworkAccessException();
       }
 
       getCal().checkAccess(cal, PrivilegeDefs.privReadFreeBusy, false);
@@ -126,7 +126,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
                            BwCalendar.calTypeInbox,
                            true,
                            PrivilegeDefs.privReadFreeBusy);
-      } catch (final CalFacadeAccessException cae) {
+      } catch (final BedeworkAccessException ignored) {
         getSpecialCalendar(who,
                            BwCalendar.calTypeInbox,
                            true,
@@ -138,7 +138,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
     }
 
     if (cals == null) {
-      throw new CalFacadeAccessException();
+      throw new BedeworkAccessException();
     }
 
     final var fb = new BwEventObj();
@@ -176,7 +176,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
                                                             "freeAndBusy",
                                                             false));
     } catch (final WebdavException t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
 
     final String userHref = who.getPrincipalRef();
@@ -307,7 +307,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
       if (debug()) {
         error(t);
       }
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
 
     return fb;
@@ -360,7 +360,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
     final FbResponses resps = new FbResponses();
 
     if (start.getDateType() || end.getDateType()) {
-      throw new CalFacadeException(CalFacadeErrorCode.schedulingBadGranulatorDt);
+      throw new BedeworkException(CalFacadeErrorCode.schedulingBadGranulatorDt);
     }
 
     resps.setResponses(new ArrayList<>());
@@ -423,7 +423,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
         // Validity check
         if (!allEp.getStart().equals(respEp.getStart()) ||
             !allEp.getEnd().equals(respEp.getEnd())) {
-          throw new CalFacadeException(CalFacadeErrorCode.schedulingBadResponse);
+          throw new BedeworkException(CalFacadeErrorCode.schedulingBadResponse);
         }
 
         if ((respEp.getType() == BwFreeBusyComponent.typeBusy) ||
@@ -484,7 +484,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
       startDt = new DateTime(start.getDate());
       endDt = new DateTime(end.getDate());
     } catch (final ParseException pe) {
-      throw new CalFacadeException(pe);
+      throw new BedeworkException(pe);
     }
 
     if (fb.getDtstart().after(start)) {
@@ -547,7 +547,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
       //  debug("gpp.startDt=" + gpp.startDt + " end=" + end);
       //}
       if (limit < 0) {
-        throw new CalFacadeException("org.bedework.svci.limit.exceeded");
+        throw new BedeworkException("org.bedework.svci.limit.exceeded");
       }
       limit--;
 
@@ -564,7 +564,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
         psdt = new DateTime(gpp.startDt.getDtval());
         pedt = new DateTime(gpp.endDt.getDtval());
       } catch (final ParseException pe) {
-        throw new CalFacadeException(pe);
+        throw new BedeworkException(pe);
       }
 
       psdt.setUtc(true);

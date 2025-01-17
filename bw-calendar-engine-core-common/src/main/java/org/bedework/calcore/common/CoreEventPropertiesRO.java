@@ -19,12 +19,12 @@
 
 package org.bedework.calcore.common;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CoreEventPropertiesI;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.util.AccessChecker;
 
@@ -56,8 +56,8 @@ public class CoreEventPropertiesRO<T extends BwEventProperty>
   }
 
   @Override
-  public <T> T throwException(final CalFacadeException cfe) {
-    throw cfe;
+  public <T> T throwException(final BedeworkException be) {
+    throw be;
   }
 
   @SuppressWarnings("unchecked")
@@ -74,7 +74,7 @@ public class CoreEventPropertiesRO<T extends BwEventProperty>
     } else if (locations) {
       eps = indexer.fetchAllLocations();
     } else {
-      throw new CalFacadeException("Unimplemented or software error");
+      throw new BedeworkException("Unimplemented or software error");
     }
 
     final Collection c = ac.getAccessUtil().checkAccess(eps, privRead, true);

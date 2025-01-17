@@ -19,6 +19,8 @@
 package org.bedework.calsvc.scheduling;
 
 import org.bedework.access.PrivilegeDefs;
+import org.bedework.base.exc.BedeworkAccessException;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.caldav.server.sysinterface.Host;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
@@ -26,9 +28,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvc.scheduling.hosts.BwHosts;
@@ -148,7 +148,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
             ui.setAttendeeScheduleStatus(null);
             ui.setStatus(ScheduleStates.scheduleOk);
           }
-        } catch (final CalFacadeAccessException cae) {
+        } catch (final BedeworkAccessException ignored) {
           ui.setStatus(ScheduleStates.scheduleNoAccess);
           deliveryStatus = IcalDefs.deliveryStatusNoAccess;
         }
@@ -355,7 +355,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     if (ui.getStatus() == ScheduleStates.scheduleDeferred) {
       sr.externalRcs.add(recip);
     } else if (ui.getStatus() == ScheduleStates.scheduleNoAccess) {
-      Response.error(sr, new CalFacadeException(
+      Response.error(sr, new BedeworkException(
               CalFacadeErrorCode.schedulingAttendeeAccessDisallowed));
 
       if (att != null) {
@@ -443,7 +443,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
       } else {
         ui.inboxPath = inbox.getPath();
       }
-    } catch (final CalFacadeAccessException cae) {
+    } catch (final BedeworkAccessException ignored) {
       ui.setStatus(ScheduleStates.scheduleNoAccess);
     }
 

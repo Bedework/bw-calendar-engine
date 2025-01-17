@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -26,7 +27,6 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.configs.BasicSystemProperties;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.prefs.BwCommonUserPrefs;
@@ -102,7 +102,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
     }
 
     if (prefs == null) {
-      throw new CalFacadeException(
+      throw new BedeworkException(
               "org.bedework.unable.to.initialise");
     }
 

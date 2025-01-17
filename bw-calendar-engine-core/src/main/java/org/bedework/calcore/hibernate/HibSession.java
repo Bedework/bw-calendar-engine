@@ -20,7 +20,6 @@
 package org.bedework.calcore.hibernate;
 
 import org.bedework.calfacade.base.BwUnversionedDbentity;
-import org.bedework.calfacade.exc.CalFacadeException;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
@@ -142,57 +141,57 @@ public interface HibSession extends Serializable {
   /** Mark the query as cacheable
    *
    */
-  public void cacheableQuery();
+  void cacheableQuery();
 
   /** Set the named parameter with the given value
    *
    * @param parName     String parameter name
    * @param parVal      String parameter value
    */
-  public void setString(String parName, String parVal);
+  void setString(String parName, String parVal);
 
   /** Set the named parameter with the given value
    *
    * @param parName     String parameter name
    * @param parVal      boolean parameter value
    */
-  public void setBool(String parName, boolean parVal);
+  void setBool(String parName, boolean parVal);
 
   /** Set the named parameter with the given value
    *
    * @param parName     String parameter name
    * @param parVal      int parameter value
    */
-  public void setInt(String parName, int parVal);
+  void setInt(String parName, int parVal);
 
   /** Set the named parameter with the given value
    *
    * @param parName     String parameter name
    * @param parVal      long parameter value
    */
-  public void setLong(String parName, long parVal);
+  void setLong(String parName, long parVal);
 
   /** Set the named parameter with the given value
    *
    * @param parName     String parameter name
    * @param parVal      Object parameter value
    */
-  public void setEntity(String parName, Object parVal);
+  void setEntity(String parName, Object parVal);
 
   /** Set the named parameter with the given value
    *
    * @param parName     String parameter name
    * @param parVal      Object parameter value
    */
-  public void setParameter(String parName, Object parVal) throws CalFacadeException ;
+  void setParameter(String parName, Object parVal);
 
   /** Set the named parameter with the given Collection
    *
    * @param parName     String parameter name
    * @param parVal      Collection parameter value
    */
-  public void setParameterList(String parName,
-                               Collection<?> parVal) throws CalFacadeException ;
+  void setParameterList(String parName,
+                        Collection<?> parVal);
 
   /** Set the first result for a paged batch
    *

@@ -18,11 +18,11 @@
 */
 package org.bedework.calsvc.scheduling;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.util.calendar.IcalDefs;
@@ -56,7 +56,7 @@ public class Scheduling extends ImplicitSchedulingHandler {
     final String preferred = getSvc().getCalendarsHandler().
             getPreferred(IcalDefs.entityTypeIcalNames[ev.getEntityType()]);
     if (preferred == null) {
-      throw new CalFacadeException(CalFacadeErrorCode.schedulingNoCalendar);
+      throw new BedeworkException(CalFacadeErrorCode.schedulingNoCalendar);
     }
 
     if (debug()) {

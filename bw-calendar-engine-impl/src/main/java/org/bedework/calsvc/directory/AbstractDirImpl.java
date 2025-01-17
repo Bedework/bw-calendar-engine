@@ -20,6 +20,7 @@ package org.bedework.calsvc.directory;
 
 import org.bedework.access.AccessPrincipal;
 import org.bedework.access.WhoDefs;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.BwPrincipalInfo.BooleanPrincipalProperty;
@@ -31,7 +32,6 @@ import org.bedework.calfacade.configs.CardDavInfo;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.util.caching.FlushMap;
@@ -944,7 +944,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   @Override
   public String normalizeCua(final String val) {
     if (val == null) {
-      throw new CalFacadeException(CalFacadeErrorCode.badCalendarUserAddr);
+      throw new BedeworkException(CalFacadeErrorCode.badCalendarUserAddr);
     }
 
     if (val.startsWith("/")) {
@@ -956,7 +956,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
     if (colonPos > 0) {
       if (atPos < colonPos) {
-        throw new CalFacadeException(CalFacadeErrorCode.badCalendarUserAddr);
+        throw new BedeworkException(CalFacadeErrorCode.badCalendarUserAddr);
       }
 
       /* Ensure mailto is lower case. */
@@ -1304,7 +1304,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       /* New request for card */
       return cl.getString(href, "text/vcard");
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       try {
         cl.release();
@@ -1352,7 +1352,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       // Expect one response only - might have responseDescription
 
       if (msr.responses.size() != 1) {
-        throw new CalFacadeException(
+        throw new BedeworkException(
                 "Bad response. Expected exactly 1 response element");
       }
 

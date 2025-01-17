@@ -25,6 +25,8 @@ import org.bedework.access.Acl;
 import org.bedework.access.Privilege;
 import org.bedework.access.Privileges;
 import org.bedework.access.WhoDefs;
+import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.exc.BedeworkForbidden;
 import org.bedework.caldav.util.notifications.NotificationType;
 import org.bedework.caldav.util.sharing.AccessType;
 import org.bedework.caldav.util.sharing.InviteNotificationType;
@@ -42,8 +44,6 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.svc.SharingReplyResult;
 import org.bedework.calfacade.svc.SubscribeResult;
 import org.bedework.calsvci.NotificationsI;
@@ -97,10 +97,10 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     try {
       return getSvc().getSharingHandler().share(col, share);
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       getSvc().popPrincipal();
     }
@@ -129,7 +129,7 @@ public class Sharing extends CalSvcDb implements SharingI {
   public ShareResultType share(final BwCalendar col,
                                final ShareType share) {
     if (!col.getCanAlias()) {
-      throw new CalFacadeForbidden("Cannot share");
+      throw new BedeworkForbidden("Cannot share");
     }
 
     final ShareResultType sr = new ShareResultType();
@@ -262,10 +262,10 @@ public class Sharing extends CalSvcDb implements SharingI {
                                          in.getUid());
       try {
         col.setProperty(NamespaceAbbrevs.prefixed(qn), in.toXml());
-      } catch (final CalFacadeException cfe) {
-        throw cfe;
+      } catch (final BedeworkException be) {
+        throw be;
       } catch (final Throwable t) {
-        throw new CalFacadeException(t);
+        throw new BedeworkException(t);
       }
     }
 
@@ -288,10 +288,10 @@ public class Sharing extends CalSvcDb implements SharingI {
         }
         setAccess(col, ap);
       }
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
 
     return sr;
@@ -303,7 +303,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     final BwCalendar home = getCols().getHome();
 
     if (!home.getPath().equals(col.getPath())) {
-      throw new CalFacadeForbidden("Not calendar home");
+      throw new BedeworkForbidden("Not calendar home");
     }
 
     /* We must have at least read access to the shared collection */
@@ -312,7 +312,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     if (sharerCol == null) {
       // Bad hosturl
-      throw new CalFacadeForbidden("Bad hosturl or no access");
+      throw new BedeworkForbidden("Bad hosturl or no access");
     }
 
     final Holder<AccessType> access = new Holder<>();
@@ -379,7 +379,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     try {
       return new Parser().parseInvite(inviteStr);
     } catch (final WebdavException we) {
-      throw new CalFacadeException(we);
+      throw new BedeworkException(we);
     }
   }
 
@@ -436,7 +436,7 @@ public class Sharing extends CalSvcDb implements SharingI {
   @Override
   public void publish(final BwCalendar col) {
     if (!col.getCanAlias()) {
-      throw new CalFacadeForbidden("Cannot publish");
+      throw new BedeworkForbidden("Cannot publish");
     }
 
     // Mark the collection as shared and published
@@ -449,10 +449,10 @@ public class Sharing extends CalSvcDb implements SharingI {
 
       setAccess(col,
                 new AddPrincipal(null, true));
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -460,7 +460,7 @@ public class Sharing extends CalSvcDb implements SharingI {
   public void unpublish(final BwCalendar col) {
     if (col.getPublick() ||
         (col.getQproperty(AppleServerTags.publishUrl) == null)) {
-      throw new CalFacadeForbidden("Not published");
+      throw new BedeworkForbidden("Not published");
     }
 
     /* Remove access to all */
@@ -478,10 +478,10 @@ public class Sharing extends CalSvcDb implements SharingI {
       if (acl != null) {
         getSvc().changeAccess(col, acl.getAces(), true);
       }
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -495,7 +495,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     if (publishedCol == null) {
       // Bad url?
-      throw new CalFacadeForbidden("Bad url or no access");
+      throw new BedeworkForbidden("Bad url or no access");
     }
 
     /* The collection MUST be published - all public calendars are considered
@@ -504,7 +504,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     if (!publishedCol.getPublick() &&
         (publishedCol.getQproperty(AppleServerTags.publishUrl) == null)) {
-      throw new CalFacadeForbidden("Not published");
+      throw new BedeworkForbidden("Not published");
     }
 
     /* We may already be subscribed. If so we're done.
@@ -576,10 +576,10 @@ public class Sharing extends CalSvcDb implements SharingI {
         final String pw = getSvc().getEncrypter().encrypt(remotePw);
         alias.setRemotePw(pw);
         alias.setPwNeedsEncrypt(false);
-      } catch (final CalFacadeException cfe) {
-        throw cfe;
+      } catch (final BedeworkException be) {
+        throw be;
       } catch (final Throwable t) {
-        throw new CalFacadeException(t);
+        throw new BedeworkException(t);
       }
     }
 
@@ -657,10 +657,10 @@ public class Sharing extends CalSvcDb implements SharingI {
       note.setNotification(reply);
 
       getSvc().getNotificationsHandler().add(note);
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       getSvc().popPrincipal();
     }
@@ -711,7 +711,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
       if (col == null) {
         // Bad hosturl?
-        throw new CalFacadeForbidden(CalFacadeErrorCode.shareTargetNotFound);
+        throw new BedeworkForbidden(CalFacadeErrorCode.shareTargetNotFound);
       }
 
       /* See if we have an outstanding invite for this user */
@@ -728,7 +728,7 @@ public class Sharing extends CalSvcDb implements SharingI {
         if (debug()) {
           debug("No invite notification on collection with name: " + pname);
         }
-        throw new CalFacadeForbidden(CalFacadeErrorCode.noInvite);
+        throw new BedeworkForbidden(CalFacadeErrorCode.noInvite);
       }
 
       /* Remove the invite */
@@ -748,7 +748,7 @@ public class Sharing extends CalSvcDb implements SharingI {
         if (debug()) {
           debug("Cannot find invitee: " + invitee);
         }
-        throw new CalFacadeForbidden(CalFacadeErrorCode.noInviteeInUsers);
+        throw new BedeworkForbidden(CalFacadeErrorCode.noInviteeInUsers);
       }
 
       if (reply.testAccepted()) {
@@ -778,10 +778,10 @@ public class Sharing extends CalSvcDb implements SharingI {
       getSvc().getNotificationsHandler().add(note);
 
       return irt.testAccepted();
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       getSvc().popPrincipal();
     }
@@ -859,15 +859,15 @@ public class Sharing extends CalSvcDb implements SharingI {
 
       try {
         return removeAccess(target, principalHref);
-      } catch (final CalFacadeException cfe) {
-        throw cfe;
+      } catch (final BedeworkException be) {
+        throw be;
       } catch (final Throwable t) {
-        throw new CalFacadeException(t);
+        throw new BedeworkException(t);
       } finally {
         getSvc().popPrincipal();
       }
     } catch (final AccessException ae) {
-      throw new CalFacadeException(ae);
+      throw new BedeworkException(ae);
     }
   }
 
@@ -1171,16 +1171,16 @@ public class Sharing extends CalSvcDb implements SharingI {
         getSvc().pushPrincipalOrFail(target.getOwnerHref());
         try {
           setAccess(target, ap);
-        } catch (final CalFacadeException cfe) {
-          throw cfe;
+        } catch (final BedeworkException be) {
+          throw be;
         } catch (final Throwable t) {
-          throw new CalFacadeException(t);
+          throw new BedeworkException(t);
         } finally {
           getSvc().popPrincipal();
         }
       }
     } catch (final AccessException ae) {
-      throw new CalFacadeException(ae);
+      throw new BedeworkException(ae);
     }
   }
 
@@ -1193,7 +1193,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
       return acl.removeWho(who);
     } catch (final AccessException ae) {
-      throw new CalFacadeException(ae);
+      throw new BedeworkException(ae);
     }
   }
 

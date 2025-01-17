@@ -18,9 +18,9 @@
 */
 package org.bedework.inoutsched;
 
+import org.bedework.base.exc.BedeworkStaleStateException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.exc.CalFacadeStaleStateException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.AbstractScheduler;
 import org.bedework.calsvci.CalSvcI;
@@ -125,7 +125,7 @@ public class InScheduler extends AbstractScheduler {
       }
 
       return ProcessMessageResult.PROCESSED;
-    } catch (final CalFacadeStaleStateException csse) {
+    } catch (final BedeworkStaleStateException ignored) {
       if (debug()) {
         debug("Stale state exception");
       }
@@ -240,7 +240,7 @@ public class InScheduler extends AbstractScheduler {
 
       //deleteEvent(ei, false, false);
       return ProcessMessageResult.PROCESSED;
-    } catch (final CalFacadeStaleStateException csse) {
+    } catch (final BedeworkStaleStateException ignored) {
       if (debug()) {
         debug("Stale state exception");
       }
@@ -253,7 +253,7 @@ public class InScheduler extends AbstractScheduler {
     } finally {
       try {
         closeSvci(svci);
-      } catch (final CalFacadeStaleStateException csse) {
+      } catch (final BedeworkStaleStateException ignored) {
         if (debug()) {
           debug("Stale state exception");
         }

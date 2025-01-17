@@ -19,6 +19,8 @@
 package org.bedework.calcore.hibernate;
 
 import org.bedework.access.CurrentAccess;
+import org.bedework.base.exc.BedeworkDupNameException;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.common.CalintfHelper;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI;
@@ -34,10 +36,7 @@ import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.configs.AuthProperties;
-import org.bedework.calfacade.exc.CalFacadeBadRequest;
-import org.bedework.calfacade.exc.CalFacadeDupNameException;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.AccessChecker;
@@ -218,9 +217,9 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   }
 
   @Override
-  public <T> T throwException(final CalFacadeException cfe) {
+  public <T> T throwException(final BedeworkException be) {
     dao.rollback();
-    throw cfe;
+    throw be;
   }
 
   @Override
@@ -344,13 +343,13 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
           avails.add(lev);
         } else if (etype == IcalDefs.entityTypeVavailability) {
           if (ev != null) {
-            throwException(new CalFacadeException(CalFacadeErrorCode.duplicateName));
+            throwException(new BedeworkException(CalFacadeErrorCode.duplicateName));
             return null;
           }
 
           ev = lev;
         } else {
-          throwException(new CalFacadeException(CalFacadeErrorCode.duplicateName));
+          throwException(new BedeworkException(CalFacadeErrorCode.duplicateName));
           return null;
         }
       }
@@ -431,7 +430,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
           final DeletedState delState,
           final RecurringRetrievalMode recurRetrieval,
           final boolean freeBusy) {
-    throw new CalFacadeException("Implemented in the interface class");
+    throw new BedeworkException("Implemented in the interface class");
   }
 
   @Override
@@ -650,8 +649,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       // XXX Is this correct?
       try {
         ac.checkAccess(val, privWriteContent, false);
-      } catch (final CalFacadeException cfe) {
-        throwException(cfe);
+      } catch (final BedeworkException be) {
+        throwException(be);
       }
     }
 
@@ -701,7 +700,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
        */
       if (calendarNameExists(val, false, false) ||
           calendarNameExists(val, true, false)) {
-        throwException(new CalFacadeDupNameException(val.getName()));
+        throwException(new BedeworkDupNameException(val.getName()));
       }
     }
 
@@ -872,9 +871,9 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       }
 
       ac.checkAccess(ev, desiredAccess, false);
-    } catch (final CalFacadeException cfe) {
+    } catch (final BedeworkException be) {
       dao.rollback();
-      throw cfe;
+      throw be;
     }
 
     if (!reallyDelete && ev.getTombstoned()) {
@@ -1019,7 +1018,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     final var ev = ei.getEvent();
 
     if (ev.getRecurrenceId() != null) {
-      throw new CalFacadeException("Cannot move an instance");
+      throw new BedeworkException("Cannot move an instance");
     }
 
     deleteTombstoned(to.getPath(), ev.getUid());
@@ -1109,7 +1108,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
                                            final String token) {
     if (path == null) {
       dao.rollback();
-      throw new CalFacadeBadRequest("Missing path");
+      throw new BedeworkException("Missing path");
     }
 
     final String fpath = fixPath(path);
@@ -1323,7 +1322,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 /*    try {
       val.setLatestDate(Timezones.getUtc(rp.rangeEnd.toString(), stzid));
     } catch (Throwable t) {
-      throwException(new CalFacadeException(t));
+      throwException(new BedeworkException(t));
     } */
 
     int maxInstances = authProps.getMaxInstances();

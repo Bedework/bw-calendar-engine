@@ -18,7 +18,7 @@
 */
 package org.bedework.calcore.hibernate;
 
-import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.logging.BwLogger;
 
@@ -71,10 +71,10 @@ public final class CoreConfigurations extends ConfBase {
     try {
 
       loadConfigs();
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 

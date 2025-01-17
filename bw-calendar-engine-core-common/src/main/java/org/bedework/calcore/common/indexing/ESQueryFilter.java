@@ -18,6 +18,7 @@
 */
 package org.bedework.calcore.common.indexing;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.common.indexing.TermOrTermsQuery.AndQB;
 import org.bedework.calcore.common.indexing.TermOrTermsQuery.NotQB;
 import org.bedework.calcore.common.indexing.TermOrTermsQuery.OrQB;
@@ -39,7 +40,6 @@ import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.BwCollectionFilter;
 import org.bedework.calfacade.filter.BwHrefFilter;
 import org.bedework.calfacade.filter.BwViewFilter;
@@ -994,8 +994,8 @@ public class ESQueryFilter extends ESQueryFilterBase
               final Collection<?> valsC = (Collection<?>)val;
               vals = valsC.toArray(new String[valsC.size()]);
             } catch (final Throwable t) {
-              throw new CalFacadeException(CalFacadeErrorCode.filterBadOperator,
-                                           "Invalid query. Multi match only allowed on strings");
+              throw new BedeworkException(CalFacadeErrorCode.filterBadOperator,
+                                          "Invalid query. Multi match only allowed on strings");
             }
             qb = new MultiMatchQueryBuilder(path, vals);
             break;
@@ -1084,7 +1084,7 @@ public class ESQueryFilter extends ESQueryFilterBase
         break;
 
       default:
-        throw new CalFacadeException(CalFacadeErrorCode.filterBadOperator,
+        throw new BedeworkException(CalFacadeErrorCode.filterBadOperator,
                                      opType.toString());
     }
 
@@ -1146,7 +1146,7 @@ public class ESQueryFilter extends ESQueryFilterBase
     final BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
 
     if (ipie == null) {
-      throw new CalFacadeException("Missing property info for " + pi);
+      throw new BedeworkException("Missing property info for " + pi);
     }
 
     return ipie.getJname();

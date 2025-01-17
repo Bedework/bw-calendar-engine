@@ -18,6 +18,7 @@
 */
 package org.bedework.calcore.common.indexing;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttachment;
 import org.bedework.calfacade.BwAttendee;
@@ -49,7 +50,6 @@ import org.bedework.calfacade.SchedulingInfo;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.calfacade.base.CategorisedEntity;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.svc.BwAdminGroup;
@@ -1003,7 +1003,7 @@ public class EntityBuilder extends EntityBuilderBase {
 
         tms.add(tm);
       } catch (final Throwable t) {
-        throw new CalFacadeException(t);
+        throw new BedeworkException(t);
       } finally {
         popFields();
       }

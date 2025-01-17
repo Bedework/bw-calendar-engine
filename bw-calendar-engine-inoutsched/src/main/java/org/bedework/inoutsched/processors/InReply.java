@@ -18,6 +18,7 @@
 */
 package org.bedework.inoutsched.processors;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
@@ -26,7 +27,6 @@ import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
@@ -90,7 +90,7 @@ public class InReply extends InProcessor {
       }
 
       if (ev.getOriginator() == null) {
-        return Response.error(pr, new CalFacadeException(
+        return Response.error(pr, new BedeworkException(
                 CalFacadeErrorCode.schedulingNoOriginator));
       }
 
@@ -122,7 +122,7 @@ public class InReply extends InProcessor {
           final var recipients = si.getRecipientParticipants();
 
           if (recipients.size() != 1) {
-            return Response.error(pr, new CalFacadeException(
+            return Response.error(pr, new BedeworkException(
                     CalFacadeErrorCode.schedulingExpectOneAttendee));
           }
 
@@ -136,14 +136,14 @@ public class InReply extends InProcessor {
           if (attUri == null) {
             attUri = att.getCalendarAddress();
           } else if (!attUri.equals(att.getCalendarAddress())) {
-            return Response.error(pr, new CalFacadeException(
+            return Response.error(pr, new BedeworkException(
                     CalFacadeErrorCode.schedulingExpectOneAttendee));
           }
         }
       }
 
       if (attUri == null) {
-        return Response.error(pr, new CalFacadeException(
+        return Response.error(pr, new BedeworkException(
                 CalFacadeErrorCode.schedulingExpectOneAttendee));
       }
 
@@ -240,7 +240,7 @@ public class InReply extends InProcessor {
     }
 
     if (inBoxEv.getScheduleMethod() != ScheduleMethods.methodTypeReply) {
-      Response.error(sr, new CalFacadeException(
+      Response.error(sr, new BedeworkException(
               CalFacadeErrorCode.schedulingExpectOneAttendee));
       return false;
     }
@@ -263,7 +263,7 @@ public class InReply extends InProcessor {
         if (debug()) {
           debug("Not an attendee of " + calEv);
         }
-        Response.error(sr, new CalFacadeException(
+        Response.error(sr, new BedeworkException(
                 CalFacadeErrorCode.schedulingUnknownAttendee,
                 attUri));
         return false;

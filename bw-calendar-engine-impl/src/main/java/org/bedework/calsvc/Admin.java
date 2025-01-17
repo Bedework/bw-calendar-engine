@@ -20,7 +20,6 @@ package org.bedework.calsvc;
 
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.AdminI;
 
 import java.util.Collection;

@@ -22,6 +22,7 @@ import org.bedework.access.AccessException;
 import org.bedework.access.AccessPrincipal;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.PrivilegeSet;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -37,7 +38,6 @@ import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -313,12 +313,12 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   public void getResourceContent(final BwResource res) {
     try {
       getCal().getResourceContent(res);
-    } catch (final CalFacadeException cfe){
-      if (cfe.getMessage().equals(CalFacadeErrorCode.missingResourceContent)) {
+    } catch (final BedeworkException be){
+      if (be.getMessage().equals(CalFacadeErrorCode.missingResourceContent)) {
         return; // Caller will flag this.
       }
 
-      throw cfe;
+      throw be;
     }
 
   }
@@ -421,7 +421,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
       final StackedState ss = stack.pop();
 
       if (ss == null) {
-        throw new CalFacadeException("Nothing to pop");
+        throw new BedeworkException("Nothing to pop");
       }
 
       setPrincipal(ss.principal);

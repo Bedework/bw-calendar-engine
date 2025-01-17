@@ -4,6 +4,7 @@
 package org.bedework.calcore.hibernate;
 
 import org.bedework.access.WhoDefs;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -13,7 +14,6 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.base.BwShareableDbentity;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -206,7 +206,6 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
   /** Delete a group
    *
    * @param  group           BwGroup group object to delete
-   * @exception CalFacadeException If there's a problem
    */
   public  void removeGroup(final BwGroup<?> group,
                            final boolean admin) {
@@ -446,7 +445,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
     } else if (val instanceof BwLocation) {
       q = removeLocationPrefForAllQuery;
     } else {
-      throw new CalFacadeException("Can't handle " + val);
+      throw new BedeworkException("Can't handle " + val);
     }
 
     sess.createQuery(q);

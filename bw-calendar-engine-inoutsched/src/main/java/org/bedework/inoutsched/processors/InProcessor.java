@@ -18,11 +18,11 @@
 */
 package org.bedework.inoutsched.processors;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.ScheduleResult;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
@@ -186,8 +186,8 @@ public abstract class InProcessor extends CalSvcHelperRw {
       if (!cmnResp.isOk()) {
         return Response.fromResponse(resp, cmnResp);
       }
-    } catch (final CalFacadeException cfe) {
-      return Response.error(resp, cfe);
+    } catch (final BedeworkException be) {
+      return Response.error(resp, be);
     }
 
     return resp;

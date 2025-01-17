@@ -18,9 +18,9 @@
 */
 package org.bedework.tools.cmdutil;
 
+import org.bedework.base.exc.BedeworkAccessException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwLocation;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.misc.Util;
@@ -123,7 +123,7 @@ public class ProcessDelete extends CmdUtilHelper {
       getSvci().getCalendarsHandler().delete(cal, emptyIt, false);
 
       return true;
-    } catch (final CalFacadeAccessException cae) {
+    } catch (final BedeworkAccessException ignored) {
       if (cal != null) {
         pstate.addError("No access to collection " + cal.getPath());
       } else {
@@ -168,7 +168,7 @@ public class ProcessDelete extends CmdUtilHelper {
       }
 
       return true;
-    } catch (final CalFacadeAccessException cae) {
+    } catch (final BedeworkAccessException ignored) {
       pstate.addError("No access to event " + path + "/" + name);
       return false;
     } finally {

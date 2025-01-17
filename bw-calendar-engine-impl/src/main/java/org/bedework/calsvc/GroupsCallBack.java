@@ -20,7 +20,6 @@ package org.bedework.calsvc;
 
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.Directories;
 
 import java.util.Collection;

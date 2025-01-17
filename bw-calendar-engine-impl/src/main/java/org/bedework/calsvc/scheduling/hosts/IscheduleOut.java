@@ -18,8 +18,8 @@
 */
 package org.bedework.calsvc.scheduling.hosts;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.caldav.server.IscheduleMessage;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.util.misc.Util;
 
@@ -102,7 +102,7 @@ public class IscheduleOut extends IscheduleMessage {
 
       addHeader(dkimSig.substring(0, pos), dkimSig.substring(pos + 1));
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 

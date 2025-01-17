@@ -18,10 +18,10 @@
  */
 package org.bedework.indexer;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.configs.IndexProperties;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
@@ -179,7 +179,7 @@ public class MessageProcessor extends CalSys {
       ent = ((EventInfo)val).getEvent();
     } else {
       error("Cannot index class: " + val.getClass());
-      throw new CalFacadeException("org.bedework.index.unexpected.class");
+      throw new BedeworkException("org.bedework.index.unexpected.class");
     }
 
     if (ent != null) {
@@ -217,7 +217,7 @@ public class MessageProcessor extends CalSys {
 
       return userIndexer;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 }

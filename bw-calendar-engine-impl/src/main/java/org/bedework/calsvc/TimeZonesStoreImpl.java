@@ -18,12 +18,12 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.BwEventKey;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.BwDateTimeUtil;
 import org.bedework.calsvci.TimeZonesStoreI;
 import org.bedework.util.logging.BwLogger;
@@ -124,7 +124,7 @@ public class TimeZonesStoreImpl implements Logged, TimeZonesStoreI {
      *
      */
     if ((info != null) && !(info instanceof UpdateFromTimeZonesInfoInternal)) {
-      throw new CalFacadeException(CalFacadeErrorCode.illegalObjectClass);
+      throw new BedeworkException(CalFacadeErrorCode.illegalObjectClass);
     }
 
     boolean redo = false;

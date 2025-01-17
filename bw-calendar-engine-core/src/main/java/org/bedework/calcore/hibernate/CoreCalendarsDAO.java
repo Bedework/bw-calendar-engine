@@ -18,13 +18,12 @@
 */
 package org.bedework.calcore.hibernate;
 
+import org.bedework.base.exc.BedeworkBadRequest;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.base.BwLastMod;
-import org.bedework.calfacade.exc.CalFacadeBadRequest;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeInvalidSynctoken;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCalendar;
 import org.bedework.util.misc.Util;
@@ -255,7 +254,7 @@ class CoreCalendarsDAO extends DAOBase {
 
     if (path == null) {
       sess.rollback();
-      throw new CalFacadeBadRequest("Missing path");
+      throw new BedeworkBadRequest("Missing path");
     }
 
     if ((token != null) && (token.length() < 18)) {

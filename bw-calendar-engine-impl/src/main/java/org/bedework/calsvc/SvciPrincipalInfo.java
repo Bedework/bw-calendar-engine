@@ -21,8 +21,8 @@ package org.bedework.calsvc;
 import org.bedework.access.AccessException;
 import org.bedework.access.AccessPrincipal;
 import org.bedework.access.PrivilegeSet;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.PrincipalInfo;
 
 import java.util.ArrayDeque;
@@ -89,7 +89,7 @@ final class SvciPrincipalInfo extends PrincipalInfo {
     final SvciPrincipalInfo.StackedState ss = stack.pop();
 
     if (ss == null) {
-      throw new CalFacadeException("Nothing to pop");
+      throw new BedeworkException("Nothing to pop");
     }
 
     setPrincipal(ss.principal);

@@ -18,6 +18,8 @@
 */
 package org.bedework.chgnote;
 
+import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.exc.BedeworkStaleStateException;
 import org.bedework.caldav.util.notifications.BaseNotificationType;
 import org.bedework.caldav.util.notifications.NotificationType;
 import org.bedework.caldav.util.notifications.ResourceChangeType;
@@ -31,8 +33,6 @@ import org.bedework.caldav.util.notifications.suggest.SuggestNotificationType;
 import org.bedework.caldav.util.notifications.suggest.SuggestResponseNotificationType;
 import org.bedework.calfacade.AliasesInfo;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.exc.CalFacadeStaleStateException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calsvc.AbstractScheduler;
@@ -278,7 +278,7 @@ public class Notifier extends AbstractScheduler {
       } finally {
         closeSvci(getSvc());
       }
-    } catch (final CalFacadeStaleStateException csse) {
+    } catch (final BedeworkStaleStateException csse) {
       if (debug()) {
         debug("Stale state exception");
       }
@@ -312,7 +312,7 @@ public class Notifier extends AbstractScheduler {
       } else {
         return processEntity(oheMsg);
       }
-    } catch (final CalFacadeStaleStateException csse) {
+    } catch (final BedeworkStaleStateException ignored) {
       if (debug()) {
         debug("Stale state exception");
       }
@@ -636,7 +636,7 @@ public class Notifier extends AbstractScheduler {
         return Parser.fromXml(((NotificationEvent)msg).getNotification());
       }
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
     return null;
   }

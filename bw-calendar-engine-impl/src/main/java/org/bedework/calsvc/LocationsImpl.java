@@ -18,9 +18,9 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calsvci.Locations;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -87,8 +87,8 @@ public class LocationsImpl
       }
 
       return Response.ok(resp, null);
-    } catch (final CalFacadeException cfe) {
-      return Response.error(resp, cfe);
+    } catch (final BedeworkException be) {
+      return Response.error(resp, be);
     }
   }
 

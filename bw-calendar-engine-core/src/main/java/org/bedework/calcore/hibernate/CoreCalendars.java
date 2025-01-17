@@ -23,6 +23,8 @@ import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
 import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
+import org.bedework.base.exc.BedeworkAccessException;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.Transactions;
 import org.bedework.calcore.common.AccessUtil;
 import org.bedework.calcore.common.CalintfHelper;
@@ -36,9 +38,7 @@ import org.bedework.calfacade.CollectionAliases;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.base.BwLastMod;
 import org.bedework.calfacade.configs.BasicSystemProperties;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
@@ -115,10 +115,10 @@ class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public <T> T throwException(final CalFacadeException cfe)
+  public <T> T throwException(final BedeworkException be)
           {
     dao.rollback();
-    throw cfe;
+    throw be;
   }
 
   @Override
@@ -296,10 +296,10 @@ class CoreCalendars extends CalintfHelper
         return null;
       }
 
-      throw new CalFacadeAccessException();
+      throw new BedeworkAccessException();
     }
 
-    throw new CalFacadeException(ger.getMessage());
+    throw new BedeworkException(ger.getMessage());
   }
 
   @Override
@@ -365,7 +365,7 @@ class CoreCalendars extends CalintfHelper
     ac.checkAccess(newParent, privBind, false);
 
     if (newParent.getCalType() != BwCalendar.calTypeFolder) {
-      throw new CalFacadeException(CalFacadeErrorCode.illegalCalendarCreation);
+      throw new BedeworkException(CalFacadeErrorCode.illegalCalendarCreation);
     }
 
     val = unwrap(val);
@@ -468,23 +468,23 @@ class CoreCalendars extends CalintfHelper
 
     final String parentPath = val.getColPath();
     if (parentPath == null) {
-      throw new CalFacadeException(CalFacadeErrorCode.cannotDeleteCalendarRoot);
+      throw new BedeworkException(CalFacadeErrorCode.cannotDeleteCalendarRoot);
     }
 
     /* Ensure the parent exists and we have writeContent on the parent.
      */
     final BwCalendar parent = getCalendar(parentPath, privWriteContent, false);
     if (parent == null) {
-      throw new CalFacadeException(CalFacadeErrorCode.collectionNotFound);
+      throw new BedeworkException(CalFacadeErrorCode.collectionNotFound);
     }
 
     val = getCalendar(val.getPath(), privUnbind, false);
     if (val == null) {
-      throw new CalFacadeException(CalFacadeErrorCode.collectionNotFound);
+      throw new BedeworkException(CalFacadeErrorCode.collectionNotFound);
     }
 
     if (!isEmpty(val)) {
-      throw new CalFacadeException(CalFacadeErrorCode.collectionNotEmpty);
+      throw new BedeworkException(CalFacadeErrorCode.collectionNotEmpty);
     }
 
     /* See if this is a no-op after all. We do this now to ensure the caller
@@ -538,7 +538,7 @@ class CoreCalendars extends CalintfHelper
     final BwCalendar userrootcal = dao.getCollection(path);
 
     if (userrootcal == null) {
-      throw new CalFacadeException("No user root at " + path);
+      throw new BedeworkException("No user root at " + path);
     }
 
     BwCalendar parentCal = userrootcal;
@@ -659,7 +659,7 @@ class CoreCalendars extends CalintfHelper
   public boolean testSynchCol(final BwCalendar col,
                               final String token)
           {
-    throw new CalFacadeException("Should not get here - handled by interface");
+    throw new BedeworkException("Should not get here - handled by interface");
   }
 
   @Override
@@ -817,7 +817,7 @@ class CoreCalendars extends CalintfHelper
     BwCalendar parent = getCalendar(pathTo, privRead);
 
     if (parent == null) {
-      throw new CalFacadeException("org.bedework.calcore.calendars.unabletocreate");
+      throw new BedeworkException("org.bedework.calcore.calendars.unabletocreate");
     }
     */
 
@@ -890,7 +890,7 @@ class CoreCalendars extends CalintfHelper
       } else {
         col = getCalendar(path, desiredAccess, false);
       }
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       col = null;
     }
 
@@ -943,13 +943,13 @@ class CoreCalendars extends CalintfHelper
 
       switch (name) {
         case BasicSystemProperties.userInbox ->
-                throw new CalFacadeException(
+                throw new BedeworkException(
                         CalFacadeErrorCode.illegalCalendarCreation);
         case BasicSystemProperties.userOutbox ->
-                throw new CalFacadeException(
+                throw new BedeworkException(
                         CalFacadeErrorCode.illegalCalendarCreation);
         case BasicSystemProperties.defaultNotificationsName ->
-                throw new CalFacadeException(
+                throw new BedeworkException(
                         CalFacadeErrorCode.illegalCalendarCreation);
       }
 
@@ -959,7 +959,7 @@ class CoreCalendars extends CalintfHelper
      */
     if ((name == null) ||
         name.contains("/")) {
-      throw new CalFacadeException(CalFacadeErrorCode.illegalCalendarCreation);
+      throw new BedeworkException(CalFacadeErrorCode.illegalCalendarCreation);
     }
 
     /* Ensure the new path is unique */
@@ -975,7 +975,7 @@ class CoreCalendars extends CalintfHelper
 
     if (col != null) {
       if (!col.getTombstoned()) {
-        throw new CalFacadeException(CalFacadeErrorCode.duplicateCalendar);
+        throw new BedeworkException(CalFacadeErrorCode.duplicateCalendar);
       }
 
       dao.deleteCalendar(unwrap(col));
@@ -996,7 +996,7 @@ class CoreCalendars extends CalintfHelper
       parent = getCalendar(parentPath, access, false);
 
       if (parent == null) {
-        throw new CalFacadeException(CalFacadeErrorCode.collectionNotFound,
+        throw new BedeworkException(CalFacadeErrorCode.collectionNotFound,
                                      parentPath);
       }
 
@@ -1007,14 +1007,14 @@ class CoreCalendars extends CalintfHelper
         if (val.getAlias() ||
             ((val.getCalType() != BwCalendar.calTypeFolder) &&
             (val.getCalType() != BwCalendar.calTypeResourceCollection))) {
-          throw new CalFacadeException(CalFacadeErrorCode.illegalCalendarCreation);
+          throw new BedeworkException(CalFacadeErrorCode.illegalCalendarCreation);
         }
 
         if (val.getCalType() == BwCalendar.calTypeFolder) {
           val.setCalType(BwCalendar.calTypeResourceCollection);
         }
       } else if (parent.getCalType() != BwCalendar.calTypeFolder) {
-        throw new CalFacadeException(CalFacadeErrorCode.illegalCalendarCreation);
+        throw new BedeworkException(CalFacadeErrorCode.illegalCalendarCreation);
       }
 
       newPath = Util.buildPath(colPathEndsWithSlash, parent.getPath(), 

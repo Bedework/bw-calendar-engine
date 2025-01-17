@@ -19,6 +19,7 @@
 package org.bedework.calcore.common.indexing;
 
 import org.bedework.access.CurrentAccess;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.common.indexing.DocBuilder.ItemKind;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
@@ -46,7 +47,6 @@ import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.configs.SystemProperties;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SortTerm;
 import org.bedework.calfacade.indexing.BwIndexFetcher;
 import org.bedework.calfacade.indexing.BwIndexer;
@@ -548,7 +548,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     try {
       final UpdateResponse ur = getClient().update(req, RequestOptions.DEFAULT);
     } catch (final IOException ie) {
-      throw new CalFacadeException(ie);
+      throw new BedeworkException(ie);
     }
   }
 
@@ -1091,7 +1091,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         final String kval = hit.getId();
 
         if (kval == null) {
-          throw new CalFacadeException(
+          throw new BedeworkException(
                   "org.bedework.index.noitemkey");
         }
 
@@ -1261,7 +1261,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       if (debug()) {
         error(t);
       }
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       lastIndexTime = System.currentTimeMillis();
     }
@@ -1619,7 +1619,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     ui = updateInfo.get(targetIndex);
 
     if (ui == null) {
-      throw new CalFacadeException("Unable to mark update");
+      throw new BedeworkException("Unable to mark update");
     }
 
     ui.setUpdated(true);
@@ -1645,11 +1645,11 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     } catch (final OpenSearchException ese) {
       // Failed somehow
       error(ese);
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
       error(t);
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       lastIndexTime = System.currentTimeMillis();
     }
@@ -1679,11 +1679,11 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     } catch (final OpenSearchException ese) {
       // Failed somehow
       error(ese);
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
       error(t);
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       lastIndexTime = System.currentTimeMillis();
     }
@@ -1717,11 +1717,11 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     } catch (final OpenSearchException ese) {
       // Failed somehow
       error(ese);
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
       error(t);
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       lastIndexTime = System.currentTimeMillis();
     }
@@ -1757,11 +1757,11 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       indexDoc(db.makeUpdateInfoDoc(docType), true);
 
       return newName;
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
       error(t);
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -1795,7 +1795,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       return res;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -1852,7 +1852,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
 
     if (alias == null) {
-      throw new CalFacadeException("Bad name " + index);
+      throw new BedeworkException("Bad name " + index);
     }
 
     //IndicesAliasesResponse resp = null;
@@ -1909,7 +1909,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       error(ese);
       return -1;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -2609,8 +2609,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       resp.setEntity(loc);
       return resp;
-    } catch (final CalFacadeException cfe) {
-      return errorReturn(resp, cfe);
+    } catch (final BedeworkException be) {
+      return errorReturn(resp, be);
     }
   }
 
@@ -2848,7 +2848,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     try {
       resp = cl.search(req, RequestOptions.DEFAULT);
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
 
 //    if (resp.status() != RestStatus.OK) {
@@ -2926,7 +2926,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       final String kval = hit.getId();
 
       if (kval == null) {
-        throw new CalFacadeException("org.bedework.index.noitemkey");
+        throw new BedeworkException("org.bedework.index.noitemkey");
       }
       final Map<String, Object> map = hit.getSourceAsMap();
 
@@ -3005,7 +3005,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       return res;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       closeScroll(scrollId);
     }
@@ -3033,7 +3033,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       final AcknowledgedResponse deleteIndexResponse =
               getClient().indices().delete(request, RequestOptions.DEFAULT);
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -3136,7 +3136,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         scrollId = scrollResp.getScrollId();
       }
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       closeScroll(scrollId);
     }
@@ -3181,7 +3181,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       return getEntityBuilder(hit.getSourceAsMap());
     } catch (final IOException ie) {
-      throw new CalFacadeException(ie);
+      throw new BedeworkException(ie);
     } finally {
       fetchEnd();
     }
@@ -3217,7 +3217,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     try {
       resp = getClient().search(req, RequestOptions.DEFAULT);
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
 
     final SearchHits hits = resp.getHits();
@@ -3282,7 +3282,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
   private void mustBe(final String reqDocType) {
     if (!docType.equals(reqDocType)) {
-      throw new CalFacadeException("Wrong index type " + docType +
+      throw new BedeworkException("Wrong index type " + docType +
                                            " for expected " + reqDocType);
     }
   }
@@ -3350,18 +3350,18 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         return indexDoc(di, waitForIt);
       }
 
-      throw new CalFacadeException(
+      throw new BedeworkException(
               new IndexException(IndexException.unknownRecordType,
                                  rec.getClass().getName()));
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final VersionConflictEngineException vcee) {
       if (forTouch) {
         // Ignore - already touched
         return null;
       }
       error(vcee);
-      throw new CalFacadeException(vcee);
+      throw new BedeworkException(vcee);
       /* Can't do this any more
       if (vcee.currentVersion() == vcee.getProvidedVersion()) {
         warn("Failed index with equal version for type " + 
@@ -3372,7 +3372,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       return null;
       */
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -3482,10 +3482,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       //</editor-fold>
 
       return iresp;
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -3514,7 +3514,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     if (rp.instances.isEmpty()) {
       // No instances for an alleged recurring event.
       return false;
-      //throw new CalFacadeException(CalFacadeErrorCode.noRecurrenceInstances);
+      //throw new BedeworkException(CalFacadeErrorCode.noRecurrenceInstances);
     }
 
     int instanceCt = maxInstances;
@@ -3661,7 +3661,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         ok = false;
       }
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
 
     return ok;
@@ -3688,7 +3688,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
               .bulk(bulkReq, RequestOptions.DEFAULT);
 
       if (bresp.hasFailures()) {
-        throw new CalFacadeException("Failed bulk index: " + bresp.buildFailureMessage());
+        throw new BedeworkException("Failed bulk index: " + bresp.buildFailureMessage());
       }
 
       if (debug()) {
@@ -3700,7 +3700,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       return new BulkRequest();
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -3744,12 +3744,12 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                       recurid);
 
       return indexDoc(di, waitForIt); //ei.getEvent().getTombstoned());
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final VersionConflictEngineException vcee) {
       error(vcee);
       error("Event was " + ei.getEvent());
-      throw new CalFacadeException(vcee);
+      throw new BedeworkException(vcee);
       /* Can't do this any more
       if (vcee.currentVersion() == vcee.getProvidedVersion()) {
         warn("Failed index with equal version for type " +
@@ -3769,10 +3769,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         return null;
       }
       error("Event was " + ei.getEvent());
-      throw new CalFacadeException(ose);
+      throw new BedeworkException(ose);
     } catch (final Throwable t) {
       error("Event was " + ei.getEvent());
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -3813,7 +3813,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     final CurrentAccess ca;
     try {
       ca = accessCheck.checkAccess(ev, desiredAccess, true);
-    } catch (final CalFacadeException e) {
+    } catch (final BedeworkException ignored) {
       return null;
     }
 
@@ -3827,8 +3827,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
   private List<EventInfo> fetchEvents(final QueryBuilder qb,
                                       final int count,
-                                      final int desiredAccess)
-          throws CalFacadeException  {
+                                      final int desiredAccess) {
     final List<EventInfo> eis =
             fetchEntities(docTypeEvent,
                           new BuildEntity<>() {
@@ -3844,7 +3843,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                               final Response resp = new Response();
                               restoreEvent(resp, entity);
                               if (!resp.isOk()) {
-                                throw new CalFacadeException(resp.toString());
+                                throw new BedeworkException(resp.toString());
                               }
 
                               return entity;
@@ -4000,8 +3999,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                        (rrm != null) && (rrm.mode == Rmode.expanded));
         default -> null;
       };
-    } catch (final CalFacadeException cfe) {
-      errorReturn(resp, cfe);
+    } catch (final BedeworkException be) {
+      errorReturn(resp, be);
       return null;
     }
   }
@@ -4198,7 +4197,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
   private void requireDocType(final String docType) {
     if (!this.docType.equals(docType)) {
-      throw new CalFacadeException("Require doctype: " + docType);
+      throw new BedeworkException("Require doctype: " + docType);
     }
   }
 

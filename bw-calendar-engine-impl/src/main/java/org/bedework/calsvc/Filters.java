@@ -18,11 +18,11 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.base.exc.BedeworkAccessException;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.caldav.util.filter.parse.EventQuery;
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.responses.GetFilterDefResponse;
@@ -67,7 +67,7 @@ class Filters extends CalSvcDb implements FiltersI {
       } catch (final Throwable t) {
         pr.ok = false;
         pr.message = t.getMessage();
-        pr.cfe = new CalFacadeException(t);
+        pr.be = new BedeworkException(t);
       }
 
       return pr;
@@ -93,7 +93,7 @@ class Filters extends CalSvcDb implements FiltersI {
     try {
       org.bedework.caldav.util.filter.parse.Filters.parse(val);
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -119,9 +119,9 @@ class Filters extends CalSvcDb implements FiltersI {
         gfdr.setStatus(Response.Status.ok);
         gfdr.setFilterDef(fdef);
       }
-    } catch (final CalFacadeException cfe) {
+    } catch (final BedeworkException be) {
       gfdr.setStatus(Response.Status.failed);
-      gfdr.setMessage(cfe.getLocalizedMessage());
+      gfdr.setMessage(be.getLocalizedMessage());
     }
     
     return gfdr;
@@ -138,7 +138,7 @@ class Filters extends CalSvcDb implements FiltersI {
   public void update(final BwFilterDef val) {
     if (!getSvc().getSuperUser() &&
             !getPrincipal().getPrincipalRef().equals(val.getOwnerHref())) {
-      throw new CalFacadeAccessException();
+      throw new BedeworkAccessException();
     }
 
     getCal().update(val);

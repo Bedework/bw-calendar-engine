@@ -18,8 +18,8 @@
 */
 package org.bedework.calcore.hibernate;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
@@ -87,26 +87,26 @@ public abstract class DAOBase implements Logged {
     return sess.getBlob(val, length);
   }
 
-  protected void throwException(final CalFacadeException cfe) {
+  protected void throwException(final BedeworkException be) {
     getSess().rollback();
-    throw cfe;
+    throw be;
   }
 
   protected void throwException(final String pname) {
     getSess().rollback();
-    throw new CalFacadeException(pname);
+    throw new BedeworkException(pname);
   }
 
   protected void throwException(final String pname, final String extra) {
     getSess().rollback();
-    throw new CalFacadeException(pname, extra);
+    throw new BedeworkException(pname, extra);
   }
 
   /* ====================================================================
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

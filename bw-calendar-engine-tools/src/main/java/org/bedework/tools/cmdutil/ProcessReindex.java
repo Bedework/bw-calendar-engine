@@ -18,10 +18,9 @@
 */
 package org.bedework.tools.cmdutil;
 
+import org.bedework.base.exc.BedeworkAccessException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.CollectionInfo;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 
 import java.util.Collection;
@@ -47,23 +46,14 @@ public class ProcessReindex extends CmdUtilHelper {
       return false;
     }
 
-    if ("collection".equals(wd)) {
-      return reindexCollections();
-    }
+    return switch (wd) {
+      case "collection" -> reindexCollections();
+      case "categories" -> reindexCategories();
+      case "contacts" -> reindexContacts();
+      case "locations" -> reindexLocations();
+      default -> false;
+    };
 
-    if ("categories".equals(wd)) {
-      return reindexCategories();
-    }
-
-    if ("contacts".equals(wd)) {
-      return reindexContacts();
-    }
-
-    if ("locations".equals(wd)) {
-      return reindexLocations();
-    }
-
-    return false;
   }
 
   @Override
@@ -103,7 +93,7 @@ public class ProcessReindex extends CmdUtilHelper {
 
       try {
         col = getSvci().getCalendarsHandler().get(path);
-      } catch (final CalFacadeAccessException cfe) {
+      } catch (final BedeworkAccessException ignored) {
         error("No access to " + path);
       }
 

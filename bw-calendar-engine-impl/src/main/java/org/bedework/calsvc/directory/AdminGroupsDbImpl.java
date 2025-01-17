@@ -18,13 +18,13 @@
 */
 package org.bedework.calsvc.directory;
 
+import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.exc.BedeworkUnimplementedException;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.DirectoryInfo;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.exc.CalFacadeUnimplementedException;
 import org.bedework.calfacade.svc.AdminGroups;
 import org.bedework.util.misc.Util;
 
@@ -158,7 +158,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   @Override
   public void addGroup(final BwGroup<?> group) {
     if (findGroup(group.getAccount()) != null) {
-      throw new CalFacadeException(CalFacadeErrorCode.duplicateAdminGroup);
+      throw new BedeworkException(CalFacadeErrorCode.duplicateAdminGroup);
     }
     cb.updateGroup(group, true);
   }
@@ -180,7 +180,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
     final BwGroup<?> ag = findGroup(group.getAccount());
 
     if (ag == null) {
-      throw new CalFacadeException(CalFacadeErrorCode.groupNotFound,
+      throw new BedeworkException(CalFacadeErrorCode.groupNotFound,
                                    group.getAccount());
     }
 
@@ -197,7 +197,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
      */
 
     if (!checkPathForSelf(group, val)) {
-      throw new CalFacadeException(CalFacadeErrorCode.alreadyOnGroupPath);
+      throw new BedeworkException(CalFacadeErrorCode.alreadyOnGroupPath);
     }
 
     ag.addGroupMember(val);
@@ -211,7 +211,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
     final var ag = findGroup(group.getAccount());
 
     if (ag == null) {
-      throw new CalFacadeException(CalFacadeErrorCode.groupNotFound,
+      throw new BedeworkException(CalFacadeErrorCode.groupNotFound,
                                    group.getAccount());
     }
 
@@ -256,7 +256,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   public Collection<String>getGroups(final String rootUrl,
                                      final String principalUrl) {
     // Not needed for admin
-    throw new CalFacadeUnimplementedException();
+    throw new BedeworkUnimplementedException();
   }
 
   private boolean checkPathForSelf(final BwGroup<?> group,

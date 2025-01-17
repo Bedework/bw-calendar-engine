@@ -5,11 +5,11 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.common.CalintfHelper;
 import org.bedework.calcorei.CoreResourcesI;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.util.misc.response.GetEntityResponse;
 import org.bedework.util.misc.response.Response;
@@ -48,9 +48,9 @@ public class CoreResources extends CalintfHelper
   }
 
   @Override
-  public <T> T throwException(final CalFacadeException cfe) {
+  public <T> T throwException(final BedeworkException be) {
     entityDao.rollback();
-    throw cfe;
+    throw be;
   }
 
   @Override
@@ -119,8 +119,8 @@ public class CoreResources extends CalintfHelper
 
       resp.setEntity(res);
       return resp;
-    } catch (final CalFacadeException cfe) {
-      return Response.error(resp, cfe);
+    } catch (final BedeworkException be) {
+      return Response.error(resp, be);
     }
   }
 
@@ -180,7 +180,7 @@ public class CoreResources extends CalintfHelper
     if (ger.isOk()) {
       try {
         delete(ger.getEntity());
-      } catch (final CalFacadeException cfe) {
+      } catch (final BedeworkException ignored) {
         // ignore - we'll probably fail later
       }
 
@@ -199,8 +199,8 @@ public class CoreResources extends CalintfHelper
     try {
       intf.getIndexer(docTypeResource).unindexEntity(href);
       intf.getIndexer(docTypeResourceContent).unindexEntity(href);
-    } catch (final CalFacadeException cfe) {
-      error(cfe);
+    } catch (final BedeworkException be) {
+      error(be);
     }
   }
 

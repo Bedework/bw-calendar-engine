@@ -20,6 +20,9 @@ package org.bedework.calsvc;
 
 import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
+import org.bedework.base.exc.BedeworkAccessException;
+import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.exc.BedeworkForbidden;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
 import org.bedework.caldav.util.sharing.InviteType;
@@ -33,10 +36,7 @@ import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.CollectionAliases;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
@@ -301,7 +301,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
       try {
         startCol = getIdx(startPath);
-      } catch (final CalFacadeAccessException cfae) {
+      } catch (final BedeworkAccessException ignored) {
         startCol = null;
       }
 
@@ -536,7 +536,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     if (getSvc().getPrincipalInfo().getSubscriptionsOnly()) {
       // Only allow the creation of an alias
       if (val.getCalType() != BwCalendar.calTypeAlias) {
-        throw new CalFacadeForbidden("User has read only access");
+        throw new BedeworkForbidden("User has read only access");
       }
     }
     updateOK(val);
@@ -559,7 +559,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       final SynchI synch = getSvc().getSynch();
 
       if (!synch.subscribe(val)) {
-        throw new CalFacadeException(
+        throw new BedeworkException(
                 CalFacadeErrorCode.subscriptionFailed);
       }
     }
@@ -819,7 +819,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
             cats.addAll(curCol.getCategories());
           }
         }
-      } catch (final CalFacadeAccessException cfae) {
+      } catch (final BedeworkAccessException ignored) {
         // We'll assume that's OK. We'll get that for /user at least.
         break;
       }
@@ -873,14 +873,14 @@ class Calendars extends CalSvcDb implements CalendarsI {
       /* Only allow delete if not in use
        */
       if (!getCal().isEmpty(val)) {
-        throw new CalFacadeException(CalFacadeErrorCode.collectionNotEmpty);
+        throw new BedeworkException(CalFacadeErrorCode.collectionNotEmpty);
       }
     }
 
     final BwPreferences prefs =
             getPrefs(getPrincipal(val.getOwnerHref()));
     if (val.getPath().equals(prefs.getDefaultCalendarPath())) {
-      throw new CalFacadeException(CalFacadeErrorCode.cannotDeleteDefaultCalendar);
+      throw new BedeworkException(CalFacadeErrorCode.cannotDeleteDefaultCalendar);
     }
 
     /* Remove any sharing */
@@ -915,7 +915,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
                                       sendSchedulingMessage,
                                       true);
           if (!delresp.isOk()) {
-            throw new CalFacadeException("Failed to delete " + ei.getHref() +
+            throw new BedeworkException("Failed to delete " + ei.getHref() +
                     " response: " + delresp);
           }
         }
@@ -934,7 +934,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
         if (!delete(cal, true, true, sendSchedulingMessage, true)) {
           // Somebody else at it
           getSvc().rollbackTransaction();
-          throw new CalFacadeException(CalFacadeErrorCode.collectionNotFound,
+          throw new BedeworkException(CalFacadeErrorCode.collectionNotFound,
                                        cal.getPath());
         }
       }
@@ -1171,7 +1171,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     try {
       val.setRemotePw(getSvc().getEncrypter().encrypt(val.getRemotePw()));
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -1181,7 +1181,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
    */
   private void updateOK(final Object o) {
     if (isGuest()) {
-      throw new CalFacadeAccessException();
+      throw new BedeworkAccessException();
     }
 
     if (isSuper()) {
@@ -1190,7 +1190,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
 
     if (!(o instanceof BwShareableDbentity)) {
-      throw new CalFacadeAccessException();
+      throw new BedeworkAccessException();
     }
 
     if (!isPublicAdmin()) {
@@ -1205,7 +1205,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return;
     }
 
-    throw new CalFacadeAccessException();
+    throw new BedeworkAccessException();
   }
 
   private String normalizeUri(String uri) {

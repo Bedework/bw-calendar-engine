@@ -19,13 +19,13 @@
 package org.bedework.calsvc;
 
 import org.bedework.access.PrivilegeDefs;
+import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.exc.BedeworkForbidden;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calsvci.ResourcesI;
 import org.bedework.util.misc.Util;
@@ -102,9 +102,9 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       }
 
       getSvc().touchCalendar(getCols().get(val.getColPath()));
-    } catch (final CalFacadeException cfe) {
+    } catch (final BedeworkException be) {
       getSvc().rollbackTransaction();
-      throw cfe;
+      throw be;
     }
   }
 
@@ -125,12 +125,12 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       final BwCalendar collTo = getCols().get(to);
 
       if (collTo == null) {
-        throw new CalFacadeException(CalFacadeErrorCode.collectionNotFound, to);
+        throw new BedeworkException(CalFacadeErrorCode.collectionNotFound, to);
       }
 
       if (collTo.getCalType() != BwCalendar.calTypeFolder) {
         // Only allowed into a folder.
-        throw new CalFacadeException(CalFacadeErrorCode.badRequest, to);
+        throw new BedeworkException(CalFacadeErrorCode.badRequest, to);
       }
 
       final int access;
@@ -152,8 +152,8 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       if (r != null) {
         /* Update of the target from the source */
         if (!overwrite) {
-          throw new CalFacadeException(CalFacadeErrorCode.targetExists,
-                                       val.getName());
+          throw new BedeworkException(CalFacadeErrorCode.targetExists,
+                                      val.getName());
         }
 
         getContent(r);
@@ -209,12 +209,12 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       getSvc().touchCalendar(to);
 
       return createdNew;
-    } catch (final CalFacadeException cfe) {
+    } catch (final BedeworkException be) {
       getSvc().rollbackTransaction();
-      throw cfe;
+      throw be;
     } catch (final Throwable t) {
       getSvc().rollbackTransaction();
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -324,23 +324,23 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     try {
       final String path = val.getColPath();
       if (path == null) {
-        throw new CalFacadeException("No col path for " + val.getName());
+        throw new BedeworkException("No col path for " + val.getName());
       }
 
 
       final BwCalendar coll = getCols().get(path);
 
       if (coll == null) {
-        throw new CalFacadeException(CalFacadeErrorCode.collectionNotFound, path);
+        throw new BedeworkException(CalFacadeErrorCode.collectionNotFound, path);
       }
 
       if (forNotification) {
         // We allow this for subscription only
         if (coll.getCalType() != BwCalendar.calTypeNotifications) {
-          throw new CalFacadeException(CalFacadeErrorCode.badRequest, path);
+          throw new BedeworkException(CalFacadeErrorCode.badRequest, path);
         }
       } else if (getSvc().getPrincipalInfo().getSubscriptionsOnly()) {
-        throw new CalFacadeForbidden("User has read only access");
+        throw new BedeworkForbidden("User has read only access");
       }
 
       final BwResource r = getCal().getResource(val.getHref(),
@@ -351,14 +351,14 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
           return false;
         }
 
-        throw new CalFacadeException(CalFacadeErrorCode.duplicateResource,
+        throw new BedeworkException(CalFacadeErrorCode.duplicateResource,
                                      val.getName());
       }
 
       final BwResourceContent rc = val.getContent();
 
       if (rc == null) {
-        throw new CalFacadeException(CalFacadeErrorCode.missingResourceContent);
+        throw new BedeworkException(CalFacadeErrorCode.missingResourceContent);
       }
 
       getSvc().setupSharableEntity(val, getPrincipal().getPrincipalRef());
@@ -367,7 +367,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
       if ((coll.getCalType() == BwCalendar.calTypeCalendarCollection) ||
               (coll.getCalType() == BwCalendar.calTypeExtSub)) {
-        throw new CalFacadeException(CalFacadeErrorCode.badRequest, path);
+        throw new BedeworkException(CalFacadeErrorCode.badRequest, path);
       }
 
       checkAccess(coll, PrivilegeDefs.privBind, false);
@@ -383,9 +383,9 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       getSvc().touchCalendar(coll);
 
       return true;
-    } catch (final CalFacadeException cfe) {
+    } catch (final BedeworkException be) {
       getSvc().rollbackTransaction();
-      throw cfe;
+      throw be;
     }
   }
 
@@ -411,7 +411,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     final int pos = uri.lastIndexOf("/", end);
     if (pos < 0) {
       // bad uri
-      throw new CalFacadeException("Invalid uri: " + uri);
+      throw new BedeworkException("Invalid uri: " + uri);
     }
 
     if (pos == 0) {

@@ -18,6 +18,8 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.base.exc.BedeworkAccessException;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
@@ -37,8 +39,6 @@ import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -110,7 +110,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       startTransaction();
 
       if (getSvc().getSysparsHandler().present()) {
-        throw new CalFacadeException("System is not empty - restore terminated");
+        throw new BedeworkException("System is not empty - restore terminated");
       }
     } finally {
       endTransaction();
@@ -199,7 +199,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
                                             false);
 
       if (!uer.addedUpdated) {
-        throw new CalFacadeException(uer.errorCode);
+        throw new BedeworkException(uer.errorCode);
       }
       if (uer.failedOverrides != null) {
         error("Following overrides failed for event ");
@@ -449,7 +449,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       paths.add(curCol.getPath());
       try {
         curCol = getCols().resolveAliasIdx(curCol, false, false);
-      } catch (final CalFacadeAccessException ignored) {
+      } catch (final BedeworkAccessException ignored) {
     	// Just exit the loop here. We may have multiple levels of aliases and one or more may not be accessible,
     	// but we can still check for circularity and broken aliases.
         break;
@@ -489,10 +489,10 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     try {
       col.setQproperty(AppleServerTags.invite, invite.toXml());
       getCols().update(col);
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
 
     return FixAliasResult.reshared;

@@ -18,7 +18,6 @@
 */
 package org.bedework.calsvc;
 
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calfacade.svc.CalSvcIPars;
@@ -26,10 +25,10 @@ import org.bedework.calfacade.svc.CalSvcIPars;
 import static java.lang.String.format;
 
 /** Handles a queue of sysevents messages.
- *
- * In general we need to delay processing until after the initiating request is
+ *<p>
+ * In general, we need to delay processing until after the initiating request is
  * processed, for example, don;t do scheduling until the event is stored.
- *
+ *<p>
  * In addition, processing of the message can cause a significant amount of
  * traffic as each message can itself generate more messages.
  *

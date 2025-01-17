@@ -20,6 +20,7 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.common.CalintfROImpl;
 import org.bedework.calcorei.CalintfInfo;
 import org.bedework.calcorei.CoreEventInfo;
@@ -49,7 +50,6 @@ import org.bedework.calfacade.base.ShareableEntity;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.BwAdminGroup;
@@ -312,11 +312,11 @@ public class CalintfImpl extends CalintfROImpl {
                                    ct == sz,
                                    ie.forTouch); // wait
             ct++;
-          } catch (final CalFacadeException cfe) {
+          } catch (final BedeworkException be) {
             if (debug()) {
-              error(cfe);
+              error(be);
             }
-            throw new RuntimeException(cfe);
+            throw be;
           }
         }
       }
@@ -519,18 +519,18 @@ public class CalintfImpl extends CalintfROImpl {
       closeIndexers();
 
       endedOk = true;
-    } catch (final CalFacadeException cfe) {
+    } catch (final BedeworkException be) {
       if (sess != null) {
         sess.rollback();
       }
 
-      throw cfe;
+      throw be;
     } catch (final Throwable t) {
       if (sess != null) {
         sess.rollback();
       }
 
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       if (!endedOk) {
         awaitingIndex.clear();
@@ -744,7 +744,7 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public BwCalendar getCalendar(final String path,
                                 final int desiredAccess,
-                                final boolean alwaysReturnResult) throws CalFacadeException{
+                                final boolean alwaysReturnResult) {
     checkOpen();
 
     return calendars.getCalendar(path, desiredAccess, alwaysReturnResult);
@@ -884,10 +884,10 @@ public class CalintfImpl extends CalintfROImpl {
       calendars.touchCalendar(ei.getEvent().getColPath());
 
       ue = events.updateEvent(ei);
-    } catch (final CalFacadeException cfe) {
+    } catch (final BedeworkException be) {
       rollbackTransaction();
       reindex(ei);
-      throw cfe;
+      throw be;
     }
 
     return ue;
@@ -902,10 +902,11 @@ public class CalintfImpl extends CalintfROImpl {
     try {
       try {
         return events.deleteEvent(ei, scheduling, reallyDelete);
-      } catch (final CalFacadeException cfe) {
+      } catch (final BedeworkException be) {
         rollbackTransaction();
         reindex(ei);
-        throw cfe;
+
+        throw be;
       }
     } finally {
       calendars.touchCalendar(colPath);
@@ -1169,7 +1170,7 @@ public class CalintfImpl extends CalintfROImpl {
     final BwFilterDef fd = filterDefs.fetch(val.getName(), owner);
 
     if (fd != null) {
-      throw new CalFacadeException(CalFacadeErrorCode.duplicateFilter,
+      throw new BedeworkException(CalFacadeErrorCode.duplicateFilter,
                                    val.getName());
     }
 
@@ -1198,7 +1199,7 @@ public class CalintfImpl extends CalintfROImpl {
     final BwFilterDef fd = filterDefs.fetch(name, owner);
 
     if (fd == null) {
-      throw new CalFacadeException(CalFacadeErrorCode.unknownFilter, name);
+      throw new BedeworkException(CalFacadeErrorCode.unknownFilter, name);
     }
 
     entityDao.delete(fd);
@@ -1213,7 +1214,7 @@ public class CalintfImpl extends CalintfROImpl {
     final BwAuthUser ck = getAuthUser(val.getUserHref());
 
     if (ck != null) {
-      throw new CalFacadeException(CalFacadeErrorCode.targetExists);
+      throw new BedeworkException(CalFacadeErrorCode.targetExists);
     }
 
     entityDao.save(val);
@@ -1576,7 +1577,7 @@ public class CalintfImpl extends CalintfROImpl {
       } catch (final Throwable t) {
         // Always bad.
         error(t);
-        throw new CalFacadeException(t);
+        throw new BedeworkException(t);
       }
     }
   }

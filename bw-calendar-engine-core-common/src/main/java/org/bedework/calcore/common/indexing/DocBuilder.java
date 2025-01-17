@@ -18,6 +18,7 @@
 */
 package org.bedework.calcore.common.indexing;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttachment;
 import org.bedework.calfacade.BwAttendee;
@@ -51,7 +52,6 @@ import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.ConceptEntity;
 import org.bedework.calfacade.base.XpropsEntity;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.IndexKeys;
 import org.bedework.calfacade.svc.BwAdminGroup;
@@ -212,10 +212,10 @@ public class DocBuilder extends DocBuilderBase {
 
       return makeDocInfo(BwIndexer.docTypePrincipal, 0,
                          getHref(ent));
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -270,11 +270,11 @@ public class DocBuilder extends DocBuilderBase {
       endObject();
 
       return makeDocInfo(BwIndexer.docTypePreferences, 0, ent.getHref());
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
       error("Exception building doc for " + ent);
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -300,11 +300,11 @@ public class DocBuilder extends DocBuilderBase {
       endObject();
 
       return makeDocInfo(BwIndexer.docTypeResource, 0, ent.getHref());
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
       error("Exception building doc for " + ent);
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -322,12 +322,12 @@ public class DocBuilder extends DocBuilderBase {
       endObject();
 
       return makeDocInfo(BwIndexer.docTypeResourceContent, 0, ent.getHref());
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
       error("Exception building doc for resource content " +
                     ent.getHref());
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -355,11 +355,11 @@ public class DocBuilder extends DocBuilderBase {
       endObject();
 
       return makeDocInfo(BwIndexer.docTypeCategory, 0, ent.getHref());
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
       error("Exception building doc for " + ent);
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -392,11 +392,11 @@ public class DocBuilder extends DocBuilderBase {
       endObject();
 
       return makeDocInfo(BwIndexer.docTypeContact, 0, ent.getHref());
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
       error("Exception building doc for " + ent);
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -447,11 +447,11 @@ public class DocBuilder extends DocBuilderBase {
       endObject();
 
       return makeDocInfo(BwIndexer.docTypeLocation, 0, ent.getHref());
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
       error("Exception building doc for " + ent);
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -475,11 +475,11 @@ public class DocBuilder extends DocBuilderBase {
       endObject();
 
       return makeDocInfo(BwIndexer.docTypeFilter, 0, ent.getHref());
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
       error("Exception building doc for " + ent);
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -540,11 +540,11 @@ public class DocBuilder extends DocBuilderBase {
 
       return makeDocInfo(BwIndexer.docTypeCollection,
                          version, col.getHref());
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
       error("Exception building doc for " + col);
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -766,10 +766,10 @@ public class DocBuilder extends DocBuilderBase {
                          keys.makeKeyVal(getItemType(ei, kind),
                                          ei.getEvent().getHref(),
                                          recurid));
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -938,7 +938,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endArray();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -962,7 +962,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endArray();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -984,7 +984,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endArray();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1010,7 +1010,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endArray();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1040,7 +1040,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endArray();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1138,7 +1138,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endArray();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1156,7 +1156,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endArray();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1171,7 +1171,7 @@ public class DocBuilder extends DocBuilderBase {
       makeField("lon", val.getLongitude().toPlainString());
       endObject();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1187,7 +1187,7 @@ public class DocBuilder extends DocBuilderBase {
       makeField(getJname(PropertyInfoIndex.VALUE), val.getValue());
       endObject();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1216,7 +1216,7 @@ public class DocBuilder extends DocBuilderBase {
                     val.getOrganizerUri());
       endObject();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1247,7 +1247,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endArray();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1264,7 +1264,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endArray();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1290,7 +1290,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endArray();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1342,7 +1342,7 @@ public class DocBuilder extends DocBuilderBase {
       makeField("uri", val.getAttendeeUri());
       endObject();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1403,7 +1403,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endObject();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1428,7 +1428,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endObject();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1452,7 +1452,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endArray();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1472,7 +1472,7 @@ public class DocBuilder extends DocBuilderBase {
       makeField(PropertyInfoIndex.VALUE, val.getValue());
       endObject();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1485,7 +1485,7 @@ public class DocBuilder extends DocBuilderBase {
     try {
       makeField(getJname(pi), val);
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1498,7 +1498,7 @@ public class DocBuilder extends DocBuilderBase {
     try {
       makeField(getJname(pi), val);
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1517,7 +1517,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endArray();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1540,7 +1540,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endArray();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1559,7 +1559,7 @@ public class DocBuilder extends DocBuilderBase {
 
       endArray();
     } catch (final IndexException e) {
-      throw new CalFacadeException(e);
+      throw new BedeworkException(e);
     }
   }
 
@@ -1574,7 +1574,7 @@ public class DocBuilder extends DocBuilderBase {
 
       return builder;
     } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
   */

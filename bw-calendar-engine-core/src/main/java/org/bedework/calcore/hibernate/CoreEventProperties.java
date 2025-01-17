@@ -19,12 +19,12 @@
 
 package org.bedework.calcore.hibernate;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.common.CalintfHelper;
 import org.bedework.calcorei.CoreEventPropertiesI;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.AccessChecker;
 
 import java.util.Collection;
@@ -60,9 +60,9 @@ public class CoreEventProperties <T extends BwEventProperty>
   }
 
   @Override
-  public <T> T throwException(final CalFacadeException cfe) {
+  public <T> T throwException(final BedeworkException be) {
     dao.rollback();
-    throw cfe;
+    throw be;
   }
 
   @SuppressWarnings("unchecked")

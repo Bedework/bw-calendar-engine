@@ -18,13 +18,13 @@
 */
 package org.bedework.calcore.hibernate;
 
+import org.bedework.base.exc.BedeworkConstraintViolationException;
+import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.exc.BedeworkStaleStateException;
 import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
-import org.bedework.calfacade.exc.CalFacadeConstraintViolationException;
-import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.exc.CalFacadeStaleStateException;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
@@ -112,10 +112,10 @@ public class HibSessionImpl implements Logged, HibSession {
   public void disconnect() {
     if (exc != null) {
       // Didn't hear me last time?
-      if (exc instanceof CalFacadeException) {
-        throw (CalFacadeException)exc;
+      if (exc instanceof BedeworkException) {
+        throw (BedeworkException)exc;
       }
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -129,18 +129,18 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setFlushMode(final FlushMode val) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
       if (tx != null) {
-        throw new CalFacadeException("Transaction already started");
+        throw new BedeworkException("Transaction already started");
       }
 
       sess.setFlushMode(val);
     } catch (final Throwable t) {
       exc = t;
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -148,25 +148,25 @@ public class HibSessionImpl implements Logged, HibSession {
   public void beginTransaction() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
       if (tx != null) {
-        throw new CalFacadeException("Transaction already started");
+        throw new BedeworkException("Transaction already started");
       }
 
       tx = sess.beginTransaction();
       rolledBack = false;
       if (tx == null) {
-        throw new CalFacadeException("Transaction not started");
+        throw new BedeworkException("Transaction not started");
       }
-    } catch (final CalFacadeException cfe) {
-      exc = cfe;
-      throw cfe;
+    } catch (final BedeworkException be) {
+      exc = be;
+      throw be;
     } catch (final Throwable t) {
       exc = t;
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -179,7 +179,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void commit() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -198,7 +198,7 @@ public class HibSessionImpl implements Logged, HibSession {
       exc = t;
 
       if (t instanceof StaleStateException) {
-        throw new CalFacadeStaleStateException(t);
+        throw new BedeworkStaleStateException(t);
       }
 
       final Class<?> obj;
@@ -208,10 +208,10 @@ public class HibSessionImpl implements Logged, HibSession {
         throw new RuntimeException(cnfe);
       }
       if (t.getClass().isAssignableFrom(obj)) {
-        throw new CalFacadeStaleStateException(t);
+        throw new BedeworkStaleStateException(t);
       }
 
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -219,7 +219,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void rollback() {
 /*    if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 */
     if (getLogger().isDebugEnabled()) {
@@ -237,7 +237,7 @@ public class HibSessionImpl implements Logged, HibSession {
       }
     } catch (final Throwable t) {
       exc = t;
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       rolledBack = true;
     }
@@ -280,7 +280,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void evict(final Object val) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -294,7 +294,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void createQuery(final String s) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -308,7 +308,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void createNoFlushQuery(final String s) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -337,7 +337,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void cacheableQuery() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -351,7 +351,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setString(final String parName, final String parVal) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -365,7 +365,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setBool(final String parName, final boolean parVal) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -379,7 +379,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setInt(final String parName, final int parVal) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -393,7 +393,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setLong(final String parName, final long parVal) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -407,7 +407,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setEntity(final String parName, final Object parVal) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -421,7 +421,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setParameter(final String parName, final Object parVal) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -436,7 +436,7 @@ public class HibSessionImpl implements Logged, HibSession {
                                final Collection<?> parVal) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -450,7 +450,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setFirstResult(final int val) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -464,7 +464,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setMaxResults(final int val) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -478,7 +478,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public Object getUnique() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -493,7 +493,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public List<?> getList() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -514,12 +514,12 @@ public class HibSessionImpl implements Logged, HibSession {
   public int executeUpdate() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
       if (q == null) {
-        throw new CalFacadeException("No query for execute update");
+        throw new BedeworkException("No query for execute update");
       }
 
       return q.executeUpdate();
@@ -533,7 +533,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void update(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -557,7 +557,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public Object merge(Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -577,7 +577,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void saveOrUpdate(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -601,7 +601,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public Object saveOrUpdateCopy(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -617,7 +617,7 @@ public class HibSessionImpl implements Logged, HibSession {
                     final Serializable id) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -637,7 +637,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void save(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -658,7 +658,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void save(Object obj, Serializable id) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -672,7 +672,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void delete(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -690,7 +690,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void restore(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -704,7 +704,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void reAttach(final BwUnversionedDbentity<?> val) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -721,7 +721,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void lockRead(final Object o) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -736,7 +736,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void lockUpdate(final Object o) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     try {
@@ -751,7 +751,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void flush() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     if (getLogger().isDebugEnabled()) {
@@ -768,7 +768,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void clear() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 
     if (getLogger().isDebugEnabled()) {
@@ -789,7 +789,7 @@ public class HibSessionImpl implements Logged, HibSession {
       return;
     }
 
-//    throw new CalFacadeException("XXXXXXXXXXXXXXXXXXXXXXXXXXXXX");/*
+//    throw new BedeworkException("XXXXXXXXXXXXXXXXXXXXXXXXXXXXX");/*
     try {
       if (!rolledback() && sess.isDirty()) {
         sess.flush();
@@ -812,7 +812,7 @@ public class HibSessionImpl implements Logged, HibSession {
 
     sess = null;
     if (exc != null) {
-      throw new CalFacadeException(exc);
+      throw new BedeworkException(exc);
     }
 //    */
   }
@@ -852,18 +852,18 @@ public class HibSessionImpl implements Logged, HibSession {
     exc = t;
 
     if (t instanceof StaleStateException) {
-      throw new CalFacadeStaleStateException(t);
+      throw new BedeworkStaleStateException(t);
     }
 
     if (t instanceof OptimisticLockException) {
-      throw new CalFacadeStaleStateException(t);
+      throw new BedeworkStaleStateException(t);
     }
 
     if (t instanceof ConstraintViolationException) {
-      throw new CalFacadeConstraintViolationException(t);
+      throw new BedeworkConstraintViolationException(t);
     }
 
-    throw new CalFacadeException(t);
+    throw new BedeworkException(t);
   }
 
   private void beforeSave(final Object o) {

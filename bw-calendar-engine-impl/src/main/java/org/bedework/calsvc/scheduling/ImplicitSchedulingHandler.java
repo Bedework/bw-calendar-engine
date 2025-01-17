@@ -18,6 +18,8 @@
 */
 package org.bedework.calsvc.scheduling;
 
+import org.bedework.base.exc.BedeworkBadRequest;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
@@ -26,9 +28,7 @@ import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.ScheduleResult;
-import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.EventInfo.UpdateResult;
 import org.bedework.calsvc.CalSvc;
@@ -107,7 +107,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
 
     if (orgCalAddr == null) {
       return Response.error(uer,
-                            new CalFacadeBadRequest(
+                            new BedeworkBadRequest(
                                     CalFacadeErrorCode.missingEventProperty));
     }
 
@@ -220,14 +220,14 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
     final BwEvent ev = ei.getEvent();
 
     if (!ev.getAttendeeSchedulingObject()) {
-      return Response.error(sr, new CalFacadeException(
+      return Response.error(sr, new BedeworkException(
               CalFacadeErrorCode.schedulingBadMethod));
     }
 
     final Participant att = findUserAttendee(ei);
 
     if (att == null) {
-      return Response.error(sr, new CalFacadeException(
+      return Response.error(sr, new BedeworkException(
               CalFacadeErrorCode.schedulingNotAttendee));
     }
 

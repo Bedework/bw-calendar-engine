@@ -18,11 +18,11 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.caldav.server.soap.synch.SynchConnection;
 import org.bedework.caldav.server.soap.synch.SynchConnectionsMBean;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.configs.SynchConfig;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.synch.BwSynchInfo;
 import org.bedework.calsvci.CalendarsI.CheckSubscriptionResult;
@@ -136,7 +136,7 @@ class Synch extends CalSvcDb implements SynchI {
     final SConnection sconn = (SConnection)getSynchConnection();
 
     if ((sconn == null) || (sconn.sc == null)) {
-      throw new CalFacadeException("No active synch connection");
+      throw new BedeworkException("No active synch connection");
     }
 
     final SynchConnection sc = sconn.sc;
@@ -275,7 +275,7 @@ class Synch extends CalSvcDb implements SynchI {
     final SConnection sconn = (SConnection)getSynchConnection();
 
     if ((sconn == null) || (sconn.sc == null)) {
-      throw new CalFacadeException("No active synch connection");
+      throw new BedeworkException("No active synch connection");
     }
 
     final SynchConnection sc = sconn.sc;
@@ -463,7 +463,7 @@ class Synch extends CalSvcDb implements SynchI {
 
       return conns;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -558,7 +558,7 @@ class Synch extends CalSvcDb implements SynchI {
               uri);
       return port;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 

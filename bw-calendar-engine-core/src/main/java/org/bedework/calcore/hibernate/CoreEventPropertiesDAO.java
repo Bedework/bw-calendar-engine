@@ -19,6 +19,7 @@
 
 package org.bedework.calcore.hibernate;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -27,7 +28,6 @@ import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCategory;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsContact;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsLocation;
@@ -264,7 +264,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
     final Collection<Long> counts = (Collection<Long>)sess.getList();
     if (counts.iterator().next() > 1) {
       sess.rollback();
-      throw new CalFacadeException("org.bedework.duplicate.object");
+      throw new BedeworkException("org.bedework.duplicate.object");
     }
   }
 
@@ -276,11 +276,11 @@ public class CoreEventPropertiesDAO extends DAOBase {
                       final BwString val,
                       final String ownerHref) {
     if (val == null) {
-      throw new CalFacadeException("Missing key value");
+      throw new BedeworkException("Missing key value");
     }
 
     if (ownerHref == null) {
-      throw new CalFacadeException("Missing owner value");
+      throw new BedeworkException("Missing owner value");
     }
 
     final HibSession sess = getSess();

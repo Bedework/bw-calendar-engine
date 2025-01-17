@@ -18,9 +18,9 @@
 */
 package org.bedework.indexer;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcFactory;
@@ -328,8 +328,8 @@ public abstract class CalSys implements Logged {
       r.index += found;
 
       return r;
-    } catch (final CalFacadeException cfe) {
-      error(cfe);
+    } catch (final BedeworkException be) {
+      error(be);
       return null;
     }
   }
@@ -377,8 +377,8 @@ public abstract class CalSys implements Logged {
       r.index += found;
 
       return r;
-    } catch (final CalFacadeException cfe) {
-      error(cfe);
+    } catch (final BedeworkException be) {
+      error(be);
       return null;
     }
   }
@@ -427,8 +427,8 @@ public abstract class CalSys implements Logged {
       r.index += found;
 
       return r;
-    } catch (final CalFacadeException cfe) {
-      error(cfe);
+    } catch (final BedeworkException be) {
+      error(be);
       return null;
     }
   }

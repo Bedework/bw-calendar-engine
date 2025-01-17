@@ -20,6 +20,8 @@ package org.bedework.calcore.common;
 
 import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
+import org.bedework.base.exc.BedeworkAccessException;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calfacade.BwCalendar;
@@ -39,8 +41,6 @@ import org.bedework.calfacade.base.RecurrenceEntity;
 import org.bedework.calfacade.base.ResourcedEntity;
 import org.bedework.calfacade.base.SummaryEntity;
 import org.bedework.calfacade.configs.SystemProperties;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.AccessChecker;
@@ -90,15 +90,15 @@ public abstract class CalintfHelper
     collectTimeStats = isMetricsDebugEnabled();
   }
 
-  public abstract <T> T throwException(CalFacadeException cfe);
+  public abstract <T> T throwException(BedeworkException be);
 
   public <T> T throwException(final String err) {
-    return throwException(new CalFacadeException(err));
+    return throwException(new BedeworkException(err));
   }
 
   public <T> T throwException(final String err,
                              final String extra) {
-    return throwException(new CalFacadeException(err, extra));
+    return throwException(new BedeworkException(err, extra));
   }
 
   /** Used to fetch a calendar from the cache
@@ -194,7 +194,7 @@ public abstract class CalintfHelper
     BwCalendar parent = getCalendar(pathTo, privRead);
 
     if (parent == null) {
-      throw new CalFacadeException("org.bedework.calcore.calendars.unabletocreate");
+      throw new BedeworkException("org.bedework.calcore.calendars.unabletocreate");
     }
     * /
 
@@ -278,7 +278,7 @@ public abstract class CalintfHelper
     if (!(val instanceof CalendarWrapper)) {
       // We get these at the moment - getEvents at svci level
       return val;
-      // CALWRAPPER throw new CalFacadeException("org.bedework.not.wrapped");
+      // CALWRAPPER throw new BedeworkException("org.bedework.not.wrapped");
     }
 
     return ((CalendarWrapper)val).fetchEntity();
@@ -303,7 +303,7 @@ public abstract class CalintfHelper
     }
 
     if (!cal.getCalendarCollection()) {
-      throwException(new CalFacadeAccessException());
+      throwException(new BedeworkAccessException());
     }
 
     if (!scheduling) {
@@ -330,7 +330,7 @@ public abstract class CalintfHelper
                                 true); //alwaysReturn
       }
     } else {
-      throw new CalFacadeAccessException();
+      throw new BedeworkAccessException();
     }
 
     if (!ca.getAccessAllowed()) {

@@ -19,14 +19,14 @@
 package org.bedework.calsvc;
 
 import org.bedework.access.PrivilegeDefs;
+import org.bedework.base.exc.BedeworkAccessException;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcorei.CoreEventPropertiesI;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
 import org.bedework.calfacade.base.BwShareableDbentity;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.EnsureEntityExistsResult;
 import org.bedework.calsvci.EventProperties;
@@ -293,7 +293,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
     }
 
     if (check(val) == null) {
-      throw new CalFacadeAccessException();
+      throw new BedeworkAccessException();
     }
 
     getCal().saveOrUpdate(val);
@@ -518,8 +518,8 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       }
 
       return resp;
-    } catch (final CalFacadeException cfe) {
-      return Response.error(resp, cfe);
+    } catch (final BedeworkException be) {
+      return Response.error(resp, be);
     }
   }
 
@@ -606,7 +606,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
     }
 
     if (isGuest()) {
-      throw new CalFacadeAccessException();
+      throw new BedeworkAccessException();
     }
 
     if (isSuper()) {
@@ -625,7 +625,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       return;
     }
 
-    throw new CalFacadeAccessException();
+    throw new BedeworkAccessException();
   }
 
   /* This provides some limits to shareable entity updates for the

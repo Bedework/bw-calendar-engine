@@ -24,6 +24,9 @@ import org.bedework.access.AceWho;
 import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.WhoDefs;
+import org.bedework.base.exc.BedeworkAccessException;
+import org.bedework.base.exc.BedeworkBadRequest;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CalintfInfo;
@@ -62,9 +65,6 @@ import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.ShareableEntity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
-import org.bedework.calfacade.exc.CalFacadeBadRequest;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.BwCollectionFilter;
 import org.bedework.calfacade.filter.SortTerm;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
@@ -247,7 +247,7 @@ public class CalintfROImpl extends CalintfBase
                    final boolean sessionless,
                    final boolean dontKill) {
     if (isOpen) {
-      throw new CalFacadeException("Already open");
+      throw new BedeworkException("Already open");
     }
 
     this.filterParserFetcher = filterParserFetcher;
@@ -344,10 +344,10 @@ public class CalintfROImpl extends CalintfBase
       if (debug()) {
         debug("End transaction for " + getTraceId());
       }
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+    } catch (final BedeworkException be) {
+      throw be;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     } finally {
       synchronized (openIfs) {
         openIfs.remove(objKey);
@@ -558,8 +558,8 @@ public class CalintfROImpl extends CalintfBase
     try {
       resolveAlias(val, true, false,
                    cai, getColIndexer());
-    } catch (final CalFacadeException cfe) {
-      return Response.error(res, cfe);
+    } catch (final BedeworkException be) {
+      return Response.error(res, be);
     }
 
     res.setEntity(cai);
@@ -574,7 +574,7 @@ public class CalintfROImpl extends CalintfBase
   @Override
   public BwCalendar getCalendar(final String path,
                                 final int desiredAccess,
-                                final boolean alwaysReturnResult) throws CalFacadeException{
+                                final boolean alwaysReturnResult) {
     checkOpen();
 
     return getCollectionIdx(getColIndexer(),
@@ -643,10 +643,10 @@ public class CalintfROImpl extends CalintfBase
         return null;
       }
 
-      throw new CalFacadeAccessException();
+      throw new BedeworkAccessException();
     }
 
-    throw new CalFacadeException(ger.getMessage());
+    throw new BedeworkException(ger.getMessage());
   }
   
   @Override
@@ -908,7 +908,7 @@ public class CalintfROImpl extends CalintfBase
                              final boolean returnAll,
                              final boolean ignoreTransparency) {
     if (who.getKind() != WhoDefs.whoTypeUser) {
-      throw new CalFacadeException("Unsupported: non user principal for free-busy");
+      throw new BedeworkException("Unsupported: non user principal for free-busy");
     }
 
     final Collection<CoreEventInfo> events = 
@@ -1015,7 +1015,7 @@ public class CalintfROImpl extends CalintfBase
       if (debug()) {
         error(t);
       }
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
 
     return fb;
@@ -1131,7 +1131,7 @@ public class CalintfROImpl extends CalintfBase
     }
 
     if (ger.getStatus() != Response.Status.ok) {
-      throw new CalFacadeException("Unable to retrieve event: " +
+      throw new BedeworkException("Unable to retrieve event: " +
                                            ger.getStatus());
     }
 
@@ -1215,7 +1215,7 @@ public class CalintfROImpl extends CalintfBase
   public Set<CoreEventInfo> getSynchEvents(final String path,
                                            final String token) {
     if (path == null) {
-      throw new CalFacadeBadRequest("Missing path");
+      throw new BedeworkBadRequest("Missing path");
     }
 
     final String fpath = fixPath(path);
@@ -1259,7 +1259,7 @@ public class CalintfROImpl extends CalintfBase
     }
 
     if (ger.getStatus() != Response.Status.ok) {
-      throw new CalFacadeException("Unable to retrieve event: " + ger.getStatus());
+      throw new BedeworkException("Unable to retrieve event: " + ger.getStatus());
     }
 
     final EventInfo ei = ger.getEntity();
@@ -1529,7 +1529,7 @@ public class CalintfROImpl extends CalintfBase
             getIndexer(docTypePrincipal).fetchGroups(admin);
 
     if (!resp.isOk()) {
-      throw new CalFacadeException(resp.getException());
+      throw new BedeworkException(resp.getException());
     }
 
     if (resp.getEntities() == null) {
@@ -1544,7 +1544,7 @@ public class CalintfROImpl extends CalintfBase
             getIndexer(docTypePrincipal).fetchAdminGroups();
 
     if (!resp.isOk()) {
-      throw new CalFacadeException(resp.getException());
+      throw new BedeworkException(resp.getException());
     }
 
     if (resp.getEntities() == null) {
@@ -1562,7 +1562,7 @@ public class CalintfROImpl extends CalintfBase
                                                      val.getHref());
 
     if (!resp.isOk()) {
-      throw new CalFacadeException(resp.getException());
+      throw new BedeworkException(resp.getException());
     }
 
     if (resp.getEntities() == null) {
@@ -1578,7 +1578,7 @@ public class CalintfROImpl extends CalintfBase
             getIndexer(docTypePrincipal).fetchAdminGroups(val.getHref());
 
     if (!resp.isOk()) {
-      throw new CalFacadeException(resp.getException());
+      throw new BedeworkException(resp.getException());
     }
 
     if (resp.getEntities() == null) {
@@ -1630,11 +1630,11 @@ public class CalintfROImpl extends CalintfBase
       return getIndexer(BwIndexer.docTypeCategory)
               .fetchCat(uid, PropertyInfoIndex.UID);
     } catch (final Throwable t) {
-      if (t instanceof CalFacadeException) {
-        throw (CalFacadeException)t;
+      if (t instanceof BedeworkException) {
+        throw (BedeworkException)t;
       }
 
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -1669,8 +1669,8 @@ public class CalintfROImpl extends CalintfBase
 
       resp.setEntity(res);
       return resp;
-    } catch (final CalFacadeException cfe) {
-      return Response.error(resp, cfe);
+    } catch (final BedeworkException be) {
+      return Response.error(resp, be);
     }
   }
 
@@ -1887,7 +1887,7 @@ public class CalintfROImpl extends CalintfBase
       col = getCollectionIdx(indexer,
                              val.getInternalAliasPath(),
                              desiredAccess, false);
-    } catch (final CalFacadeAccessException cfae) {
+    } catch (final BedeworkAccessException ignored) {
       col = null;
     }
 
@@ -1948,7 +1948,7 @@ public class CalintfROImpl extends CalintfBase
                                                             "freeAndBusy",
                                                             false));
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
 
     final RecurringRetrievalMode rrm = new RecurringRetrievalMode(

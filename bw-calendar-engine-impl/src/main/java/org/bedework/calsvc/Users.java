@@ -21,13 +21,13 @@ package org.bedework.calsvc;
 import org.bedework.access.Access;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.WhoDefs;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.DirectoryInfo;
 import org.bedework.calfacade.configs.BasicSystemProperties;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calsvci.CalSvcI;
@@ -197,7 +197,7 @@ class Users extends CalSvcDb implements UsersI {
     }
 
     if (account == null) {
-      throw new CalFacadeException("Bad user account " + val);
+      throw new BedeworkException("Bad user account " + val);
     }
 
     setRoots(getSvc());
@@ -304,7 +304,7 @@ class Users extends CalSvcDb implements UsersI {
   /*
   public void deleteUser(BwUser user) {
     checkOpen();
-    throw new CalFacadeException("Unimplemented");
+    throw new BedeworkException("Unimplemented");
   }*/
 
   @Override

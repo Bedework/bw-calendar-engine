@@ -18,7 +18,7 @@
 */
 package org.bedework.calcore.hibernate;
 
-import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.configs.SchemaBuilder;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
@@ -71,7 +71,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
       se.execute(targets, SchemaExport.Action.BOTH, null,
                  ssrBuilder.getBootstrapServiceRegistry());
     } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      throw new BedeworkException(t);
     }
   }
 
@@ -79,8 +79,8 @@ public class SchemaBuilderImpl implements SchemaBuilder {
    *                   Private methods
    * ==================================================================== */
 
-  private Configuration getConfiguration(final Properties props) throws Throwable {
-    Configuration cfg = new Configuration();
+  private Configuration getConfiguration(final Properties props) {
+    final Configuration cfg = new Configuration();
 
     cfg.addProperties(props).configure();
 

@@ -27,12 +27,12 @@ import org.bedework.access.CurrentAccess;
 import org.bedework.access.Privilege;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.WhoDefs;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -70,7 +70,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     BwCalSuite cs = getCal().getCalSuite(name);
 
     if (cs != null) {
-      throw new CalFacadeException(CalFacadeErrorCode.duplicateCalsuite);
+      throw new BedeworkException(CalFacadeErrorCode.duplicateCalsuite);
     }
 
     cs = new BwCalSuite();
@@ -237,14 +237,14 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
       }
 
       return r;
-    } catch (final CalFacadeException cfe) {
-      if (CalFacadeErrorCode.collectionNotFound.equals(cfe.getMessage())) {
+    } catch (final BedeworkException be) {
+      if (CalFacadeErrorCode.collectionNotFound.equals(be.getMessage())) {
         // Collection does not exist (yet)
 
         return null;
       }
 
-      throw cfe;
+      throw be;
     }
   }
 
@@ -273,7 +273,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     final String path = getResourcesPath(suite, cl);
 
     if (path == null) {
-      throw new CalFacadeException(CalFacadeErrorCode.noCalsuiteResCol);
+      throw new BedeworkException(CalFacadeErrorCode.noCalsuiteResCol);
     }
 
     BwCalendar resCol = getCols().get(path);
@@ -315,7 +315,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
 
       getSvc().changeAccess(resCol, aces, true);
     } catch (final AccessException ae) {
-      throw new CalFacadeException(ae);
+      throw new BedeworkException(ae);
     }
 
     return resCol;
@@ -334,7 +334,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
 
     final BwCalendar rootCol = getCols().get(rootCollectionPath);
     if (rootCol == null) {
-      throw new CalFacadeException(CalFacadeErrorCode.calsuiteUnknownRootCollection,
+      throw new BedeworkException(CalFacadeErrorCode.calsuiteUnknownRootCollection,
                                    rootCollectionPath);
     }
 
@@ -348,7 +348,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
   private BwCalendar validateGroup(final BwCalSuite cs,
                                    final String groupName) {
     if (groupName.length() > BwCalSuite.maxNameLength) {
-      throw new CalFacadeException(CalFacadeErrorCode.calsuiteGroupNameTooLong);
+      throw new BedeworkException(CalFacadeErrorCode.calsuiteGroupNameTooLong);
     }
 
     final BwAdminGroup agrp =
@@ -356,7 +356,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
                     getAdminDirectories().
                     findGroup(groupName);
     if (agrp == null) {
-      throw new CalFacadeException(CalFacadeErrorCode.groupNotFound,
+      throw new BedeworkException(CalFacadeErrorCode.groupNotFound,
                                    groupName);
     }
 
@@ -364,19 +364,19 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
 
     if ((csw != null) && !csw.equals(cs)) {
       // Group already assigned to another cal suite
-      throw new CalFacadeException(CalFacadeErrorCode.calsuiteGroupAssigned,
+      throw new BedeworkException(CalFacadeErrorCode.calsuiteGroupAssigned,
                                    csw.getName());
     }
 
     final BwPrincipal<?> eventsOwner = getPrincipal(agrp.getOwnerHref());
 
     if (eventsOwner == null) {
-      throw new CalFacadeException(CalFacadeErrorCode.calsuiteBadowner);
+      throw new BedeworkException(CalFacadeErrorCode.calsuiteBadowner);
     }
 
     final BwCalendar home = getCols().getHomeDb(eventsOwner, true);
     if (home == null) {
-      throw new CalFacadeException(CalFacadeErrorCode.missingGroupOwnerHome);
+      throw new BedeworkException(CalFacadeErrorCode.missingGroupOwnerHome);
     }
 
     cs.setGroup(agrp);
@@ -416,7 +416,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
       eventsOwner.setLocationAccess(aclStr);
       eventsOwner.setContactAccess(aclStr);
     } catch (final AccessException ae) {
-      throw new CalFacadeException(ae);
+      throw new BedeworkException(ae);
     }
 
     getSvc().getUsersHandler().update(eventsOwner);

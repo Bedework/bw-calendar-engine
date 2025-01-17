@@ -19,13 +19,13 @@
 package org.bedework.calsvc.scheduling;
 
 import org.bedework.access.PrivilegeDefs;
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.convert.Icalendar;
@@ -91,7 +91,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
 
     try {
       if (!Icalendar.itipRequestMethodType(ev.getScheduleMethod())) {
-        return Response.error(sr, new CalFacadeException(
+        return Response.error(sr, new BedeworkException(
                 CalFacadeErrorCode.schedulingBadMethod));
       }
 
@@ -396,10 +396,10 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
             ocalEv.setDtstart(BwDateTime.makeDateTime(st));
             ocalEv.setDuration(calEv.getDuration());
             ocalEv.setDtend(ocalEv.getDtstart().addDur(new Dur(calEv.getDuration())));
-          } catch (CalFacadeException cfe) {
-            throw cfe;
+          } catch (BedeworkException be) {
+            throw be;
           } catch (Throwable t) {
-            throw new CalFacadeException(t);
+            throw new BedeworkException(t);
           }
         }
 
