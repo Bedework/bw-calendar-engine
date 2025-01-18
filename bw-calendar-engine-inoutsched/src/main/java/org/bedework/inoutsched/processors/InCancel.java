@@ -25,7 +25,7 @@ import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.SchedulingI;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.Response;
 
 /** Handles method CANCEL scheduling messages.
  *

@@ -22,7 +22,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.SchedulingI;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.Response;
 
 /**
  * @author douglm

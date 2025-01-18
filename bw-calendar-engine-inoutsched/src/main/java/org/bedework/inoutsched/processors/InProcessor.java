@@ -30,8 +30,8 @@ import org.bedework.calsvc.CalSvcHelperRw;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
-import org.bedework.util.misc.ToString;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.ToString;
+import org.bedework.base.response.Response;
 
 /** Abstract class to support processing of inbox scheduling messages.
  *

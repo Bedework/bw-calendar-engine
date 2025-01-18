@@ -24,9 +24,9 @@ import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calsvci.Locations;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.misc.response.GetEntitiesResponse;
-import org.bedework.util.misc.response.GetEntityResponse;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.GetEntitiesResponse;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 
 import java.util.Collection;
 

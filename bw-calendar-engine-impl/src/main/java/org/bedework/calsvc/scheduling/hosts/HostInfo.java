@@ -21,7 +21,7 @@ package org.bedework.calsvc.scheduling.hosts;
 import org.bedework.caldav.server.sysinterface.Host;
 import org.bedework.util.config.ConfInfo;
 import org.bedework.util.config.ConfigBase;
-import org.bedework.util.misc.ToString;
+import org.bedework.base.ToString;
 
 import java.util.Comparator;
 import java.util.List;

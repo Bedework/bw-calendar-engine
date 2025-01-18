@@ -48,7 +48,7 @@ import org.bedework.synch.wsmessages.SynchRemoteServicePortType;
 import org.bedework.synch.wsmessages.UnsubscribeRequestType;
 import org.bedework.synch.wsmessages.UnsubscribeResponseType;
 import org.bedework.util.jmx.MBeanUtil;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.Response;
 
 import org.oasis_open.docs.ws_calendar.ns.soap.BaseResponseType;
 import org.oasis_open.docs.ws_calendar.ns.soap.StatusType;
@@ -58,10 +58,10 @@ import java.net.URL;
 import javax.xml.namespace.QName;
 import javax.xml.ws.BindingProvider;
 
-import static org.bedework.util.misc.response.Response.Status.failed;
-import static org.bedework.util.misc.response.Response.Status.noAccess;
-import static org.bedework.util.misc.response.Response.Status.notFound;
-import static org.bedework.util.misc.response.Response.Status.ok;
+import static org.bedework.base.response.Response.Status.failed;
+import static org.bedework.base.response.Response.Status.noAccess;
+import static org.bedework.base.response.Response.Status.notFound;
+import static org.bedework.base.response.Response.Status.ok;
 
 /** Handles interactions with the synch engine from within bedework.
  *

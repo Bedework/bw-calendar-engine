@@ -109,8 +109,8 @@ import org.bedework.util.calendar.XcalUtil;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.GetEntityResponse;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 import org.bedework.util.xml.XmlEmit;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.WebdavTags;
@@ -156,9 +156,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 import javax.xml.ws.Holder;
 
-import static org.bedework.util.misc.response.Response.Status.limitExceeded;
-import static org.bedework.util.misc.response.Response.Status.noAccess;
-import static org.bedework.util.misc.response.Response.Status.ok;
+import static org.bedework.base.response.Response.Status.limitExceeded;
+import static org.bedework.base.response.Response.Status.noAccess;
+import static org.bedework.base.response.Response.Status.ok;
 
 /** Bedework implementation of SysIntf.
  *

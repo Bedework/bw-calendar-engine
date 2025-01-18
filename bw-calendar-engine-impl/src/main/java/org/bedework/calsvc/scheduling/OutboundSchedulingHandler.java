@@ -37,7 +37,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleStates;
 import org.bedework.util.misc.Uid;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.Response;
 
 import java.util.ArrayList;
 import java.util.Collection;

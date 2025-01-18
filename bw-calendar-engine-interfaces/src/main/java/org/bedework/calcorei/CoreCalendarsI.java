@@ -26,7 +26,7 @@ import org.bedework.calfacade.CollectionAliases;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
-import org.bedework.util.misc.response.GetEntityResponse;
+import org.bedework.base.response.GetEntityResponse;
 
 import java.io.Serializable;
 import java.util.Collection;

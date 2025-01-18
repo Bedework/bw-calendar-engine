@@ -11,8 +11,8 @@ import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.GetEntitiesResponse;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.GetEntitiesResponse;
+import org.bedework.base.response.Response;
 import org.bedework.util.security.PwEncryptionIntf;
 
 import java.util.Collection;

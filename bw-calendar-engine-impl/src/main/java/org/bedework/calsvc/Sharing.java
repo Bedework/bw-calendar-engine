@@ -48,7 +48,7 @@ import org.bedework.calfacade.svc.SharingReplyResult;
 import org.bedework.calfacade.svc.SubscribeResult;
 import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.SharingI;
-import org.bedework.util.misc.ToString;
+import org.bedework.base.ToString;
 import org.bedework.util.misc.Uid;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.tagdefs.AppleServerTags;

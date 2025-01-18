@@ -25,8 +25,8 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.svc.BwPreferences.CategoryMapping;
-import org.bedework.util.misc.response.GetEntityResponse;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 import org.bedework.webdav.servlet.shared.WebdavException;
 
 /**

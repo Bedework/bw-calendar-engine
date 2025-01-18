@@ -23,7 +23,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.util.misc.Uid;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.Response;
 
 import java.util.Set;
 

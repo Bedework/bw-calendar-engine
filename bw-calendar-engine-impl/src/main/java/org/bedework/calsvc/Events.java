@@ -79,8 +79,8 @@ import org.bedework.sysevents.events.SysEventBase.SysCode;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.GetEntitiesResponse;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.GetEntitiesResponse;
+import org.bedework.base.response.Response;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
@@ -104,12 +104,12 @@ import javax.xml.ws.Holder;
 
 import static org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
 import static org.bedework.calsvci.EventsI.SetEntityCategoriesResult.success;
-import static org.bedework.util.misc.response.Response.Status.failed;
-import static org.bedework.util.misc.response.Response.Status.forbidden;
-import static org.bedework.util.misc.response.Response.Status.limitExceeded;
-import static org.bedework.util.misc.response.Response.Status.noAccess;
-import static org.bedework.util.misc.response.Response.fromResponse;
-import static org.bedework.util.misc.response.Response.notOk;
+import static org.bedework.base.response.Response.Status.failed;
+import static org.bedework.base.response.Response.Status.forbidden;
+import static org.bedework.base.response.Response.Status.limitExceeded;
+import static org.bedework.base.response.Response.Status.noAccess;
+import static org.bedework.base.response.Response.fromResponse;
+import static org.bedework.base.response.Response.notOk;
 
 /** This class handles fetching and updates of events.
  *

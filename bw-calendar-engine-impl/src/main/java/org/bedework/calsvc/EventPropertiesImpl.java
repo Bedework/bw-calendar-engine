@@ -32,9 +32,9 @@ import org.bedework.calfacade.svc.EnsureEntityExistsResult;
 import org.bedework.calsvci.EventProperties;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.GetEntitiesResponse;
-import org.bedework.util.misc.response.GetEntityResponse;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.GetEntitiesResponse;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 
 import java.util.ArrayList;
 import java.util.Collection;

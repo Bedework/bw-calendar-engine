@@ -15,6 +15,11 @@
 
 		<dependency>
 			<groupId>org.bedework</groupId>
+			<artifactId>bw-base</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.bedework</groupId>
 			<artifactId>bw-calendar-api</artifactId>
 		</dependency>
 

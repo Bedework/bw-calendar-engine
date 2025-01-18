@@ -39,8 +39,8 @@ import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.EventsI;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
-import org.bedework.util.misc.response.GetEntityResponse;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 
 import java.io.StreamTokenizer;
 import java.util.List;

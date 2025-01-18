@@ -2,7 +2,7 @@ package org.bedework.calcorei;
 
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
-import org.bedework.util.misc.response.GetEntityResponse;
+import org.bedework.base.response.GetEntityResponse;
 
 import java.util.List;
 

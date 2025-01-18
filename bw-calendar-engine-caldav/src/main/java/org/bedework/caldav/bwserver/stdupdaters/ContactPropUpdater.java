@@ -26,7 +26,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.Response;
 import org.bedework.webdav.servlet.shared.WebdavException;
 
 import ietf.params.xml.ns.icalendar_2.TextPropertyType;

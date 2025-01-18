@@ -62,8 +62,8 @@ import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.GetEntityResponse;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 
 import java.sql.Timestamp;
 import java.util.Collection;
@@ -75,7 +75,7 @@ import java.util.concurrent.LinkedTransferQueue;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeCategory;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeContact;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
-import static org.bedework.util.misc.response.Response.Status.failed;
+import static org.bedework.base.response.Response.Status.failed;
 
 /** Base Implementation of CalIntf which throws exceptions for most methods.
 *

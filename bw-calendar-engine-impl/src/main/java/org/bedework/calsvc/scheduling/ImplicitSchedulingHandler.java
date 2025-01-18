@@ -36,7 +36,7 @@ import org.bedework.calsvci.EventsI;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.Response;
 
 import static java.lang.String.format;
 

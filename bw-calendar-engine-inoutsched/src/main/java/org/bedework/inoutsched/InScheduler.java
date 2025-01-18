@@ -39,7 +39,7 @@ import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.ScheduleMethods;
 
 import static org.bedework.sysevents.events.ScheduleUpdateEvent.ChangeType.attendeeChange;
-import static org.bedework.util.misc.response.Response.Status.forbidden;
+import static org.bedework.base.response.Response.Status.forbidden;
 
 /** Handles a queue of scheduling requests. We need to delay
  * processing until after the initiating request is processed. In addition,

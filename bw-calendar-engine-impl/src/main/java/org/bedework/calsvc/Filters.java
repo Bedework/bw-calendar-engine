@@ -28,7 +28,7 @@ import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.responses.GetFilterDefResponse;
 import org.bedework.calsvci.FiltersI;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.Response;
 
 import ietf.params.xml.ns.caldav.FilterType;
 

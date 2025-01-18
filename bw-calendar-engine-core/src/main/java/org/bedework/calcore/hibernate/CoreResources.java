@@ -11,8 +11,8 @@ import org.bedework.calcorei.CoreResourcesI;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.util.AccessChecker;
-import org.bedework.util.misc.response.GetEntityResponse;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 
 import java.util.ArrayList;
 import java.util.Collection;

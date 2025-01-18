@@ -33,7 +33,7 @@ import org.bedework.util.calendar.XcalUtil;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.GetEntityResponse;
+import org.bedework.base.response.GetEntityResponse;
 import org.bedework.util.xml.tagdefs.XcalTags;
 import org.bedework.webdav.servlet.shared.WebdavException;
 
@@ -44,7 +44,7 @@ import ietf.params.xml.ns.icalendar_2.TextPropertyType;
 import java.util.List;
 
 import static org.bedework.calfacade.BwXproperty.xBedeworkLocation;
-import static org.bedework.util.misc.response.Response.Status.ok;
+import static org.bedework.base.response.Response.Status.ok;
 
 /** Updates the x-property which saves the original location property
  * for the event.

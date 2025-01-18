@@ -21,7 +21,7 @@ package org.bedework.tools.cmdutil;
 import org.bedework.calfacade.configs.CmdUtilProperties;
 import org.bedework.util.config.ConfInfo;
 import org.bedework.util.config.ConfigBase;
-import org.bedework.util.misc.ToString;
+import org.bedework.base.ToString;
 
 /**
  * @author douglm

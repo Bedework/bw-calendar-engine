@@ -51,7 +51,7 @@ import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.GetEntityResponse;
+import org.bedework.base.response.GetEntityResponse;
 
 import net.fortuna.ical4j.model.Period;
 

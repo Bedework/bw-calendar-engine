@@ -45,7 +45,7 @@ import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.GetEntityResponse;
+import org.bedework.base.response.GetEntityResponse;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -54,9 +54,9 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
-import static org.bedework.util.misc.response.Response.Status.noAccess;
-import static org.bedework.util.misc.response.Response.Status.notFound;
-import static org.bedework.util.misc.response.Response.Status.ok;
+import static org.bedework.base.response.Response.Status.noAccess;
+import static org.bedework.base.response.Response.Status.notFound;
+import static org.bedework.base.response.Response.Status.ok;
 
 /** Class to encapsulate most of what we do with collections
  *

@@ -45,8 +45,8 @@ import org.bedework.calsvci.ResourcesI;
 import org.bedework.calsvci.SynchI;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.GetEntityResponse;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 import org.bedework.util.timezones.DateTimeUtil;
 import org.bedework.util.xml.tagdefs.AppleServerTags;
 

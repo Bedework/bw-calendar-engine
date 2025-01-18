@@ -24,7 +24,7 @@ import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.util.calendar.PropertyIndex;
-import org.bedework.util.misc.response.GetEntityResponse;
+import org.bedework.base.response.GetEntityResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -39,7 +39,7 @@ import static org.bedework.calfacade.indexing.BwIndexer.docTypePreferences;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeResource;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeResourceContent;
-import static org.bedework.util.misc.response.Response.Status.ok;
+import static org.bedework.base.response.Response.Status.ok;
 
 /** This implementation crawls the user subtree indexing user entries.
  *

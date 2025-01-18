@@ -86,9 +86,9 @@ import org.bedework.sysevents.events.SysEventBase;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.GetEntitiesResponse;
-import org.bedework.util.misc.response.GetEntityResponse;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.GetEntitiesResponse;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
@@ -108,9 +108,9 @@ import java.util.TreeSet;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
-import static org.bedework.util.misc.response.Response.Status.noAccess;
-import static org.bedework.util.misc.response.Response.Status.notFound;
-import static org.bedework.util.misc.response.Response.Status.ok;
+import static org.bedework.base.response.Response.Status.noAccess;
+import static org.bedework.base.response.Response.Status.notFound;
+import static org.bedework.base.response.Response.Status.ok;
 
 /** Implementation of CalIntf for read-only clients which only interacts with
  * the search engine.

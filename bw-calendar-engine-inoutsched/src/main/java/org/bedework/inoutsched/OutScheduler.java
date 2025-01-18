@@ -31,7 +31,7 @@ import org.bedework.convert.IcalTranslator;
 import org.bedework.sysevents.events.EntityQueuedEvent;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.Response;
 
 import net.fortuna.ical4j.model.Calendar;
 

@@ -21,7 +21,7 @@ package org.bedework.indexer;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.util.config.ConfInfo;
 import org.bedework.util.config.ConfigBase;
-import org.bedework.util.misc.ToString;
+import org.bedework.base.ToString;
 
 import java.util.ArrayList;
 import java.util.Collections;

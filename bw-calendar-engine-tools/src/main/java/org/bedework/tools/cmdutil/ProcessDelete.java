@@ -24,7 +24,7 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.Response;
+import org.bedework.base.response.Response;
 
 import java.util.ArrayList;
 import java.util.Collection;

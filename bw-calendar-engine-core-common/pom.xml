@@ -20,6 +20,11 @@
 
     <dependency>
       <groupId>org.bedework</groupId>
+      <artifactId>bw-base</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.bedework</groupId>
       <artifactId>bw-calendar-sysevents-common</artifactId>
     </dependency>
 
