@@ -20,7 +20,6 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calfacade.BwDateTime;
-import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.misc.Util;
@@ -371,28 +370,5 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
 
       hrefs.add(val);
     }
-  }
-
-  public void doCalendarEntities(final boolean setUser,
-                                 final BwPrincipal pr,
-                                 final EventsQueryResult eqr) {
-    if (setUser) {
-      sess.setString("userHref", pr.getPrincipalRef());
-    }
-
-    if (eqr.colPaths == null) {
-      return;
-    }
-
-    /*
-    int i = 0;
-    Iterator it = eqr.calendars.iterator();
-    while (it.hasNext()) {
-      BwCalendar cal = (BwCalendar)it.next();
-      sess.setEntity("calendar" + i, unwrap(cal));
-      i++;
-    }
-    */
-    sess.setParameterList("colPaths", eqr.colPaths);
   }
 }

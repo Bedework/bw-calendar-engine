@@ -18,29 +18,25 @@
 */
 package org.bedework.calcore.hibernate;
 
-import org.bedework.base.exc.BedeworkConstraintViolationException;
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.base.exc.BedeworkStaleStateException;
+import org.bedework.base.exc.persist.BedeworkConstraintViolationException;
+import org.bedework.base.exc.persist.BedeworkDatabaseException;
+import org.bedework.base.exc.persist.BedeworkStaleStateException;
 import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.base.BwDbentity;
-import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
-import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
-import org.hibernate.LockOptions;
 import org.hibernate.Query;
-import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;
 
-import java.io.InputStream;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Timestamp;
@@ -64,7 +60,7 @@ public class HibSessionImpl implements Logged, HibSession {
   transient Query q;
 
   /** Exception from this session. */
-  Throwable exc;
+  BedeworkException exc;
 
   private final SimpleDateFormat dateFormatter =
           new SimpleDateFormat("yyyy-MM-dd");
@@ -76,10 +72,8 @@ public class HibSessionImpl implements Logged, HibSession {
                         .interceptor(new HibernateInterceptor())
                         .openSession();
       rolledBack = false;
-      //sess.setFlushMode(FlushMode.COMMIT);
-//      tx = sess.beginTransaction();
     } catch (final Throwable t) {
-      exc = t;
+      exc = new BedeworkDatabaseException(t);
       tx = null;  // not even started. Should be null anyway
       close();
     }
@@ -109,64 +103,30 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void disconnect() {
-    if (exc != null) {
-      // Didn't hear me last time?
-      if (exc instanceof BedeworkException) {
-        throw (BedeworkException)exc;
-      }
-      throw new BedeworkException(exc);
-    }
-
-    try {
-      sess.disconnect();
-    } catch (final Throwable t) {
-      handleException(t);
-    }
-  }
-
-  @Override
-  public void setFlushMode(final FlushMode val) {
-    if (exc != null) {
-      // Didn't hear me last time?
-      throw new BedeworkException(exc);
-    }
-
-    try {
-      if (tx != null) {
-        throw new BedeworkException("Transaction already started");
-      }
-
-      sess.setFlushMode(val);
-    } catch (final Throwable t) {
-      exc = t;
-      throw new BedeworkException(t);
-    }
-  }
-
-  @Override
   public void beginTransaction() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
       if (tx != null) {
-        throw new BedeworkException("Transaction already started");
+        exc = new BedeworkDatabaseException("Transaction already started");
+        throw exc;
       }
 
       tx = sess.beginTransaction();
       rolledBack = false;
       if (tx == null) {
-        throw new BedeworkException("Transaction not started");
+        exc = new BedeworkDatabaseException("Transaction not started");
+        throw exc;
       }
     } catch (final BedeworkException be) {
       exc = be;
       throw be;
     } catch (final Throwable t) {
-      exc = t;
-      throw new BedeworkException(t);
+      exc = new BedeworkDatabaseException(t);
+      throw exc;
     }
   }
 
@@ -179,7 +139,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void commit() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -195,23 +155,25 @@ public class HibSessionImpl implements Logged, HibSession {
 
       tx = null;
     } catch (final Throwable t) {
-      exc = t;
-
       if (t instanceof StaleStateException) {
-        throw new BedeworkStaleStateException(t);
+        exc = new BedeworkStaleStateException(t);
+        throw exc;
       }
 
       final Class<?> obj;
       try {
         obj = t.getClass().getClassLoader().loadClass("javax.persistence.OptimisticLockException");
       } catch (final ClassNotFoundException cnfe) {
-        throw new RuntimeException(cnfe);
+        exc = new BedeworkDatabaseException(t);
+        throw exc;
       }
       if (t.getClass().isAssignableFrom(obj)) {
-        throw new BedeworkStaleStateException(t);
+        exc = new BedeworkStaleStateException(t);
+        throw exc;
       }
 
-      throw new BedeworkException(t);
+      exc = new BedeworkDatabaseException(t);
+      throw exc;
     }
   }
 
@@ -219,7 +181,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void rollback() {
 /*    if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw  new BedeworkDatabaseException(exc);
     }
 */
     if (getLogger().isDebugEnabled()) {
@@ -236,8 +198,8 @@ public class HibSessionImpl implements Logged, HibSession {
         sess.clear();
       }
     } catch (final Throwable t) {
-      exc = t;
-      throw new BedeworkException(t);
+      exc = new BedeworkDatabaseException(t);
+      throw exc;
     } finally {
       rolledBack = true;
     }
@@ -272,15 +234,11 @@ public class HibSessionImpl implements Logged, HibSession {
     return Hibernate.getLobCreator(sess).createBlob(val);
   }
 
-  public Blob getBlob(final InputStream val, final long length) {
-    return Hibernate.getLobCreator(sess).createBlob(val, length);
-  }
-
   @Override
   public void evict(final Object val) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw  new BedeworkDatabaseException(exc);
     }
 
     try {
@@ -294,42 +252,13 @@ public class HibSessionImpl implements Logged, HibSession {
   public void createQuery(final String s) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
       q = sess.createQuery(s);
     } catch (final Throwable t) {
       handleException(t);
-    }
-  }
-
-  @Override
-  public void createNoFlushQuery(final String s) {
-    if (exc != null) {
-      // Didn't hear me last time?
-      throw new BedeworkException(exc);
-    }
-
-    try {
-      q = sess.createQuery(s);
-      q.setFlushMode(FlushMode.COMMIT);
-    } catch (final Throwable t) {
-      handleException(t);
-    }
-  }
-
-  @Override
-  public String getQueryString() {
-    if (q == null) {
-      return "*** no query ***";
-    }
-
-    try {
-      return q.getQueryString();
-    } catch (final Throwable t) {
-      handleException(t);
-      return null;
     }
   }
 
@@ -337,7 +266,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void cacheableQuery() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -351,7 +280,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setString(final String parName, final String parVal) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -365,7 +294,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setBool(final String parName, final boolean parVal) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -379,7 +308,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setInt(final String parName, final int parVal) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -393,7 +322,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setLong(final String parName, final long parVal) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -407,7 +336,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setEntity(final String parName, final Object parVal) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -418,25 +347,11 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void setParameter(final String parName, final Object parVal) {
-    if (exc != null) {
-      // Didn't hear me last time?
-      throw new BedeworkException(exc);
-    }
-
-    try {
-      q.setParameter(parName, parVal);
-    } catch (final Throwable t) {
-      handleException(t);
-    }
-  }
-
-  @Override
   public void setParameterList(final String parName,
                                final Collection<?> parVal) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -450,7 +365,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setFirstResult(final int val) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -464,7 +379,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void setMaxResults(final int val) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -478,7 +393,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public Object getUnique() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -493,7 +408,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public List<?> getList() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -514,14 +429,15 @@ public class HibSessionImpl implements Logged, HibSession {
   public int executeUpdate() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
+    }
+
+    if (q == null) {
+      exc = new BedeworkDatabaseException("No query for execute update");
+      throw exc;
     }
 
     try {
-      if (q == null) {
-        throw new BedeworkException("No query for execute update");
-      }
-
       return q.executeUpdate();
     } catch (final Throwable t) {
       handleException(t);
@@ -533,20 +449,12 @@ public class HibSessionImpl implements Logged, HibSession {
   public void update(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
-      final Object ent = obj;
-
-      beforeSave(ent);
-
- //     if ((ent instanceof BwDbentity) &&
- //         (((BwDbentity)ent).getId() != CalFacadeDefs.unsavedItemKey)) {
- //       ent = sess.merge(ent);
- //     } else {
-        sess.update(ent);
- //     }
+      beforeSave(obj);
+      sess.update(obj);
       deleteSubs(obj);
     } catch (final Throwable t) {
       handleException(t);
@@ -557,7 +465,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public Object merge(Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -577,13 +485,13 @@ public class HibSessionImpl implements Logged, HibSession {
   public void saveOrUpdate(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
-      Object ent = obj;
+      beforeSave(obj);
 
-      beforeSave(ent);
+      Object ent = obj;
 
       if ((ent instanceof BwDbentity) &&
           (((BwDbentity<?>)ent).getId() != CalFacadeDefs.unsavedItemKey)) {
@@ -598,26 +506,11 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public Object saveOrUpdateCopy(final Object obj) {
-    if (exc != null) {
-      // Didn't hear me last time?
-      throw new BedeworkException(exc);
-    }
-
-    try {
-      return sess.merge(obj);
-    } catch (final Throwable t) {
-      handleException(t);
-      return null;  // Don't get here
-    }
-  }
-
-  @Override
   public Object get(final Class<?> cl,
                     final Serializable id) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -637,7 +530,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void save(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -649,30 +542,11 @@ public class HibSessionImpl implements Logged, HibSession {
     }
   }
 
-  /* * Save a new object with the given id. This should only be used for
-   * restoring the db from a save or for assigned keys.
-   *
-   * @param obj
-   * @param id
-   * /
-  public void save(Object obj, Serializable id) {
-    if (exc != null) {
-      // Didn't hear me last time?
-      throw new BedeworkException(exc);
-    }
-
-    try {
-      sess.save(obj, id);
-    } catch (Throwable t) {
-      handleException(t);
-    }
-  }*/
-
   @Override
   public void delete(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     try {
@@ -687,71 +561,10 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void restore(final Object obj) {
-    if (exc != null) {
-      // Didn't hear me last time?
-      throw new BedeworkException(exc);
-    }
-
-    try {
-      sess.replicate(obj, ReplicationMode.IGNORE);
-    } catch (final Throwable t) {
-      handleException(t);
-    }
-  }
-
-  @Override
-  public void reAttach(final BwUnversionedDbentity<?> val) {
-    if (exc != null) {
-      // Didn't hear me last time?
-      throw new BedeworkException(exc);
-    }
-
-    try {
-      if (!val.unsaved()) {
-//        sess.lock(val, LockMode.NONE);
-        sess.buildLockRequest(LockOptions.NONE).lock(val);
-      }
-    } catch (final Throwable t) {
-      handleException(t);
-    }
-  }
-
-  @Override
-  public void lockRead(final Object o) {
-    if (exc != null) {
-      // Didn't hear me last time?
-      throw new BedeworkException(exc);
-    }
-
-    try {
-//      sess.lock(o, LockMode.READ);
-      sess.buildLockRequest(LockOptions.READ).lock(o);
-    } catch (final Throwable t) {
-      handleException(t);
-    }
-  }
-
-  @Override
-  public void lockUpdate(final Object o) {
-    if (exc != null) {
-      // Didn't hear me last time?
-      throw new BedeworkException(exc);
-    }
-
-    try {
-//      sess.lock(o, LockMode.UPGRADE);
-      sess.buildLockRequest(LockOptions.UPGRADE).lock(o);
-    } catch (final Throwable t) {
-      handleException(t);
-    }
-  }
-
-  @Override
   public void flush() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     if (getLogger().isDebugEnabled()) {
@@ -768,7 +581,7 @@ public class HibSessionImpl implements Logged, HibSession {
   public void clear() {
     if (exc != null) {
       // Didn't hear me last time?
-      throw new BedeworkException(exc);
+      throw exc;
     }
 
     if (getLogger().isDebugEnabled()) {
@@ -789,7 +602,7 @@ public class HibSessionImpl implements Logged, HibSession {
       return;
     }
 
-//    throw new BedeworkException("XXXXXXXXXXXXXXXXXXXXXXXXXXXXX");/*
+//    throw  new BedeworkDatabaseException("XXXXXXXXXXXXXXXXXXXXXXXXXXXXX");/*
     try {
       if (!rolledback() && sess.isDirty()) {
         sess.flush();
@@ -799,20 +612,20 @@ public class HibSessionImpl implements Logged, HibSession {
       }
     } catch (final Throwable t) {
       if (exc == null) {
-        exc = t;
+        exc = new BedeworkException(t);
       }
     } finally {
       tx = null;
       if (sess != null) {
         try {
           sess.close();
-        } catch (Throwable t) {}
+        } catch (final Throwable ignored) {}
       }
     }
 
     sess = null;
     if (exc != null) {
-      throw new BedeworkException(exc);
+      throw exc;
     }
 //    */
   }
@@ -849,29 +662,34 @@ public class HibSessionImpl implements Logged, HibSession {
       sess = null;
     }
 
-    exc = t;
+    if (t instanceof final BedeworkException be) {
+      exc = be;
+      throw exc;
+    }
 
     if (t instanceof StaleStateException) {
-      throw new BedeworkStaleStateException(t);
+      exc = new BedeworkStaleStateException(t);
+      throw exc;
     }
 
     if (t instanceof OptimisticLockException) {
-      throw new BedeworkStaleStateException(t);
+      exc = new BedeworkStaleStateException(t);
+      throw exc;
     }
 
     if (t instanceof ConstraintViolationException) {
-      throw new BedeworkConstraintViolationException(t);
+      exc = new BedeworkConstraintViolationException(t);
+      throw exc;
     }
 
-    throw new BedeworkException(t);
+    exc = new BedeworkDatabaseException(t);
+    throw exc;
   }
 
   private void beforeSave(final Object o) {
-    if (!(o instanceof BwDbentity)) {
+    if (!(o instanceof final BwDbentity<?> ent)) {
       return;
     }
-
-    final BwDbentity<?> ent = (BwDbentity<?>)o;
 
     ent.beforeSave();
   }
@@ -881,24 +699,22 @@ public class HibSessionImpl implements Logged, HibSession {
       return;
     }
 
-    final BwDbentity<?> ent = (BwDbentity<?>)o;
+    final var ent = (BwDbentity<?>)o;
 
     ent.beforeDeletion();
   }
 
   private void deleteSubs(final Object o) {
-    if (!(o instanceof BwDbentity)) {
+    if (!(o instanceof final BwDbentity<?> ent)) {
       return;
     }
 
-    final BwDbentity<?> ent = (BwDbentity<?>)o;
-
-    final Collection<BwDbentity<?>> subs = ent.getDeletedEntities();
+    final var subs = ent.getDeletedEntities();
     if (subs == null) {
       return;
     }
 
-    for (final BwDbentity<?> sub: subs) {
+    for (final var sub: subs) {
       evict(sub);
       delete(sub);
     }

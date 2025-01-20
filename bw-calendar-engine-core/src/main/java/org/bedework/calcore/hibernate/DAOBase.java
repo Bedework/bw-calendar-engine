@@ -23,7 +23,6 @@ import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
-import java.io.InputStream;
 import java.sql.Blob;
 
 /** Class used as basis for a number of DAO classes.
@@ -80,11 +79,6 @@ public abstract class DAOBase implements Logged {
 
   public Blob getBlob(final byte[] val) {
     return sess.getBlob(val);
-  }
-
-  public Blob getBlob(final InputStream val,
-                      final long length) {
-    return sess.getBlob(val, length);
   }
 
   protected void throwException(final BedeworkException be) {

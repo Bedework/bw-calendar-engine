@@ -43,7 +43,6 @@ import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
 import org.bedework.calfacade.CollectionSynchInfo;
-import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.ShareableEntity;
@@ -60,15 +59,12 @@ import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
-import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.util.misc.Util;
 
-import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.Statistics;
 
-import java.io.InputStream;
 import java.io.StringReader;
 import java.sql.Blob;
 import java.sql.Timestamp;
@@ -357,7 +353,6 @@ public class CalintfImpl extends CalintfROImpl {
   public void open(final FilterParserFetcher filterParserFetcher,
                    final String logId,
                    final Configurations configs,
-                   final boolean webMode,
                    final boolean forRestore,
                    final boolean indexRebuild,
                    final boolean publicAdmin,
@@ -367,7 +362,7 @@ public class CalintfImpl extends CalintfROImpl {
                    final boolean sessionless,
                    final boolean dontKill) {
     final long start = System.currentTimeMillis();
-    super.open(filterParserFetcher, logId, configs, webMode,
+    super.open(filterParserFetcher, logId, configs,
                forRestore, indexRebuild,
                publicAdmin, publicAuth, publicSubmission,
                authenticated, sessionless, dontKill);
@@ -376,7 +371,7 @@ public class CalintfImpl extends CalintfROImpl {
                    System.currentTimeMillis() - start));
     }
 
-    if ((sess != null) && !webMode) {
+    if (sess != null) {
       warn("Session is not null. Will close");
       close();
     }
@@ -387,9 +382,7 @@ public class CalintfImpl extends CalintfROImpl {
       }
       sess = new HibSessionImpl();
       sess.init(getSessionFactory());
-      if (webMode) {
-        sess.setFlushMode(FlushMode.MANUAL);
-      } else if (debug()) {
+      if (debug()) {
         debug("Open session for " + getTraceId());
       }
     }
@@ -445,7 +438,7 @@ public class CalintfImpl extends CalintfROImpl {
             sess.rollback();
             clearNotifications();
           }
-  //        sess.disconnect();
+
           sess.close();
           sess = null;
         }
@@ -626,18 +619,9 @@ public class CalintfImpl extends CalintfROImpl {
     super.kill();
   }
 
-  @Override
-  public void reAttach(BwDbentity<?> val) {
-    if (val instanceof CalendarWrapper) {
-      final CalendarWrapper ccw = (CalendarWrapper)val;
-      val = ccw.fetchEntity();
-    }
-    sess.reAttach(val);
-  }
-
-  /* ====================================================================
+  /* ==============================================================
    *                   Access
-   * ==================================================================== */
+   * ============================================================== */
 
   @Override
   public void changeAccess(final ShareableEntity ent,
@@ -954,12 +938,6 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public Blob getBlob(final byte[] val) {
     return entityDao.getBlob(val);
-  }
-
-  @Override
-  public Blob getBlob(final InputStream val,
-                      final long length) {
-    return entityDao.getBlob(val, length);
   }
 
   private class ObjectIterator<T> implements Iterator<T> {

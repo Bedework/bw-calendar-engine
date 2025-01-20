@@ -23,8 +23,11 @@ import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
 import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeSet;
-import org.bedework.base.exc.BedeworkConstraintViolationException;
 import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.exc.persist.BedeworkConstraintViolationException;
+import org.bedework.base.response.GetEntitiesResponse;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfFactory;
 import org.bedework.caldav.util.notifications.admin.AdminNoteParsers;
@@ -44,7 +47,6 @@ import org.bedework.calfacade.BwStats.CacheStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
@@ -105,16 +107,12 @@ import org.bedework.util.jmx.MBeanUtil;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
-import org.bedework.base.response.GetEntitiesResponse;
-import org.bedework.base.response.GetEntityResponse;
-import org.bedework.base.response.Response;
 import org.bedework.util.security.PwEncryptionIntf;
 import org.bedework.util.security.keys.GenKeysMBean;
 import org.bedework.util.timezones.Timezones;
 
 import org.apache.james.jdkim.api.JDKIM;
 
-import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -557,7 +555,6 @@ public class CalSvc
     getCal().open(this,
                   pars.getLogId(),
                   configs,
-                  pars.getWebMode(),
                   pars.getForRestore(),
                   pars.getIndexRebuild(),
                   pars.getPublicAdmin(),
@@ -629,17 +626,6 @@ public class CalSvc
 
   public Blob getBlob(final byte[] val) {
     return getCal().getBlob(val);
-  }
-
-  @Override
-  public Blob getBlob(final InputStream val,
-                      final long length) {
-    return getCal().getBlob(val, length);
-  }
-
-  @Override
-  public void reAttach(final BwDbentity<?> val) {
-    getCal().reAttach(val);
   }
 
   @Override
@@ -1303,7 +1289,6 @@ public class CalSvc
       cali.open(this,
                 pars.getLogId(),
                 configs,
-                pars.getWebMode(),
                 pars.getForRestore(),
                 pars.getIndexRebuild(),
                 pars.getPublicAdmin(),

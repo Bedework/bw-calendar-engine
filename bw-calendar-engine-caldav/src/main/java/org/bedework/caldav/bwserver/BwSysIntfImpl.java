@@ -26,7 +26,7 @@ import org.bedework.access.WhoDefs;
 import org.bedework.base.exc.BedeworkAccessException;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.base.exc.BedeworkForbidden;
-import org.bedework.base.exc.BedeworkStaleStateException;
+import org.bedework.base.exc.persist.BedeworkStaleStateException;
 import org.bedework.caldav.server.CalDAVCollection;
 import org.bedework.caldav.server.CalDAVEvent;
 import org.bedework.caldav.server.CalDAVResource;

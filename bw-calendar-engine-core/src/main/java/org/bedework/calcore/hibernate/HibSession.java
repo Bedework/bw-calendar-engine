@@ -19,13 +19,9 @@
 
 package org.bedework.calcore.hibernate;
 
-import org.bedework.calfacade.base.BwUnversionedDbentity;
-
-import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-import java.io.InputStream;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Timestamp;
@@ -41,102 +37,73 @@ public interface HibSession extends Serializable {
    *
    * @param sessFactory
    */
-  public void init(SessionFactory sessFactory);
+  void init(SessionFactory sessFactory);
 
   /**
    * @return Session
    */
-  public Session getSession();
+  Session getSession();
 
   /**
    * @return boolean true if open
    */
-  public boolean isOpen();
+  boolean isOpen();
 
-  /** If we had a hibernate exception this will return non-null. The session
+  /** If we had a database exception this will return non-null. The session
    * needs to be discarded.
    *
    * @return current exception or null.
    */
-  public Throwable getException();
-
-  /** Disconnect a session
-   *
-   */
-  public void disconnect();
-
-  /** set the flushmode
-   *
-   * @param val
-   */
-  public void setFlushMode(FlushMode val);
+  Throwable getException();
 
   /** Begin a transaction
    *
    */
-  public void beginTransaction();
+  void beginTransaction();
 
   /** Return true if we have a transaction started
    *
    * @return boolean
    */
-  public boolean transactionStarted();
+  boolean transactionStarted();
 
   /** Commit a transaction
    *
    */
-  public void commit();
+  void commit();
 
   /** Rollback a transaction
    *
    */
-  public void rollback();
+  void rollback();
 
   /** Did we rollback the transaction?
    *
    * @return boolean
    */
-  public boolean rolledback();
+  boolean rolledback();
 
   /**
    * @return a timestamp from the db
    */
-  public Timestamp getCurrentTimestamp();
+  Timestamp getCurrentTimestamp();
 
   /**
    * @return a blob
    */
   Blob getBlob(byte[] val);
 
-  /**
-   * @return a blob
-   */
-  Blob getBlob(InputStream val, long length);
-
   /** Evict an object from the session.
    *
    * @param val          Object to evict
    */
-  public void evict(Object val);
+  void evict(Object val);
 
   /** Create a query ready for parameter replacement or execution.
    *
    * @param s             String hibernate query
    */
-  public void createQuery(String s);
-
-  /** Create a query ready for parameter replacement or execution and flag it
-   * for no flush. This assumes that any queued changes will not affect the
-   * result of the query.
-   *
-   * @param s             String hibernate query
-   */
-  public void createNoFlushQuery(String s);
-
-  /**
-   * @return query string
-   */
-  public String getQueryString();
+  void createQuery(String s);
 
   /** Mark the query as cacheable
    *
@@ -178,13 +145,6 @@ public interface HibSession extends Serializable {
    */
   void setEntity(String parName, Object parVal);
 
-  /** Set the named parameter with the given value
-   *
-   * @param parName     String parameter name
-   * @param parVal      Object parameter value
-   */
-  void setParameter(String parName, Object parVal);
-
   /** Set the named parameter with the given Collection
    *
    * @param parName     String parameter name
@@ -197,37 +157,37 @@ public interface HibSession extends Serializable {
    *
    * @param val      int first index
    */
-  public void setFirstResult(int val);
+  void setFirstResult(int val);
 
   /** Set the max number of results for a paged batch
    *
    * @param val      int max number
    */
-  public void setMaxResults(int val);
+  void setMaxResults(int val);
 
   /** Return the single object resulting from the query.
    *
    * @return Object          retrieved object or null
    */
-  public Object getUnique();
+  Object getUnique();
 
   /** Return a list resulting from the query.
    *
    * @return List          list from query
    */
-  public List<?> getList();
+  List<?> getList();
 
   /**
    * @return int number updated
    */
-  public int executeUpdate();
+  int executeUpdate();
 
   /** Update an object which may have been loaded in a previous hibernate
    * session
    *
    * @param obj
    */
-  public void update(Object obj);
+  void update(Object obj);
 
   /** Merge and update an object which may have been loaded in a previous hibernate
    * session
@@ -235,26 +195,14 @@ public interface HibSession extends Serializable {
    * @param obj
    * @return Object   the persiatent object
    */
-  public Object merge(Object obj);
+  Object merge(Object obj);
 
   /** Save a new object or update an object which may have been loaded in a
    * previous hibernate session
    *
    * @param obj
    */
-  public void saveOrUpdate(Object obj);
-
-  /** Copy the state of the given object onto the persistent object with the
-   * same identifier. If there is no persistent instance currently associated
-   * with the session, it will be loaded. Return the persistent instance.
-   * If the given instance is unsaved or does not exist in the database,
-   * save it and return it as a newly persistent instance. Otherwise, the
-   * given instance does not become associated with the session.
-   *
-   * @param obj
-   * @return Object
-   */
-  public Object saveOrUpdateCopy(Object obj);
+  void saveOrUpdate(Object obj);
 
   /** Return an object of the given class with the given id if it is
    * already associated with this session. This must be called for specific
@@ -264,7 +212,7 @@ public interface HibSession extends Serializable {
    * @param  id    A serializable key
    * @return Object
    */
-  public Object get(Class<?> cl, Serializable id);
+  Object get(Class<?> cl, Serializable id);
 
   /** Return an object of the given class with the given id if it is
    * already associated with this session. This must be called for specific
@@ -274,51 +222,29 @@ public interface HibSession extends Serializable {
    * @param  id    int key
    * @return Object
    */
-  public Object get(Class<?> cl, int id);
+  Object get(Class<?> cl, int id);
 
   /** Save a new object.
    *
    * @param obj
    */
-  public void save(Object obj);
+  void save(Object obj);
 
   /** Delete an object
    *
    * @param obj
    */
-  public void delete(Object obj);
-
-  /** Save a new object with the given id. This should only be used for
-   * restoring the db from a save.
-   *
-   * @param obj
-   */
-  public void restore(Object obj);
-
-  /**
-   * @param val
-   */
-  public void reAttach(BwUnversionedDbentity<?> val);
-
-  /**
-   * @param o
-   */
-  public void lockRead(Object o);
-
-  /**
-   * @param o
-   */
-  public void lockUpdate(Object o);
+  void delete(Object obj);
 
   /**
    */
-  public void flush();
+  void flush();
 
   /**
    */
-  public void clear();
+  void clear();
 
   /**
    */
-  public void close();
+  void close();
 }

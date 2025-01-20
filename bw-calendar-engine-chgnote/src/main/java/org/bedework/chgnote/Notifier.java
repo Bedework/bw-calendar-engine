@@ -19,7 +19,7 @@
 package org.bedework.chgnote;
 
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.base.exc.BedeworkStaleStateException;
+import org.bedework.base.exc.persist.BedeworkStaleStateException;
 import org.bedework.caldav.util.notifications.BaseNotificationType;
 import org.bedework.caldav.util.notifications.NotificationType;
 import org.bedework.caldav.util.notifications.ResourceChangeType;

@@ -754,12 +754,12 @@ public class Filters extends FiltersCommon {
       TimeRange tr = trf.getEntity();
 
       if (tr.getStart() != null) {
-        sess.setParameter(parPrefix + qi, tr.getStart().toString());
+        sess.setString(parPrefix + qi, tr.getStart().toString());
         qi++;
       }
 
       if (tr.getEnd() != null) {
-        sess.setParameter(parPrefix + qi, tr.getEnd().toString());
+        sess.setString(parPrefix + qi, tr.getEnd().toString());
         qi++;
       }
 
@@ -788,13 +788,13 @@ public class Filters extends FiltersCommon {
 
       if (c != null) {
         // TODO - Assuming String collection
-        for (Object co: c) {
+        for (final Object co: c) {
           String s = (String)co;
           if (doCaseless) {
             s = s.toLowerCase();
           }
 
-          sess.setParameter(parPrefix + qi, s);
+          sess.setString(parPrefix + qi, s);
           qi++;
         }
 
@@ -802,18 +802,19 @@ public class Filters extends FiltersCommon {
       }
 
       if (o instanceof BwCalendar) {
-        BwCalendar cal = unwrap((BwCalendar)o);
+        final BwCalendar cal = unwrap((BwCalendar)o);
         sess.setString(parPrefix + qi, cal.getPath());
       } else if (o instanceof BwPrincipal) {
         sess.setString(parPrefix + qi, ((BwPrincipal)o).getPrincipalRef());
       } else if (o instanceof BwDbentity) {
         sess.setEntity(parPrefix + qi, o);
       } else if (of.getExact()) {
+        String s = (String)o;
         if (doCaseless) {
-          o = ((String)o).toLowerCase();
+          s = s.toLowerCase();
         }
 
-        sess.setParameter(parPrefix + qi, o);
+        sess.setString(parPrefix + qi, s);
       } else if (of.getEntity() instanceof String) {
         String s = o.toString();
 

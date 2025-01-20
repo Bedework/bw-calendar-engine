@@ -27,6 +27,9 @@ import org.bedework.access.WhoDefs;
 import org.bedework.base.exc.BedeworkAccessException;
 import org.bedework.base.exc.BedeworkBadRequest;
 import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.response.GetEntitiesResponse;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CalintfInfo;
@@ -59,7 +62,6 @@ import org.bedework.calfacade.CollectionAliases;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
-import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.ShareableEntity;
@@ -86,14 +88,10 @@ import org.bedework.sysevents.events.SysEventBase;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
-import org.bedework.base.response.GetEntitiesResponse;
-import org.bedework.base.response.GetEntityResponse;
-import org.bedework.base.response.Response;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
 
-import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -106,11 +104,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
-import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
 import static org.bedework.base.response.Response.Status.noAccess;
 import static org.bedework.base.response.Response.Status.notFound;
 import static org.bedework.base.response.Response.Status.ok;
+import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
 
 /** Implementation of CalIntf for read-only clients which only interacts with
  * the search engine.
@@ -237,7 +235,6 @@ public class CalintfROImpl extends CalintfBase
   public void open(final FilterParserFetcher filterParserFetcher,
                    final String logId,
                    final Configurations configs,
-                   final boolean webMode,
                    final boolean forRestore,
                    final boolean indexRebuild,
                    final boolean publicAdmin,
@@ -414,10 +411,6 @@ public class CalintfROImpl extends CalintfBase
     }
 
     return curTimestamp;
-  }
-
-  @Override
-  public void reAttach(final BwDbentity<?> val) {
   }
 
   /* ====================================================================
@@ -1295,11 +1288,6 @@ public class CalintfROImpl extends CalintfBase
   }
 
   public Blob getBlob(final byte[] val) {
-    throw new RuntimeException("Read only version");
-  }
-
-  public Blob getBlob(final InputStream val,
-                      final long length) {
     throw new RuntimeException("Read only version");
   }
 

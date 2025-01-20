@@ -19,7 +19,7 @@
 package org.bedework.inoutsched;
 
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.base.exc.BedeworkStaleStateException;
+import org.bedework.base.exc.persist.BedeworkStaleStateException;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.RecurringRetrievalMode;

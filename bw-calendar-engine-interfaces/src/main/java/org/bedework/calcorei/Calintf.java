@@ -31,7 +31,6 @@ import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
-import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.ShareableEntity;
@@ -46,7 +45,6 @@ import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.sysevents.events.SysEventBase;
 
-import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.Collection;
@@ -187,7 +185,6 @@ public interface Calintf
    * @param filterParserFetcher for the parsing of filters
    * @param logId for tracing
    * @param configs for configuration info
-   * @param webMode  true for long-running multi request conversations.
    * @param forRestore true if this is for a system restore
    * @param indexRebuild  true if we are rebuilding the index.
    * @param publicAdmin boolean true if this is a public events admin app
@@ -200,7 +197,6 @@ public interface Calintf
   void open(FilterParserFetcher filterParserFetcher,
             String logId,
             Configurations configs,
-            boolean webMode,
             boolean forRestore,
             boolean indexRebuild,
             boolean publicAdmin,
@@ -210,7 +206,7 @@ public interface Calintf
             boolean sessionless,
             boolean dontKill);
 
-  /** Call on the way out after handling a request..
+  /** Call on the way out after handling a request.
    *
    */
   void close();
@@ -278,12 +274,6 @@ public interface Calintf
    * @return a timestamp from the db
    */
   Timestamp getCurrentTimestamp();
-
-  /** Call to reassociate an entity with the current database session
-   *
-   * @param val the entity
-   */
-  void reAttach(BwDbentity<?> val);
 
   String getCalendarNameFromType(int calType);
 
@@ -541,11 +531,6 @@ public interface Calintf
    * @return a blob
    */
   Blob getBlob(byte[] val);
-
-  /**
-   * @return a blob
-   */
-  Blob getBlob(InputStream val, long length);
 
   /* ====================================================================
    *                       dump/restore methods

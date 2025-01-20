@@ -260,8 +260,8 @@ public class CoreEventsDAO extends DAOBase {
      * It's also the case that a concurrent transaction could add uids and
      * a no-flush call will miss those.
      *
-     * We may have to live with it but see if we can't speed up the fush. A lot
-     * of the COU ends up in hibernate calling java.lang.Class.getInterfaces
+     * We may have to live with it but see if we can't speed up the flush. A lot
+     * of the CPU ends up in hibernate calling java.lang.Class.getInterfaces
      * which is not meant to be called frequently.
      */
 

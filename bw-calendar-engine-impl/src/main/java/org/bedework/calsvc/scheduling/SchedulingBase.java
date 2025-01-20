@@ -399,9 +399,6 @@ public abstract class SchedulingBase extends CalSvcHelperRw
     if (origEv instanceof BwEventProxy) {
       proxy = (BwEventProxy)origEv;
 
-      //proxy.setRef((BwEventAnnotation)getSvc().merge(proxy.getRef()));
-      //getSvc().reAttach(proxy.getRef());
-
       if (masterEv == null) {
         /* we are being asked to copy an instance of a recurring event - rather than
          * a complete recurring event + all overrides - clone the master
@@ -417,8 +414,6 @@ public abstract class SchedulingBase extends CalSvcHelperRw
         newEv = proxy.getRef();
       }
     } else {
-      //getSvc().reAttach(origEv);
-
       newEv = (BwEvent)origEv.clone();
     }
 
