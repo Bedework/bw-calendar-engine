@@ -158,12 +158,11 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
         getContent(r);
         r.setContentType(val.getContentType());
+        r.setContentLength(val.getContentLength());
+        r.updateLastmod(getCurrentTimestamp());
 
         final BwResourceContent rc = r.getContent();
         final BwResourceContent toRc = val.getContent();
-
-        r.setContentLength(toRc.getValue().length());
-        r.updateLastmod(getCurrentTimestamp());
 
         rc.setValue(val.getContent().getValue());
 

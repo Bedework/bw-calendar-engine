@@ -34,7 +34,6 @@ import org.bedework.calsvci.ResourcesI;
 import org.bedework.util.misc.Util;
 
 import java.io.InputStream;
-import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -454,19 +453,16 @@ class Notifications extends CalSvcDb implements NotificationsI {
     getSvc().getResourcesHandler().getContent(rsrc);
 
     final BwResourceContent bwrc = rsrc.getContent();
-
     if (bwrc == null) {
       return null;
     }
 
-    final Blob b = bwrc.getValue();
-
-    if (b == null) {
+    final InputStream is = bwrc.getBinaryStream();
+    if (is == null) {
       return null;
     }
 
     try {
-      final InputStream is = b.getBinaryStream();
 
       final NotificationType note = Parser.fromXml(is);
 

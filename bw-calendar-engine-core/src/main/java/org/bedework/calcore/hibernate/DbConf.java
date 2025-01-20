@@ -18,8 +18,8 @@
 */
 package org.bedework.calcore.hibernate;
 
-import org.bedework.util.hibernate.HibConfig;
-import org.bedework.util.hibernate.SchemaThread;
+import org.bedework.database.hibernate.HibConfig;
+import org.bedework.database.hibernate.SchemaThread;
 import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.jmx.InfoLines;
 
