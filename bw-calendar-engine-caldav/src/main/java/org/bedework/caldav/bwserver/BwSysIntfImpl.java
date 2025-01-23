@@ -141,7 +141,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -2381,10 +2380,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public void close() {
     close(svci);
-  }
-
-  public Blob getBlob(final byte[] val) {
-    return getSvci().getBlob(val);
   }
 
   /* ====================================================================

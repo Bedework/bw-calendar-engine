@@ -66,7 +66,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.Statistics;
 
 import java.io.StringReader;
-import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.HashMap;
@@ -933,11 +932,6 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) {
     return entityDao.merge(val);
-  }
-
-  @Override
-  public Blob getBlob(final byte[] val) {
-    return entityDao.getBlob(val);
   }
 
   private class ObjectIterator<T> implements Iterator<T> {

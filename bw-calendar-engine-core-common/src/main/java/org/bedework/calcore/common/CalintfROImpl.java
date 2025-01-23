@@ -92,7 +92,6 @@ import org.bedework.util.misc.Util;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
 
-import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1284,10 +1283,6 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) {
-    throw new RuntimeException("Read only version");
-  }
-
-  public Blob getBlob(final byte[] val) {
     throw new RuntimeException("Read only version");
   }
 

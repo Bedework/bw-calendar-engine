@@ -22,7 +22,9 @@
     <property name="name" column="bwname" type="string"
               length="100" not-null="true" />
 
-    <property name="value" column="bw_value" type="blob"/>
+    <property name="byteValue" column="bw_value">
+      <type name="org.hibernate.type.MaterializedBlobType"/>
+    </property>
   </class>
 
   <!-- =================================================================

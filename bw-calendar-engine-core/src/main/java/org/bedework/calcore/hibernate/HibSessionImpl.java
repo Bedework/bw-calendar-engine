@@ -38,7 +38,6 @@ import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;
 
 import java.io.Serializable;
-import java.sql.Blob;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -227,11 +226,6 @@ public class HibSessionImpl implements Logged, HibSession {
       handleException(t);
       return null;
     }
-  }
-
-  @Override
-  public Blob getBlob(final byte[] val) {
-    return Hibernate.getLobCreator(sess).createBlob(val);
   }
 
   @Override

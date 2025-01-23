@@ -113,7 +113,6 @@ import org.bedework.util.timezones.Timezones;
 
 import org.apache.james.jdkim.api.JDKIM;
 
-import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -622,10 +621,6 @@ public class CalSvc
   @Override
   public Timestamp getCurrentTimestamp() {
     return getCal().getCurrentTimestamp();
-  }
-
-  public Blob getBlob(final byte[] val) {
-    return getCal().getBlob(val);
   }
 
   @Override

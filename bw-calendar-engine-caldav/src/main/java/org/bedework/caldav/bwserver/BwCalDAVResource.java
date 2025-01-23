@@ -150,12 +150,12 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
       }
 
       final ByteArrayOutputStream outBuff = new ByteArrayOutputStream();
-      byte[] inBuffer = new byte[1000];
+      final byte[] inBuffer = new byte[1000];
       long clen = 0;
       int chunkSize;
-      int maxSize = intf.getAuthProperties().getMaxUserEntitySize();
+      final int maxSize = intf.getAuthProperties().getMaxUserEntitySize();
 
-      long oldSize = r.getContentLength();
+      final long oldSize = r.getContentLength();
 
       while (clen <= maxSize) {
         chunkSize = str.read(inBuffer);
@@ -172,7 +172,7 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
         throw new WebdavForbidden(CaldavTags.maxResourceSize);
       }
       
-      rc.setValue(intf.getBlob(outBuff.toByteArray()));
+      rc.setByteValue(outBuff.toByteArray());
       r.setContentLength(clen);
 
       if (!intf.updateQuota(getOwner(),
@@ -180,14 +180,11 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
         throw new WebdavForbidden(WebdavTags.quotaNotExceeded);
       }
 
-    } catch (Throwable t) {
-      throw new RuntimeException(t);
+    } catch (final Throwable t) {
+      throw new WebdavException(t);
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.CalDAVResource#getBinaryContent()
-   */
   @Override
   public InputStream getBinaryContent() {
     if (!isNotification()) {

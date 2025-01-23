@@ -164,7 +164,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         final BwResourceContent rc = r.getContent();
         final BwResourceContent toRc = val.getContent();
 
-        rc.setValue(val.getContent().getValue());
+        rc.setByteValue(val.getContent().getByteValue());
 
         getCal().saveOrUpdate(r);
         getCal().saveOrUpdateContent(r, rc);
@@ -188,7 +188,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
         rc.setColPath(collTo.getPath());
         rc.setName(val.getName());
-        rc.setValue(fromRc.getValue());
+        rc.setByteValue(fromRc.getByteValue());
 
         getCal().saveOrUpdateContent(val, rc);
 
