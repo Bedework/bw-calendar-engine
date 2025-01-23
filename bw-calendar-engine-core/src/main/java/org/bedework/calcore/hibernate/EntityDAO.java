@@ -51,7 +51,6 @@ public class EntityDAO extends DAOBase {
     sess.createQuery(getCalSuiteByGroupQuery);
 
     sess.setEntity("group", group);
-    sess.cacheableQuery();
 
     final BwCalSuite cs = (BwCalSuite)sess.getUnique();
 
@@ -72,7 +71,6 @@ public class EntityDAO extends DAOBase {
     sess.createQuery(getCalSuiteQuery);
 
     sess.setString("name", name);
-    sess.cacheableQuery();
 
     return (BwCalSuite)sess.getUnique();
   }
@@ -85,8 +83,6 @@ public class EntityDAO extends DAOBase {
     final HibSession sess = getSess();
 
     sess.createQuery(getAllCalSuitesQuery);
-
-    sess.cacheableQuery();
 
     return (Collection<BwCalSuite>)sess.getList();
   }
@@ -152,7 +148,6 @@ public class EntityDAO extends DAOBase {
     sess.setString("name", name);
     sess.setString("path", colPath);
     sess.setString("tsenc", BwResource.tombstoned);
-    sess.cacheableQuery();
 
     return (BwResource)sess.getUnique();
   }
@@ -167,7 +162,6 @@ public class EntityDAO extends DAOBase {
     sess.createQuery(getResourceContentQuery);
     sess.setString("path", val.getColPath());
     sess.setString("name", val.getName());
-    sess.cacheableQuery();
 
     final BwResourceContent rc = (BwResourceContent)sess.getUnique();
     if (rc == null) {
@@ -219,8 +213,6 @@ public class EntityDAO extends DAOBase {
     if (count > 0) {
       sess.setMaxResults(count);
     }
-
-    sess.cacheableQuery();
 
     return (List<BwResource>)sess.getList();
   }

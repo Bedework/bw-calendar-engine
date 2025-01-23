@@ -115,7 +115,6 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
 
     sess.createQuery(getOwnerPreferencesQuery);
     sess.setString("ownerHref", principalHref);
-    sess.cacheableQuery();
 
     return (BwPreferences)sess.getUnique();
   }

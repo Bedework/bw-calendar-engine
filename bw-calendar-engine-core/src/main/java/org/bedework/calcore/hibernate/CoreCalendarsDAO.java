@@ -68,7 +68,6 @@ class CoreCalendarsDAO extends DAOBase {
     sess.createQuery(getSynchInfoQuery);
 
     sess.setString("path", path);
-    sess.cacheableQuery();
 
     final Object[] lmfields = (Object[])sess.getUnique();
 
@@ -102,8 +101,6 @@ class CoreCalendarsDAO extends DAOBase {
     sess.setString("alias", "bwcal://" + aliasPath);
     sess.setInt("caltype", BwCalendar.calTypeAlias);
     sess.setString("tsfilter", BwCalendar.tombstonedFilter);
-
-    sess.cacheableQuery();
 
     //noinspection unchecked
     return (List<BwCalendar>)sess.getList();
@@ -293,8 +290,6 @@ class CoreCalendarsDAO extends DAOBase {
       sess.setString("tsfilter", BwCalendar.tombstonedFilter);
     }
 
-    sess.cacheableQuery();
-
     return (List<BwCalendar>)sess.getList();
   }
 
@@ -404,7 +399,6 @@ class CoreCalendarsDAO extends DAOBase {
 
     sess.setString("path", parentPath);
     sess.setString("tsfilter", BwCalendar.tombstonedFilter);
-    sess.cacheableQuery();
 
     final List<?> chfields = sess.getList();
 
