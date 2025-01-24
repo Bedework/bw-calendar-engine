@@ -1,0 +1,45 @@
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm_2_0.xsd"
+                 version="2.0">
+  <persistence-unit-metadata>
+    <persistence-unit-defaults>
+      <!-- declares a default access type for all entities -->
+      <access>PROPERTY</access>
+    </persistence-unit-defaults>
+  </persistence-unit-metadata>
+  <entity class="org.mag.Magazine">
+    <id-class="org.mag.Magazine$MagazineId"/>
+    <attributes>
+      <id name="isbn">
+        <sequence-generator name="hibernate_sequence" />
+      </id>
+      <id name="title"/>
+      <basic name="name"/>
+      <basic name="price"/>
+      <basic name="copiesSold"/>
+      <version name="version">
+        <column name="hhh"/>
+      </version>
+      <many-to-one name="publisher" fetch="LAZY">
+        <cascade>
+          <cascade-persist/>
+        </cascade>
+      </many-to-one>
+      <one-to-many name="articles">
+        <order-by/>
+        <cascade>
+          <cascade-persist/>
+          <cascade-remove/>
+        </cascade>
+      </one-to-many>
+      <one-to-one name="coverArticle" fetch="LAZY">
+        <cascade>
+          <cascade-persist/>
+          <cascade-remove/>
+        </cascade>
+      </one-to-one>
+      <transient name="data"/>
+    </attributes>
+  </entity>
+</entity-mappings>

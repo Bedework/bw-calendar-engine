@@ -19,13 +19,15 @@
     <module>bw-calendar-engine-api</module>
     <module>bw-calendar-engine-caldav</module>
     <module>bw-calendar-engine-chgnote</module>
-    <module>bw-calendar-engine-core</module>
-    <module>bw-calendar-engine-core-common</module>
+    <module>bw-calendar-engine-core-rw-hibernate</module>
+    <module>bw-calendar-engine-core-ro</module>
     <module>bw-calendar-engine-impl</module>
     <module>bw-calendar-engine-indexer</module>
     <module>bw-calendar-engine-inoutsched</module>
     <module>bw-calendar-engine-interfaces</module>
     <module>bw-calendar-engine-tools</module>
+    <module>bw-calendar-engine-core-rw-openjpa</module>
+    <module>bw-calendar-engine-indexing</module>
   </modules>
 
   <scm>
@@ -61,13 +63,13 @@
 
       <dependency>
         <groupId>org.bedework.caleng</groupId>
-        <artifactId>bw-calendar-engine-core</artifactId>
+        <artifactId>bw-calendar-engine-core-rw-hibernate</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>org.bedework.caleng</groupId>
-        <artifactId>bw-calendar-engine-core-common</artifactId>
+        <artifactId>bw-calendar-engine-core-ro</artifactId>
         <version>${project.version}</version>
       </dependency>
 

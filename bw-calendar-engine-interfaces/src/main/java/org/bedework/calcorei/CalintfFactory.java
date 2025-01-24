@@ -52,10 +52,10 @@ import org.bedework.util.misc.Util;
  *
  */
 public class CalintfFactory {
-  private final static String hibernateClass =
+  private final static String readWriteClass =
           "org.bedework.calcore.hibernate.CalintfImpl";
-  private final static String indexerOnlyClass =
-          "org.bedework.calcore.common.CalintfROImpl";
+  private final static String readOnlyClass =
+          "org.bedework.calcore.ro.CalintfROImpl";
 
   /* CalIntf implemented via CalDAV */
   //public final static String caldavClass =
@@ -72,9 +72,9 @@ public class CalintfFactory {
     final String nm;
 
     if (readOnly) {
-      nm = indexerOnlyClass;
+      nm = readOnlyClass;
     } else {
-      nm = hibernateClass;
+      nm = readWriteClass;
     }
 
     return (Calintf)Util.getObject(loader,
