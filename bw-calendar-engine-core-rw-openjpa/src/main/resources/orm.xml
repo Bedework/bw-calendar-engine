@@ -64,19 +64,18 @@ Put this or the equiv somewhere
   <entity class="org.bedework.calfacade.svc.BwAdminGroupEntry">
     <table name="bw_adminGroupMembers"/>
     <attributes>
-      <composite-id>
-        <key-many-to-one name="grp">
-          <column name="bw_groupid"
-                  class="org.bedework.calfacade.svc.BwAdminGroup"
-                  foreign-key="bw_agm_ag_fk" />
-        </key-many-to-one>
-        <key-property name="memberId">
-          <column name="memberid"/>
-        </key-property>
-        <key-property name="memberIsGroup">
-          <column name="member_is_group" />
-        </key-property>
-      </composite-id>
+      <!-- 3 id fields -->
+      <many-to-one name="grp" id="true">
+        <!-- below I want       foreign-key="bw_agm_ag_fk" -->
+        <join-column name="bw_groupid"
+                     referenced-column-name="bw_groupid"/>
+      </many-to-one>
+      <id name="memberId">
+        <column name="memberid"/>
+      </id>
+      <id name="memberIsGroup">
+        <column name="member_is_group" />
+      </id>
     </attributes>
   </entity>
 
