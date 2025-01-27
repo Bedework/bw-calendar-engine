@@ -6,6 +6,7 @@
 Put this or the equiv somewhere
  <basic name="openjpa.jdbc.DBDictionary" value="(BooleanRepresentation=STRING_YN)"/>
  -->
+
   <!-- ===========================================================
        Administrative groups..
        =========================================================== -->
@@ -22,10 +23,6 @@ Put this or the equiv somewhere
         <column name="bw_groupid"/>
         <sequence-generator name="hibernate_sequence" />
       </id>
-
-      <version name="seq">
-        <column name="bwseq"/>
-      </version>
 
       <basic name="account">
         <column name="account" length="255" nullable="false"/>
@@ -50,6 +47,10 @@ Put this or the equiv somewhere
         <column name="bw_owner"
                 nullable="false" />
       </basic>
+
+      <version name="seq">
+        <column name="bwseq"/>
+      </version>
     </attributes>
   </entity>
 
@@ -65,21 +66,23 @@ Put this or the equiv somewhere
     <table name="bw_adminGroupMembers"/>
     <attributes>
       <!-- 3 id fields -->
+      <id name="memberId">
+        <column name="memberid"/>
+      </id>
+
+      <id name="memberIsGroup">
+        <column name="member_is_group" />
+      </id>
+
       <many-to-one name="grp" id="true">
         <!-- below I want       foreign-key="bw_agm_ag_fk" -->
         <join-column name="bw_groupid"
                      referenced-column-name="bw_groupid"/>
       </many-to-one>
-      <id name="memberId">
-        <column name="memberid"/>
-      </id>
-      <id name="memberIsGroup">
-        <column name="member_is_group" />
-      </id>
     </attributes>
   </entity>
 
-<!-- ===================================================================
+  <!-- ===========================================================
      An alarm in Bedework.
 
      An alarm may be associated with an event or task.
@@ -113,7 +116,7 @@ Put this or the equiv somewhere
      previous_trigger  Used to determine if we missed an alarm
      repeat_count  Number of repeats we've done
      expired       Set to 'T' when we're done - default 'F'
-     =================================================================== -->
+     =========================================================== -->
 
   <entity class="org.bedework.calfacade.BwAlarm">
     <table name="bw_alarms">
@@ -125,10 +128,6 @@ Put this or the equiv somewhere
         <column name="alarmid"/>
         <sequence-generator name="hibernate_sequence" />
       </id>
-
-      <version name="seq">
-        <column name="bwseq"/>
-      </version>
 
       <basic name="alarmType">
         <column name="alarm_type"/>
@@ -146,84 +145,79 @@ Put this or the equiv somewhere
       <basic name="trigger">
         <column name="trigger_rfctime"
                 length="16" />
-      </basic> 
+      </basic>
 
-    <basic name="triggerStart">
-      <column name="trigger_start" nullable="false" />
-    </basic>
+      <basic name="triggerStart">
+        <column name="trigger_start" nullable="false" />
+      </basic>
 
-    <basic name="duration">
+      <basic name="duration">
         <column name="duration"
-              length="100" />
-    </basic>
-      
-    <basic name="repeat">
-        <column name="repetitions"/>
-    </basic>
+                length="100" />
+      </basic>
 
-    <!-- This is inadequate and/or wrong
+      <basic name="repeat">
+        <column name="repetitions"/>
+      </basic>
+
+      <!-- This is inadequate and/or wrong
          It needs to be multiple valued and allow for longer values.
          Also, if a real attachment, it probably ought to be saved as a file and
          this would be a url
          -->
-    <basic name="attach">
+      <basic name="attach">
         <column name="attach"
-              length="2000"/>
-    </basic>
+                length="2000"/>
+      </basic>
 
-    <set name="summaries" table="bw_alarmsummaries"
-         cascade="all-delete-orphan" >
-      <cache usage="read-write"/>
-      <key column="bw_alarmid" foreign-key="bw_as_alarm_fk" />
-      <many-to-many class="org.bedework.calfacade.BwString"
-                    unique="true"
-                    column="bw_strid"
-                    foreign-key="bw_as_str_fk" />
-    </set>
+      <basic name="expired">
+        <column name="expired" nullable="false" />
+      </basic>
 
-    <set name="descriptions" table="bw_alarmdescriptions"
-         cascade="all-delete-orphan" >
-      <cache usage="read-write"/>
-      <key column="bw_alarmid" foreign-key="bw_ad_alarm_fk" />
-      <many-to-many class="org.bedework.calfacade.BwString"
-                    unique="true"
-                    column="bw_strid"
-                    foreign-key="bw_ad_str_fk" />
-    </set>
+      <version name="seq">
+        <column name="bwseq"/>
+      </version>
 
-    <set name="attendees" table="bw_alarm_attendees"
-         cascade="all-delete-orphan" >
-      <key column="alarmid" foreign-key="bw_aa_alarm_fk" />
-      <many-to-many class="org.bedework.calfacade.BwAttendee"
-                    column="attendeeid"
-                    foreign-key="bw_aa_att_fk"/>
-    </set>
+      <many-to-many name="summaries" >
+        <join-table name="bw_alarmsummaries">
+          <join-column name="bw_alarmid"/>
+          <inverse-join-column name="bw_strid"/>
+        </join-table>
+        <cascade>
+          <cascade-persist/>
+          <cascade-merge/>
+        </cascade>
+      </many-to-many>
 
-    <basic name="expired">
-      <column name="expired" nullable="false" />
-    </basic>
+      <many-to-many name="descriptions" >
+        <join-table name="bw_alarmdescriptions">
+          <join-column name="bw_alarmid"/>
+          <inverse-join-column name="bw_strid"/>
+        </join-table>
+        <cascade>
+          <cascade-persist/>
+          <cascade-merge/>
+        </cascade>
+      </many-to-many>
 
-    <list name="xproperties" table="bw_alarm_xprops"
-         cascade="all-delete-orphan" >
-      <!-- <cache usage="read-write"/> -->
-      <key column="alarmid" foreign-key="bw_alarmxp_aid_fk" />
-      <list-index column="bwxp_position"/>
-      <composite-element class="org.bedework.calfacade.BwXproperty">
-        <basic name="name" >
-                  <column name="bw_name" length="100"  />
-        </basic>
+      <many-to-many name="attendees" >
+        <join-table name="bw_alarm_attendees">
+          <join-column name="alarmid"/>
+          <inverse-join-column name="attendeeid"/>
+        </join-table>
+        <cascade>
+          <cascade-persist/>
+          <cascade-merge/>
+        </cascade>
+      </many-to-many>
 
-        <basic name="pars">
-                  <column name="bw_pars" length="4000"  />
-        </basic>
-
-        <basic name="value">
-        <column name="bw_value"/>
-         <type="text"/>
-        </basic>
-      </composite-element>
-    </list>
-  </attributes>
+      <element-collection name="xproperties">
+        <order-column name="bwxp_position" />
+        <collection-table name="bw_alarm_xprops" >
+          <join-column name="alarmid" />
+        </collection-table>
+      </element-collection>
+    </attributes>
   </entity>
 
   <!-- ==============================================
@@ -238,28 +232,26 @@ Put this or the equiv somewhere
         <sequence-generator name="hibernate_sequence" />
       </id>
 
-    <basic name="fmtType">
-       <column name="bw_fmttype" length="20"/>
-    </basic>
+      <basic name="fmtType">
+        <column name="bw_fmttype" length="20"/>
+      </basic>
       
-    <basic name="valueType">
-      <column name="bw_valuetype" length="20"/>
-    </basic> 
+      <basic name="valueType">
+        <column name="bw_valuetype" length="20"/>
+      </basic>
 
-    <basic name="encoding">
+      <basic name="encoding">
         <column name="bw_encoding"
-              length="2000"/>
-    </basic>
+                length="2000"/>
+      </basic>
       
-    <basic name="uri">
-        <column name="bw_uri"
-              length="2000"/>
-    </basic> 
+      <basic name="uri">
+        <column name="bw_uri" length="2000"/>
+      </basic>
 
-    <basic name="value">
-        <column name="bw_value"/>
-         <type="text"/>
-    </basic>
+      <basic name="value">
+        <column name="bw_value" column-definition="type=text" />
+      </basic>
     </attributes>
   </entity>
 
@@ -267,84 +259,81 @@ Put this or the equiv somewhere
        Attendees
        ======================================================= -->
 
-<entity class="org.bedework.calfacade.BwAttendee">
-  <table name="bw_attendees"/>
-  <attributes>
-    <id name="id">
-      <column name="attendeeid"/>
-      <sequence-generator name="hibernate_sequence" />
-    </id>
+  <entity class="org.bedework.calfacade.BwAttendee">
+    <table name="bw_attendees"/>
+    <attributes>
+      <id name="id">
+        <column name="attendeeid"/>
+        <sequence-generator name="hibernate_sequence" />
+      </id>
 
-    <basic name="cn">
-    <column name="cn" length="2000" />
-    </basic>
+      <basic name="cn">
+        <column name="cn" length="2000" />
+      </basic>
 
-    <basic name="cuType">
+      <basic name="cuType">
         <column name="cutype" length="2000"/>
-    </basic>
+      </basic>
 
-    <basic name="delegatedFrom">
+      <basic name="delegatedFrom">
         <column name="delegated_from"
-              length="2000"/>
-    </basic>
+                length="2000"/>
+      </basic>
 
-    <basic name="delegatedTo">
+      <basic name="delegatedTo">
         <column name="delegated_to"
-              length="2000"/>
-    </basic>
+                length="2000"/>
+      </basic>
 
-    <basic name="dir">
-    <column name="dir" length="2000"/>
-    </basic>
+      <basic name="dir">
+        <column name="dir" length="2000"/>
+      </basic>
 
-    <basic name="language">
+      <basic name="language">
         <column name="lang" length="100"/>
-    </basic>
+      </basic>
 
-    <basic name="member">
-      <column name="member" length="2000"/>
-    </basic>
+      <basic name="member">
+        <column name="member" length="2000"/>
+      </basic>
 
-    <basic name="rsvp"/>
+      <basic name="rsvp"/>
 
-    <basic name="role">
-      <column name="role" length="200"/>
-    </basic>
+      <basic name="role">
+        <column name="role" length="200"/>
+      </basic>
 
-    <basic name="partstat">
-      <column name="partstat" length="100"/>
-    </basic>
+      <basic name="partstat">
+        <column name="partstat" length="100"/>
+      </basic>
 
-    <basic name="sentByVal">
+      <basic name="sentByVal">
         <column name="sent_by" length="2000"/>
-    </basic>
+      </basic>
 
-    <basic name="attendeeUri">
-        <column name="attendee_uri"
-              length="2000"/>
-    </basic> 
+      <basic name="attendeeUri">
+        <column name="attendee_uri" length="2000"/>
+      </basic>
 
-    <basic name="sequence">
+      <basic name="sequence">
         <column name="rfcsequence"/>
-     </basic> 
+      </basic>
 
-    <basic name="scheduleAgent">
+      <basic name="scheduleAgent">
         <column name="bw_sched_agent"/>
-    </basic>
+      </basic>
 
-    <basic name="scheduleStatus">
-        <column name="bw_sched_status"
-              length="100"/>
-    </basic> 
+      <basic name="scheduleStatus">
+        <column name="bw_sched_status" length="100"/>
+      </basic>
 
-    <basic name="dtstamp">
+      <basic name="dtstamp">
         <column name="dtstamp" length="16" />
-    </basic>
-
-  </attributes>
+      </basic>
+    </attributes>
   </entity>
 
-<!-- =================================================================
+  <!-- =========================================================
      object to represent an authorised calendar user - that is a user
      with some special privilege. This could also be represented by users
      with roles in a directory.
@@ -352,7 +341,7 @@ Put this or the equiv somewhere
      NOTE: I believe the constraint on the id requires we create the user
      first and have an embedded user entry - or at least have an
      embedded entry which hibernate will create.
-     ================================================================= -->
+     ========================================================= -->
 
   <entity class="org.bedework.calfacade.svc.BwAuthUser">
     <table name="bw_auth"/>
@@ -362,87 +351,20 @@ Put this or the equiv somewhere
         <sequence-generator name="hibernate_sequence" />
       </id>
 
-      <version name="seq">
-        <column name="bwseq"/>
-      </version>
-
       <basic name="userHref">
         <column name="bw_user"
                 nullable="false" />
       </basic>
 
-      <component name="prefs"
-                 class="org.bedework.calfacade.svc.prefs.BwAuthUserPrefs">
-        <component name="categoryPrefs"
-                   class="org.bedework.calfacade.svc.prefs.CategoryPref" >
-          <basic name="autoAdd" type="true_false" >
-            <column name="autoaddCategories" not-null="true" />
-          </basic>
-
-          <set name="preferred" table="bw_authprefCategories" >
-            <key foreign-key="bw_apcat_ap_fk1">
-              <column name="userid" not-null="true" />
-            </key>
-            <many-to-many class="org.bedework.calfacade.BwCategory"
-                          column="categoryid"
-                          foreign-key="bw_apcat_cat_fk1"/>
-          </set>
-        </component>
-
-        <component name="locationPrefs"
-                   class="org.bedework.calfacade.svc.prefs.LocationPref" >
-          <basic name="autoAdd" type="true_false" >
-            <column name="autoaddLocations" not-null="true" />
-          </basic>
-
-          <set name="preferred" table="bw_authprefLocations" >
-            <key foreign-key="bw_aploc_ap_fk1">
-              <column name="userid" not-null="true" />
-            </key>
-            <many-to-many class="org.bedework.calfacade.BwLocation"
-                          column="locationid"
-                          foreign-key="bw_aploc_loc_fk1" />
-          </set>
-        </component>
-
-        <component name="contactPrefs"
-                   class="org.bedework.calfacade.svc.prefs.ContactPref" >
-          <basic name="autoAdd" type="true_false" >
-            <column name="autoaddContacts" not-null="true" />
-          </basic>
-
-          <set name="preferred" table="bw_authprefContacts" >
-            <key foreign-key="bw_apcon_ap_fk1">
-              <column name="userid" not-null="true" />
-            </key>
-            <many-to-many class="org.bedework.calfacade.BwContact"
-                          column="contactid"
-                          foreign-key="bw_apcon_con_fk1"
-                          lazy="false"/>
-          </set>
-        </component>
-
-        <component name="calendarPrefs"
-                   class="org.bedework.calfacade.svc.prefs.CalendarPref" >
-          <basic name="autoAdd" >
-            <column name="autoaddCalendars" nullable="false" type="true_false" />
-          </basic>
-
-          <set name="preferred" table="bw_authprefCalendars" >
-            <key foreign-key="bw_apcal_ap_fk1">
-              <column name="userid" not-null="true" />
-            </key>
-            <many-to-many class="org.bedework.calfacade.BwCalendar"
-                          column="calendarid"
-                          foreign-key="bw_apcal_cal_fk1"/>
-          </set>
-        </component>
-      </component>
-
       <basic name="usertype">
         <column name="usertype"/>
       </basic>
 
+      <version name="seq">
+        <column name="bwseq"/>
+      </version>
+
+      <embedded name="prefs"/>
     </attributes>
   </entity>
 
@@ -506,9 +428,9 @@ Put this or the equiv somewhere
     </attributes>
   </entity>
 
-<!-- ===================================================================
-                         Calendar Suites
-     =================================================================== -->
+  <!-- =========================================================
+                           Calendar Suites
+       ========================================================= -->
 
   <entity class="org.bedework.calfacade.svc.BwCalSuite">
     <table name="bw_calsuites"/>
@@ -518,22 +440,17 @@ Put this or the equiv somewhere
         <sequence-generator name="hibernate_sequence" />
       </id>
 
-      <version name="seq">
-        <column name="bwseq"/>
-      </version>
-
       <basic name="creatorHref">
         <column name="bw_creator"/>
-      </basic> 
+      </basic>
 
       <basic name="ownerHref">
         <column name="bw_owner"/>
-      </basic> 
+      </basic>
 
       <basic name="access">
-        <column name="bwaccess"
-                length="3900" />
-      </basic> 
+        <column name="bwaccess" length="3900" />
+      </basic>
 
       <basic name="publick">
         <column name="publick" nullable="false" />
@@ -544,52 +461,48 @@ Put this or the equiv somewhere
                 length="255" unique="true" />
       </basic>
 
-      <many-to-one name="group"
-                   class="org.bedework.calfacade.svc.BwAdminGroup"
-                   column="groupid" nullable="false"
-                   index="bwidx_calsuite_group"
-                   foreign-key="bw_cs_ag_fk" />
-
       <basic name="fields1">
-        <column name="bw_root_collection"
-                length="3000"/>
-      </basic> 
+        <column name="bw_root_collection" length="3000"/>
+      </basic>
 
       <basic name="fields2">
-        <column name="bw_submissions_root"
-                length="3000"/>
+        <column name="bw_submissions_root" length="3000"/>
       </basic>
+
+      <version name="seq">
+        <column name="bwseq"/>
+      </version>
+
+      <many-to-one name="group">
+        <join-column name="groupid" nullable="false"/>
+      </many-to-one>
     </attributes>
   </entity>
 
-<!-- ===================================================================
-     A calendar definition in Bedework.
-     =================================================================== -->
+  <!-- =========================================================
+       A calendar definition in Bedework.
+       ========================================================= -->
 
   <entity class="org.bedework.calfacade.BwCalendar">
-    <table name="bw_calendars" lazy="false">
+    <table name="bw_calendars" />
     <attributes>
       <id name="id">
         <column name="id"/>
         <sequence-generator name="hibernate_sequence" />
       </id>
 
-      <version name="seq">
-        <column name="bwseq"/>
-      </version>
-
       <basic name="creatorHref">
         <column name="bw_creator"/>
-      </basic> 
+      </basic>
 
       <basic name="ownerHref">
         <column name="bw_owner"/>
-      </basic> 
+      </basic>
 
       <basic name="access">
         <column name="bwaccess"
                 length="3900" />
-      </basic> 
+      </basic>
 
       <basic name="publick">
         <column name="publick" nullable="false" />
@@ -613,61 +526,55 @@ Put this or the equiv somewhere
       <basic name="path">
         <column name="bwpath" length="3000"
                 nullable="false"/>
-      </basic> 
+      </basic>
 
       <basic name="colPath">
         <column name="bw_col_path" length="3000"/>
       </basic>
-      
+
       <!-- These need changing. Perhaps recast summary as displayNames
            Both need to be multi-language.
            For the moment limit the lengtgh for Oracle -->
       <basic name="summary">
         <column name="summary" length="500" />
       </basic>
-      
+
       <basic name="description">
         <column name="description" length="1000" />
-      </basic> 
+      </basic>
 
       <basic name="mailListId">
         <column name="mail_list_id"
                 length="200" />
-      </basic> 
+      </basic>
 
       <basic name="calType">
         <column name="caltype" nullable="false"/>
       </basic>
-
-      <one-to-one name="lastmod"
-                  class="org.bedework.calfacade.BwCollectionLastmod"
-                  cascade="all"/>
 
       <basic name="created">
         <column name="bw_created" length="16" nullable="false" />
       </basic>
 
       <basic name="filterExpr">
-        <column name="bw_filterexpr"/>
-        <type="text" />
-      </basic> 
+        <column name="bw_filterexpr" column-definition="type=text"/>
+      </basic>
 
       <basic name="aliasUri">
-        <column name="bw_alias_uri"
-                length="500" />
-      </basic> 
+        <column name="bw_alias_uri" length="500" />
+      </basic>
 
       <basic name="display">
         <column name="display" nullable="false" />
-      </basic> 
+      </basic>
 
       <basic name="affectsFreeBusy">
         <column name="affects_free_busy" nullable="false" />
-      </basic> 
+      </basic>
 
       <basic name="ignoreTransparency">
         <column name="ignore_transparency" nullable="false" />
-      </basic> 
+      </basic>
 
       <basic name="unremoveable">
         <column name="unremoveable" nullable="false" />
@@ -679,73 +586,58 @@ Put this or the equiv somewhere
       </basic>
 
       <basic name="lastRefresh">
-        <column name="bwlastrefresh"
-                length="16" />
+        <column name="bwlastrefresh" length="16" />
       </basic>
 
       <basic name="lastEtag">
-        <column name="bwlastetag"
-                length="256" />
+        <column name="bwlastetag" length="256" />
       </basic>
 
       <basic name="remoteId">
-        <column name="bwrid"
-                length="256" />
+        <column name="bwrid" length="256" />
       </basic>
 
       <basic name="remotePw">
-        <column name="bwrpw"
-                length="500" />
+        <column name="bwrpw" length="500" />
       </basic>
 
-      <set name="categories" table="bw_calendar_categories"
-           lazy="false">
-        <cache usage="read-write"/>
-        <key column="calendarid" foreign-key="bw_calcat_cid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwCategory"
-                      column="categoryid"
-                      foreign-key="bw_cal_cat_fk" />
-      </set>
+      <version name="seq">
+        <column name="bwseq"/>
+      </version>
 
-      <set name="properties" table="bw_calendar_properties"
-           cascade="all,delete-orphan"
-           lazy="false">
-        <key column="bwid" foreign-key="bw_calprp_pid_fk" />
-        <composite-element class="org.bedework.calfacade.BwProperty">
-          <basic name="name"
-                 column="bw_name" length="200" />
+      <one-to-one name="lastmod" orphan-removal="true"/>
 
-          <basic name="value">
-          <column name="bw_value"/>
-          <type="text"/>
-        </composite-element>
-      </set>
+      <many-to-many name="categories">
+        <join-table name="bw_calendar_categories">
+          <join-column name="calendarid"/>
+          <inverse-join-column name="categoryid"/>
+        </join-table>
+      </many-to-many>
+
+      <element-collection name="properties">
+        <collection-table name="bw_calendar_properties" >
+          <join-column name="bwid" />
+        </collection-table>
+      </element-collection>
     </attributes>
   </entity>
 
-  <!-- =================================================================
+  <!-- =======================================================
        Collection last mod
-       ================================================================= -->
+       ======================================================= -->
 
   <entity class="org.bedework.calfacade.BwCollectionLastmod">
-    <table name="bw_collection_lastmods" //>
+    <table name="bw_collection_lastmods" />
 
     <attributes>
       <id name="id">
-        <column name="bw_id">
-        <generator class="foreign">
-          <param name="property">dbEntity</param>
-        </generator>
+        <column name="bw_id"/>
       </id>
-
-      <one-to-one name="dbEntity"
-                  class="org.bedework.calfacade.BwCalendar"
-                  constrained="true"/>
 
       <basic name="path">
         <column name="bwpath" length="3000"
                 nullable="false"/>
-      </basic> 
+      </basic>
 
       <basic name="timestamp" >
         <column name="bw_timestamp" length="16" nullable="false" />
@@ -754,15 +646,17 @@ Put this or the equiv somewhere
       <basic name="sequence">
         <column name="bw_sequence"/>
       </basic>
+
+      <one-to-one name="dbEntity" maps-id="id"/>
     </attributes>
   </entity>
 
-<!-- ===================================================================
-     A category in Bedework
-     =================================================================== -->
+  <!-- =========================================================
+       A category in Bedework
+       ========================================================= -->
 
   <entity class="org.bedework.calfacade.BwCategory">
-    <table name="bw_categories"//>
+    <table name="bw_categories"/>
 
     <attributes>
       <id name="id">
@@ -770,69 +664,55 @@ Put this or the equiv somewhere
         <sequence-generator name="hibernate_sequence" />
       </id>
 
-      <version name="seq">
-        <column name="bwseq"/>
-      </version>
-
       <basic name="creatorHref">
         <column name="bw_creator"/>
-      </basic> 
+      </basic>
 
       <basic name="ownerHref">
         <column name="bw_owner"/>
-      </basic> 
+      </basic>
 
       <basic name="access">
         <column name="bwaccess"
                 length="3900" />
-      </basic> 
+      </basic>
 
       <basic name="publick">
         <column name="publick" nullable="false" />
       </basic>
 
-    <many-to-one name="word"
-                 class="org.bedework.calfacade.BwString"
-                 column="bw_catwdid"
-                 unique="true"
-                 nullable="false"
-                 cascade="all"
-                 foreign-key="bw_cat_wd_fk"
-                 fetch="join" />
-
-    <many-to-one name="description"
-                 class="org.bedework.calfacade.BwString"
-                 column="bw_catdescid"
-                 unique="true"
-                 not-null="false"
-                 fetch="join"
-                 cascade="all"
-                 foreign-key="bw_cat_desc_fk" />
-
-    <basic name="uid">
+      <basic name="uid">
         <column name="bw_uid" length="50"
-              unique="true"
-              nullable="false"/>
-    </basic>
+                unique="true"
+                nullable="false"/>
+      </basic>
+
+      <version name="seq">
+        <column name="bwseq"/>
+      </version>
+
+      <many-to-one name="word">
+        <join-column name="bw_catwdid" unique="true" nullable="false"/>
+      </many-to-one>
+
+      <many-to-one name="description">
+        <join-column name="bw_catdescid" unique="true" nullable="false"/>
+      </many-to-one>
     </attributes>
   </entity>
 
-<!-- ===================================================================
-     Object representing contacts
-     =================================================================== -->
+  <!-- =========================================================
+       Object representing contacts
+       ========================================================= -->
 
   <entity class="org.bedework.calfacade.BwContact">
-    <table name="bw_contacts"//>
+    <table name="bw_contacts"/>
 
     <attributes>
       <id name="id">
         <column name="entityid"/>
         <sequence-generator name="hibernate_sequence" />
       </id>
-
-      <version name="seq">
-        <column name="bwseq"/>
-      </version>
 
       <basic name="creatorHref">
         <column name="bw_creator"/>
@@ -852,17 +732,10 @@ Put this or the equiv somewhere
       </basic>
 
       <basic name="uid">
-      <column name="bw_uid" length="50"
+        <column name="bw_uid" length="50"
               unique="true"
               nullable="false"/>
-
-      <many-to-one name="cn"
-                   class="org.bedework.calfacade.BwString"
-                   column="bw_connameid"
-                   unique="true"
-                   nullable="false"
-                   cascade="all"
-                   foreign-key="bw_con_name_fk" />
+      </basic>
 
       <basic name="phone">
         <column name="bw_phone"/>
@@ -877,99 +750,28 @@ Put this or the equiv somewhere
                 length="500" />
       </basic>
 
+      <version name="seq">
+        <column name="bwseq"/>
+      </version>
+
+      <many-to-one name="cn">
+        <join-column name="bw_connameid" unique="true" nullable="false"/>
+      </many-to-one>
     </attributes>
   </entity>
-
-  <embeddable class="org.bedework.calfacade.BwDateTime" >
-    <attributes>
-      <basic name="dateType"/>
-
-      <basic name="timezoneId"/>
-
-      <basic name="dtval">
-        <column length="16" />
-      </basic>
-
-      <basic name="date">
-        <column length="16"/>
-      </basic>
-
-      <basic name="floatFlag"/>
-    </attributes>
-  </embeddable>
-
-  <embeddable class="org.bedework.calfacade.BwGeo" >
-    <attributes>
-    <basic name="latitude">
-      <column name="bw_geolatitude"/>
-    </basic>
-
-    <basic name="longitude">
-      <column name="bw_geolongitude"/>
-    </basic>
-    </attributes>
-  </embeddable>
-
-  <embeddable class="org.bedework.calfacade.BwOrganizer">
-    <attributes>
-      <basic name="cn">
-        <column name="bw_org_cn" length="500" />
-      </basic>
-
-      <basic name="dir">
-        <column name="bw_org_dir" length="500" />
-      </basic>
-
-      <basic name="language">
-        <column name="bw_org_lang" length="100" />
-      </basic>
-
-      <basic name="sentBy">
-        <column name="bw_org_sentby" length="500" />
-      </basic>
-
-      <basic name="organizerUri">
-        <column name="bw_org_uri" length="500" />
-      </basic>
-
-      <basic name="scheduleStatus">
-        <column name="bw_org_sched_status" length="100"/>
-      </basic>
-
-      <basic name="dtstamp">
-        <column name="bw_org_dtstamp" length="16" />
-      </basic>
-    </attributes>
-  </embeddable>
-
-  <embeddable class="org.bedework.calfacade.BwRelatedTo" >
-    <attributes>
-      <basic name="relType">
-        <column name="bw_reltype" length="100" />
-      </basic>
-
-      <basic name="value">
-        <column name="bw_reltoval" length="500" />
-      </basic>
-    </attributes>
-  </embeddable>
 
   <!-- ===================================================================
      An Event in Bedework.
      =================================================================== -->
 
   <entity class="org.bedework.calfacade.BwEventObj">
-    <table name="bw_events"//>
+    <table name="bw_events"/>
 
     <attributes>
       <id name="id">
         <column name="eventid"/>
         <sequence-generator name="hibernate_sequence" />
       </id>
-
-      <version name="seq">
-        <column name="bwseq"/>
-      </version>
 
       <basic name="entityType">
         <column name="bw_entity_type"/>
@@ -985,7 +787,7 @@ Put this or the equiv somewhere
         <column name="bw_uid" length="1000"/>
       </basic> 
 
-      <basic name=>
+      <basic name="name">
         <column name="eventname" length="500"/>
       </basic> 
 
@@ -1005,6 +807,269 @@ Put this or the equiv somewhere
       <basic name="publick">
         <column name="publick" nullable="false" />
       </basic>
+
+      <basic name="duration">
+        <column name="duration" />
+      </basic> 
+
+      <basic name="endType">
+        <column name="end_type" nullable="false" />
+      </basic> 
+
+      <basic name="noStart">
+        <column name="bw_nostart" nullable="false" />
+      </basic> 
+
+      <basic name="deleted">
+        <column name="bw_deleted" nullable="false"/>
+      </basic>
+
+      <basic name="tombstoned">
+        <column name="bwtombstoned" nullable="false"/>
+      </basic>
+
+      <basic name="status" />
+
+      <basic name="classification">
+        <column name="bw_class" length="250" />
+      </basic>
+
+      <basic name="link">
+        <column name="bw_link" length="500" />
+      </basic>
+
+      <basic name="cost">
+        <column name="cost"/>
+      </basic>
+
+      <basic name="dtstamp">
+        <column name="bw_dtstamp" length="16" />
+      </basic>
+
+      <basic name="lastmod" >
+        <column name="bw_lastmod" length="16" nullable="false" />
+      </basic>
+
+      <basic name="created">
+        <column name="bw_created" length="16" nullable="false" />
+      </basic>
+
+      <basic name="stag" >
+        <column name="bw_stag" length="21" />
+      </basic>
+
+      <basic name="priority">
+        <column name="priority" />
+      </basic>
+
+      <basic name="sequence">
+        <column name="rfcsequence"/>
+      </basic>
+
+      <basic name="transparency">
+        <column name="transparency" length="100" />
+      </basic>
+
+      <!-- task only -->
+      <basic name="percentComplete">
+        <column name="percent_complete"/>
+      </basic>
+
+      <basic name="completed">
+        <column name="completed" length="16" />
+      </basic>
+
+      <basic name="recurring">
+        <column name="recurring" nullable="false"/>
+      </basic>
+
+      <basic name="recurrenceId">
+        <column name="recurrence_id"
+                length="16" />
+      </basic>
+
+      <basic name="ctoken">
+        <column name="latest_date"/>
+      </basic>
+
+      <basic name="scheduleMethod">
+        <column name="schedule_method"/>
+      </basic>
+
+      <basic name="originator">
+        <column name="originator" />
+      </basic>
+
+      <basic name="scheduleState">
+        <column name="schedule_state"/>
+      </basic>
+
+      <basic name="organizerSchedulingObject">
+        <column name="bw_org_scheduleobj" nullable="false"/>
+      </basic>
+
+      <basic name="attendeeSchedulingObject">
+        <column name="bw_att_scheduleobj" nullable="false"/>
+      </basic>
+
+      <basic name="busyType">
+        <column name="busy_type"/>
+      </basic>
+
+      <version name="seq">
+        <column name="bwseq"/>
+      </version>
+
+      <many-to-one name="location">
+        <join-column name="locationid"/>
+      </many-to-one>
+
+      <many-to-many name="summaries">
+        <join-table name="bw_event_summaries">
+          <join-column name="bw_eventid"/>
+          <inverse-join-column name="bw_strid"/>
+        </join-table>
+      </many-to-many>
+
+      <many-to-many name="descriptions">
+        <join-table name="bw_event_descriptions">
+          <join-column name="bw_eventid"/>
+          <inverse-join-column name="bw_strid"/>
+        </join-table>
+      </many-to-many>
+
+      <many-to-many name="comments">
+        <join-table name="bw_event_comments">
+          <join-column name="bw_eventid"/>
+          <inverse-join-column name="bw_strid"/>
+        </join-table>
+      </many-to-many>
+
+      <many-to-many name="contacts">
+        <join-table name="bw_event_contacts">
+          <join-column name="bw_eventid"/>
+          <inverse-join-column name="contactid"/>
+        </join-table>
+      </many-to-many>
+
+      <many-to-many name="resources">
+        <join-table name="bw_event_resources">
+          <join-column name="bw_eventid"/>
+          <inverse-join-column name="bw_strid"/>
+        </join-table>
+      </many-to-many>
+
+      <many-to-many name="categories">
+        <join-table name="bw_event_categories">
+          <join-column name="eventid"/>
+          <inverse-join-column name="categoryid"/>
+        </join-table>
+      </many-to-many>
+
+      <many-to-many name="alarms">
+        <join-table name="bw_entity_alarms">
+          <join-column name="eventid"/>
+          <inverse-join-column name="alarmid"/>
+        </join-table>
+        <cascade>
+          <cascade-all/>
+        </cascade>
+      </many-to-many>
+
+      <many-to-many name="attachments">
+        <join-table name="bw_entity_attachments">
+          <join-column name="eventid"/>
+          <inverse-join-column name="attachid"/>
+        </join-table>
+        <cascade>
+          <cascade-all/>
+        </cascade>
+      </many-to-many>
+
+      <many-to-many name="attendees" >
+        <join-table name="bw_event_attendees">
+          <join-column name="eventid"/>
+          <inverse-join-column name="attendeeid"/>
+        </join-table>
+        <cascade>
+          <cascade-persist/>
+          <cascade-merge/>
+        </cascade>
+      </many-to-many>
+
+      <element-collection name="rrules" fetch="EAGER"
+                          target-class="java.lang.String">
+        <column name="rrule" nullable="false" length="255"/>
+        <collection-table name="bw_event_rrules">
+          <join-column name="eventid"/>
+        </collection-table>
+      </element-collection>
+
+      <element-collection name="rdates">
+        <collection-table name="bw_event_rdates">
+          <join-column name="eventid"/>
+        </collection-table>
+      </element-collection>
+
+      <element-collection name="exrules" fetch="EAGER"
+                          target-class="java.lang.String">
+        <column name="exrule" nullable="false" length="255"/>
+        <collection-table name="bw_event_exrules">
+          <join-column name="eventid"/>
+        </collection-table>
+      </element-collection>
+
+      <element-collection name="exdates">
+        <collection-table name="bw_event_exdates">
+          <join-column name="eventid"/>
+        </collection-table>
+      </element-collection>
+
+      <element-collection name="recipients" fetch="EAGER"
+                          target-class="java.lang.String">
+        <column name="recipient" nullable="false" length="255"/>
+        <collection-table name="bw_event_recipients">
+          <join-column name="eventid"/>
+        </collection-table>
+      </element-collection>
+
+      <element-collection name="requestStatuses">
+        <collection-table name="bw_rstatus">
+          <join-column name="eventid"/>
+        </collection-table>
+      </element-collection>
+
+      <element-collection name="xproperties">
+        <order-column name="bwxp_position" />
+        <collection-table name="bw_event_xprops" >
+          <join-column name="bw_eventid" />
+        </collection-table>
+      </element-collection>
+
+      <!-- =============== Freebusy =============== -->
+
+      <element-collection name="freeBusyPeriods" fetch="LAZY">
+        <order-column name="fbcomp_position"/>
+        <collection-table name="bw_fbcomp" >
+          <join-column name="eventid"/>
+        </collection-table>
+      </element-collection>
+
+    <!-- =============== Vavailability =============== -->
+
+      <element-collection name="availableUids" fetch="LAZY"
+                          target-class="java.lang.String">
+        <column name="avluid" nullable="false" length="255"/>
+        <collection-table name="bw_event_availuids">
+          <join-column name="eventid"/>
+        </collection-table>
+      </element-collection>
+
+      <embedded name="geo" />
+
+      <embedded name="relatedTo"/>
+
+      <embedded name="organizer"/>
 
       <embedded name="dtstart">
         <attribute-override name="dateType">
@@ -1051,364 +1116,6 @@ Put this or the equiv somewhere
           <column name="bw_end_floating"/>
         </attribute-override>
       </embedded>
-
-      <basic name="duration">
-        <column name="duration" />
-      </basic> 
-
-      <basic name="endType">
-        <column name="end_type"/>
-        <type="char"
-        nullable="false" />
-      </basic> 
-
-      <basic name="noStart">
-        <column name="bw_nostart" nullable="false" />
-      </basic> 
-
-      <basic name="deleted">
-        <column name="bw_deleted" nullable="false"/>
-      </basic>
-
-      <basic name="tombstoned">
-        <column name="bwtombstoned" nullable="false"/>
-      </basic>
-
-      <set name="summaries" table="bw_event_summaries"
-           cascade="all-delete-orphan"
-           lazy="false"
-           fetch="subselect" >
-        <!-- <cache usage="read-write"/> -->
-        <key column="bw_eventid" foreign-key="bw_eventsum_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwString"
-                      unique="true"
-                      column="bw_strid"
-                      foreign-key="bw_event_sum_fk" />
-      </set>
-
-      <set name="descriptions" table="bw_event_descriptions"
-           cascade="all-delete-orphan"
-           lazy="false"
-           fetch="subselect" >
-        <!-- <cache usage="read-write"/> -->
-        <key column="bw_eventid" foreign-key="bw_eventdesc_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwLongString"
-                      unique="true"
-                      column="bw_strid"
-                      foreign-key="bw_event_desc_fk" />
-      </set>
-
-      <basic name="classification">
-        <column name="bw_class" length="250" />
-      </basic>
-
-      <set name="comments" table="bw_event_comments"
-           cascade="all-delete-orphan"
-           lazy="false"
-           fetch="subselect" >
-        <!-- <cache usage="read-write"/> -->
-        <key column="bw_eventid" foreign-key="bw_eventcom_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwString"
-                      unique="true"
-                      column="bw_strid"
-                      foreign-key="bw_event_com_fk" />
-      </set>
-
-      <set name="contacts" table="bw_event_contacts"
-           sort="natural"
-           fetch="subselect">
-        <!-- <cache usage="read-write"/> -->
-        <key column="eventid" foreign-key="bw_eventcon_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwContact"
-                      column="contactid"
-                      foreign-key="bw_event_con_fk"/>
-      </set>
-
-      <set name="resources" table="bw_event_resources"
-           lazy="false"
-           cascade="all-delete-orphan" >
-        <!-- <cache usage="read-write"/> -->
-        <key column="bw_eventid" foreign-key="bw_eventres_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwString"
-                      unique="true"
-                      column="bw_strid"
-                      foreign-key="bw_event_res_fk" />
-      </set>
-
-      <basic name="link">
-        <column name="bw_link" length="500" />
-      </basic>
-
-      <embedded name="geo" />
-
-      <basic name="status" />
-
-      <basic name="cost">
-        <column name="cost"/>
-      </basic> 
-
-      <basic name="dtstamp">
-        <column name="bw_dtstamp" length="16" />
-      </basic> 
-
-      <basic name="lastmod" >
-        <column name="bw_lastmod" length="16" nullable="false" />
-      </basic>
-
-      <basic name="created">
-        <column name="bw_created" length="16" nullable="false" />
-      </basic>
-
-      <basic name="stag" >
-        <column name="bw_stag" length="21" />
-      </basic>
-
-      <basic name="priority">
-        <column name="priority" />
-      </basic>
-
-      <many-to-one name="location"
-                   class="org.bedework.calfacade.BwLocation"
-                   foreign-key="bw_event_loc_fk" >
-        <column name="locationid" />
-      </many-to-one>
-
-      <basic name="sequence">
-        <column name="rfcsequence"/>
-      </basic>
-
-      <basic name="transparency">
-        <column name="transparency" length="100" />
-      </basic>
-
-      <!-- task only -->
-      <basic name="percentComplete">
-        <column name="percent_complete"/>
-      </basic>
-
-      <basic name="completed">
-        <column name="completed" length="16" />
-      </basic>
-
-      <set name="categories" table="bw_event_categories"
-           sort="natural"
-           lazy="false"
-           cascade="lock" >
-        <!-- <cache usage="read-write"/> -->
-        <key column="eventid" foreign-key="bw_eventcat_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwCategory"
-                      column="categoryid"
-                      foreign-key="bw_event_cat_fk" />
-      </set>
-
-      <set name="alarms" table="bw_entity_alarms"
-           lazy="false"
-           cascade="all-delete-orphan" >
-        <key column="eventid" foreign-key="bw_eventalm_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwAlarm"
-                      column="alarmid" foreign-key="bw_event_alarm_fk" />
-      </set>
-
-      <set name="attachments" table="bw_entity_attachments"
-           lazy="true"
-           cascade="all-delete-orphan" >
-        <key column="eventid" foreign-key="bw_eventattach_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwAttachment"
-                      column="attachid" foreign-key="bw_event_attach_fk" />
-      </set>
-
-      <basic name="recurring">
-        <column name="recurring" nullable="false"/>
-      </basic> 
-
-      <basic name="recurrenceId">
-        <column name="recurrence_id"
-                length="16" />
-      </basic>
-      
-      <set name="rrules"
-           lazy="false">
-        <table name="bw_event_rrules"
-               cascade="all-delete-orphan">
-        <key column="eventid" foreign-key="bw_event_rrule_fk" />
-        <element type="string">
-        <column name="rrule" nullable="false"/>
-      </set>
-
-      <set name="rdates"
-           lazy="false">
-        <table name="bw_event_rdates"
-               cascade="all-delete-orphan">
-        <key column="eventid" foreign-key="bw_event_rdate_fk" />
-        <composite-element
-                class="org.bedework.calfacade.BwDateTime" >
-          <basic name="dateType">
-            <column name="r_date_type" nullable="false" />
-          </basic>
-
-          <basic name="timezoneId">
-            <column name="r_tzid" />
-          </basic>
-
-          <basic name="dtval">
-            <column name="r_dtval" length="16"
-                    nullable="false" />
-          </basic>
-
-          <basic name="date">
-            <column name="r_date" length="16"
-                    nullable="false"/>
-          </basic>
-        </composite-element>
-      </set>
-
-      <set name="exrules"
-           lazy="false">
-        <table name="bw_event_exrules"
-               cascade="all-delete-orphan">
-        <key column="eventid" foreign-key="bw_event_erule_fk" />
-        <element type="string">
-        <column name="exrule" nullable="false"/>
-      </set>
-
-      <set name="exdates">
-        <table name="bw_event_exdates"
-               lazy="false"
-               cascade="all-delete-orphan">
-        <key column="eventid" foreign-key="bw_event_edate_fk" />
-        <composite-element
-                class="org.bedework.calfacade.BwDateTime" >
-          <basic name="dateType">
-            <column name="ex_date_type" nullable="false" />
-          </basic>
-
-          <basic name="timezoneId">
-            <column name="ex_tzid" />
-          </basic>
-
-          <basic name="dtval">
-            <column name="ex_dtval" length="16"
-                    nullable="false" />
-          </basic>
-
-          <basic name="date">
-            <column name="ex_date" length="16"
-                    nullable="false"/>
-          </basic>
-        </composite-element>
-      </set>
-
-      <basic name="ctoken">
-        <column name="latest_date"/>
-      </basic> 
-
-      <basic name="scheduleMethod">
-        <column name="schedule_method"/>
-      </basic> 
-
-      <basic name="originator">
-        <column name="originator" />
-      </basic>
-      
-      <set name="recipients">
-        <table name="bw_event_recipients"
-               fetch="subselect"
-               lazy="false"
-               cascade="all-delete-orphan">
-        <key column="eventid" foreign-key="bw_event_recip_fk" />
-        <element type="string">
-        <column name="recipient" nullable="false"/>
-      </set>
-
-      <embedded name="organizer"/>
-
-      <set name="attendees" table="bw_event_attendees"
-           cascade="all-delete-orphan"
-           lazy="false"
-           fetch="subselect" >
-        <key column="eventid" foreign-key="bw_eventatt_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwAttendee"
-                      column="attendeeid"
-                      foreign-key="bw_event_att_fk" />
-      </set>
-
-      <set name="requestStatuses" table="bw_rstatus"
-           cascade="all-delete-orphan"
-           lazy="false">
-        <key column="eventid" foreign-key="bw_eventrst_eid_fk" />
-        <composite-element
-                class="org.bedework.calfacade.BwRequestStatus" >
-          <basic name="code">
-          <column name="bw_rscode" length="100" />
-          <many-to-one name="description"
-                       class="org.bedework.calfacade.BwString"
-                       column="bw_rsdescid"
-                       unique="true"
-                       not-null="false"
-                       cascade="all"
-                       foreign-key="bw_event_rst_fk"/>
-          <basic name="data">
-            <column name="bw_rsdata" length="250" />
-          </basic>
-        </composite-element>
-      </set>
-
-      <embedded name="relatedTo"/>
-
-      <basic name="scheduleState">
-        <column name="schedule_state"/>
-      </basic>
-
-      <basic name="organizerSchedulingObject">
-        <column name="bw_org_scheduleobj" nullable="false"/>
-      </basic>
-
-      <basic name="attendeeSchedulingObject">
-        <column name="bw_att_scheduleobj" nullable="false"/>
-      </basic>
-
-      <list name="xproperties" table="bw_event_xprops"
-            cascade="all-delete-orphan"
-            lazy="false" >
-        <!-- <cache usage="read-write"/> -->
-        <key column="bw_eventid" foreign-key="bw_eventxp_eid_fk" />
-        <list-index column="bwxp_position"/>
-        <composite-element class="org.bedework.calfacade.BwXproperty">
-          <basic name="name">
-            <column name="bw_name" length="100"  />
-          </basic>
-
-          <basic name="pars">
-            <column name="bw_pars" length="4000"  />
-          </basic>
-
-          <basic name="value">
-            <column name="bw_value"/>
-            <type="text"/>
-          </basic>
-        </composite-element>
-      </list>
-
-      <!-- =============== Freebusy =============== -->
-
-      <list name="freeBusyPeriods" lazy="true"
-          cascade="all-delete-orphan">
-      <key column="eventid" foreign-key="bw_eventfbc_eid_fk" />
-      <list-index column="fbcomp_position"/>
-      <one-to-many class="org.bedework.calfacade.BwFreeBusyComponent" />
-    </list>
-
-    <!-- =============== Vavailability =============== -->
-
-      <basic name="busyType">
-        <column name="busy_type"/>
-      </basic>
- 
-      <set name="availableUids" lazy="true" table="bw_event_availuids">
-        <key column="eventid" foreign-key="bw_event_avluid_fk" />
-        <element type="string">
-        <column name="avluid" nullable="false"/>
-      </set>
     </attributes>
   </entity>
 
@@ -1446,10 +1153,6 @@ Put this or the equiv somewhere
         <sequence-generator name="hibernate_sequence" />
       </id>
 
-      <version name="seq">
-        <column name="bwseq"/>
-      </version>
-
       <basic name="entityType">
         <column name="bw_entity_type"/>
       </basic>
@@ -1484,6 +1187,260 @@ Put this or the equiv somewhere
       <basic name="publick">
         <column name="publick" />
       </basic>
+
+      <basic name="duration">
+        <column name="duration" />
+      </basic>
+
+      <basic name="endType">
+        <column name="end_type"/>
+      </basic>
+
+      <basic name="noStart">
+        <column name="bw_nostart" />
+      </basic>
+
+      <basic name="deleted">
+        <column name="bw_deleted"/>
+      </basic>
+
+      <basic name="tombstoned">
+        <column name="bwtombstoned" nullable="false"/>
+      </basic>
+
+      <basic name="classification">
+        <column name="bw_class" length="250" />
+      </basic>
+
+      <basic name="link">
+        <column name="bw_link" length="500" />
+      </basic>
+
+      <basic name="status" />
+
+      <basic name="cost">
+        <column name="cost"/>
+      </basic>
+
+      <basic name="dtstamp">
+        <column name="bw_dtstamp" length="16" />
+      </basic>
+
+      <basic name="lastmod" >
+        <column name="bw_lastmod" length="16" />
+      </basic>
+
+      <basic name="created">
+        <column name="bw_created" length="16" />
+      </basic>
+
+      <basic name="stag" >
+        <column name="bw_stag" length="21" />
+      </basic>
+
+      <basic name="priority">
+        <column name="priority" />
+      </basic>
+
+      <basic name="sequence">
+        <column name="rfcsequence"/>
+      </basic>
+
+      <basic name="transparency">
+        <column name="transparency" length="100" />
+      </basic>
+
+      <!-- task only -->
+      <basic name="percentComplete">
+        <column name="percent_complete"/>
+      </basic>
+
+      <basic name="completed">
+        <column name="completed" length="16" />
+      </basic>
+
+      <basic name="recurring">
+        <column name="recurring"/>
+      </basic>
+
+      <basic name="recurrenceId">
+        <column name="recurrence_id"
+                length="16" />
+      </basic>
+
+      <basic name="ctoken">
+        <column name="latest_date"/>
+      </basic>
+
+      <basic name="scheduleMethod">
+        <column name="schedule_method"/>
+      </basic>
+
+      <basic name="originator">
+        <column name="originator" />
+      </basic>
+
+      <basic name="scheduleState">
+        <column name="schedule_state"/>
+      </basic>
+
+      <basic name="override">
+        <column name="bw_override" nullable="false" />
+      </basic>
+
+      <!-- Empty Collection flags -->
+
+      <basic name="emptyFlags">
+        <column name="bw_empty_flags" length="200" />
+      </basic>
+
+      <version name="seq">
+        <column name="bwseq"/>
+      </version>
+
+      <!-- We probably shouldn't do this. For target and master events we
+         need to allow the target event to be deleted and then inform the
+         user if they disappear.
+      -->
+      <many-to-one name="target">
+        <join-column name="targetid" />
+      </many-to-one>
+
+      <many-to-one name="master">
+        <join-column name="masterid" />
+      </many-to-one>
+
+      <many-to-one name="location">
+        <join-column name="locationid"/>
+      </many-to-one>
+
+      <many-to-many name="summaries">
+        <join-table name="bw_eventann_summaries">
+          <join-column name="bw_eventid"/>
+          <inverse-join-column name="bw_strid"/>
+        </join-table>
+      </many-to-many>
+
+      <many-to-many name="descriptions">
+        <join-table name="bw_eventann_descriptions">
+          <join-column name="bw_eventid"/>
+          <inverse-join-column name="bw_strid"/>
+        </join-table>
+      </many-to-many>
+
+      <many-to-many name="comments">
+        <join-table name="bw_eventann_comments">
+          <join-column name="bw_eventid"/>
+          <inverse-join-column name="bw_strid"/>
+        </join-table>
+      </many-to-many>
+
+      <many-to-many name="contacts">
+        <join-table name="bw_eventann_contacts">
+          <join-column name="bw_eventid"/>
+          <inverse-join-column name="contactid"/>
+        </join-table>
+      </many-to-many>
+
+      <many-to-many name="resources">
+        <join-table name="bw_eventann_resources">
+          <join-column name="bw_eventid"/>
+          <inverse-join-column name="bw_strid"/>
+        </join-table>
+      </many-to-many>
+
+      <many-to-many name="categories">
+        <join-table name="bw_eventann_categories">
+          <join-column name="eventid"/>
+          <inverse-join-column name="categoryid"/>
+        </join-table>
+      </many-to-many>
+
+      <many-to-many name="alarms">
+        <join-table name="bw_eventann_alarms">
+          <join-column name="eventid"/>
+          <inverse-join-column name="alarmid"/>
+        </join-table>
+        <cascade>
+          <cascade-all/>
+        </cascade>
+      </many-to-many>
+
+      <many-to-many name="attachments">
+        <join-table name="bw_eventann_attachments">
+          <join-column name="eventid"/>
+          <inverse-join-column name="attachid"/>
+        </join-table>
+        <cascade>
+          <cascade-all/>
+        </cascade>
+      </many-to-many>
+
+      <many-to-many name="attendees" >
+        <join-table name="bw_eventann_attendees">
+          <join-column name="eventid"/>
+          <inverse-join-column name="attendeeid"/>
+        </join-table>
+        <cascade>
+          <cascade-persist/>
+          <cascade-merge/>
+        </cascade>
+      </many-to-many>
+
+      <element-collection name="requestStatuses">
+        <collection-table name="bw_eventann_rstatus">
+          <join-column name="eventid"/>
+        </collection-table>
+      </element-collection>
+
+      <element-collection name="rrules" fetch="EAGER"
+                          target-class="java.lang.String">
+        <column name="rrule" nullable="false" length="255"/>
+        <collection-table name="bw_eventann_rrules">
+          <join-column name="eventid"/>
+        </collection-table>
+      </element-collection>
+
+      <element-collection name="rdates">
+        <collection-table name="bw_eventann_rdates">
+          <join-column name="eventid"/>
+        </collection-table>
+      </element-collection>
+
+      <element-collection name="exrules" fetch="EAGER"
+                          target-class="java.lang.String">
+        <column name="exrule" nullable="false" length="255"/>
+        <collection-table name="bw_eventann_exrules">
+          <join-column name="eventid"/>
+        </collection-table>
+      </element-collection>
+
+      <element-collection name="exdates">
+        <collection-table name="bw_eventann_exdates">
+          <join-column name="eventid"/>
+        </collection-table>
+      </element-collection>
+
+      <element-collection name="recipients" fetch="EAGER"
+                          target-class="java.lang.String">
+        <column name="recipient" nullable="false" length="255"/>
+        <collection-table name="bw_eventann_recipients">
+          <join-column name="eventid"/>
+        </collection-table>
+      </element-collection>
+
+      <element-collection name="xproperties">
+        <order-column name="bwxp_position" />
+        <collection-table name="bw_eventann_xprops" >
+          <join-column name="bw_eventannid" />
+        </collection-table>
+      </element-collection>
+
+      <embedded name="geo"/>
+
+      <embedded name="organizer"/>
+
+      <embedded name="relatedTo"/>
 
       <embedded name="dtstart" >
         <attribute-override name="dateType">
@@ -1530,495 +1487,86 @@ Put this or the equiv somewhere
           <column name="bw_end_floating"/>
         </attribute-override>
       </embedded>
-
-      <basic name="duration">
-        <column name="duration" />
-      </basic>
-
-      <basic name="endType">
-        <column name="end_type"/>
-        <type="char" />
-      </basic>
-
-      <basic name="noStart">
-        <column="bw_nostart" />
-      </basic>
-
-      <basic name="deleted">
-        <column name="bw_deleted"/>
-      </basic>
-
-      <basic name="tombstoned">
-        <column name="bwtombstoned" nullable="false"/>
-      </basic>
-
-      <set name="summaries" table="bw_eventann_summaries"
-           cascade="all-delete-orphan"
-           fetch="subselect"
-           lazy="false">
-        <!-- <cache usage="read-write"/> -->
-        <key column="bw_eventid" foreign-key="bw_eannsum_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwString"
-                      unique="true"
-                      column="bw_strid"
-                      foreign-key="bw_eann_sum_fk" />
-      </set>
-
-      <set name="descriptions" table="bw_eventann_descriptions"
-           cascade="all-delete-orphan"
-           fetch="subselect"
-           lazy="false" >
-        <!-- <cache usage="read-write"/> -->
-        <key column="bw_eventid" foreign-key="bw_eanndesc_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwLongString"
-                      unique="true"
-                      column="bw_strid"
-                      foreign-key="bw_eann_desc_fk" />
-      </set>
-
-      <basic name="classification">
-        <column name="bw_class"
-                type="string" length="250" />
-      </basic>
-
-      <set name="comments" table="bw_eventann_comments"
-           cascade="all-delete-orphan"
-           lazy="false"
-           fetch="subselect" >
-        <!-- <cache usage="read-write"/> -->
-        <key column="bw_eventid" foreign-key="bw_eanncom_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwString"
-                      unique="true"
-                      column="bw_strid"
-                      foreign-key="bw_eann_com_fk"  />
-      </set>
-
-      <set name="contacts" table="bw_eventann_contacts"
-           sort="natural"
-           lazy="false"
-           fetch="subselect">
-        <!-- <cache usage="read-write"/> -->
-        <key column="eventid" foreign-key="bw_eanncon_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwContact"
-                      column="contactid"
-                      foreign-key="bw_eann_con_fk" />
-      </set>
-
-      <set name="resources">
-        <table name="bw_eventann_resources"
-               lazy="false"
-               cascade="all-delete-orphan" >
-        <!-- <cache usage="read-write"/> -->
-        <key column="bw_eventid" foreign-key="bw_eannres_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwString"
-                      unique="true"
-                      column="bw_strid"
-                      foreign-key="bw_eann_res_fk"  />
-      </set>
-
-      <basic name="link">
-        <column name="bw_link" length="500" />
-      </basic>
-
-      <embedded name="geo"/>
-
-      <basic name="status" />
-
-      <basic name="cost">
-        <column name="cost"/>
-      </basic>
-
-      <basic name="dtstamp">
-        <column name="bw_dtstamp" length="16" />
-      </basic>
-
-      <basic name="lastmod" >
-        <column name="bw_lastmod" length="16" />
-      </basic>
-
-      <basic name="created">
-        <column name="bw_created" length="16" />
-      </basic>
-
-      <basic name="stag" >
-        <column name="bw_stag" length="21" />
-      </basic>
-
-      <basic name="priority">
-        <column name="priority" />
-      </basic>
-
-      <many-to-one name="location"
-                   class="org.bedework.calfacade.BwLocation"
-                   foreign-key="bw_eann_loc_fk" >
-        <column name="locationid" />
-      </many-to-one>
-
-      <basic name="sequence">
-        <column name="rfcsequence"/>
-      </basic>
-
-      <basic name="transparency">
-        <column name="transparency" length="100" />
-      </basic>
-
-      <!-- task only -->
-      <basic name="percentComplete">
-        <column name="percent_complete"/>
-      </basic>
-
-      <basic name="completed">
-        <column name="completed"
-                type="string" length="16" />
-      </basic>
-
-      <set name="categories" table="bw_eventann_categories"
-           sort="natural"
-           lazy="false"
-           cascade="lock" >
-        <key column="eventid" foreign-key="bw_eanncat_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwCategory"
-                      column="categoryid"
-                      foreign-key="bw_eann_cat_fk" />
-      </set>
-
-      <set name="alarms" table="bw_eventann_alarms"
-           lazy="false"
-           cascade="all-delete-orphan" >
-        <key column="eventid" foreign-key="bw_eannalm_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwAlarm"
-                      column="alarmid"
-                      foreign-key="bw_eann_alarm_fk" />
-      </set>
-
-      <set name="attachments" table="bw_eventann_attachments"
-           lazy="true"
-           cascade="all-delete-orphan" >
-        <key column="eventid" foreign-key="bw_eannattach_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwAttachment"
-                      column="attachid" foreign-key="bw_eann_attach_fk" />
-      </set>
-
-      <basic name="recurring">
-        <column name="recurring"/>
-      </basic>
-
-      <basic name="recurrenceId">
-        <column name="recurrence_id"
-                length="16" />
-      </basic>
-
-
-      <set name="rrules"
-           lazy="false">
-        <table name="bw_eventann_rrules"
-               cascade="all-delete-orphan">
-        <key column="eventid" foreign-key="bw_eann_rrule_fk" />
-        <element type="string">
-        <column name="rrule"/>
-      </set>
-
-      <set name="rdates"
-           lazy="false">
-        <table name="bw_eventann_rdates"
-               cascade="all-delete-orphan">
-        <key column="eventid" foreign-key="bw_eann_rdate_fk" />
-        <composite-element
-                class="org.bedework.calfacade.BwDateTime" >
-          <basic name="dateType">
-            <column name="r_date_type" nullable="false" />
-          </basic>
-
-          <basic name="timezoneId">
-            <column name="r_tzid" />
-          </basic>
-
-          <basic name="dtval">
-            <column name="r_dtval" length="16"
-                    nullable="false" />
-          </basic>
-
-          <basic name="date">
-            <column name="r_date" length="16"
-                    nullable="false"/>
-          </basic>
-        </composite-element>
-      </set>
-
-      <set name="exrules"
-           lazy="false">
-        <table name="bw_eventann_exrules"
-               cascade="all-delete-orphan">
-        <key column="eventid" foreign-key="bw_eann_erule_fk" />
-        <element type="string">
-        <column name="exrule" nullable="false"/>
-      </set>
-
-      <set name="exdates"
-           lazy="false">
-        <table name="bw_eventann_exdates"
-               cascade="all-delete-orphan">
-        <key column="eventid" foreign-key="bw_eann_edate_fk" />
-        <composite-element
-                class="org.bedework.calfacade.BwDateTime" >
-          <basic name="dateType">
-            <column name="ex_date_type" nullable="false" />
-          </basic>
-
-          <basic name="timezoneId">
-            <column name="ex_tzid" />
-          </basic>
-
-          <basic name="dtval">
-            <column name="ex_dtval" length="16"
-                    nullable="false" />
-          </basic>
-
-          <basic name="date">
-            <column name="ex_date" length="16"
-                    nullable="false" />
-          </basic>
-        </composite-element>
-      </set>
-
-      <basic name="ctoken">
-        <column name="latest_date"/>
-      </basic>
-
-      <basic name="scheduleMethod">
-        <column name="schedule_method"/>
-      </basic> 
-
-      <basic name="originator">
-        <column name="originator" />
-      </basic>
-
-      <set name="recipients">
-        <table name="bw_eventann_recipients"
-               fetch="subselect"
-               lazy="false"
-               cascade="all-delete-orphan">
-        <key column="eventid" foreign-key="bw_eann_recip_fk" />
-        <element type="string">
-        <column name="recipient" nullable="false"/>
-      </set>
-
-      <embedded name="organizer"/>
-
-      <set name="attendees" table="bw_eventann_attendees"
-           cascade="all-delete-orphan"
-           lazy="false"
-           fetch="subselect" >
-        <key column="eventid" foreign-key="bw_eannatt_eid_fk" />
-        <many-to-many class="org.bedework.calfacade.BwAttendee"
-                      column="attendeeid"
-                      foreign-key="bw_eann_att_fk" />
-      </set>
-
-      <set name="requestStatuses" table="bw_eventann_rstatus"
-           cascade="all-delete-orphan"
-           lazy="false">
-        <key column="eventid" foreign-key="bw_eannrst_eid_fk" />
-        <composite-element
-                class="org.bedework.calfacade.BwRequestStatus" >
-          <basic name="code">
-            <column name="bw_rscode" length="100" />
-          </basic>
-          <many-to-one name="description"
-                       class="org.bedework.calfacade.BwString"
-                       column="bw_rsdescid"
-                       unique="true"
-                       not-null="false"
-                       cascade="all"
-                       foreign-key="bw_eann_rst_fk"/>
-          <basic name="data">
-            <column name="bw_rsdata" length="250" />
-          </basic>
-        </composite-element>
-      </set>
-
-      <embedded name="relatedTo"/>
-
-      <basic name="scheduleState">
-        <column name="schedule_state"/>
-      </basic>
- 
-      <list name="xproperties" table="bw_eventann_xprops"
-            cascade="all-delete-orphan"
-            lazy="false" >
-        <!-- <cache usage="read-write"/> -->
-        <key column="bw_eventannid" foreign-key="bw_eventannxp_eid_fk" />
-        <list-index column="bwxp_position"/>
-        <composite-element class="org.bedework.calfacade.BwXproperty">
-          <basic name="name=">
-            <column name="bw_name="  length="100" />
-          </basic>
-
-          <basic name="pars">
-            <column name="bw_pars" length="4000" />
-          </basic>
-
-          <basic name="value">
-            <column name="bw_value"/>
-            <type="text"/>
-          </basic>
-        </composite-element>
-      </list>
-
-      <!-- We probably shouldn't do this. For target and master events we
-         need to allow the target event to be deleted and then inform the
-         user if they disappear.
-      -->
-      <many-to-one name="target"
-                   class="org.bedework.calfacade.BwEventObj" lazy="proxy"
-                   foreign-key="bw_eann_tgt_fk" >
-        <column name="targetid" />
-      </many-to-one>
-
-      <many-to-one name="master"
-                   class="org.bedework.calfacade.BwEventObj" lazy="proxy"
-                   foreign-key="bw_eann_mstr_fk" >
-        <column name="masterid" />
-      </many-to-one>
-
-      <basic name="override">
-        <column name="bw_override" nullable="false" />
-      </basic>
-
-      <!-- Empty Collection flags -->
-
-    <basic name="emptyFlags">
-        <column name="bw_empty_flags" length="200" />
-    </basic>
-  </attributes>
+    </attributes>
   </entity>
 
+  <!-- =========================================================
+       A filter definition is an xml string with an associated
+       internal name, a set of display names and descriptions
+       ========================================================= -->
 
-
-<!-- ===================================================================
-     A filter definition is an xml string with an associated internal name,
-     a set of display names and descriptions
-     =================================================================== -->
-
-<entity class="org.bedework.calfacade.BwFilterDef">
-  <table name="bw_filters"/>
+  <entity class="org.bedework.calfacade.BwFilterDef">
+    <table name="bw_filters"/>
     <attributes>
       <id name="id">
         <column name="filterid"/>
-      <sequence-generator name="hibernate_sequence" />
-    </id>
+        <sequence-generator name="hibernate_sequence" />
+      </id>
 
-    <version name="seq">
-        <column name="bwseq"/>
-     </version>
-
-    <basic name="ownerHref">
+      <basic name="ownerHref">
         <column name="bw_owner"/>
-    </basic> 
+      </basic>
 
-    <basic name="publick">
-      <column name="publick" nullable="false" />
-    </basic>
+      <basic name="publick">
+        <column name="publick" nullable="false" />
+      </basic>
 
-    <basic name="name" >
-      <column name="filtername" length="200" />
-    </basic>
+      <basic name="name" >
+        <column name="filtername" length="200" />
+      </basic>
 
-    <set name="displayNames" table="bw_filter_display_names"
-         cascade="all-delete-orphan"
-         fetch="subselect" >
-      <cache usage="read-write"/>
-      <key column="bw_eventid" foreign-key="bw_fltrdname_eid_fk" />
-      <many-to-many class="org.bedework.calfacade.BwString"
-                    unique="true"
-                    column="bw_strid"
-                    foreign-key="bw_fltrdname_fk" />
-    </set>
+      <basic name="definition">
+        <column name="bwdefinition" column-definition="type=text"/>
+      </basic>
 
-    <set name="descriptions" table="bw_filter_descriptions"
-         cascade="all-delete-orphan"
-         fetch="subselect" >
-      <cache usage="read-write"/>
-      <key column="bw_eventid" foreign-key="bw_fltrdesc_eid_fk" />
-      <many-to-many class="org.bedework.calfacade.BwLongString"
-                    unique="true"
-                    column="bw_strid"
-                    foreign-key="bw_fktr_desc_fk" />
-    </set>
-
-    <basic name="definition">
-        <column name="bwdefinition"/>
-         <type="text" />
-  </attributes>
-  </entity>
-
-
-
-<!-- ===================================================================
-     A freebusy component in Bedework.
-     =================================================================== -->
-
-<entity class="org.bedework.calfacade.BwFreeBusyComponent">
-  <table name="bw_fbcomp"/>
-    <attributes>
-      <id name="id">
-        <column name="bwid"/>
-      <sequence-generator name="hibernate_sequence" />
-    </id>
-
-    <version name="seq">
+      <version name="seq">
         <column name="bwseq"/>
-     </version>
+      </version>
 
-    <basic name="type">
-        <column name="bwtype"/>
-     <basic name="value">
-        <column name="bwvalue"
-              length="3900" />
-  </attributes>
+      <many-to-many name="displayNames">
+        <join-table name="bw_filter_display_names">
+          <join-column name="bw_eventid"/>
+          <inverse-join-column name="bw_strid"/>
+        </join-table>
+      </many-to-many>
+
+      <many-to-many name="descriptions">
+        <join-table name="bw_filter_descriptions">
+          <join-column name="bw_eventid"/>
+          <inverse-join-column name="bw_strid"/>
+        </join-table>
+      </many-to-many>
+    </attributes>
   </entity>
 
+  <!-- ==================================================
+       Groups stored in the db - most sites will probably use an external
+       directory but this is useful for debugging
+       =================================================== -->
 
-
-<!-- ==================================================
-     Groups stored in the db - most sites will probably use an external
-     directory but this is useful for debugging
-     =================================================== -->
-
-<entity class="org.bedework.calfacade.BwGroup">
-  <table name="bw_groups"/>
+  <entity class="org.bedework.calfacade.BwGroup">
+    <table name="bw_groups"/>
     <attributes>
       <id name="id">
         <column name="bw_group_id"/>
-      <sequence-generator name="hibernate_sequence" />
-    </id>
+        <sequence-generator name="hibernate_sequence" />
+      </id>
 
-    <version name="seq">
+      <basic name="account">
+        <column name="bw_account" length="200"
+                nullable="false"
+                unique="true"/>
+      </basic>
+
+      <basic name="principalRef">
+        <column name="bw_principal_ref" nullable="false" />
+      </basic>
+
+      <version name="seq">
         <column name="bwseq"/>
-     </version>
-
-    <basic name="account">
-        <column name="bw_account" length="200" nullable="false"
-              unique-key="group-key" />
-    </basic> 
-
-    <basic name="principalRef">
-        <column name="bw_principal_ref"
-              nullable="false" />
-
-    <!--
-    <set name="groupMembers" table="bw_Group_Members"
-         lazy="true" >
-      <key>
-        <column name="groupname=" nullable="false" />
-      </key>
-      <many-to-many class="org.bedework.calfacade.BwUser"
-                    column="userid" />
-    </set>
-    -->
-  </attributes>
+      </version>
+    </attributes>
   </entity>
-
 
   <!-- This is a cheat to get around some problems.
 
@@ -2031,30 +1579,27 @@ Put this or the equiv somewhere
     <table name="bw_group_Members"/>
 
     <attributes>
-      <composite-id>
-        <key-many-to-one name="grp">
-        <column name="groupid"
-                class="org.bedework.calfacade.BwGroup"
-                foreign-key="bw_grp_grp_fk" />
-        <key-property name="memberId">
-        <column name="memberid"
-                type="integer"/>
-        <key-property name="memberIsGroup">
-        <column name="member_is_group"
-                type="true_false" />
-      </composite-id>
+      <id name="memberId">
+        <column name="memberid"/>
+      </id>
+
+      <id name="memberIsGroup">
+        <column name="member_is_group" />
+      </id>
 
       <basic name="groupId">
-        <column name="groupid"
-                insert="false" update="false"/>
+        <column name="groupid" insertable="false" updatable="false"/>
       </basic>
 
+      <many-to-one name="grp" id="true">
+        <join-column name="groupid" />
+      </many-to-one>
     </attributes>
   </entity>
 
-<!-- ===================================================================
-     Object representing the location of an event
-     =================================================================== -->
+  <!-- =========================================================
+       Object representing the location of an event
+       ========================================================= -->
 
 <entity class="org.bedework.calfacade.BwLocation">
   <table name="bw_locations" />
@@ -2064,10 +1609,6 @@ Put this or the equiv somewhere
         <column name="entityid"/>
       <sequence-generator name="hibernate_sequence" />
     </id>
-
-    <version name="seq">
-        <column name="bwseq"/>
-     </version>
 
     <basic name="creatorHref">
         <column name="bw_creator"/>
@@ -2090,30 +1631,31 @@ Put this or the equiv somewhere
         <column name="bw_uid" length="50"
               unique="true"
               nullable="false"/>
+    </basic>
 
-    <many-to-one name="address"
-                 class="org.bedework.calfacade.BwString"
-                 column="bw_locaddrid"
-                 unique="true"
-                 nullable="false"
-                 cascade="all"
-                 foreign-key="bw_loc_addr_fk" />
-
-    <many-to-one name="subaddress"
-                 class="org.bedework.calfacade.BwString"
-                 column="bw_locsubaddrid"
-                 unique="true"
-                 not-null="false"
-                 cascade="all"
-                 foreign-key="bw_loc_sadd_fk" />
-    </basic> 
-
-    <basic name="link">
+      <basic name="link">
         <column name="bw_link" length="500"/>
+      </basic>
+
+      <version name="seq">
+        <column name="bwseq"/>
+      </version>
+
+    <many-to-one name="address">
+      <join-column name="bw_locaddrid" unique="true" nullable="false"/>
+      <cascade>
+        <cascade-all/>
+      </cascade>
+    </many-to-one>
+
+    <many-to-one name="subaddress">
+      <join-column name="bw_locsubaddrid" unique="true" nullable="false"/>
+      <cascade>
+        <cascade-all/>
+      </cascade>
+    </many-to-one>
   </attributes>
   </entity>
-
-
 
 <!-- ===================================================================
      A long string in Bedework. There are restrictions on the use of such
@@ -2129,29 +1671,23 @@ Put this or the equiv somewhere
       <sequence-generator name="hibernate_sequence" />
     </id>
 
+    <basic name="lang">
+        <column name="bw_lang" length="100" />
+    </basic>
+
+    <basic name="value">
+        <column name="bw_value" column-definition="type=text"/>
+    </basic>
+
     <version name="seq">
         <column name="bwseq"/>
      </version>
-
-    <basic name="lang" length="100">
-        <column name="bw_lang"  />
-    </basic> 
-
-    <basic name="value">
-        <column name="bw_value"/>
-         <type="text"/>
   </attributes>
   </entity>
 
-
-  <!-- =================================================================
-       String queries
-       ================================================================= -->
-
-
-<!-- ===================================================================
-     Object to represent calendar user preferences.
-     =================================================================== -->
+  <!-- =========================================================
+       Object to represent calendar user preferences.
+       ========================================================= -->
 
 <entity class="org.bedework.calfacade.svc.BwPreferences">
   <table name="bw_preferences" />
@@ -2161,106 +1697,104 @@ Put this or the equiv somewhere
       <sequence-generator name="hibernate_sequence" />
     </id>
 
+      <basic name="ownerHref">
+        <column name="bw_owner" unique="true" nullable="false" />
+      </basic>
+
+      <basic name="email">
+        <column name="email" />
+      </basic>
+
+      <basic name="defaultCalendarPath">
+        <column name="bw_default_calendar"
+                length="3900" />
+      </basic>
+
+      <basic name="skinName">
+        <column name="skin_name" />
+      </basic>
+
+      <basic name="skinStyle">
+        <column name="skin_style" />
+      </basic>
+
+      <basic name="preferredView">
+        <column name="preferred_view" />
+      </basic>
+
+      <basic name="preferredViewPeriod">
+        <column name="preferred_view_period" />
+      </basic>
+
+      <basic name="pageSize">
+        <column name="bw_page_size"/>
+      </basic>
+
+      <basic name="workDays">
+        <column name="workdays" />
+      </basic>
+
+      <basic name="workdayStart">
+        <column name="workday_start"/>
+      </basic>
+
+      <basic name="workdayEnd">
+        <column name="workday_end"/>
+      </basic>
+
+      <basic name="preferredEndType">
+        <column name="preferred_endtype" />
+      </basic>
+
+      <basic name="userMode">
+        <column name="bwuser_mode"/>
+      </basic>
+
+      <basic name="hour24">
+        <column name="bw_hour24" nullable="false" />
+      </basic>
+
+      <basic name="scheduleAutoRespond">
+        <column name="bw_sched_autoresp" nullable="false" />
+      </basic>
+
+      <basic name="scheduleAutoCancelAction">
+        <column name="bw_sched_autocancelaction"/>
+      </basic>
+
+      <basic name="scheduleDoubleBook">
+        <column name="bw_sched_double_book" nullable="false" />
+      </basic>
+
+      <basic name="scheduleAutoProcessResponses">
+        <column name="bw_sched_autoproc_resp"/>
+      </basic>
+
     <version name="seq">
         <column name="bwseq"/>
      </version>
 
-    <basic name="ownerHref">
-        <column name="bw_owner"
-              unique="true"
-              nullable="false" />
+      <many-to-many name="views" fetch="EAGER">
+        <join-table name="bw_user_views">
+          <join-column name="prefid"/>
+          <inverse-join-column name="elt"/>
+        </join-table>
+        <cascade>
+          <cascade-all/>
+        </cascade>
+      </many-to-many>
 
-    <set name="views" table="bw_user_views" lazy="false"
-         cascade="all-delete-orphan"
-         sort="natural" >
-      <cache usage="read-write"/>
-      <key column="prefid" foreign-key="bw_prview_pid_fk" />
-      <many-to-many class="org.bedework.calfacade.svc.BwView"
-                    foreign-key="bw_pr_view_fk" />
-    </set>
-
-    <basic name="email">
-        <column name="email" />
-    </basic> 
-
-    <basic name="defaultCalendarPath">
-        <column name="bw_default_calendar"
-              length="3900" />
-    </basic> 
-
-    <basic name="skinname=">
-        <column name="skin_name=" />
-    <basic name="skinStyle">
-        <column name="skin_style" />
-    <basic name="preferredView">
-        <column name="preferred_view" />
-    <basic name="preferredViewPeriod">
-        <column name="preferred_view_period"
-              type="string" />
-    <basic name="pageSize">
-        <column name="bw_page_size"/>
-     <basic name="workDays">
-        <column name="workdays" />
-    <basic name="workdayStart">
-        <column name="workday_start"/>
-     <basic name="workdayEnd">
-        <column name="workday_end"/>
-     <basic name="preferredEndType">
-        <column name="preferred_endtype" />
-    </basic> 
-
-    <basic name="userMode">
-        <column name="bwuser_mode"/>
-     </basic> 
-
-    <basic name="hour24">
-        <column name="bw_hour24"/>
-         <type="true_false"
-              nullable="false" />
-    </basic> 
-
-    <basic name="scheduleAutoRespond">
-        <column name="bw_sched_autoresp"/>
-         <type="true_false"
-              nullable="false" />
-    </basic> 
-
-    <basic name="scheduleAutoCancelAction">
-        <column name="bw_sched_autocancelaction"
-              type="integer" />
-    </basic> 
-
-    <basic name="scheduleDoubleBook">
-        <column name="bw_sched_double_book"/>
-         <type="true_false"
-              nullable="false" />
-    </basic> 
-
-    <basic name="scheduleAutoProcessResponses">
-        <column name="bw_sched_autoproc_resp"
-              type="integer" />
-
-    <set name="properties" table="bw_user_properties"
-         lazy="true">
-      <key column="bwid" foreign-key="bw_prprp_pid_fk" />
-      <composite-element class="org.bedework.calfacade.BwProperty">
-        <basic name="name">
-                  <column name="bw_name" length="200"  />
-        </basic>
-
-        <basic name="value">
-        <column name="bw_value"/>
-         <type="text"/>
-        </basic>
-      </composite-element>
-    </set>
-  </attributes>
+      <element-collection name="properties">
+        <collection-table name="bw_user_properties" >
+          <join-column name="bwid" />
+        </collection-table>
+      </element-collection>
+    </attributes>
   </entity>
 
-
-<!-- ===================================================================
-     A resource definition in Bedework.
-     =================================================================== -->
+  <!-- =========================================================
+       A resource definition in Bedework.
+       ========================================================= -->
 
   <entity class="org.bedework.calfacade.BwResource">
     <table name="bw_resources"/>
@@ -2269,10 +1803,6 @@ Put this or the equiv somewhere
         <column name="id"/>
         <sequence-generator name="hibernate_sequence" />
       </id>
-
-      <version name="seq">
-        <column name="bwseq"/>
-      </version>
 
       <basic name="colPath">
         <column name="bw_col_path" length="3000"
@@ -2324,8 +1854,11 @@ Put this or the equiv somewhere
 
       <basic name="contentLength">
         <column name="bwcontent_length"/>
-        <type="long" />
       </basic>
+
+      <version name="seq">
+        <column name="bwseq"/>
+      </version>
     </attributes>
   </entity>
 
@@ -2341,10 +1874,6 @@ Put this or the equiv somewhere
         <sequence-generator name="hibernate_sequence" />
       </id>
 
-      <version name="seq">
-        <column name="bwseq"/>
-      </version>
-
       <basic name="colPath">
         <column name="bw_col_path" length="3000"/>
       </basic>
@@ -2355,284 +1884,72 @@ Put this or the equiv somewhere
       </basic>
 
       <basic name="byteValue">
-        <column name="bw_value">
-        <type name="org.hibernate.type.MaterializedBlobType"/>
+        <column name="bw_value"/>
+        <lob/>
       </basic>
+
+      <version name="seq">
+        <column name="bwseq"/>
+      </version>
+    </attributes>
+  </entity>
+
+  <!-- =========================================================
+       A string in Bedework
+       ========================================================= -->
+
+  <entity class="org.bedework.calfacade.BwString">
+    <table name="bw_strings"/>
+
+    <attributes>
+      <id name="id">
+        <column name="bw_id"/>
+        <sequence-generator name="hibernate_sequence" />
+      </id>
+
+      <basic name="lang">
+        <column name="bw_lang" length="100" />
+      </basic>
+
+      <!--<basic name="value">
+        <column name="bw_value"/>
+         <type="text"/>-->
+      <basic name="value">
+        <column name="bw_value" length="3900" />
+      </basic>
+
+      <version name="seq">
+        <column name="bwseq"/>
+      </version>
     </attributes>
   </entity>
 
   <!-- ===================================================================
-     A scheduling message definition in Bedework.
+     Object representing the system parameters
      =================================================================== -->
 
-  <entity class="org.bedework.calfacade.svc.ScheduleMessage">
-    <table name="bw_sched_msg" >
+  <entity class="org.bedework.calfacade.BwSystem">
+    <table name="bw_settings"/>
     <attributes>
       <id name="id">
         <column name="id"/>
         <sequence-generator name="hibernate_sequence" />
       </id>
 
+      <basic name="name">
+        <column name="bwname" length="200" />
+      </basic>
+
       <version name="seq">
         <column name="bwseq"/>
       </version>
 
-      <basic name="timestamp">
-        <column name="bw_timestamp" length="16" nullable="false"/>
-      </basic>
-
-      <basic name="sequence">
-        <column name"bw_sequence"/>
-     </basic> 
-
-    <basic name="lastProcessed" >
-      <column name="bw_lastproc" length="16" nullable="false" />
-    </basic>
-
-    <basic name="inBox">
-        <column="bw_inbox" nullable="false" />
-    </basic> 
-
-    <basic name="principalHref">
-        <column name="bw_principal_href"/>
-    </basic> 
-
-    <basic name="eventname=">
-        <column name="bw_eventname=" length="500"/>
-    </basic> 
-
-    <basic name="rid">
-        <column name="bw_recurrence_id"
-               length="16" />
-  </attributes>
-  </entity>
-
-<!-- ===================================================================
-     A string in Bedework
-     =================================================================== -->
-
-<entity class="org.bedework.calfacade.BwString">
-  <table name="bw_strings"/>
-
-    <attributes>
-      <id name="id">
-        <column name="bw_id"/>
-      <sequence-generator name="hibernate_sequence" />
-    </id>
-
-    <version name="seq">
-        <column name="bwseq"/>
-     </basic> 
-
-    <basic name="lang" length="100">
-        <column name="bw_lang"  />
-
-    <!--<basic name="value">
-        <column name="bw_value"/>
-         <type="text"/>-->
-    <basic name="value">
-        <column name="bw_value" length="3900" />
-  </attributes>
-  </entity>
-
-<!-- ===================================================================
-     SynchData
-     =================================================================== -->
-
-<entity class="org.bedework.calfacade.syncml.BwSynchData">
-  <table name="bw_synchdata">
-    <composite-id>
-      <key-property name="userid"/>
-       <key-property name="eventId">
-        <column name="eventid"/>
-     </composite-id>
-
-    <version name="seq">
-        <column name="bwseq"/>
-     </version>
-
-    <basic name="user">
-        <column name="bw_owner"/>
-    </basic> 
-
-    <basic name="eventData">
-        <column name="eventData"/>
-         <type="text"/>
-  </attributes>
-  </entity>
-
-
-  <!-- =================================================================
-       SynchData queries
-       ================================================================= -->
-
-  <query name="getSynchData"><![CDATA[
-    from org.bedework.calfacade.syncml.BwSynchData as sd
-      where sd.user=:user and sd.eventId =:eventid
-  ]]></query>
-
-
-<!-- ===================================================================
-     SynchInfo
-     =================================================================== -->
-
-<entity class="org.bedework.calfacade.syncml.BwSynchInfo">
-  <table name="bw_synchinfo">
-    <composite-id>
-      <key-property name="userid"/>
-       <key-property name="deviceId"
-                column="deviceid" length="255" />
-    </composite-id>
-
-    <version name="seq">
-        <column name="bwseq"/>
-     </version>
-
-    <many-to-one name="user" insert="false" update="false"
-                 class="org.bedework.calfacade.BwUser"
-                 foreign-key="bw_syi_user_fk" >
-      <column name="userid"/>
-    </many-to-one>
-
-    <basic name="calendarId">
-        <column name="calendarid"/>
-         <type="integer"/>
-    <basic name="lastsynch" >
-      <column name="lastsynch" />
-    </basic>
-  </attributes>
-  </entity>
-
-
-  <!-- =================================================================
-       SynchInfo queries
-       ================================================================= -->
-
-  <query name="getSynchInfo"><![CDATA[
-    from org.bedework.calfacade.syncml.BwSynchInfo as si
-      where si.user=:user and si.deviceId =:deviceId
-  ]]></query>
-
-
-<!-- ===================================================================
-     SynchState
-     =================================================================== -->
-
-<entity class="org.bedework.calfacade.syncml.BwSynchState">
-  <table name="bw_synchstate">
-    <composite-id>
-      <key-property name="userid"/>
-       <key-property name="deviceId"
-                    column="deviceid" length="255" />
-      <key-property name="eventId">
-        <column name="eventid"/>
-     </composite-id>
-
-    <version name="seq">
-        <column name="bwseq"/>
-     </version>
-
-    <many-to-one name="user" insert="false" update="false"
-                 class="org.bedework.calfacade.BwUser"
-                 foreign-key="bw_sys_user_fk" >
-      <column name="userid"/>
-    </many-to-one>
-
-    <many-to-one name="event" insert="false" update="false"
-                 class="org.bedework.calfacade.BwEventObj"
-                 column="eventid"
-                 foreign-key="bw_sys_event_fk" />
-    </basic> 
-
-    <basic name="guid">
-        <column name="guid" length="255" />
-    <basic name="synchState">
-        <column name="state"/>
-         <type="integer"/>
-  </attributes>
-  </entity>
-
-
-  <!-- =================================================================
-       SynchState queries
-       ================================================================= -->
-
-  <query name="getSynchState"><![CDATA[
-    from org.bedework.calfacade.syncml.BwSynchState as ss
-      where ss.event=:event and ss.user=:user and ss.deviceId=:deviceId
-  ]]></query>
-
-  <query name="getDeletedSynchStates"><![CDATA[
-    from org.bedework.calfacade.syncml.BwSynchState as ss
-      where ss.user=:user and ss.deviceId=:deviceId and ss.synchState=:synchState
-  ]]></query>
-
-  <query name="setSynchState">
-    <![CDATA[
-     update org.bedework.calfacade.syncml.BwSynchState
-       set state=:state where eventid=:eventid
-    ]]>
-  </query>
-
-  <query name="setSynchStateUser"><![CDATA[
-     update org.bedework.calfacade.syncml.BwSynchState
-      set state=:state where userid=:userid and eventid=:eventid
-    ]]>
-  </query>
-
-  <query name="updateSynchStates1"><![CDATA[
-     update org.bedework.calfacade.syncml.BwSynchState
-        set state=:newstate
-        where userid=:userid and deviceid=:deviceid
-          and state<=:state
-    ]]>
-  </query>
-
-  <query name="updateSynchStates2"><![CDATA[
-     update org.bedework.calfacade.syncml.BwSynchState
-        set state=:newstate
-        where userid=:userid and deviceid=:deviceid
-            and state=:state
-    ]]>
-  </query>
-
-
-<!-- ===================================================================
-     Object representing the system parameters
-     =================================================================== -->
-
-<entity class="org.bedework.calfacade.BwSystem">
-  <table name="bw_settings"/>
-    <attributes>
-      <id name="id">
-        <column name="id"/>
-      <sequence-generator name="hibernate_sequence" />
-    </id>
-
-    <version name="seq">
-        <column name="bwseq"/>
-     </version>
-
-    <basic name="name">
-        <column name="bwname"
-              length="200" />
-
-    <set name="properties" table="bw_system_properties"
-         cascade="all,delete-orphan"
-         lazy="false">
-      <key column="bwid" foreign-key="bw_sysprp_pid_fk" />
-      <composite-element class="org.bedework.calfacade.BwProperty">
-        <basic name="name">
-                  <column="bw_name" length="200" />
-        </basic>
-
-        <basic name="value">
-        <column name="bw_value"/>
-         <type="text"/>
-        </basic>
-      </composite-element>
-    </set>
-  </attributes>
+      <element-collection name="properties">
+        <collection-table name="bw_system_properties" >
+          <join-column name="bwid" />
+        </collection-table>
+      </element-collection>
+    </attributes>
   </entity>
 
 
@@ -2645,50 +1962,42 @@ Put this or the equiv somewhere
      requiring explicit initializations at various places.
      =================================================================== -->
 
-<entity class="org.bedework.calfacade.BwUser">
-  <table name="bw_users" lazy="false" />
+  <entity class="org.bedework.calfacade.BwUser">
+    <table name="bw_users" />
     <attributes>
       <id name="id">
         <column name="userid"/>
-      <sequence-generator name="hibernate_sequence" />
-    </id>
+        <sequence-generator name="hibernate_sequence" />
+      </id>
 
-    <version name="seq">
-        <column name="bwseq"/>
-     </version>
-
-    <basic name="account">
+      <basic name="account">
         <column name="bw_account" length="200" nullable="false"
-              unique-key="user-key" />
-    </basic> 
+                unique="true" />
+      </basic>
 
-    <basic name="principalRef">
+      <basic name="principalRef">
         <column name="bw_principal_ref"
-              nullable="false" />
-    </basic> 
+                nullable="false" />
+      </basic>
 
-    <basic name="instanceOwner">
-      <column name="instance_owner" nullable="false" />
-    </basic>
+      <basic name="instanceOwner">
+        <column name="instance_owner" nullable="false" />
+      </basic>
 
-    <basic name="created">
-        <column name="bw_created"
-              type="timestamp"/>
-    </basic>
+      <basic name="created">
+        <column name="bw_created"/>
+      </basic>
 
       <basic name="logon">
-        <column name="bw_last_logon"
-              type="timestamp"/>
+        <column name="bw_last_logon"/>
       </basic>
 
       <basic name="lastAccess">
         <column name="bw_last_access"/>
-         <type="timestamp"/>
       </basic>
 
       <basic name="lastModify">
         <column name="bw_last_modify"/>
-         <type="timestamp"/>
       </basic>
 
       <basic name="categoryAccess">
@@ -2701,47 +2010,253 @@ Put this or the equiv somewhere
 
       <basic name="locationAccess">
         <column name="bw_location_access" length="3900" />
-    </basic> 
+      </basic>
 
-    <basic name="quota">
+      <basic name="quota">
         <column name="bw_quota"/>
-         <type="long"/>
-    </basic>
+      </basic>
 
+      <version name="seq">
+        <column name="bwseq"/>
+      </version>
     </attributes>
   </entity>
 
-<!-- ===================================================================
-     Views
-     =================================================================== -->
+  <!-- =======================================================
+       Views
+       ======================================================= -->
 
-<entity class="org.bedework.calfacade.svc.BwView">
-  <table name="bw_views"/>
+  <entity class="org.bedework.calfacade.svc.BwView">
+    <table name="bw_views"/>
 
     <attributes>
       <id name="id">
         <column name="viewid"/>
-      <sequence-generator name="hibernate_sequence" />
-    </id>
+        <sequence-generator name="hibernate_sequence" />
+      </id>
 
-    <version name="seq">
-        <column name="bwseq"/>
-     </version>
-
-    <basic name="name">
+      <basic name="name">
         <column name="viewname"
-              length="100" nullable="false"/>
-    </basic>
+                length="100" nullable="false"/>
+      </basic>
 
-    <list name="collectionPaths"
-          table="bw_view_collections"
-          cascade="all, delete-orphan"
-          lazy="false" >
-      <key column="viewid" foreign-key="bw_cal_vid_fk" />
-      <list-index column="bw_path_positon"/>
-      <element type="string">
+      <version name="seq">
+        <column name="bwseq"/>
+      </version>
+
+      <element-collection name="collectionPaths"
+                          target-class="java.lang.String">
+        <order-column name="bw_path_positon"/>
         <column name="bw_calpath" nullable="false"/>
-    </list>
-  </attributes>
-</entity>
-        </entity-mappings>
+        <collection-table name="bw_view_collections">
+          <join-column name="viewid"/>
+        </collection-table>
+      </element-collection>
+    </attributes>
+  </entity>
+
+  <embeddable class="org.bedework.calfacade.BwProperty">
+    <attributes>
+      <basic name="name">
+        <column name="bw_name" length="200" />
+      </basic>
+
+      <basic name="value">
+        <column name="bw_value" column-definition="type=text"/>
+      </basic>
+    </attributes>
+  </embeddable>
+  <embeddable class="org.bedework.calfacade.BwXproperty">
+    <attributes>
+      <basic name="name" >
+        <column name="bw_name" length="100"  />
+      </basic>
+
+      <basic name="pars">
+        <column name="bw_pars" length="4000"  />
+      </basic>
+
+      <basic name="value">
+        <column name="bw_value" column-definition="type=text"/>
+      </basic>
+    </attributes>
+  </embeddable>
+
+  <embeddable class="org.bedework.calfacade.svc.prefs.CategoryPref" >
+    <attributes>
+      <basic name="autoAdd" >
+        <column name="autoaddCategories" nullable="false" />
+      </basic>
+
+      <many-to-many name="preferred">
+        <join-table name="bw_authprefCategories">
+          <join-column name="userid"/>
+          <inverse-join-column name="categoryid"/>
+        </join-table>
+      </many-to-many>
+    </attributes>
+  </embeddable>
+
+  <embeddable class="org.bedework.calfacade.svc.prefs.LocationPref" >
+    <attributes>
+      <basic name="autoAdd" >
+        <column name="autoaddLocations" nullable="false" />
+      </basic>
+
+      <many-to-many name="preferred">
+        <join-table name="bw_authprefLocations">
+          <join-column name="userid"/>
+          <inverse-join-column name="locationid"/>
+        </join-table>
+      </many-to-many>
+    </attributes>
+  </embeddable>
+
+  <embeddable class="org.bedework.calfacade.svc.prefs.ContactPref" >
+    <attributes>
+      <basic name="autoAdd" >
+        <column name="autoaddContacts" nullable="false" />
+      </basic>
+
+      <many-to-many name="preferred">
+        <join-table name="bw_authprefContacts">
+          <join-column name="userid"/>
+          <inverse-join-column name="contactid"/>
+        </join-table>
+      </many-to-many>
+    </attributes>
+  </embeddable>
+
+  <embeddable class="org.bedework.calfacade.svc.prefs.CalendarPref" >
+    <attributes>
+      <basic name="autoAdd" >
+        <column name="autoaddCalendars" nullable="false" />
+      </basic>
+
+      <many-to-many name="preferred">
+        <join-table name="bw_authprefCalendars">
+          <join-column name="userid"/>
+          <inverse-join-column name="calendarid"/>
+        </join-table>
+      </many-to-many>
+    </attributes>
+  </embeddable>
+
+  <embeddable class="org.bedework.calfacade.svc.prefs.BwAuthUserPrefs">
+    <attributes>
+      <embedded name="categoryPrefs" />
+
+      <embedded name="locationPrefs"/>
+
+      <embedded name="contactPrefs"/>
+
+      <embedded name="calendarPrefs"/>
+    </attributes>
+  </embeddable>
+
+  <embeddable class="org.bedework.calfacade.BwDateTime" >
+    <attributes>
+      <basic name="dateType"/>
+
+      <basic name="timezoneId"/>
+
+      <basic name="dtval">
+        <column length="16" />
+      </basic>
+
+      <basic name="date">
+        <column length="16"/>
+      </basic>
+
+      <basic name="floatFlag"/>
+    </attributes>
+  </embeddable>
+
+  <embeddable class="org.bedework.calfacade.BwGeo" >
+    <attributes>
+      <basic name="latitude">
+        <column name="bw_geolatitude"/>
+      </basic>
+
+      <basic name="longitude">
+        <column name="bw_geolongitude"/>
+      </basic>
+    </attributes>
+  </embeddable>
+
+  <embeddable class="org.bedework.calfacade.BwOrganizer">
+    <attributes>
+      <basic name="cn">
+        <column name="bw_org_cn" length="500" />
+      </basic>
+
+      <basic name="dir">
+        <column name="bw_org_dir" length="500" />
+      </basic>
+
+      <basic name="language">
+        <column name="bw_org_lang" length="100" />
+      </basic>
+
+      <basic name="sentBy">
+        <column name="bw_org_sentby" length="500" />
+      </basic>
+
+      <basic name="organizerUri">
+        <column name="bw_org_uri" length="500" />
+      </basic>
+
+      <basic name="scheduleStatus">
+        <column name="bw_org_sched_status" length="100"/>
+      </basic>
+
+      <basic name="dtstamp">
+        <column name="bw_org_dtstamp" length="16" />
+      </basic>
+    </attributes>
+  </embeddable>
+
+  <embeddable class="org.bedework.calfacade.BwRelatedTo" >
+    <attributes>
+      <basic name="relType">
+        <column name="bw_reltype" length="100" />
+      </basic>
+
+      <basic name="value">
+        <column name="bw_reltoval" length="500" />
+      </basic>
+    </attributes>
+  </embeddable>
+
+  <embeddable class="org.bedework.calfacade.BwRequestStatus" >
+    <attributes>
+      <basic name="code">
+        <column name="bw_rscode" length="100" />
+      </basic>
+
+      <basic name="data">
+        <column name="bw_rsdata" length="250" />
+      </basic>
+
+      <many-to-one name="description">
+        <join-column name="bw_rsdescid"/>
+      </many-to-one>
+    </attributes>
+  </embeddable>
+
+  <!-- =========================================================
+       A freebusy component in Bedework.
+       ========================================================= -->
+
+  <embeddable class="org.bedework.calfacade.BwFreeBusyComponent">
+    <attributes>
+      <basic name="type">
+        <column name="bwtype"/>
+      </basic>
+
+      <basic name="value">
+        <column name="bwvalue" length="3900" />
+      </basic>
+    </attributes>
+  </embeddable>
+</entity-mappings>
