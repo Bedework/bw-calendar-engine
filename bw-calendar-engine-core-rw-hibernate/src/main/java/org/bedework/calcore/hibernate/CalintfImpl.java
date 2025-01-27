@@ -42,6 +42,7 @@ import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
+import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
@@ -465,7 +466,7 @@ public class CalintfImpl extends CalintfROImpl {
     super.beginTransaction();
     sess.beginTransaction();
 
-    curTimestamp = sess.getCurrentTimestamp();
+    curTimestamp = sess.getCurrentTimestamp(BwSystem.class);
 
     if (calendars != null) {
       calendars.startTransaction();

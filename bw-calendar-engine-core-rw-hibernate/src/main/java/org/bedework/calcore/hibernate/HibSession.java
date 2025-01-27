@@ -34,9 +34,9 @@ import java.util.List;
 public interface HibSession extends Serializable {
   /** Set up for a hibernate interaction. Throw the object away on exception.
    *
-   * @param sessFactory
+   * @param factory to create session
    */
-  void init(SessionFactory sessFactory);
+  void init(SessionFactory factory);
 
   /**
    * @return Session
@@ -85,7 +85,7 @@ public interface HibSession extends Serializable {
   /**
    * @return a timestamp from the db
    */
-  Timestamp getCurrentTimestamp();
+  Timestamp getCurrentTimestamp(Class<?> tableClass);
 
   /** Evict an object from the session.
    *
@@ -174,22 +174,22 @@ public interface HibSession extends Serializable {
   /** Update an object which may have been loaded in a previous hibernate
    * session
    *
-   * @param obj
+   * @param obj to update
    */
   void update(Object obj);
 
   /** Merge and update an object which may have been loaded in a previous hibernate
    * session
    *
-   * @param obj
-   * @return Object   the persiatent object
+   * @param obj to merge
+   * @return Object   the persistent object
    */
   Object merge(Object obj);
 
   /** Save a new object or update an object which may have been loaded in a
    * previous hibernate session
    *
-   * @param obj
+   * @param obj to save or update
    */
   void saveOrUpdate(Object obj);
 
@@ -215,15 +215,21 @@ public interface HibSession extends Serializable {
 
   /** Save a new object.
    *
-   * @param obj
+   * @param obj to save
    */
   void save(Object obj);
 
   /** Delete an object
    *
-   * @param obj
+   * @param obj to delete
    */
   void delete(Object obj);
+
+  /** Refresh an object
+   *
+   * @param obj to refresh
+   */
+  void refresh(Object obj);
 
   /**
    */

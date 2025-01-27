@@ -22,7 +22,6 @@ import org.bedework.base.exc.BedeworkException;
 import org.bedework.base.exc.persist.BedeworkConstraintViolationException;
 import org.bedework.base.exc.persist.BedeworkDatabaseException;
 import org.bedework.base.exc.persist.BedeworkStaleStateException;
-import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.util.logging.BwLogger;
@@ -51,14 +50,14 @@ import javax.persistence.OptimisticLockException;
  * @author Mike Douglass douglm@rpi.edu
  */
 public class HibSessionImpl implements Logged, HibSession {
-  Session sess;
-  transient Transaction tx;
-  boolean rolledBack;
+  protected Session sess;
+  protected transient Transaction tx;
+  protected boolean rolledBack;
 
-  transient Query q;
+  protected transient Query q;
 
   /** Exception from this session. */
-  BedeworkException exc;
+  protected BedeworkException exc;
 
   private final SimpleDateFormat dateFormatter =
           new SimpleDateFormat("yyyy-MM-dd");
@@ -96,7 +95,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public Throwable getException() {
+  public BedeworkException getException() {
     return exc;
   }
 
@@ -141,12 +140,6 @@ public class HibSessionImpl implements Logged, HibSession {
     }
 
     try {
-//      if (tx != null &&
-//          !tx.wasCommitted() &&
-//          !tx.wasRolledBack()) {
-        //if (getLogger().isDebugEnabled()) {
-        //  getLogger().debug("About to comnmit");
-        //}
       if (tx != null) {
         tx.commit();
       }
@@ -182,14 +175,14 @@ public class HibSessionImpl implements Logged, HibSession {
       throw  new BedeworkDatabaseException(exc);
     }
 */
-    if (getLogger().isDebugEnabled()) {
-      getLogger().debug("Enter rollback");
+    if (debug()) {
+      debug("Enter rollback");
     }
     try {
       if ((tx != null) &&
           !rolledBack) {
-        if (getLogger().isDebugEnabled()) {
-          getLogger().debug("About to rollback");
+        if (debug()) {
+          debug("About to rollback");
         }
         tx.rollback();
         tx = null;
@@ -208,13 +201,13 @@ public class HibSessionImpl implements Logged, HibSession {
     return rolledBack;
   }
 
-  private static final String getCurrentTimestampQuery =
-      "select current_timestamp() from " + BwSystem.class.getName();
-
   @Override
-  public Timestamp getCurrentTimestamp() {
+  public Timestamp getCurrentTimestamp(
+          final Class<?> tableClass) {
     try {
-      final List<?> l = sess.createQuery(getCurrentTimestampQuery).list();
+      final List<?> l = sess.createQuery(
+              "select current_timestamp() from " +
+                      tableClass.getName()).list();
 
       if (Util.isEmpty(l)) {
         return null;
@@ -263,7 +256,7 @@ public class HibSessionImpl implements Logged, HibSession {
     }
 
     try {
-      q.setString(parName, parVal);
+      q.setParameter(parName, parVal);
     } catch (final Throwable t) {
       handleException(t);
     }
@@ -277,7 +270,7 @@ public class HibSessionImpl implements Logged, HibSession {
     }
 
     try {
-      q.setBoolean(parName, parVal);
+      q.setParameter(parName, parVal);
     } catch (final Throwable t) {
       handleException(t);
     }
@@ -291,7 +284,7 @@ public class HibSessionImpl implements Logged, HibSession {
     }
 
     try {
-      q.setInteger(parName, parVal);
+      q.setParameter(parName, parVal);
     } catch (final Throwable t) {
       handleException(t);
     }
@@ -305,7 +298,7 @@ public class HibSessionImpl implements Logged, HibSession {
     }
 
     try {
-      q.setLong(parName, parVal);
+      q.setParameter(parName, parVal);
     } catch (final Throwable t) {
       handleException(t);
     }
@@ -540,14 +533,28 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
+  public void refresh(final Object obj) {
+    if (exc != null) {
+      // Didn't hear me last time?
+      throw exc;
+    }
+
+    try {
+      sess.refresh(obj);
+    } catch (final Throwable t) {
+      handleException(t);
+    }
+  }
+
+  @Override
   public void flush() {
     if (exc != null) {
       // Didn't hear me last time?
       throw exc;
     }
 
-    if (getLogger().isDebugEnabled()) {
-      getLogger().debug("About to flush");
+    if (debug()) {
+      debug("About to flush");
     }
     try {
       sess.flush();
@@ -563,8 +570,8 @@ public class HibSessionImpl implements Logged, HibSession {
       throw exc;
     }
 
-    if (getLogger().isDebugEnabled()) {
-      getLogger().debug("About to flush");
+    if (debug()) {
+      debug("About to flush");
     }
     try {
       sess.clear();
@@ -581,7 +588,6 @@ public class HibSessionImpl implements Logged, HibSession {
       return;
     }
 
-//    throw  new BedeworkDatabaseException("XXXXXXXXXXXXXXXXXXXXXXXXXXXXX");/*
     try {
       if (!rolledback() && sess.isDirty()) {
         sess.flush();
@@ -606,7 +612,6 @@ public class HibSessionImpl implements Logged, HibSession {
     if (exc != null) {
       throw exc;
     }
-//    */
   }
 
   private void handleException(final Throwable t) {
@@ -708,9 +713,9 @@ public class HibSessionImpl implements Logged, HibSession {
     error(t);
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                   Logged methods
-   * ==================================================================== */
+   * ============================================================== */
 
   private final BwLogger logger = new BwLogger();
 
