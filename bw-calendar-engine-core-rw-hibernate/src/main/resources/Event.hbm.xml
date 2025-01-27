@@ -383,7 +383,11 @@
           cascade="all-delete-orphan">
       <key column="eventid" foreign-key="bw_eventfbc_eid_fk" />
       <list-index column="fbcomp_position"/>
-      <one-to-many class="org.bedework.calfacade.BwFreeBusyComponent" />
+      <composite-element class="org.bedework.calfacade.BwFreeBusyComponent">
+        <property name="type" column="bwtype" type="integer" />
+        <property name="value" column="bwvalue" type="string"
+                  length="3900" />
+      </composite-element>
     </list>
 
     <!-- =============== Vavailability =============== -->

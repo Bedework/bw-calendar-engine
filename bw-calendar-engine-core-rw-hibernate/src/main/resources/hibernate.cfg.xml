@@ -28,7 +28,6 @@
     <mapping resource="ResourceContent.hbm.xml"/>
     <mapping resource="Resource.hbm.xml"/>
     <mapping resource="Contact.hbm.xml"/>
-    <mapping resource="ScheduleMessage.hbm.xml"/>
     <mapping resource="String.hbm.xml"/>
     <mapping resource="System.hbm.xml"/>
     <mapping resource="User.hbm.xml"/>
