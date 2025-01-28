@@ -81,9 +81,9 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     setRootCol(cs, rootCollectionPath);
     getSvc().setupSharableEntity(cs, getPrincipal().getPrincipalRef());
 
-    validateGroup(cs, adminGroupName);
-
-    getCal().saveOrUpdate(cs);
+    final var ho = validateGroup(cs, adminGroupName);
+    getCal().add(cs);
+    setAccess(cs, ho);
 
     return wrap(cs, false);
   }
@@ -164,14 +164,15 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     final BwCalSuite cs = csw.fetchEntity();
 
     if (adminGroupName != null) {
-      validateGroup(cs, adminGroupName);
+      final var ho = validateGroup(cs, adminGroupName);
+      setAccess(cs, ho);
     }
 
     cs.setDescription(description);
 
     setRootCol(cs, rootCollectionPath);
 
-    getCal().saveOrUpdate(cs);
+    getCal().update(cs);
   }
 
   @Override
@@ -342,13 +343,17 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     cs.setRootCollectionPath(rootCol.getPath());
   }
 
+  private record HomeAndOwner(BwCalendar home,
+                              BwPrincipal<?> eventsOwner) {}
+
   /* Ensure the given group is valid for the given calendar suite
    *
    */
-  private BwCalendar validateGroup(final BwCalSuite cs,
-                                   final String groupName) {
+  private HomeAndOwner validateGroup(final BwCalSuite cs,
+                                       final String groupName) {
     if (groupName.length() > BwCalSuite.maxNameLength) {
-      throw new BedeworkException(CalFacadeErrorCode.calsuiteGroupNameTooLong);
+      throw new BedeworkException(
+              CalFacadeErrorCode.calsuiteGroupNameTooLong);
     }
 
     final BwAdminGroup agrp =
@@ -357,34 +362,42 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
                     findGroup(groupName);
     if (agrp == null) {
       throw new BedeworkException(CalFacadeErrorCode.groupNotFound,
-                                   groupName);
+                                  groupName);
     }
 
     final BwCalSuiteWrapper csw = get(agrp);
 
     if ((csw != null) && !csw.equals(cs)) {
       // Group already assigned to another cal suite
-      throw new BedeworkException(CalFacadeErrorCode.calsuiteGroupAssigned,
-                                   csw.getName());
+      throw new BedeworkException(
+              CalFacadeErrorCode.calsuiteGroupAssigned,
+              csw.getName());
     }
 
-    final BwPrincipal<?> eventsOwner = getPrincipal(agrp.getOwnerHref());
+    final BwPrincipal<?> eventsOwner = getPrincipal(
+            agrp.getOwnerHref());
 
     if (eventsOwner == null) {
-      throw new BedeworkException(CalFacadeErrorCode.calsuiteBadowner);
+      throw new BedeworkException(
+              CalFacadeErrorCode.calsuiteBadowner);
     }
 
     final BwCalendar home = getCols().getHomeDb(eventsOwner, true);
     if (home == null) {
-      throw new BedeworkException(CalFacadeErrorCode.missingGroupOwnerHome);
+      throw new BedeworkException(
+              CalFacadeErrorCode.missingGroupOwnerHome);
     }
 
     cs.setGroup(agrp);
 
-    /* Change access on the home for the events creator which is also the
-     * owner of the calsuite resources.
-     */
+    return new HomeAndOwner(home, eventsOwner);
+  }
 
+  /** Change access on the home for the events creator which is also the
+   * owner of the calsuite resources.
+   */
+  private void setAccess(final BwCalSuite cs,
+                         final HomeAndOwner ho) {
     final Collection<Privilege> allPrivs = new ArrayList<>();
     allPrivs.add(Access.all);
 
@@ -394,15 +407,17 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     final Collection<Ace> aces = new ArrayList<>();
     try {
       aces.add(Ace.makeAce(AceWho.owner, allPrivs, null));
-      aces.add(Ace.makeAce(AceWho.getAceWho(eventsOwner.getAccount(),
-                                            WhoDefs.whoTypeUser, false),
-                                            allPrivs, null));
-      aces.add(Ace.makeAce(AceWho.getAceWho(null,
-                                            WhoDefs.whoTypeAuthenticated, false),
-                                            readPrivs, null));
+      aces.add(Ace.makeAce(
+              AceWho.getAceWho(ho.eventsOwner().getAccount(),
+                               WhoDefs.whoTypeUser, false),
+              allPrivs, null));
+      aces.add(Ace.makeAce(
+              AceWho.getAceWho(null,
+                               WhoDefs.whoTypeAuthenticated, false),
+              readPrivs, null));
       aces.add(Ace.makeAce(AceWho.all, readPrivs, null));
 
-      getSvc().changeAccess(home, aces, true);
+      getSvc().changeAccess(ho.home(), aces, true);
 
       /* Same access to the calsuite itself */
 
@@ -412,17 +427,14 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
 
       final String aclStr = new String(new Acl(aces).encode());
 
-      eventsOwner.setCategoryAccess(aclStr);
-      eventsOwner.setLocationAccess(aclStr);
-      eventsOwner.setContactAccess(aclStr);
+      ho.eventsOwner().setCategoryAccess(aclStr);
+      ho.eventsOwner().setLocationAccess(aclStr);
+      ho.eventsOwner().setContactAccess(aclStr);
     } catch (final AccessException ae) {
       throw new BedeworkException(ae);
     }
 
-    getSvc().getUsersHandler().update(eventsOwner);
-
-
-    return home;
+    getSvc().getUsersHandler().update(ho.eventsOwner());
   }
 
   private BwCalSuiteWrapper wrap(final BwCalSuite cs,

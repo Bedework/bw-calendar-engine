@@ -479,31 +479,41 @@ public interface Calintf
   /**
    * @param val an entity to restore
    */
-  void saveOrUpdate(BwUnversionedDbentity<?> val);
+  void add(BwUnversionedDbentity<?> val);
 
-  /* ====================================================================
+  /* ==========================================================
    *                       General db methods
-   * ==================================================================== */
+   * ========================================================== */
 
   /**
    * @param val principal
    */
-  void saveOrUpdate(BwPrincipal<?> val);
+  void add(BwPrincipal<?> val);
+
+  /**
+   * @param val principal
+   */
+  void update(BwPrincipal<?> val);
 
   /**
    * @param val the event property
    */
-  void saveOrUpdate(BwEventProperty<?> val);
+  void add(BwEventProperty<?> val);
+
+  /**
+   * @param val the event property
+   */
+  void update(BwEventProperty<?> val);
 
   /**
    * @param val the preferences
    */
-  void saveOrUpdate(BwPreferences val);
+  void add(BwPreferences val);
 
   /**
-   * @param val to save/update/index
+   * @param val the preferences
    */
-  void saveOrUpdate(BwCalSuite val);
+  void update(BwPreferences val);
 
   /**
    * @param val auth user entry to delete
@@ -514,6 +524,16 @@ public interface Calintf
    * @param val the preferences
    */
   void delete(BwPreferences val);
+
+  /**
+   * @param val to add and index
+   */
+  void add(BwCalSuite val);
+
+  /**
+   * @param val to update and index
+   */
+  void update(BwCalSuite val);
 
   /**
    * @param val calsuite to delete and unindex
@@ -637,7 +657,14 @@ public interface Calintf
           boolean admin);
 
   /**
-   * @param group
+   * @param group to add
+   * @param admin          true for an admin group
+   */
+  void addGroup(BwGroup<?> group,
+                boolean admin);
+
+  /**
+   * @param group to update
    * @param admin          true for an admin group
    */
   void updateGroup(BwGroup<?> group,

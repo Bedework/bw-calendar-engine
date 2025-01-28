@@ -262,7 +262,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
     }
 
     try {
-      getCal().saveOrUpdate(val);
+      getCal().add(val);
       ((Preferences)getSvc().getPrefsHandler())
               .updateAdminPrefs(false, val);
 
@@ -289,14 +289,14 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
   public void update(final T val) {
     if ((val.getCreatorHref() == null) ||
         (val.getOwnerHref() == null)) {
-      throw new RuntimeException("Owner and creator must be set");
+      throw new BedeworkException("Owner and creator must be set");
     }
 
     if (check(val) == null) {
       throw new BedeworkAccessException();
     }
 
-    getCal().saveOrUpdate(val);
+    getCal().update(val);
     ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(false, val);
 
     getCoreHdlr().checkUnique(val.getFinderKeyValue(), val.getOwnerHref());

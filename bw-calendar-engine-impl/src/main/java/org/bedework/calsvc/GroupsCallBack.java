@@ -66,6 +66,16 @@ public class GroupsCallBack extends Directories.CallBack {
   }
 
   @Override
+  public void addGroup(final BwGroup<?> group,
+                       final boolean admin) {
+    try {
+      svci.getCal().addGroup(group, admin);
+    } catch (final Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  @Override
   public void updateGroup(final BwGroup<?> group,
                           final boolean admin) {
     try {

@@ -510,7 +510,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
      * and retrieval
      */
     if ((val instanceof BwEventAnnotation) || !val.getRecurring()) {
-      dao.save(val);
+      dao.add(val);
 
       if (!getForRestore()) {
         notify(SysEvent.SysCode.ENTITY_ADDED, val, shared);
@@ -550,7 +550,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     }
 
     /* We can save the master at this point */
-    dao.save(val);
+    dao.add(val);
 
     final String stzid = val.getDtstart().getTzid();
 
@@ -737,7 +737,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
             }
 
             if (ann.unsaved()) {
-              dao.save(ann);
+              dao.add(ann);
             } else if (updated) {
               updateProxy(new BwEventProxy(ann));
             }
@@ -790,7 +790,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
           if (!ann.unsaved()) {
             updateProxy(new BwEventProxy(ann));
           } else {
-            dao.save(ann);
+            dao.add(ann);
           }
 
           notifyInstanceChange(SysEvent.SysCode.ENTITY_UPDATED, val, shared,
@@ -1033,7 +1033,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
       //tombstoneEvent(tombstone);
 
-      dao.save(tombstone);
+      dao.add(tombstone);
       final EventInfo old = new EventInfo(tombstone);
       indexEntity(old);
 //    } else {
@@ -1185,7 +1185,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
        then the recurrence instance should point at this override.
        Otherwise we just update the event annotation.
      */
-    final BwEventAnnotation override = proxy.getRef();
+    final var override = proxy.getRef();
     if (debug()) {
       debug("Update override event " + override);
     }
@@ -1208,13 +1208,13 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 //    if (mstr.getOwner().equals(getUser()) &&
     if (mstr.testRecurring()) {
       override.setOwnerHref(mstr.getOwnerHref()); // XXX Force owner????
-      dao.saveOrUpdate(override);
+      dao.update(override);
 
       /* Update the lastmod on the master event */
       mstr.setDtstamps(getCurrentTimestamp());
       dao.update(mstr);
     } else {
-      dao.saveOrUpdate(override);
+      dao.update(override);
     }
 
     proxy.setChangeFlag(false);
@@ -1255,7 +1255,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     override.setOverride(true);
     override.setTombstoned(false);
 
-    dao.saveOrUpdate(override);
+    dao.update(override);
   }
 
   /* XXX This is a bit brute force but it will do for the moment. We have to

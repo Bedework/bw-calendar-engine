@@ -91,14 +91,14 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     try {
       val.updateLastmod(getCurrentTimestamp());
 
-      getCal().saveOrUpdate(val);
+      getCal().update(val);
 
       if (updateContent && (val.getContent() != null)) {
         final BwResourceContent rc = val.getContent();
         rc.setColPath(val.getColPath());
         rc.setName(val.getName());
 
-        getCal().saveOrUpdateContent(val, rc);
+        getCal().updateContent(val, rc);
       }
 
       getSvc().touchCalendar(getCols().get(val.getColPath()));
@@ -162,12 +162,11 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         r.updateLastmod(getCurrentTimestamp());
 
         final BwResourceContent rc = r.getContent();
-        final BwResourceContent toRc = val.getContent();
 
         rc.setByteValue(val.getContent().getByteValue());
 
-        getCal().saveOrUpdate(r);
-        getCal().saveOrUpdateContent(r, rc);
+        getCal().update(r);
+        getCal().updateContent(r, rc);
       } else {
         /* Create a new resource */
 
@@ -181,7 +180,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         r.setContentLength(val.getContentLength());
         r.updateLastmod(getCurrentTimestamp());
 
-        getCal().saveOrUpdate(r);
+        getCal().add(r);
 
         final BwResourceContent fromRc = val.getContent();
         final BwResourceContent rc = new BwResourceContent();
@@ -190,7 +189,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         rc.setName(val.getName());
         rc.setByteValue(fromRc.getByteValue());
 
-        getCal().saveOrUpdateContent(val, rc);
+        getCal().addContent(val, rc);
 
         createdNew = true;
       }

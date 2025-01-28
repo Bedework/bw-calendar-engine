@@ -381,7 +381,7 @@ class CoreCalendars extends CalintfHelper
      */
     updatePaths(val, newParent);
 
-    dao.save(tombstoned);
+    dao.add(tombstoned);
     indexEntity(tombstoned);
 
     /* Remove any tombstoned collection with the same name
@@ -436,7 +436,7 @@ class CoreCalendars extends CalintfHelper
     // Clear the cache - inheritance makes it difficult to be sure of the effects.
     intf.colCache.clear();
 
-    dao.saveOrUpdateCollection(unwrap(col));
+    dao.updateCollection(unwrap(col));
 
     touchCalendar(col); // indexes as well
 
@@ -450,7 +450,7 @@ class CoreCalendars extends CalintfHelper
   public void defaultAccess(final BwCalendar cal,
                             final AceWho who) {
     ac.getAccessUtil().defaultAccess(cal, who);
-    dao.saveOrUpdateCollection(unwrap(cal));
+    dao.updateCollection(unwrap(cal));
 
     indexEntity(cal);
 
@@ -578,7 +578,7 @@ class CoreCalendars extends CalintfHelper
         final BwCollectionLastmod lm = usercal.getLastmod();
         lm.updateLastmod(getCurrentTimestamp());
 
-        dao.saveCollection(usercal);
+        dao.addCollection(usercal);
 
         indexEntityNow(usercal);
 
@@ -598,7 +598,7 @@ class CoreCalendars extends CalintfHelper
         final BwCollectionLastmod lm = usercal.getLastmod();
         lm.updateLastmod(getCurrentTimestamp());
 
-        dao.saveCollection(usercal);
+        dao.addCollection(usercal);
 
         indexEntityNow(usercal);
 
@@ -627,7 +627,7 @@ class CoreCalendars extends CalintfHelper
     final BwCollectionLastmod lm = cal.getLastmod();
     lm.updateLastmod(getCurrentTimestamp());
 
-    dao.saveCollection(cal);
+    dao.addCollection(cal);
 
     indexEntity(cal);
     notify(SysEvent.SysCode.COLLECTION_ADDED, cal);
@@ -1040,7 +1040,7 @@ class CoreCalendars extends CalintfHelper
     dao.removeTombstonedVersion(val);
 
     // No cascades - explicitly save child
-    dao.saveCollection(unwrap(val));
+    dao.addCollection(unwrap(val));
 
     if (parent != null) {
       touchCalendar(parent);

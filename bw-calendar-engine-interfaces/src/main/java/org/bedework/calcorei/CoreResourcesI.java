@@ -63,14 +63,14 @@ public interface CoreResourcesI {
   /**
    * @param val resource
    */
-  void saveOrUpdate(BwResource val);
+  void update(BwResource val);
 
   /**
    * @param r resource owning content
    * @param val resource content
    */
-  void saveOrUpdateContent(BwResource r,
-                           BwResourceContent val);
+  void updateContent(BwResource r,
+                     BwResourceContent val);
 
   /**
    * @param href of resource to delete

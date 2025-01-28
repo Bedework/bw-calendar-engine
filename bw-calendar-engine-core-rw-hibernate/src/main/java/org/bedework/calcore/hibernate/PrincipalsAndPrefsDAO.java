@@ -46,8 +46,8 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
     return PrincipalsAndPrefsDAO.class.getName();
   }
 
-  public void saveOrUpdate(final BwGroupEntry val) {
-    getSess().saveOrUpdate(val);
+  public void add(final BwGroupEntry val) {
+    getSess().add(val);
   }
 
   /* ====================================================================
@@ -386,13 +386,14 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
     sess.setInt("entId", val.getId());
 
     /* This is what I want to do but it inserts 'true' or 'false'
-    sess.setBool("isgroup", (val instanceof BwGroup));
     */
+    sess.setBool("isgroup", (val instanceof BwGroup));
+    /*
     if (val.getKind() == WhoDefs.whoTypeGroup) {
       sess.setString("isgroup", "T");
     } else {
       sess.setString("isgroup", "F");
-    }
+    }*/
 
     final Set<BwGroup<?>> gs =
             new TreeSet<>(

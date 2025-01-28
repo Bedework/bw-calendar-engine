@@ -98,12 +98,12 @@ class Filters extends CalSvcDb implements FiltersI {
   }
 
   @Override
-  public void save(final BwFilterDef val) {
+  public void add(final BwFilterDef val) {
     getSvc().setupOwnedEntity(val,
                               getPrincipal().getPrincipalRef());
     validate(val.getDefinition());
 
-    getCal().save(val, getSvc().getEntityOwner());
+    getCal().add(val, getSvc().getEntityOwner());
   }
 
   @Override

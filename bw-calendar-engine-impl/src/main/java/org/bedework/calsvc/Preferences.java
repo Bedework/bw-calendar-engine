@@ -115,13 +115,23 @@ class Preferences extends CalSvcDb implements PreferencesI {
   }
 
   @Override
+  public void add(final BwPreferences val) {
+    if (val.getPublick() == null) {
+      // Fix the data
+      val.setPublick(val.getOwnerHref().equals(BwPrincipal.publicUserHref));
+    }
+
+    getCal().add(val);
+  }
+
+  @Override
   public void update(final BwPreferences val) {
     if (val.getPublick() == null) {
       // Fix the data
       val.setPublick(val.getOwnerHref().equals(BwPrincipal.publicUserHref));
     }
 
-    getCal().saveOrUpdate(val);
+    getCal().update(val);
   }
 
   @Override

@@ -55,12 +55,8 @@ public abstract class DAOBase implements Logged {
     getSess().rollback();
   }
 
-  protected void saveOrUpdate(final BwUnversionedDbentity val) {
-    getSess().saveOrUpdate(val);
-  }
-
-  protected void save(final BwUnversionedDbentity val) {
-    getSess().save(val);
+  protected void add(final BwUnversionedDbentity val) {
+    getSess().add(val);
   }
 
   protected void update(final BwUnversionedDbentity val) {

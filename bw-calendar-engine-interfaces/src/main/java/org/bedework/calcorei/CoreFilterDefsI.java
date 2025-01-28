@@ -33,15 +33,15 @@ public interface CoreFilterDefsI extends Serializable {
   /** Validate and persist a new filter definition
    *
    * @param  val       filter definition
-   * @param owner
+   * @param owner of the filter
    */
-  void save(BwFilterDef val,
-            BwPrincipal<?> owner);
+  void add(BwFilterDef val,
+           BwPrincipal<?> owner);
 
   /** Get a filter given the name
    *
    * @param  name     String internal name of filter
-   * @param owner
+   * @param owner of the filter
    * @return BwFilter null for unknown filter
    */
   BwFilterDef getFilterDef(String name,
@@ -49,7 +49,7 @@ public interface CoreFilterDefsI extends Serializable {
 
   /** Get filter definitions to which this user has access
    *
-   * @param owner
+   * @param owner of the filter
    * @return Collection     of BwCalSuiteWrapper
    */
   Collection<BwFilterDef> getAllFilterDefs(BwPrincipal<?> owner);
@@ -63,7 +63,7 @@ public interface CoreFilterDefsI extends Serializable {
   /** Delete a filter given the name
    *
    * @param  name     String name of filter
-   * @param owner
+   * @param owner of the filter
    */
   void deleteFilterDef(String name,
                        BwPrincipal<?> owner);

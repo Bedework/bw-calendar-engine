@@ -222,7 +222,7 @@ class Users extends CalSvcDb implements UsersI {
 
     setRoots(getSvc());
 
-    getCal().saveOrUpdate(user);
+    getCal().add(user);
 
     getSvc().initPrincipal(user);
     initPrincipal(user, getSvc());
@@ -245,7 +245,7 @@ class Users extends CalSvcDb implements UsersI {
 
   @Override
   public void update(final BwPrincipal<?> principal) {
-    getCal().saveOrUpdate(principal);
+    getCal().update(principal);
   }
 
   @Override
@@ -349,7 +349,7 @@ class Users extends CalSvcDb implements UsersI {
               BwPreferences.scheduleAutoProcessResponsesNotifyAll);
     }
 
-    getSvc().getPrefsHandler().update(prefs);
+    getSvc().getPrefsHandler().add(prefs);
   }
 
   private boolean isTestUser(final BwPrincipal<?> pr) {

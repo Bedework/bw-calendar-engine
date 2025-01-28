@@ -44,17 +44,20 @@ public class ProcessPrefs extends CmdUtilHelper {
     }
 
     if ("help".equals(wd)) {
-      addInfo("prefs <preference>* \n" +
-                      "   set given prefs for current user\n\n" +
-                      "<preference> is one or more of\n" +
-                      "    defaultCategory = \"word\"\n" +
-                      "   defaultViewMode = \"list\"\n" +
-                      "   viewPeriod = \"dayView\"\n" +
-                      "   defaultTzid = \"America/New_York\"\n" +
-                      "   pageSize = \"10\"\n" +
-                      "   preferredEndType = \"duration\"\n" +
-                      "   preferredView = \"All\"\n" +
-                      "   hour24 = \"false\"");
+      addInfo("""
+                  prefs <preference>*\s
+                     set given prefs for current user
+                  
+                  <preference> is one or more of
+                      defaultCategory = "word"
+                     defaultViewMode = "list"
+                     viewPeriod = "dayView"
+                     defaultTzid = "America/New_York"
+                     pageSize = "10"
+                     preferredEndType = "duration"
+                     preferredView = "All"
+                     hour24 = "false"
+                  """);
 
       return true;
     }
@@ -68,7 +71,7 @@ public class ProcessPrefs extends CmdUtilHelper {
         return true; // No change
       }
 
-      Set<String> catUids = new TreeSet<>();
+      final Set<String> catUids = new TreeSet<>();
       
       while (wd != null) {
         switch (wd) {
@@ -135,7 +138,7 @@ public class ProcessPrefs extends CmdUtilHelper {
             break;
 
           case "hour24":
-            prefs.setHour24(Boolean.valueOf(word()));
+            prefs.setHour24(Boolean.parseBoolean(word()));
             break;
 
           case "skin":

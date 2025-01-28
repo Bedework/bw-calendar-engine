@@ -178,13 +178,8 @@ class CoreCalendarsDAO extends DAOBase {
     getSess().update(val);
   }
 
-  protected void saveOrUpdateCollection(final BwCalendar val) {
-    // TODO Is this needed? Are these action only on preexisting 
-    getSess().saveOrUpdate(val);
-  }
-
-  protected void saveCollection(final BwCalendar val) {
-    getSess().save(val);
+  protected void addCollection(final BwCalendar val) {
+    getSess().add(val);
   }
 
   private static final String removeCalendarPrefForAllQuery =

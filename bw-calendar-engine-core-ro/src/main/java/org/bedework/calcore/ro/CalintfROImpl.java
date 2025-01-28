@@ -1268,7 +1268,7 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public void saveOrUpdate(final BwUnversionedDbentity<?> val) {
+  public void add(final BwUnversionedDbentity<?> val) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1277,7 +1277,12 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public void saveOrUpdate(final BwEventProperty<?> val) {
+  public void add(final BwEventProperty<?> val) {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
+  public void update(final BwEventProperty<?> val) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1327,8 +1332,8 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public void save(final BwFilterDef val,
-                   final BwPrincipal<?> owner) {
+  public void add(final BwFilterDef val,
+                  final BwPrincipal<?> owner) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1400,7 +1405,12 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void saveOrUpdate(final BwPrincipal<?> val) {
+  public void add(final BwPrincipal<?> val) {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
+  public void update(final BwPrincipal<?> val) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1416,7 +1426,12 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void saveOrUpdate(final BwPreferences val) {
+  public void add(final BwPreferences val) {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
+  public void update(final BwPreferences val) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1463,6 +1478,12 @@ public class CalintfROImpl extends CalintfBase
     throw new RuntimeException("Read only version");
  }
  
+  @Override
+  public void addGroup(final BwGroup<?> group,
+                       final boolean admin) {
+    throw new RuntimeException("Read only version");
+  }
+
   @Override
   public void updateGroup(final BwGroup<?> group,
                           final boolean admin) {
@@ -1594,7 +1615,12 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void saveOrUpdate(final BwCalSuite val) {
+  public void add(final BwCalSuite val) {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
+  public void update(final BwCalSuite val) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1708,13 +1734,13 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void saveOrUpdate(final BwResource val) {
+  public void update(final BwResource val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void saveOrUpdateContent(final BwResource r,
-                                  final BwResourceContent val) {
+  public void updateContent(final BwResource r,
+                            final BwResourceContent val) {
     throw new RuntimeException("Read only version");
   }
 

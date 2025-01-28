@@ -142,7 +142,7 @@ public class CoreResources extends CalintfHelper
 
   @Override
   public void add(final BwResource val) {
-    entityDao.save(val);
+    entityDao.add(val);
 
     intf.indexEntity(val);
   }
@@ -152,21 +152,21 @@ public class CoreResources extends CalintfHelper
                          final BwResourceContent rc) {
     removeTombstoned(r);
 
-    entityDao.save(rc);
+    entityDao.add(rc);
 
     intf.indexEntity(rc);
   }
 
   @Override
-  public void saveOrUpdate(final BwResource val) {
-    entityDao.saveOrUpdate(val);
+  public void update(final BwResource val) {
+    entityDao.update(val);
     intf.indexEntity(val);
   }
 
   @Override
-  public void saveOrUpdateContent(final BwResource r,
-                                  final BwResourceContent val) {
-    entityDao.saveOrUpdate(val);
+  public void updateContent(final BwResource r,
+                            final BwResourceContent val) {
+    entityDao.update(val);
     intf.indexEntity(val);
   }
 
@@ -217,7 +217,7 @@ public class CoreResources extends CalintfHelper
     r.tombstone();
     r.updateLastmod(getCurrentTimestamp());
 
-    entityDao.saveOrUpdate(r);
+    entityDao.update(r);
 
     if (rc != null) {
       deleteContent(r, rc);

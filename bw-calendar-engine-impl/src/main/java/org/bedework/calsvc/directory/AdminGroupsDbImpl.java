@@ -160,7 +160,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
     if (findGroup(group.getAccount()) != null) {
       throw new BedeworkException(CalFacadeErrorCode.duplicateAdminGroup);
     }
-    cb.updateGroup(group, true);
+    cb.addGroup(group, true);
   }
 
   /** Find a group given its name

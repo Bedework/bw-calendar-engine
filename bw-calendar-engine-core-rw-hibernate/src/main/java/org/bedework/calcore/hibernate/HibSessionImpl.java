@@ -454,30 +454,6 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void saveOrUpdate(final Object obj) {
-    if (exc != null) {
-      // Didn't hear me last time?
-      throw exc;
-    }
-
-    try {
-      beforeSave(obj);
-
-      Object ent = obj;
-
-      if ((ent instanceof BwDbentity) &&
-          (((BwDbentity<?>)ent).getId() != CalFacadeDefs.unsavedItemKey)) {
-        ent = sess.merge(ent);
-      } else {
-        sess.saveOrUpdate(ent);
-      }
-      deleteSubs(obj);
-    } catch (final Throwable t) {
-      handleException(t);
-    }
-  }
-
-  @Override
   public Object get(final Class<?> cl,
                     final Serializable id) {
     if (exc != null) {
@@ -499,7 +475,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public void save(final Object obj) {
+  public void add(final Object obj) {
     if (exc != null) {
       // Didn't hear me last time?
       throw exc;

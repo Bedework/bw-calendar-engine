@@ -84,7 +84,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
 
 
   @Override
-  public void endTransactionNow() throws Throwable {
+  public void endTransactionNow() {
     if (transactionStarted) {
       getSvc().endTransaction();
       getSvc().close();
@@ -95,7 +95,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public void endTransaction() throws Throwable {
+  public void endTransaction() {
     if ((batchSize > 0) &&
         (curBatchSize < batchSize)) {
       return;
@@ -105,7 +105,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public void checkEmptySystem() throws Throwable {
+  public void checkEmptySystem() {
     try {
       startTransaction();
 
@@ -118,24 +118,24 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public void restoreSyspars(final BwSystem o) throws Throwable {
+  public void restoreSyspars(final BwSystem o) {
     try {
       startTransaction();
 
       o.markUnsaved();
-      getCal().saveOrUpdate(o);
+      getCal().add(o);
     } finally {
       endTransaction();
     }
   }
 
   @Override
-  public void restorePrincipal(final BwPrincipal<?> o) throws Throwable {
+  public void restorePrincipal(final BwPrincipal<?> o) {
     try {
       startTransaction();
 
       o.markUnsaved();
-      getCal().saveOrUpdate((BwUnversionedDbentity<?>)o);
+      getCal().add((BwUnversionedDbentity<?>)o);
     } catch (final Throwable t) {
       handleException(t, "Exception restoring user " + o);
     } finally {
@@ -144,12 +144,12 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public void restoreAdminGroup(final BwAdminGroup o) throws Throwable {
+  public void restoreAdminGroup(final BwAdminGroup o) {
     try {
       startTransaction();
 
       o.markUnsaved();
-      getCal().saveOrUpdate((BwUnversionedDbentity<?>)o);
+      getCal().add((BwUnversionedDbentity<?>)o);
 
       if (debug()) {
         log.debug("Saved admin group " + o);
@@ -161,7 +161,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
 
   @Override
   public void addAdminGroupMember(final BwAdminGroup o,
-                                  final BwPrincipal<?> pr) throws Throwable {
+                                  final BwPrincipal<?> pr) {
     try {
       startTransaction();
 
@@ -172,25 +172,25 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public BwAdminGroup getAdminGroup(final String account) throws Throwable {
+  public BwAdminGroup getAdminGroup(final String account) {
     startTransaction();
 
     return (BwAdminGroup)getCal().findGroup(account, true);
   }
 
   @Override
-  public void restoreAuthUser(final BwAuthUser o) throws Throwable {
+  public void restoreAuthUser(final BwAuthUser o) {
     try {
       startTransaction();
 
-      getCal().saveOrUpdate(o);
+      getCal().add(o);
     } finally {
       endTransaction();
     }
   }
 
   @Override
-  public void restoreEvent(final EventInfo ei) throws Throwable {
+  public void restoreEvent(final EventInfo ei) {
     try {
       startTransaction();
 
@@ -218,7 +218,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   public BwEvent getEvent(final BwPrincipal<?> owner,
                           final String colPath,
                           final String recurrenceId,
-                          final String uid) throws Throwable {
+                          final String uid) {
     startTransaction();
     final Collection<CoreEventInfo> ceis = getCal().getEvent(colPath,
                                                              uid);
@@ -255,23 +255,23 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public void restoreCategory(final BwCategory o) throws Throwable {
+  public void restoreCategory(final BwCategory o) {
     try {
       startTransaction();
 
-      getCal().saveOrUpdate(o);
+      getCal().add(o);
     } finally {
       endTransaction();
     }
   }
 
   @Override
-  public void restoreCalSuite(final BwCalSuite o) throws Throwable {
+  public void restoreCalSuite(final BwCalSuite o) {
     try {
       startTransaction();
 
       o.markUnsaved();
-      getCal().saveOrUpdate(o);
+      getCal().add(o);
     } finally {
       endTransaction();
     }
@@ -279,61 +279,61 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
 
 
   @Override
-  public void restoreLocation(final BwLocation o) throws Throwable {
+  public void restoreLocation(final BwLocation o) {
     try {
       startTransaction();
 
       o.markUnsaved();
-      getCal().saveOrUpdate(o);
+      getCal().add(o);
     } finally {
       endTransaction();
     }
   }
 
   @Override
-  public void restoreContact(final BwContact o) throws Throwable {
+  public void restoreContact(final BwContact o) {
     try {
       startTransaction();
 
       o.markUnsaved();
-      getCal().saveOrUpdate(o);
+      getCal().add(o);
     } finally {
       endTransaction();
     }
   }
 
   @Override
-  public void restoreFilter(final BwFilterDef o) throws Throwable {
+  public void restoreFilter(final BwFilterDef o) {
     try {
       startTransaction();
 
       o.markUnsaved();
-      getCal().saveOrUpdate(o);
+      getCal().add(o);
     } finally {
       endTransaction();
     }
   }
 
   @Override
-  public void restoreResource(final BwResource o) throws Throwable {
+  public void restoreResource(final BwResource o) {
     try {
       startTransaction();
 
       o.markUnsaved();
-      getCal().saveOrUpdate(o);
+      getCal().add(o);
 
       final BwResourceContent rc = o.getContent();
 
       rc.markUnsaved();
       rc.setByteValue(rc.getByteValue());
-      getCal().saveOrUpdate(rc);
+      getCal().addContent(o, rc);
     } finally {
       endTransaction();
     }
   }
 
   @Override
-  public void restoreUserPrefs(final BwPreferences o) throws Throwable {
+  public void restoreUserPrefs(final BwPreferences o) {
     try {
       startTransaction();
 
@@ -362,35 +362,35 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
         p.markUnsaved();
       }
 
-      getCal().saveOrUpdate(o);
+      getCal().add(o);
     } finally {
       endTransaction();
     }
   }
 
   @Override
-  public BwCalendar getCalendar(final String path) throws Throwable {
+  public BwCalendar getCalendar(final String path) {
     startTransaction();
 
     return getCols().get(path);
   }
 
   @Override
-  public BwCategory getCategory(final String uid) throws Throwable {
+  public BwCategory getCategory(final String uid) {
     startTransaction();
 
     return getSvc().getCategoriesHandler().getPersistent(uid);
   }
 
   @Override
-  public BwContact getContact(final String uid) throws Throwable {
+  public BwContact getContact(final String uid) {
     startTransaction();
 
     return getSvc().getContactsHandler().getPersistent(uid);
   }
 
   @Override
-  public BwLocation getLocation(final String uid) throws Throwable {
+  public BwLocation getLocation(final String uid) {
     startTransaction();
 
     return getSvc().getLocationsHandler().getPersistent(uid);
@@ -404,28 +404,28 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public void saveRootCalendar(final BwCalendar val) throws Throwable {
+  public void saveRootCalendar(final BwCalendar val) {
     // Ensure id not set
     val.markUnsaved();
 
     try {
       startTransaction();
 
-      getCal().saveOrUpdate(val);
+      getCal().add(val);
     } finally {
       endTransaction();
     }
   }
 
   @Override
-  public void addCalendar(final BwCalendar o) throws Throwable {
+  public void addCalendar(final BwCalendar o) {
     // Ensure id not set
     o.markUnsaved();
 
     try {
       startTransaction();
 
-      getCal().saveOrUpdate(o);
+      getCal().add(o);
       curBatchSize++;
     } finally {
       endTransaction();

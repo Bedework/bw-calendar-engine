@@ -633,7 +633,7 @@ public class CalintfImpl extends CalintfROImpl {
     }
     checkOpen();
     access.changeAccess(ent, aces, replaceAll);
-    entityDao.saveOrUpdate((BwUnversionedDbentity<?>)ent);
+    entityDao.update((BwUnversionedDbentity<?>)ent);
   }
 
   @Override
@@ -654,7 +654,7 @@ public class CalintfImpl extends CalintfROImpl {
     checkOpen();
     checkAccess(ent, privWriteAcl, false);
     access.defaultAccess(ent, who);
-    entityDao.saveOrUpdate((BwUnversionedDbentity<?>)ent);
+    entityDao.update((BwUnversionedDbentity<?>)ent);
   }
 
   @Override
@@ -922,8 +922,8 @@ public class CalintfImpl extends CalintfROImpl {
    * ==================================================================== */
 
   @Override
-  public void saveOrUpdate(final BwUnversionedDbentity<?> val) {
-    entityDao.saveOrUpdate(val);
+  public void add(final BwUnversionedDbentity<?> val) {
+    entityDao.add(val);
   }
 
   /* ====================================================================
@@ -1138,8 +1138,8 @@ public class CalintfImpl extends CalintfROImpl {
    * ==================================================================== */
 
   @Override
-  public void save(final BwFilterDef val,
-                   final BwPrincipal<?> owner) {
+  public void add(final BwFilterDef val,
+                  final BwPrincipal<?> owner) {
     final BwFilterDef fd = filterDefs.fetch(val.getName(), owner);
 
     if (fd != null) {
@@ -1147,7 +1147,7 @@ public class CalintfImpl extends CalintfROImpl {
                                    val.getName());
     }
 
-    entityDao.save(val);
+    entityDao.add(val);
   }
 
   @Override
@@ -1190,7 +1190,7 @@ public class CalintfImpl extends CalintfROImpl {
       throw new BedeworkException(CalFacadeErrorCode.targetExists);
     }
 
-    entityDao.save(val);
+    entityDao.add(val);
   }
 
   @Override
@@ -1237,8 +1237,15 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public void saveOrUpdate(final BwPrincipal<?> val) {
-    entityDao.saveOrUpdate(val);
+  public void add(final BwPrincipal<?> val) {
+    entityDao.add(val);
+    getIndexer(val.getPrincipalRef(),
+               docTypePrincipal).indexEntity(val);
+  }
+
+  @Override
+  public void update(final BwPrincipal<?> val) {
+    entityDao.update(val);
     getIndexer(val.getPrincipalRef(),
                docTypePrincipal).indexEntity(val);
   }
@@ -1255,8 +1262,14 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public void saveOrUpdate(final BwPreferences val) {
-    entityDao.saveOrUpdate(val);
+  public void add(final BwPreferences val) {
+    entityDao.add(val);
+    indexEntity(val);
+  }
+
+  @Override
+  public void update(final BwPreferences val) {
+    entityDao.update(val);
     indexEntity(val);
   }
 
@@ -1292,9 +1305,16 @@ public class CalintfImpl extends CalintfROImpl {
  }
  
   @Override
+  public void addGroup(final BwGroup group,
+                       final boolean admin) {
+    principalsAndPrefs.add(group);
+    indexEntity(group);
+  }
+
+  @Override
   public void updateGroup(final BwGroup group,
                           final boolean admin) {
-    principalsAndPrefs.saveOrUpdate(group);
+    principalsAndPrefs.update(group);
     indexEntity(group);
   }
 
@@ -1320,7 +1340,7 @@ public class CalintfImpl extends CalintfROImpl {
     ent.setGrp(group);
     ent.setMember(val);
 
-    principalsAndPrefs.saveOrUpdate(ent);
+    principalsAndPrefs.add(ent);
     indexEntity(group);
   }
 
@@ -1381,8 +1401,14 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public void saveOrUpdate(final BwCalSuite val) {
-    entityDao.saveOrUpdate(val);
+  public void add(final BwCalSuite val) {
+    entityDao.add(val);
+    indexEntity(val);
+  }
+
+  @Override
+  public void update(final BwCalSuite val) {
+    entityDao.update(val);
     indexEntity(val);
   }
 
@@ -1397,8 +1423,14 @@ public class CalintfImpl extends CalintfROImpl {
    * ==================================================================== */
 
   @Override
-  public void saveOrUpdate(final BwEventProperty<?> val) {
-    entityDao.saveOrUpdate(val);
+  public void add(final BwEventProperty<?> val) {
+    entityDao.add(val);
+    indexEntity(val);
+  }
+
+  @Override
+  public void update(final BwEventProperty<?> val) {
+    entityDao.update(val);
     indexEntity(val);
   }
 
@@ -1483,14 +1515,14 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public void saveOrUpdate(final BwResource val) {
-    resources.saveOrUpdate(val);
+  public void update(final BwResource val) {
+    resources.update(val);
   }
 
   @Override
-  public void saveOrUpdateContent(final BwResource r,
-                                  final BwResourceContent val) {
-    resources.saveOrUpdateContent(r, val);
+  public void updateContent(final BwResource r,
+                            final BwResourceContent val) {
+    resources.updateContent(r, val);
   }
 
   @Override
