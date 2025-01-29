@@ -22,7 +22,6 @@ import org.bedework.base.exc.BedeworkException;
 import org.bedework.base.exc.persist.BedeworkConstraintViolationException;
 import org.bedework.base.exc.persist.BedeworkDatabaseException;
 import org.bedework.base.exc.persist.BedeworkStaleStateException;
-import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
@@ -425,9 +424,9 @@ public class HibSessionImpl implements Logged, HibSession {
     }
 
     try {
-      beforeSave(obj);
+      beforeUpdate(obj);
       sess.update(obj);
-      deleteSubs(obj);
+      afterUpdate(obj);
     } catch (final Throwable t) {
       handleException(t);
     }
@@ -441,10 +440,10 @@ public class HibSessionImpl implements Logged, HibSession {
     }
 
     try {
-      beforeSave(obj);
+      beforeUpdate(obj);
 
       obj = sess.merge(obj);
-      deleteSubs(obj);
+      afterUpdate(obj);
 
       return obj;
     } catch (final Throwable t) {
@@ -482,9 +481,9 @@ public class HibSessionImpl implements Logged, HibSession {
     }
 
     try {
-      beforeSave(obj);
+      beforeAdd(obj);
       sess.save(obj);
-      deleteSubs(obj);
+      afterAdd(obj);
     } catch (final Throwable t) {
       handleException(t);
     }
@@ -500,9 +499,10 @@ public class HibSessionImpl implements Logged, HibSession {
     try {
       beforeDelete(obj);
 
-      evict(obj);
-      sess.delete(sess.merge(obj));
-      deleteSubs(obj);
+      //evict(obj);
+      // Do a merge to ensure not detached
+      sess.remove(sess.merge(obj));
+      afterDelete(obj);
     } catch (final Throwable t) {
       handleException(t);
     }
@@ -565,10 +565,7 @@ public class HibSessionImpl implements Logged, HibSession {
     }
 
     try {
-      if (!rolledback() && sess.isDirty()) {
-        sess.flush();
-      }
-      if ((tx != null) && !rolledback()) {
+      if (!rolledback() && (tx != null)) {
         tx.commit();
       }
     } catch (final Throwable t) {
@@ -646,7 +643,7 @@ public class HibSessionImpl implements Logged, HibSession {
     throw exc;
   }
 
-  private void beforeSave(final Object o) {
+  private void beforeAdd(final Object o) {
     if (!(o instanceof final BwDbentity<?> ent)) {
       return;
     }
@@ -654,14 +651,46 @@ public class HibSessionImpl implements Logged, HibSession {
     ent.beforeSave();
   }
 
-  private void beforeDelete(final Object o) {
-    if (!(o instanceof BwDbentity)) {
+  private void afterAdd(final Object o) {
+    if (!(o instanceof final BwDbentity<?> ent)) {
       return;
     }
 
-    final var ent = (BwDbentity<?>)o;
+    //ent.afterAdd();
+    deleteSubs(ent);
+  }
+
+  private void beforeUpdate(final Object o) {
+    if (!(o instanceof final BwDbentity<?> ent)) {
+      return;
+    }
+
+    ent.beforeUpdate();
+  }
+
+  private void afterUpdate(final Object o) {
+    if (!(o instanceof final BwDbentity<?> ent)) {
+      return;
+    }
+
+    deleteSubs(ent);
+  }
+
+  private void beforeDelete(final Object o) {
+    if (!(o instanceof final BwDbentity<?> ent)) {
+      return;
+    }
 
     ent.beforeDeletion();
+  }
+
+  private void afterDelete(final Object o) {
+    if (!(o instanceof final BwDbentity<?> ent)) {
+      return;
+    }
+
+    ent.afterDeletion();
+    deleteSubs(ent);
   }
 
   private void deleteSubs(final Object o) {
