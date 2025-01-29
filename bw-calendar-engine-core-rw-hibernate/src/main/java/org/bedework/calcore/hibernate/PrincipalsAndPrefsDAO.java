@@ -21,6 +21,7 @@ import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCalendar;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCategory;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsContact;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsLocation;
+import org.bedework.database.db.DbSession;
 import org.bedework.util.misc.Util;
 
 import java.util.Collection;
@@ -37,7 +38,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
   /**
    * @param sess             the session
    */
-  public PrincipalsAndPrefsDAO(final HibSession sess) {
+  public PrincipalsAndPrefsDAO(final DbSession sess) {
     super(sess);
   }
 
@@ -59,7 +60,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   " as u where u.principalRef = :href";
 
   public BwPrincipal<?> getPrincipal(final String href) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     if (href == null) {
       return null;
@@ -89,7 +90,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
 
   public List<String> getPrincipalHrefs(final int start,
                                         final int count) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getPrincipalHrefsQuery);
 
@@ -111,7 +112,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "where p.ownerHref=:ownerHref";
 
   public BwPreferences getPreferences(final String principalHref) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getOwnerPreferencesQuery);
     sess.setString("ownerHref", principalHref);
@@ -133,7 +134,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
 
   public BwGroup<?> findGroup(final String account,
                            final boolean admin) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     if (admin) {
       sess.createQuery(getAdminGroupQuery);
@@ -169,7 +170,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
   public Collection<BwGroup<?>> findGroupParents(
           final BwGroup<?> group,
           final boolean admin) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     if (admin) {
       sess.createQuery(getAdminGroupParentsQuery);
@@ -208,7 +209,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
    */
   public  void removeGroup(final BwGroup<?> group,
                            final boolean admin) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     if (admin) {
       sess.createQuery(removeAllAdminGroupMemberRefsQuery);
@@ -249,7 +250,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
   public void removeMember(final BwGroup<?> group,
                            final BwPrincipal<?> val,
                            final boolean admin) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     if (admin) {
       sess.createQuery(findAdminGroupEntryQuery);
@@ -309,7 +310,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
   @SuppressWarnings("unchecked")
   public Collection<BwPrincipal<?>> getMembers(final BwGroup<?> group,
                                                final boolean admin) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     if (admin) {
       sess.createQuery(getAdminGroupUserMembersQuery);
@@ -346,7 +347,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
 
   @SuppressWarnings("unchecked")
   public <T extends BwGroup<?>> Collection<T> getAllGroups(final boolean admin) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     if (admin) {
       sess.createQuery(getAllAdminGroupsQuery);
@@ -375,7 +376,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
   public <T extends BwGroup<?>> Collection<T> getGroups(
           final BwPrincipal<?> val,
           final boolean admin) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     if (admin) {
       sess.createQuery(getAdminGroupsQuery);
@@ -432,7 +433,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   " where contactid=:id";
 
   public void removeFromAllPrefs(final BwShareableDbentity<?> val) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     final String q;
 
@@ -465,7 +466,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "where au.userHref = :userHref";
 
   public BwAuthUser getAuthUser(final String href) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
     
     sess.createQuery(getUserQuery);
     sess.setString("userHref", href);
@@ -481,7 +482,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
 
   @SuppressWarnings("unchecked")
   public List<BwAuthUser> getAllAuthUsers() {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getAllAuthUsersQuery);
 

@@ -20,6 +20,7 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.database.db.DbSession;
 
 import java.util.Collection;
 
@@ -32,7 +33,7 @@ class FilterDefsDAO extends DAOBase {
   *
    * @param sess the session
   */
- public FilterDefsDAO(final HibSession sess) {
+ public FilterDefsDAO(final DbSession sess) {
    super(sess);
  }
 
@@ -47,7 +48,7 @@ class FilterDefsDAO extends DAOBase {
 
   @SuppressWarnings("unchecked")
   public Collection<BwFilterDef> getAllFilterDefs(final BwPrincipal owner) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getAllFilterDefsQuery);
     sess.setString("ownerHref", owner.getPrincipalRef());
@@ -61,7 +62,7 @@ class FilterDefsDAO extends DAOBase {
 
   public BwFilterDef fetch(final String name,
                            final BwPrincipal owner) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(fetchFilterDefQuery);
     sess.setString("ownerHref", owner.getPrincipalRef());

@@ -26,6 +26,7 @@ import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.base.BwLastMod;
 import org.bedework.calfacade.exc.CalFacadeInvalidSynctoken;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCalendar;
+import org.bedework.database.db.DbSession;
 import org.bedework.util.misc.Util;
 
 import java.sql.Timestamp;
@@ -43,7 +44,7 @@ class CoreCalendarsDAO extends DAOBase {
    *
    * @param sess the session
    */
-  CoreCalendarsDAO(final HibSession sess) {
+  CoreCalendarsDAO(final DbSession sess) {
     super(sess);
   }
 
@@ -63,7 +64,7 @@ class CoreCalendarsDAO extends DAOBase {
 
   protected CollectionSynchInfo getSynchInfo(final String path,
                                           final String token) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getSynchInfoQuery);
 
@@ -93,7 +94,7 @@ class CoreCalendarsDAO extends DAOBase {
           
   public List<BwCalendar> findCollectionAlias(final String aliasPath,
                                               final String ownerHref) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(findAliasQuery);
 
@@ -112,7 +113,7 @@ class CoreCalendarsDAO extends DAOBase {
            "(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')";
 
   public BwCalendar getCollection(final String path) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getCalendarByPathQuery);
     sess.setString("path", path);
@@ -126,7 +127,7 @@ class CoreCalendarsDAO extends DAOBase {
                   "(col.filterExpr = null or col.filterExpr <> '--TOMBSTONED--')";
 
   public boolean collectionExists(final String path) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(collectionExistsQuery);
 
@@ -163,7 +164,7 @@ class CoreCalendarsDAO extends DAOBase {
     final BwCollectionLastmod lm = col.getLastmod();
     lm.updateLastmod(ts);
 
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(touchCalendarQuery);
 
@@ -187,7 +188,7 @@ class CoreCalendarsDAO extends DAOBase {
          " where calendarid=:id";
 
   protected void removeCalendarFromAuthPrefs(final BwCalendar val) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(removeCalendarPrefForAllQuery);
     sess.setInt("id", val.getId());
@@ -196,7 +197,7 @@ class CoreCalendarsDAO extends DAOBase {
   }
 
   protected void deleteCalendar(final BwCalendar col) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.delete(col);
   }
@@ -211,7 +212,7 @@ class CoreCalendarsDAO extends DAOBase {
         "(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')";
 
   public boolean isEmptyCollection(final BwCalendar val) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(countCalendarEventRefsQuery);
     sess.setString("colPath", val.getPath());
@@ -241,7 +242,7 @@ class CoreCalendarsDAO extends DAOBase {
   protected List<BwCalendar> getSynchCollections(
           final String path,
           final String token) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     if (path == null) {
       sess.rollback();
@@ -292,7 +293,7 @@ class CoreCalendarsDAO extends DAOBase {
                   "where col.path like :path ";
           
   public List<BwCalendar> getPathPrefix(final String path) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getPathPrefixQuery);
 
@@ -315,7 +316,7 @@ class CoreCalendarsDAO extends DAOBase {
   public List<String> getChildrenCollections(final String parentPath,
                                              final int start,
                                              final int count) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     if (parentPath == null) {
       sess.createQuery(getChildCollectionPathsQuery + " is null order by col.path");
@@ -348,7 +349,7 @@ class CoreCalendarsDAO extends DAOBase {
 
   @SuppressWarnings("unchecked")
   protected List<BwCalendar> getChildCollections(final String parentPath) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     if (parentPath == null) {
       sess.createQuery(getChildCollectionsQuery + " is null order by col.path");
@@ -387,7 +388,7 @@ class CoreCalendarsDAO extends DAOBase {
   }
   
   protected List<LastModAndPath> getChildLastModsAndPaths(final String parentPath) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getChildLastModsAndPathsQuery);
 
@@ -419,7 +420,7 @@ class CoreCalendarsDAO extends DAOBase {
                   "where path in (:paths)";
   
   protected List<BwCalendar> getCollections(final List<String> paths) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
     sess.createQuery(getCollectionsQuery);
 
     sess.setParameterList("paths", paths);
@@ -444,7 +445,7 @@ class CoreCalendarsDAO extends DAOBase {
                   "col.filterExpr = :tsfilter";
           
   protected void removeTombstoned(final String path) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(removeTombstonedCollectionEventsQuery);
 
@@ -485,7 +486,7 @@ class CoreCalendarsDAO extends DAOBase {
 
 
   public BwCalendar getTombstonedCollection(final String path) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getTombstonedCollectionByPathQuery);
     sess.setString("path", path);

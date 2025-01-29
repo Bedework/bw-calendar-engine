@@ -21,6 +21,7 @@ package org.bedework.calcore.hibernate;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
+import org.bedework.database.db.DbSession;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.misc.Util;
 
@@ -34,7 +35,7 @@ import java.util.List;
  */
 public class EventQueryBuilder implements Serializable, CalintfDefs {
   private final StringBuilder sb = new StringBuilder();
-  private HibSession sess;
+  private DbSession sess;
 
   public void fields(final List<BwIcalPropertyInfoEntry> retrieveListFields,
                      final String name,
@@ -293,7 +294,7 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
     sb.append(".colPath in (:colPaths))");
   }
 
-  public void createQuery(final HibSession sess) {
+  public void createQuery(final DbSession sess) {
     this.sess = sess;
 
     sess.createQuery(sb.toString());

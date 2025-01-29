@@ -42,6 +42,7 @@ import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.database.db.DbSession;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
@@ -78,7 +79,7 @@ class CoreCalendars extends CalintfHelper
    * @param readOnlyMode true for a guest
    * @param sessionless if true
    */
-  CoreCalendars(final HibSession sess, 
+  CoreCalendars(final DbSession sess,
                 final CalintfImpl intf,
                 final AccessChecker ac,
                 final boolean readOnlyMode,

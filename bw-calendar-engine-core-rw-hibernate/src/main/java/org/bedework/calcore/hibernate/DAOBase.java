@@ -20,6 +20,7 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
+import org.bedework.database.db.DbSession;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
@@ -28,12 +29,12 @@ import org.bedework.util.logging.Logged;
  * @author Mike Douglass   douglm  bedework.org
  */
 public abstract class DAOBase implements Logged {
-  private HibSession sess;
+  private DbSession sess;
 
   /**
    * @param sess the session
    */
-  public DAOBase(final HibSession sess) {
+  public DAOBase(final DbSession sess) {
     this.sess = sess;
   }
 
@@ -43,11 +44,11 @@ public abstract class DAOBase implements Logged {
    */
   public abstract String getName();
 
-  public void setSess(final HibSession val) {
+  public void setSess(final DbSession val) {
     sess = val;
   }
 
-  protected HibSession getSess() {
+  protected DbSession getSess() {
     return sess;
   }
 

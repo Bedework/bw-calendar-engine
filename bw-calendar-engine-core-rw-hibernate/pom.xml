@@ -53,6 +53,11 @@
 
 		<dependency>
       <groupId>org.bedework.database</groupId>
+      <artifactId>bw-db</artifactId>
+    </dependency>
+
+		<dependency>
+      <groupId>org.bedework.database</groupId>
       <artifactId>bw-hibernate</artifactId>
     </dependency>
 

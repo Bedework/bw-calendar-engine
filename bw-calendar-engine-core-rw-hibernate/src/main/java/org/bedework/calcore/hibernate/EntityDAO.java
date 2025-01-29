@@ -12,6 +12,7 @@ import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
+import org.bedework.database.db.DbSession;
 import org.bedework.util.misc.Util;
 
 import java.util.Collection;
@@ -28,7 +29,7 @@ public class EntityDAO extends DAOBase {
   /**
    * @param sess             the session
    */
-  public EntityDAO(final HibSession sess) {
+  public EntityDAO(final DbSession sess) {
     super(sess);
   }
 
@@ -46,7 +47,7 @@ public class EntityDAO extends DAOBase {
                   "where cal.group=:group";
 
   public BwCalSuite get(final BwAdminGroup group) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getCalSuiteByGroupQuery);
 
@@ -66,7 +67,7 @@ public class EntityDAO extends DAOBase {
                   "where cal.name=:name";
 
   public BwCalSuite getCalSuite(final String name) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getCalSuiteQuery);
 
@@ -80,7 +81,7 @@ public class EntityDAO extends DAOBase {
 
   @SuppressWarnings("unchecked")
   public Collection<BwCalSuite> getAllCalSuites() {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getAllCalSuitesQuery);
 
@@ -103,7 +104,7 @@ public class EntityDAO extends DAOBase {
 
   @SuppressWarnings("unchecked")
   public Collection<BwAlarm> getUnexpiredAlarms(final long triggerTime) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     if (triggerTime == 0) {
       sess.createQuery(getUnexpiredAlarmsQuery);
@@ -121,7 +122,7 @@ public class EntityDAO extends DAOBase {
 
   @SuppressWarnings("unchecked")
   public Collection<BwEvent> getEventsByAlarm(final BwAlarm alarm) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(eventByAlarmQuery);
     sess.setInt("alarmId", alarm.getId());
@@ -141,7 +142,7 @@ public class EntityDAO extends DAOBase {
   public BwResource getResource(final String name,
                                 final String colPath,
                                 final int desiredAccess) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getResourceQuery);
 
@@ -157,7 +158,7 @@ public class EntityDAO extends DAOBase {
                   " as rc where rc.colPath=:path and rc.name=:name";
 
   public void getResourceContent(final BwResource val) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getResourceContentQuery);
     sess.setString("path", val.getColPath());
@@ -190,7 +191,7 @@ public class EntityDAO extends DAOBase {
                                           final boolean forSynch,
                                           final String token,
                                           final int count) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     if (forSynch && (token != null)) {
       sess.createQuery(getAllResourcesSynchQuery);

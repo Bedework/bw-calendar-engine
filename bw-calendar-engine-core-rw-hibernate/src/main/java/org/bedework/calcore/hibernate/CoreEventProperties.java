@@ -26,6 +26,7 @@ import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
 import org.bedework.calfacade.util.AccessChecker;
+import org.bedework.database.db.DbSession;
 
 import java.util.Collection;
 import java.util.List;
@@ -48,7 +49,7 @@ public class CoreEventProperties <T extends BwEventProperty>
    * @param readOnlyMode true for a guest
    * @param sessionless if true
    */
-  public CoreEventProperties(final HibSession sess,
+  public CoreEventProperties(final DbSession sess,
                              final CalintfImpl intf,
                              final AccessChecker ac,
                              final boolean readOnlyMode,

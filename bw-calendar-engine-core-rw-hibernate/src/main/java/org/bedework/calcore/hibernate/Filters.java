@@ -41,6 +41,7 @@ import org.bedework.calfacade.filter.BwObjectFilter;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.database.db.DbSession;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
 
@@ -112,7 +113,7 @@ public class Filters extends FiltersCommon {
 
   /** This is set for the second pass when we set the pars
    */
-  private HibSession sess;
+  private DbSession sess;
 
   private final Calintf intf;
 
@@ -240,7 +241,7 @@ public class Filters extends FiltersCommon {
    *
    * @param sess
    */
-  public void parPass(final HibSession sess) {
+  public void parPass(final DbSession sess) {
     if (getFilter() == null) {
       return;
     }

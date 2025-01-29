@@ -21,6 +21,7 @@ package org.bedework.calcore.hibernate;
 import org.bedework.access.CurrentAccess;
 import org.bedework.base.exc.BedeworkDupNameException;
 import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.response.GetEntityResponse;
 import org.bedework.calcore.ro.CalintfHelper;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI;
@@ -46,12 +47,12 @@ import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.convert.RecurUtil;
 import org.bedework.convert.RecurUtil.RecurPeriods;
+import org.bedework.database.db.DbSession;
 import org.bedework.sysevents.events.StatsEvent;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
-import org.bedework.base.response.GetEntityResponse;
 
 import net.fortuna.ical4j.model.Period;
 
@@ -205,7 +206,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
    * @param authProps - authorisation info
    * @param sessionless if true
    */
-  public CoreEvents(final HibSession sess,
+  public CoreEvents(final DbSession sess,
                     final CalintfImpl intf,
                     final AccessChecker ac,
                     final AuthProperties authProps,

@@ -6,13 +6,14 @@ package org.bedework.calcore.hibernate;
 import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 import org.bedework.calcore.ro.CalintfHelper;
 import org.bedework.calcorei.CoreResourcesI;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.util.AccessChecker;
-import org.bedework.base.response.GetEntityResponse;
-import org.bedework.base.response.Response;
+import org.bedework.database.db.DbSession;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,7 +37,7 @@ public class CoreResources extends CalintfHelper
    * @param readOnlyMode true for a guest
    * @param sessionless if true
    */
-  CoreResources(final HibSession sess,
+  CoreResources(final DbSession sess,
                 final CalintfImpl intf,
                 final AccessChecker ac,
                 final boolean readOnlyMode,

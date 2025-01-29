@@ -31,6 +31,7 @@ import org.bedework.calfacade.EventPropertiesReference;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCategory;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsContact;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsLocation;
+import org.bedework.database.db.DbSession;
 
 import java.util.Collection;
 import java.util.List;
@@ -137,7 +138,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
    * @param sess the session
    * @param className of class we act for
    */
-  public CoreEventPropertiesDAO(final HibSession sess,
+  public CoreEventPropertiesDAO(final DbSession sess,
                                 final String className) {
     super(sess);
 
@@ -162,7 +163,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
               " order by ent." + keyFieldName;
     }
     
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getAllQuery);
 
@@ -183,7 +184,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
       getQuery = "from " + className + " ent where uid=:uid";
     }
 
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getQuery);
 
@@ -193,7 +194,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
   }
 
   public void delete(final BwEventProperty val) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     @SuppressWarnings("unchecked")
     final BwEventProperty v = (BwEventProperty)sess.merge(val);
@@ -258,7 +259,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
 
     doFind(findCountQuery, val, ownerHref);
 
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     //noinspection unchecked
     final Collection<Long> counts = (Collection<Long>)sess.getList();
@@ -283,7 +284,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
       throw new BedeworkException("Missing owner value");
     }
 
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     final StringBuilder qstr = new StringBuilder(qpfx);
 
@@ -300,7 +301,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
   @SuppressWarnings("unchecked")
   private List<EventPropertiesReference> getRefs(final BwEventProperty val,
                                                  final String query) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(query);
     sess.setEntity("ent", val);
@@ -317,7 +318,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
 
   private long getRefsCount(final BwEventProperty val,
                             final String query) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(query);
     sess.setEntity("ent", val);
@@ -367,7 +368,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
   }
 
   private void addBwStringKeyvals(final BwString key) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     if (key.getLang() != null) {
       sess.setString("langval", key.getLang());

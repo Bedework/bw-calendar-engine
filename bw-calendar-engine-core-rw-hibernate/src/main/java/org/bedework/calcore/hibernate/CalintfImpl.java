@@ -60,6 +60,7 @@ import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
+import org.bedework.database.db.DbSession;
 import org.bedework.util.misc.Util;
 
 import org.hibernate.SessionFactory;
@@ -149,7 +150,7 @@ public class CalintfImpl extends CalintfROImpl {
 
   /** Current hibernate session - exists only across one user interaction
    */
-  private HibSession sess;
+  private DbSession sess;
 
   private Timestamp curTimestamp;
 

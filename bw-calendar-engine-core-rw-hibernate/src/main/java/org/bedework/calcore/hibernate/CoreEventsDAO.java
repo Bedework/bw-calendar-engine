@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProxy;
+import org.bedework.database.db.DbSession;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -37,7 +38,7 @@ public class CoreEventsDAO extends DAOBase {
    *
    * @param sess the session
    */
-  public CoreEventsDAO(final HibSession sess) {
+  public CoreEventsDAO(final DbSession sess) {
     super(sess);
   }
 
@@ -52,7 +53,7 @@ public class CoreEventsDAO extends DAOBase {
 
   protected List<BwEvent> getEventsByName(final String colPath,
                                           final String name) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(eventsByNameQuery);
     sess.setString("name", name);
@@ -71,7 +72,7 @@ public class CoreEventsDAO extends DAOBase {
 
   protected BwEventAnnotation getEventsAnnotationName(final String colPath,
                                                       final String name) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(eventAnnotationsByNameQuery);
     sess.setString("name", name);
@@ -98,7 +99,7 @@ public class CoreEventsDAO extends DAOBase {
 
   protected void deleteTombstonedEvent(final String colPath,
                                      final String uid) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(deleteTombstonedEventQuery);
 
@@ -122,7 +123,7 @@ public class CoreEventsDAO extends DAOBase {
 
   protected List<?> getSynchEventObjects(final String path,
                                          final String token) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
     
     if (token != null) {
       sess.createQuery(getSynchEventObjectsTokenQuery);
@@ -153,7 +154,7 @@ public class CoreEventsDAO extends DAOBase {
   public List<String> getChildrenEntities(final String parentPath,
                                           final int start,
                                           final int count) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getChildEntitiesQuery);
 
@@ -175,7 +176,7 @@ public class CoreEventsDAO extends DAOBase {
                   " where recurrenceId=null";
 
   public Iterator<BwEventAnnotation> getEventAnnotations() {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getEventAnnotationsQuery);
 
@@ -193,7 +194,7 @@ public class CoreEventsDAO extends DAOBase {
 
   @SuppressWarnings("unchecked")
   public Collection<BwEventAnnotation> getEventOverrides(final BwEvent ev) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getEventOverridesQuery);
     sess.setEntity("target", ev);
@@ -218,7 +219,7 @@ public class CoreEventsDAO extends DAOBase {
   protected String calendarGuidExists(final BwEvent val,
                                       final boolean annotation,
                                       final boolean adding) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     final StringBuilder sb = new StringBuilder();
 
@@ -296,7 +297,7 @@ public class CoreEventsDAO extends DAOBase {
   protected boolean calendarNameExists(final BwEvent val,
                                        final boolean annotation,
                                        final boolean adding) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     final StringBuilder sb = new StringBuilder();
 
@@ -361,7 +362,7 @@ public class CoreEventsDAO extends DAOBase {
 
   @SuppressWarnings("unchecked")
   protected Collection<BwEventAnnotation> getAnnotations(final BwEvent val) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
 
     sess.createQuery(getAnnotationsQuery);
     sess.setEntity("target", val);
@@ -382,7 +383,7 @@ public class CoreEventsDAO extends DAOBase {
                             final String guid,
                             final BwEvent master,
                             final Boolean overrides) {
-    final HibSession sess = getSess();
+    final var sess = getSess();
     final EventQueryBuilder qb = new EventQueryBuilder();
     final String qevName = "ev";
     final BwDateTime startDate = null;
