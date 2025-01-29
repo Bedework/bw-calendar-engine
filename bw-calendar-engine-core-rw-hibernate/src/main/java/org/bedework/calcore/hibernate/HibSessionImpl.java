@@ -27,7 +27,6 @@ import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.StaleStateException;
@@ -41,7 +40,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.persistence.NoResultException;
 import javax.persistence.OptimisticLockException;
+import javax.persistence.Query;
 
 /** Convenience class to do the actual hibernate interaction. Intended for
  * one use only.
@@ -64,9 +65,7 @@ public class HibSessionImpl implements Logged, HibSession {
   @Override
   public void init(final SessionFactory sessFactory) {
     try {
-      sess = sessFactory.withOptions()
-                        .interceptor(new HibernateInterceptor())
-                        .openSession();
+      sess = sessFactory.openSession();
       rolledBack = false;
     } catch (final Throwable t) {
       exc = new BedeworkDatabaseException(t);
@@ -326,7 +325,7 @@ public class HibSessionImpl implements Logged, HibSession {
     }
 
     try {
-      q.setParameterList(parName, parVal);
+      q.setParameter(parName, parVal);
     } catch (final Throwable t) {
       handleException(t);
     }
@@ -368,7 +367,9 @@ public class HibSessionImpl implements Logged, HibSession {
     }
 
     try {
-      return q.uniqueResult();
+      return q.getSingleResult();
+    } catch (final NoResultException ignored) {
+      return null;
     } catch (final Throwable t) {
       handleException(t);
       return null;  // Don't get here
@@ -383,7 +384,7 @@ public class HibSessionImpl implements Logged, HibSession {
     }
 
     try {
-      final List<?> l = q.list();
+      final List<?> l = q.getResultList();
 
       if (l == null) {
         return new ArrayList<>();
