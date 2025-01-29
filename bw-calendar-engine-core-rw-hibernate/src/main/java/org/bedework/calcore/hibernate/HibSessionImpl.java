@@ -311,7 +311,7 @@ public class HibSessionImpl implements Logged, HibSession {
     }
 
     try {
-      q.setEntity(parName, parVal);
+      q.setParameter(parName, parVal);
     } catch (final Throwable t) {
       handleException(t);
     }
