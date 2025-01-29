@@ -25,6 +25,7 @@ import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.base.exc.BedeworkAccessException;
 import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.response.GetEntityResponse;
 import org.bedework.calcore.Transactions;
 import org.bedework.calcore.ro.AccessUtil;
 import org.bedework.calcore.ro.CalintfHelper;
@@ -33,7 +34,6 @@ import org.bedework.calcorei.CoreCalendarsI;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.CollectionAliases;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.base.BwLastMod;
@@ -45,7 +45,6 @@ import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
-import org.bedework.base.response.GetEntityResponse;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,10 +52,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
 import static org.bedework.base.response.Response.Status.noAccess;
 import static org.bedework.base.response.Response.Status.notFound;
 import static org.bedework.base.response.Response.Status.ok;
+import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
 
 /** Class to encapsulate most of what we do with collections
  *
@@ -897,7 +896,7 @@ class CoreCalendars extends CalintfHelper
     if (col == null) {
       /* Assume deleted - flag in the subscription if it's ours or a temp.
        */
-      if ((val.getId() == CalFacadeDefs.unsavedItemKey) ||
+      if (val.unsaved() ||
           val.getOwnerHref().equals(getPrincipal().getPrincipalRef())) {
         disableAlias(val);
       }
@@ -920,7 +919,7 @@ class CoreCalendars extends CalintfHelper
 
   private void disableAlias(final BwCalendar val) {
     val.setDisabled(true);
-    if (val.getId() != CalFacadeDefs.unsavedItemKey) {
+    if (!val.unsaved()) {
       // Save the state
       val.updateLastmod(getCurrentTimestamp());
       dao.updateCollection(unwrap(val));

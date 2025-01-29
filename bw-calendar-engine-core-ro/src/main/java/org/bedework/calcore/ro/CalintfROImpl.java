@@ -57,7 +57,6 @@ import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
-import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.CollectionAliases;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
@@ -1903,7 +1902,7 @@ public class CalintfROImpl extends CalintfBase
     if (col == null) {
       /* Assume deleted - flag in the subscription if it's ours or a temp.
        */
-      if ((val.getId() == CalFacadeDefs.unsavedItemKey) ||
+      if (val.unsaved() ||
               val.getOwnerHref().equals(getPrincipal().getPrincipalRef())) {
         val.setDisabled(true);
       }
