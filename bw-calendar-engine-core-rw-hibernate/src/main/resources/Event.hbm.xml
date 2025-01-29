@@ -380,6 +380,7 @@
     <!-- =============== Freebusy =============== -->
 
     <list name="freeBusyPeriods" lazy="true"
+          table="bw_fbcomp"
           cascade="all-delete-orphan">
       <key column="eventid" foreign-key="bw_eventfbc_eid_fk" />
       <list-index column="fbcomp_position"/>
