@@ -1,7 +1,7 @@
 /* ********************************************************************
     Appropriate copyright notice
 */
-package org.bedework.calcore.hibernate;
+package org.bedework.calcore.rw.common;
 
 import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
@@ -9,11 +9,12 @@ import org.bedework.base.exc.BedeworkException;
 import org.bedework.base.response.GetEntityResponse;
 import org.bedework.base.response.Response;
 import org.bedework.calcore.ro.CalintfHelper;
+import org.bedework.calcore.rw.common.dao.CoreResourcesDAO;
+import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CoreResourcesI;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.util.AccessChecker;
-import org.bedework.database.db.DbSession;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,20 +32,16 @@ public class CoreResources extends CalintfHelper
 
   /** Constructor
    *
-   * @param sess persistance session
+   * @param dao for db access
    * @param intf interface
    * @param ac access checker
-   * @param readOnlyMode true for a guest
    * @param sessionless if true
    */
-  CoreResources(final DbSession sess,
-                final CalintfImpl intf,
-                final AccessChecker ac,
-                final boolean readOnlyMode,
-                final boolean sessionless) {
-    entityDao = new CoreResourcesDAO(sess);
-    this.intf = intf;
-    intf.registerDao(entityDao);
+  public CoreResources(final CoreResourcesDAO dao,
+                       final Calintf intf,
+                       final AccessChecker ac,
+                       final boolean sessionless) {
+    entityDao = dao;
     super.init(intf, ac, sessionless);
   }
 
@@ -216,7 +213,7 @@ public class CoreResources extends CalintfHelper
 
     r.setContent(null);
     r.tombstone();
-    r.updateLastmod(getCurrentTimestamp());
+    r.updateLastmod(intf.getCurrentTimestamp());
 
     entityDao.update(r);
 

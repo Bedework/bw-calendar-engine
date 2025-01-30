@@ -20,13 +20,14 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.database.db.InterceptorDbEntity;
+import org.bedework.database.jpa.DbSessionImpl;
 
 /** Class to do the actual database interaction.
  *
  * @author Mike Douglass bedework.org
  */
 public class HibSessionImpl
-        extends org.bedework.database.jpa.DbSessionImpl {
+        extends DbSessionImpl {
 
   protected void afterAdd(final Object o) {
     if (!(o instanceof final InterceptorDbEntity ent)) {

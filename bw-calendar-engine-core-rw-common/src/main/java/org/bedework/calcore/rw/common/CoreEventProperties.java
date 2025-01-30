@@ -17,16 +17,18 @@
     under the License.
 */
 
-package org.bedework.calcore.hibernate;
+package org.bedework.calcore.rw.common;
 
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.ro.CalintfHelper;
+import org.bedework.calcore.rw.common.dao.CoreEventPropertiesDAO;
+import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CoreEventPropertiesI;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
+import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.util.AccessChecker;
-import org.bedework.database.db.DbSession;
 
 import java.util.Collection;
 import java.util.List;
@@ -37,26 +39,22 @@ import java.util.List;
  * @version 1.0
  * @param <T> type of property, Location, contact etc.
  */
-public class CoreEventProperties <T extends BwEventProperty>
+public class CoreEventProperties <T extends BwEventProperty<?>>
         extends CalintfHelper implements CoreEventPropertiesI<T> {
   private final CoreEventPropertiesDAO dao;
 
   /** Constructor
    *
-   * @param sess persistance session
+   * @param dao for db access
    * @param intf interface
    * @param ac access checker
-   * @param readOnlyMode true for a guest
    * @param sessionless if true
    */
-  public CoreEventProperties(final DbSession sess,
-                             final CalintfImpl intf,
+  public CoreEventProperties(final CoreEventPropertiesDAO dao,
+                             final Calintf intf,
                              final AccessChecker ac,
-                             final boolean readOnlyMode,
-                             final boolean sessionless,
-                             final String className) {
-    dao = new CoreEventPropertiesDAO(sess, className);
-    intf.registerDao(dao);
+                             final boolean sessionless) {
+    this.dao = dao;
     super.init(intf, ac, sessionless);
   }
 
@@ -69,15 +67,15 @@ public class CoreEventProperties <T extends BwEventProperty>
   @SuppressWarnings("unchecked")
   @Override
   public Collection<T> getAll(final String ownerHref) {
-    final List eps = dao.getAll(ownerHref);
+    final var eps = dao.getAll(ownerHref);
 
-    final Collection c = ac.getAccessUtil().checkAccess(eps, privRead, true);
+    final var c = ac.getAccessUtil().checkAccess(eps, privRead, true);
 
     if (debug()) {
       debug("getAll: found: " + eps.size() + " returning: " + c.size());
     }
 
-    return c;
+    return (Collection<T>)c;
   }
 
   @SuppressWarnings("unchecked")
@@ -90,7 +88,7 @@ public class CoreEventProperties <T extends BwEventProperty>
   @Override
   public T find(final BwString val,
                 final String ownerHref) {
-    final BwEventProperty p = dao.find(val, ownerHref);
+    final BwEventProperty<?> p = dao.find(val, ownerHref);
 
     return check((T)p);
   }
@@ -103,7 +101,7 @@ public class CoreEventProperties <T extends BwEventProperty>
 
   @Override
   public void deleteProp(final T val) {
-    dao.delete(val);
+    dao.delete((BwUnversionedDbentity<?>)val);
   }
 
   @Override

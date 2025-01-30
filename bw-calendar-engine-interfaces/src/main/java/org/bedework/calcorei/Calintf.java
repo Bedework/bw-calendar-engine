@@ -27,11 +27,9 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventProperty;
-import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
-import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.ShareableEntity;
 import org.bedework.calfacade.configs.Configurations;
@@ -43,12 +41,12 @@ import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.PrincipalInfo;
+import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.events.SysEventBase;
 
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
 /** This is the low level interface to the calendar database.
  *
@@ -69,7 +67,7 @@ import java.util.List;
  */
 public interface Calintf
         extends CoreCalendarsI, CoreEventsI, CoreFilterDefsI,
-        CoreResourcesI, CoreUserAuthI {
+        CorePrincialsAndPrefsI, CoreResourcesI {
   interface FilterParserFetcher {
     SimpleFilterParser getFilterParser();
   }
@@ -276,6 +274,8 @@ public interface Calintf
 
   String getCalendarNameFromType(int calType);
 
+  CalendarWrapper wrap(BwCalendar val);
+
   /**
    * @param docType type of entity
    * @return the appropriate indexer
@@ -336,9 +336,9 @@ public interface Calintf
    * queue up notifications until after transaction commit as consumers
    * should only receive notifications when the actual data has been written.
    *
-   * @param ev
+   * @param ev system event
    */
-  void postNotification(final SysEventBase ev);
+  void postNotification(SysEventBase ev);
 
   /** Called to flush any queued notifications. Called by the commit
    * process.
@@ -409,64 +409,65 @@ public interface Calintf
    * <p>Typically the system will call this with a time set into the near future
    * and then queue up alarms that are near to triggering.
    *
-   * @param triggerTime
+   * @param triggerTime limit
    * @return Collection of unexpired alarms.
    */
   Collection<BwAlarm> getUnexpiredAlarms(long triggerTime);
 
   /** Given an alarm return the associated event(s)
    *
-   * @param alarm
+   * @param alarm to search for
    * @return an event.
    */
   Collection<BwEvent> getEventsByAlarm(BwAlarm alarm);
 
-  /* ====================================================================
+  /* ==========================================================
    *                   Some general helpers
-   * ==================================================================== */
+   * ========================================================== */
 
   /** Used to fetch a category from the cache - assumes any access
    *
-   * @param uid
+   * @param uid of category
    * @return BwCategory
    */
   BwCategory getCategory(String uid);
 
-  /* ====================================================================
+  /* ===========================================================
    *                   Free busy
-   * ==================================================================== */
+   * =========================================================== */
 
   /** Get the fee busy for calendars (if cal != null) or for a principal.
    *
-   * @param cals
-   * @param who
-   * @param start
-   * @param end
+   * @param cals calendar set
+   * @param who the principal
+   * @param start of period
+   * @param end of period
    * @param returnAll
-   * @param ignoreTransparency
+   * @param ignoreTransparency include transparent
    * @return  BwFreeBusy object representing the calendar (or principal's)
    *          free/busy
    */
-  BwEvent getFreeBusy(Collection<BwCalendar> cals, BwPrincipal<?> who,
+  BwEvent getFreeBusy(Collection<BwCalendar> cals,
+                      BwPrincipal<?> who,
                       BwDateTime start, BwDateTime end,
                       boolean returnAll,
                       boolean ignoreTransparency);
 
-  /* ====================================================================
+  /* ===========================================================
    *                   Events
-   * ==================================================================== */
+   * ========================================================== */
 
   Collection<CoreEventInfo> postGetEvents(
           Collection<?> evs,
           int desiredAccess,
           boolean nullForNoAccess);
 
-  /* Post processing of event access has been checked
+  /* Post-processing of event access has been checked
    */
   CoreEventInfo postGetEvent(BwEvent ev,
                              CurrentAccess ca);
 
-  /* Post processing of event. Return null or throw exception for no access
+  /* Post-processing of event. Return null or throw exception for no access
    */
   CoreEventInfo postGetEvent(BwEvent ev,
                              int desiredAccess,
@@ -590,160 +591,9 @@ public interface Calintf
    */
   Iterator<String> getEventHrefs(int start);
 
-  /* ====================================================================
-   *                       principals + prefs
-   * ==================================================================== */
-
-  /** Find the principal with the given href.
-   *
-   * @param href          String principal hierarchy path
-   * @return BwPrincipal  representing the principal or null if not there
-   */
-  BwPrincipal<?> getPrincipal(String href);
-
-  /** Get a partial list of principal hrefs.
-   *
-   * @param start         Position to start
-   * @param count         Number we want
-   * @return list of hrefs - null for no more
-   */
-  List<String> getPrincipalHrefs(int start,
-                                 int count);
-
-  /** Fetch the preferences for the given principal.
-   *
-   * @param principalHref
-   * @return the preferences for the principal
-   */
-  BwPreferences getPreferences(String principalHref);
-
-  /* ====================================================================
-   *                       adminprefs
-   * ==================================================================== */
-
-  /* XXX These should no be required - there was some issue with earlier hibernate (maybe).
-   */
-
-  /** Remove any refs to this object
-   *
-   * @param val the entity
-   */
-  void removeFromAllPrefs(BwShareableDbentity<?> val);
-
-  /* ====================================================================
-   *                       groups
-   * ==================================================================== */
-
-  /* XXX This should really be some sort of directory function - perhaps
-   * via carddav
-   */
-
-  /** Find a group given its account name
-   *
-   * @param  account           String group name
-   * @param admin          true for an admin group
-   * @return BwGroup        group object
-   */
-  BwGroup<?> findGroup(final String account,
-                       boolean admin);
-
-  /**
-   * @param group the group
-   * @param admin          true for an admin group
-   * @return Collection
-   */
-  Collection<BwGroup<?>> findGroupParents(
-          BwGroup<?> group,
-          boolean admin);
-
-  /**
-   * @param group to add
-   * @param admin          true for an admin group
-   */
-  void addGroup(BwGroup<?> group,
-                boolean admin);
-
-  /**
-   * @param group to update
-   * @param admin          true for an admin group
-   */
-  void updateGroup(BwGroup<?> group,
-                   boolean admin);
-
-  /** Delete a group
-   *
-   * @param  group           BwGroup group object to delete
-   * @param admin          true for an admin group
-   */
-  void removeGroup(BwGroup<?> group,
-                   boolean admin);
-
-  /** Add a member to a group
-   *
-   * @param group          a group principal
-   * @param val             BwPrincipal new member
-   * @param admin          true for an admin group
-   */
-  void addMember(BwGroup<?> group,
-                 BwPrincipal<?> val,
-                 boolean admin);
-
-  /** Remove a member from a group
-   *
-   * @param group          a group principal
-   * @param val            BwPrincipal new member
-   * @param admin          true for an admin group
-   */
-  void removeMember(BwGroup<?> group,
-                    BwPrincipal<?> val,
-                    boolean admin);
-
-  /** Get the direct members of the given group.
-   *
-   * @param  group           BwGroup group object to add
-   * @param admin          true for an admin group
-   * @return list of members
-   */
-  Collection<BwPrincipal<?>> getMembers(BwGroup<?> group,
-                                        boolean admin);
-
-  /** Return all groups to which this user has some access. Never returns null.
-   *
-   * @param admin          true for an admin group
-   * @return Collection    of BwGroup
-   */
-  Collection<BwGroup<?>> getAllGroups(boolean admin);
-
-  /** Return all admin groups to which this user has some access. Never returns null.
-   *
-   * @return Collection    of BwAdminGroup
-   */
-  Collection<BwAdminGroup> getAdminGroups();
-
-  /** Return all groups of which the given principal is a member. Never returns null.
-   *
-   * <p>Does not check the returned groups for membership of other groups.
-   *
-   * @param val            a principal
-   * @param admin          true for an admin group
-   * @return Collection    of BwGroup
-   */
-  Collection<BwGroup<?>> getGroups(BwPrincipal<?> val,
-                                   boolean admin);
-
-  /** Return all admin groups of which the given principal is a member. Never returns null.
-   *
-   * <p>Does not check the returned groups for membership of other groups.
-   *
-   * @param val            a principal
-   * @return Collection    of BwGroup
-   */
-  Collection<BwAdminGroup> getAdminGroups(
-          BwPrincipal<?> val);
-
-  /* ====================================================================
+  /* ==========================================================
    *                       calendar suites
-   * ==================================================================== */
+   * ========================================================== */
 
   /** Get a detached instance of the calendar suite given the 'owning' group
    *

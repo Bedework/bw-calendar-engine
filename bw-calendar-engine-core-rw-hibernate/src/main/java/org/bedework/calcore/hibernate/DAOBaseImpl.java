@@ -19,25 +19,33 @@
 package org.bedework.calcore.hibernate;
 
 import org.bedework.base.exc.BedeworkException;
+import org.bedework.calcore.rw.common.dao.DAOBase;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.database.db.DbSession;
 import org.bedework.util.logging.BwLogger;
-import org.bedework.util.logging.Logged;
 
 /** Class used as basis for a number of DAO classes.
  *
  * @author Mike Douglass   douglm  bedework.org
  */
-public abstract class DAOBase implements Logged {
+public abstract class DAOBaseImpl implements DAOBase {
   private DbSession sess;
+
+  /**
+   */
+  public DAOBaseImpl() {
+  }
 
   /**
    * @param sess the session
    */
-  public DAOBase(final DbSession sess) {
-    this.sess = sess;
+  public DAOBaseImpl(final DbSession sess) {
+    init(sess);
   }
 
+  public void init(final DbSession sess) {
+    this.sess = sess;
+  }
   /**
    * 
    * @return a unique name for the instance.
@@ -48,41 +56,41 @@ public abstract class DAOBase implements Logged {
     sess = val;
   }
 
-  protected DbSession getSess() {
+  public DbSession getSess() {
     return sess;
   }
 
-  protected void rollback() {
+  public void rollback() {
     getSess().rollback();
   }
 
-  protected void add(final BwUnversionedDbentity val) {
+  public void add(final BwUnversionedDbentity<?> val) {
     getSess().add(val);
   }
 
-  protected void update(final BwUnversionedDbentity val) {
+  public void update(final BwUnversionedDbentity<?> val) {
     getSess().update(val);
   }
 
-  protected void delete(final BwUnversionedDbentity val) {
+  public void delete(final BwUnversionedDbentity<?> val) {
     getSess().delete(val);
   }
 
-  public BwUnversionedDbentity merge(final BwUnversionedDbentity val) {
+  public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) {
     return (BwUnversionedDbentity)sess.merge(val);
   }
 
-  protected void throwException(final BedeworkException be) {
+  public void throwException(final BedeworkException be) {
     getSess().rollback();
     throw be;
   }
 
-  protected void throwException(final String pname) {
+  public void throwException(final String pname) {
     getSess().rollback();
     throw new BedeworkException(pname);
   }
 
-  protected void throwException(final String pname, final String extra) {
+  public void throwException(final String pname, final String extra) {
     getSess().rollback();
     throw new BedeworkException(pname, extra);
   }

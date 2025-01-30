@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calcore.hibernate;
+package org.bedework.calcore.rw.common;
 
 import org.bedework.access.Access;
 import org.bedework.access.Ace;
@@ -26,10 +26,11 @@ import org.bedework.access.PrivilegeDefs;
 import org.bedework.base.exc.BedeworkAccessException;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.base.response.GetEntityResponse;
-import org.bedework.calcore.Transactions;
 import org.bedework.calcore.ro.AccessUtil;
 import org.bedework.calcore.ro.CalintfHelper;
 import org.bedework.calcore.ro.CollectionCache;
+import org.bedework.calcore.rw.common.dao.CoreCalendarsDAO;
+import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CoreCalendarsI;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCollectionLastmod;
@@ -42,11 +43,11 @@ import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
-import org.bedework.database.db.DbSession;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -63,30 +64,29 @@ import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWi
  * @author douglm
  *
  */
-class CoreCalendars extends CalintfHelper
+public class CoreCalendars extends CalintfHelper
          implements AccessUtil.CollectionGetter, Transactions,
         CoreCalendarsI {
-  private final CalintfImpl intf;
+  private final Calintf intf;
   private final CoreCalendarsDAO dao;
   private final String userCalendarRootPath;
   //private String groupCalendarRootPath;
 
+  private final CollectionCache colCache;
+
   /** Constructor
    *
-   * @param sess persistance session
+   * @param dao for db access
    * @param intf interface
    * @param ac access checker
-   * @param readOnlyMode true for a guest
    * @param sessionless if true
    */
-  CoreCalendars(final DbSession sess,
-                final CalintfImpl intf,
-                final AccessChecker ac,
-                final boolean readOnlyMode,
-                final boolean sessionless) {
-    dao = new CoreCalendarsDAO(sess);
+  public CoreCalendars(final CoreCalendarsDAO dao,
+                       final Calintf intf,
+                       final AccessChecker ac,
+                       final boolean sessionless) {
+    this.dao = dao;
     this.intf = intf;
-    intf.registerDao(dao);
     super.init(intf, ac, sessionless);
 
     userCalendarRootPath = 
@@ -94,19 +94,19 @@ class CoreCalendars extends CalintfHelper
                            "/", BasicSystemProperties.userCalendarRoot);
     //groupCalendarRootPath = userCalendarRootPath + "/" + "groups";
 
-    intf.colCache =
+    colCache =
             new CollectionCache(this,
                                 intf.getStats().getCollectionCacheStats());
   }
 
   @Override
   public void startTransaction() {
-    intf.colCache.flush();  // Just in case
+    colCache.flush();  // Just in case
   }
 
   @Override
   public void endTransaction() {
-    intf.colCache.flush();
+    colCache.flush();
   }
 
   @Override
@@ -132,7 +132,7 @@ class CoreCalendars extends CalintfHelper
       return null;
     }
 
-    BwCalendar col = intf.colCache.get(path);
+    BwCalendar col = colCache.get(path);
 
     if (col != null) {
       return col;
@@ -174,7 +174,7 @@ class CoreCalendars extends CalintfHelper
 
     final CalendarWrapper wcol = intf.wrap(col);
     if (wcol != null) {
-      intf.colCache.put(wcol);
+      colCache.put(wcol);
     }
 
     return wcol;
@@ -186,7 +186,7 @@ class CoreCalendars extends CalintfHelper
 
   @Override
   public void principalChanged() {
-    intf.colCache.clear();
+    colCache.clear();
   }
 
   @Override
@@ -273,7 +273,7 @@ class CoreCalendars extends CalintfHelper
                                      final String path,
                                      final int desiredAccess,
                                      final boolean alwaysReturnResult) {
-    final BwCalendar col = intf.colCache.get(path);
+    final BwCalendar col = colCache.get(path);
 
     if (col != null) {
       return col;
@@ -322,7 +322,7 @@ class CoreCalendars extends CalintfHelper
   @Override
   public void renameCalendar(BwCalendar val,
                              final String newName) {
-    intf.colCache.flush();
+    colCache.flush();
 
     ac.checkAccess(val, privWriteProperties, false);
 
@@ -351,13 +351,13 @@ class CoreCalendars extends CalintfHelper
     updatePaths(val, parent);
 
     // Flush it again
-    intf.colCache.flush();
+    colCache.flush();
   }
 
   @Override
   public void moveCalendar(BwCalendar val,
                            final BwCalendar newParent) {
-    intf.colCache.flush();
+    colCache.flush();
 
     /* check access - privbind on new parent privunbind on val?
      */
@@ -391,7 +391,7 @@ class CoreCalendars extends CalintfHelper
     error("Unimplemented - remove tombstoned from index");
     */
     // Flush it again
-    intf.colCache.flush();
+    colCache.flush();
   }
 
   @Override
@@ -408,7 +408,7 @@ class CoreCalendars extends CalintfHelper
   public void touchCalendar(final BwCalendar col) {
     dao.touchCollection(col, getCurrentTimestamp());
     // Remove it
-    intf.colCache.remove(col.getPath());
+    colCache.remove(col.getPath());
 
     if (!getForRestore()) {
       intf.indexEntityNow(col);
@@ -424,7 +424,7 @@ class CoreCalendars extends CalintfHelper
 
     notify(SysEvent.SysCode.COLLECTION_UPDATED, val);
 
-    intf.colCache.put((CalendarWrapper)val);
+    colCache.put((CalendarWrapper)val);
   }
 
   @Override
@@ -434,14 +434,14 @@ class CoreCalendars extends CalintfHelper
     ac.getAccessUtil().changeAccess(col, aces, replaceAll);
 
     // Clear the cache - inheritance makes it difficult to be sure of the effects.
-    intf.colCache.clear();
+    colCache.clear();
 
     dao.updateCollection(unwrap(col));
 
     touchCalendar(col); // indexes as well
 
     ((CalendarWrapper)col).clearCurrentAccess(); // force recheck
-    intf.colCache.put((CalendarWrapper)col);
+    colCache.put((CalendarWrapper)col);
 
     notify(SysEvent.SysCode.COLLECTION_UPDATED, col);
   }
@@ -454,7 +454,7 @@ class CoreCalendars extends CalintfHelper
 
     indexEntity(cal);
 
-    intf.colCache.flush();
+    colCache.flush();
 
     notify(SysEvent.SysCode.COLLECTION_UPDATED, cal);
   }
@@ -462,7 +462,7 @@ class CoreCalendars extends CalintfHelper
   @Override
   public boolean deleteCalendar(BwCalendar val,
                                 final boolean reallyDelete) {
-    intf.colCache.flush();
+    colCache.flush();
 
     ac.checkAccess(val, privUnbind, false);
 
@@ -516,7 +516,7 @@ class CoreCalendars extends CalintfHelper
       touchCalendar(unwrapped); // Indexes as well
     }
 
-    intf.colCache.remove(path);
+    colCache.remove(path);
     touchCalendar(parent);
 
     notify(SysEvent.SysCode.COLLECTION_DELETED, val);
@@ -930,7 +930,7 @@ class CoreCalendars extends CalintfHelper
 
       notify(SysEvent.SysCode.COLLECTION_UPDATED, val);
 
-      intf.colCache.put((CalendarWrapper)val);
+      colCache.put((CalendarWrapper)val);
     }
   }
 
@@ -1052,7 +1052,7 @@ class CoreCalendars extends CalintfHelper
 
     final CalendarWrapper wcol = intf.wrap(val);
 
-    intf.colCache.put(wcol);
+    colCache.put(wcol);
 
     return checkAccess(wcol, privAny, true);
   }
@@ -1195,7 +1195,7 @@ class CoreCalendars extends CalintfHelper
        * got in the cache.
        */
 
-      final List<CoreCalendarsDAO.LastModAndPath> lmps =
+      final var lmps =
               dao.getChildLastModsAndPaths(col.getPath());
 
       final List<String> paths = new ArrayList<>();
@@ -1204,18 +1204,19 @@ class CoreCalendars extends CalintfHelper
         return wch;
       }
 
-      for (final CoreCalendarsDAO.LastModAndPath lmp: lmps) {
-        final String token = BwLastMod.getTagValue(lmp.timestamp, 
-                                                   lmp.sequence);
+      for (final var lmp: lmps) {
+        final String token =
+                BwLastMod.getTagValue(lmp.timestamp(),
+                                      lmp.sequence());
 
-        final BwCalendar c = intf.colCache.get(lmp.path, token);
+        final BwCalendar c = colCache.get(lmp.path(), token);
 
         if ((c != null) && !c.getTombstoned()) {
           wch.add(c);
           continue;
         }
 
-        paths.add(lmp.path);
+        paths.add(lmp.path());
       }
 
       if (paths.isEmpty()) {
@@ -1236,10 +1237,18 @@ class CoreCalendars extends CalintfHelper
     for (final BwCalendar c: ch) {
       final CalendarWrapper wc = intf.wrap(c);
 
-      intf.colCache.put(wc);
+      colCache.put(wc);
       wch.add(wc);
     }
 
     return wch;
+  }
+
+  /** Only valid during a transaction.
+   *
+   * @return a timestamp from the db
+   */
+  private Timestamp getCurrentTimestamp() {
+    return intf.getCurrentTimestamp();
   }
 }

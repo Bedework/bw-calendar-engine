@@ -11,10 +11,38 @@
 
   <artifactId>bw-calendar-engine-core-rw-common</artifactId>
 
-  <properties>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.bedework.caleng</groupId>
+      <artifactId>bw-calendar-engine-core-ro</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
+    <dependency>
+      <groupId>org.bedework.caleng</groupId>
+      <artifactId>bw-calendar-engine-interfaces</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Bedework Dependencies -->
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-calendar-facade</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.bedework.database</groupId>
+      <artifactId>bw-db</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-calendar-sysevents-msgs</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util-misc</artifactId>
+    </dependency>
+  </dependencies>
 </project>

@@ -4,141 +4,41 @@
 package org.bedework.calcore.hibernate;
 
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calfacade.BwAlarm;
-import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.BwEventObj;
+import org.bedework.calcore.rw.common.dao.CoreResourcesDAO;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
-import org.bedework.calfacade.svc.BwAdminGroup;
-import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.database.db.DbSession;
 import org.bedework.util.misc.Util;
 
-import java.util.Collection;
 import java.util.List;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
 
 /**
- * User: mike
- * Date: 11/21/16
- * Time: 23:30
+ * User: mike Date: 2/1/20 Time: 15:23
  */
-public class EntityDAO extends DAOBase {
-  /**
-   * @param sess             the session
+public class CoreResourcesDAOImpl extends DAOBaseImpl implements
+        CoreResourcesDAO {
+  /** Constructor
+   *
+   * @param sess the session
    */
-  public EntityDAO(final DbSession sess) {
+  CoreResourcesDAOImpl(final DbSession sess) {
     super(sess);
   }
 
   @Override
   public String getName() {
-    return EntityDAO.class.getName();
+    return CoreResourcesDAOImpl.class.getName();
   }
-
-  /* ====================================================================
-   *                       calendar suites
-   * ==================================================================== */
-
-  private static final String getCalSuiteByGroupQuery =
-          "from org.bedework.calfacade.svc.BwCalSuite cal " +
-                  "where cal.group=:group";
-
-  public BwCalSuite get(final BwAdminGroup group) {
-    final var sess = getSess();
-
-    sess.createQuery(getCalSuiteByGroupQuery);
-
-    sess.setEntity("group", group);
-
-    final BwCalSuite cs = (BwCalSuite)sess.getUnique();
-
-    if (cs != null){
-      sess.evict(cs);
-    }
-
-    return cs;
-  }
-
-  private static final String getCalSuiteQuery =
-          "from org.bedework.calfacade.svc.BwCalSuite cal " +
-                  "where cal.name=:name";
-
-  public BwCalSuite getCalSuite(final String name) {
-    final var sess = getSess();
-
-    sess.createQuery(getCalSuiteQuery);
-
-    sess.setString("name", name);
-
-    return (BwCalSuite)sess.getUnique();
-  }
-
-  private static final String getAllCalSuitesQuery =
-          "from " + BwCalSuite.class.getName();
-
-  @SuppressWarnings("unchecked")
-  public Collection<BwCalSuite> getAllCalSuites() {
-    final var sess = getSess();
-
-    sess.createQuery(getAllCalSuitesQuery);
-
-    return (Collection<BwCalSuite>)sess.getList();
-  }
-
-  /* ====================================================================
-   *                   Alarms
-   * ==================================================================== */
-
-  private static final String getUnexpiredAlarmsQuery =
-          "from " + BwAlarm.class.getName() + " as al " +
-                  "where al.expired = false";
-
-  /* Return all unexpired alarms before the given time */
-  private static final String getUnexpiredAlarmsTimeQuery =
-          "from " + BwAlarm.class.getName() + " as al " +
-                  "where al.expired = false and " +
-                  "al.triggerTime <= :tt";
-
-  @SuppressWarnings("unchecked")
-  public Collection<BwAlarm> getUnexpiredAlarms(final long triggerTime) {
-    final var sess = getSess();
-
-    if (triggerTime == 0) {
-      sess.createQuery(getUnexpiredAlarmsQuery);
-    } else {
-      sess.createQuery(getUnexpiredAlarmsTimeQuery);
-      sess.setString("tt", String.valueOf(triggerTime));
-    }
-
-    return (Collection<BwAlarm>)sess.getList();
-  }
-
-  private static final String eventByAlarmQuery =
-          "select count(*) from " + BwEventObj.class.getName() + " as ev " +
-                  "where ev.tombstoned=false and :alarm in alarms";
-
-  @SuppressWarnings("unchecked")
-  public Collection<BwEvent> getEventsByAlarm(final BwAlarm alarm) {
-    final var sess = getSess();
-
-    sess.createQuery(eventByAlarmQuery);
-    sess.setInt("alarmId", alarm.getId());
-
-    return (Collection<BwEvent>)sess.getList();
-  }
-
-  /* ====================================================================
-   *                       resources
-   * ==================================================================== */
 
   private static final String getResourceQuery =
           "from " + BwResource.class.getName() +
                   " where name=:name and colPath=:path" +
                   " and (encoding is null or encoding <> :tsenc)";
 
+  @Override
   public BwResource getResource(final String name,
                                 final String colPath,
                                 final int desiredAccess) {
@@ -157,6 +57,7 @@ public class EntityDAO extends DAOBase {
           "from " + BwResourceContent.class.getName() +
                   " as rc where rc.colPath=:path and rc.name=:name";
 
+  @Override
   public void getResourceContent(final BwResource val) {
     final var sess = getSess();
 
@@ -187,6 +88,7 @@ public class EntityDAO extends DAOBase {
                   " order by r.created desc";
 
   @SuppressWarnings("unchecked")
+  @Override
   public List<BwResource> getAllResources(final String path,
                                           final boolean forSynch,
                                           final String token,

@@ -502,7 +502,6 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public void principalChanged() {
-    colCache.clear();
   }
 
   @Override

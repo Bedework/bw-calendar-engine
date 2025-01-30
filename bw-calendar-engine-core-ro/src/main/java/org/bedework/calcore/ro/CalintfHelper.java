@@ -18,9 +18,7 @@
 */
 package org.bedework.calcore.ro;
 
-import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
-import org.bedework.base.exc.BedeworkAccessException;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfDefs;
@@ -44,7 +42,6 @@ import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.AccessChecker;
-import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.util.NotificationsInfo;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.events.SysEvent;
@@ -54,7 +51,6 @@ import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 import java.util.Collection;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
@@ -147,14 +143,6 @@ public abstract class CalintfHelper
     }
 
     return getPrincipal().getPrincipalRef();
-  }
-
-  /** Only valid during a transaction.
-   *
-   * @return a timestamp from the db
-   */
-  public Timestamp getCurrentTimestamp() {
-    return intf.getCurrentTimestamp();
   }
 
   public BwCalendar getCollection(final String path) {
@@ -282,62 +270,6 @@ public abstract class CalintfHelper
     }
 
     return ((CalendarWrapper)val).fetchEntity();
-  }
-
-  protected BwCalendar getEntityCollection(final String path,
-                                           final int nonSchedAccess,
-                                           final boolean scheduling,
-                                           final boolean alwaysReturn) {
-    final int desiredAccess;
-
-    if (!scheduling) {
-      desiredAccess = nonSchedAccess;
-    } else {
-      desiredAccess = privAny;
-    }
-
-    final BwCalendar cal = getCollection(path, desiredAccess,
-                                         alwaysReturn | scheduling);
-    if (cal == null) {
-      return null;
-    }
-
-    if (!cal.getCalendarCollection()) {
-      throwException(new BedeworkAccessException());
-    }
-
-    if (!scheduling) {
-      return cal;
-    }
-
-    CurrentAccess ca;
-    final AccessUtilI access = ac.getAccessUtil();
-
-    if ((cal.getCalType() == BwCalendar.calTypeInbox) ||
-        (cal.getCalType() == BwCalendar.calTypePendingInbox)) {
-      ca = access.checkAccess(cal, privScheduleDeliver,
-                              true); //alwaysReturn
-      if (!ca.getAccessAllowed()) {
-        // try old style
-        ca = access.checkAccess(cal, privScheduleRequest,
-                                true); //alwaysReturn
-      }
-    } else if (cal.getCalType() == BwCalendar.calTypeOutbox) {
-      ca = access.checkAccess(cal, privScheduleSend, true);
-      if (!ca.getAccessAllowed()) {
-        // try old style
-        ca = access.checkAccess(cal, privScheduleReply,
-                                true); //alwaysReturn
-      }
-    } else {
-      throw new BedeworkAccessException();
-    }
-
-    if (!ca.getAccessAllowed()) {
-      return null;
-    }
-
-    return cal;
   }
 
   protected void tombstoneEntity(final BwShareableContainedDbentity<?> val) {

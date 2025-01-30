@@ -20,6 +20,7 @@
 package org.bedework.calcore.hibernate;
 
 import org.bedework.base.exc.BedeworkException;
+import org.bedework.calcore.rw.common.dao.CoreEventPropertiesDAO;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -41,7 +42,8 @@ import java.util.List;
  * @author Mike Douglass    douglm  rpi.edu
  * @version 1.0
  */
-public class CoreEventPropertiesDAO extends DAOBase {
+public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
+        implements CoreEventPropertiesDAO {
   private final String className;
 
   /* This was easier with named queries */
@@ -138,8 +140,8 @@ public class CoreEventPropertiesDAO extends DAOBase {
    * @param sess the session
    * @param className of class we act for
    */
-  public CoreEventPropertiesDAO(final DbSession sess,
-                                final String className) {
+  public CoreEventPropertiesDAOImpl(final DbSession sess,
+                                    final String className) {
     super(sess);
 
     this.className = className;
@@ -150,13 +152,14 @@ public class CoreEventPropertiesDAO extends DAOBase {
 
   @Override
   public String getName() {
-    return CoreEventPropertiesDAO.class.getName() + "-" + className;
+    return CoreEventPropertiesDAOImpl.class.getName() + "-" + className;
   }
 
   private String getAllQuery;
 
   @SuppressWarnings("unchecked")
-  public List<BwEventProperty> getAll(final String ownerHref) {
+  @Override
+  public List<BwEventProperty<?>> getAll(final String ownerHref) {
     if (getAllQuery == null) {
       getAllQuery = "from " + className + " ent where " +
               " ent.ownerHref=:ownerHref" +
@@ -173,13 +176,13 @@ public class CoreEventPropertiesDAO extends DAOBase {
 
     sess.setString("ownerHref", ownerHref);
 
-    return (List<BwEventProperty>)sess.getList();
+    return (List<BwEventProperty<?>>)sess.getList();
   }
 
   private String getQuery;
 
-  @SuppressWarnings("unchecked")
-  public BwEventProperty get(final String uid) {
+  @Override
+  public BwEventProperty<?> get(final String uid) {
     if (getQuery == null) {
       getQuery = "from " + className + " ent where uid=:uid";
     }
@@ -190,14 +193,14 @@ public class CoreEventPropertiesDAO extends DAOBase {
 
     sess.setString("uid", uid);
 
-    return (BwEventProperty)sess.getUnique();
+    return (BwEventProperty<?>)sess.getUnique();
   }
 
-  public void delete(final BwEventProperty val) {
+  @Override
+  public void delete(final BwEventProperty<?> val) {
     final var sess = getSess();
 
-    @SuppressWarnings("unchecked")
-    final BwEventProperty v = (BwEventProperty)sess.merge(val);
+    final var v = (BwEventProperty<?>)sess.merge(val);
 
     sess.createQuery(delPrefsQuery.get(className));
     sess.setInt("id", v.getId());
@@ -206,7 +209,9 @@ public class CoreEventPropertiesDAO extends DAOBase {
     sess.delete(v);
   }
 
-  public List<EventPropertiesReference> getRefs(final BwEventProperty val) {
+  @Override
+  public List<EventPropertiesReference> getRefs(
+          final BwEventProperty<?> val) {
     final List<EventPropertiesReference> refs = getRefs(val,
                                                   refsQuery.get(className));
 
@@ -223,7 +228,8 @@ public class CoreEventPropertiesDAO extends DAOBase {
     return refs;
   }
 
-  public long getRefsCount(final BwEventProperty val) {
+  @Override
+  public long getRefsCount(final BwEventProperty<?> val) {
     long total = getRefsCount(val, refsCountQuery.get(className));
 
     /* The parameterization doesn't quite cut it for categories. They can appear
@@ -241,16 +247,18 @@ public class CoreEventPropertiesDAO extends DAOBase {
   private String findQuery;
   private String findCountQuery;
 
-  public BwEventProperty find(final BwString val,
-                              final String ownerHref) {
+  @Override
+  public BwEventProperty<?> find(final BwString val,
+                                 final String ownerHref) {
     if (findQuery == null) {
       findQuery = "from " + className + " ent where ";
     }
 
     doFind(findQuery, val, ownerHref);
-    return (BwEventProperty)getSess().getUnique();
+    return (BwEventProperty<?>)getSess().getUnique();
   }
 
+  @Override
   public void checkUnique(final BwString val,
                           final String ownerHref) {
     if (findCountQuery == null) {
@@ -269,9 +277,9 @@ public class CoreEventPropertiesDAO extends DAOBase {
     }
   }
 
-  /* ====================================================================
+  /* ============================================================
    *                   Private methods
-   * ==================================================================== */
+   * ============================================================ */
 
   private void doFind(final String qpfx,
                       final BwString val,
@@ -299,7 +307,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
   }
 
   @SuppressWarnings("unchecked")
-  private List<EventPropertiesReference> getRefs(final BwEventProperty val,
+  private List<EventPropertiesReference> getRefs(final BwEventProperty<?> val,
                                                  final String query) {
     final var sess = getSess();
 
@@ -316,7 +324,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
     return refs;
   }
 
-  private long getRefsCount(final BwEventProperty val,
+  private long getRefsCount(final BwEventProperty<?> val,
                             final String query) {
     final var sess = getSess();
 
@@ -331,7 +339,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
 
     if (debug()) {
       debug(" ----------- count = " + counts.size());
-      if (counts.size() > 0) {
+      if (!counts.isEmpty()) {
         debug(" ---------- first el class is " + counts.iterator().next().getClass().getName());
       }
     }

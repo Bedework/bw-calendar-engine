@@ -127,8 +127,6 @@ public abstract class CalintfBase implements Logged, Calintf {
    */
   protected AccessUtil access;
 
-  public CollectionCache colCache;
-
   private final BwIndexFetcher indexFetcher = new BwIndexFetcherImpl();
 
   public class CIAccessChecker implements AccessChecker {

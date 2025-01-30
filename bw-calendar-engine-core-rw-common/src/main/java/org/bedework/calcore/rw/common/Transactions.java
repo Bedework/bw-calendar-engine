@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calcore;
+package org.bedework.calcore.rw.common;
 
 import org.bedework.base.exc.BedeworkException;
 

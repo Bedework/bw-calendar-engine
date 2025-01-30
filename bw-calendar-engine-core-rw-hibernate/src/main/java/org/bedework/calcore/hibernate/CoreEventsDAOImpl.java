@@ -18,6 +18,7 @@
 */
 package org.bedework.calcore.hibernate;
 
+import org.bedework.calcore.rw.common.dao.CoreEventsDAO;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
@@ -33,26 +34,28 @@ import java.util.List;
  * 
  * @author Mike Douglass   douglm  - bedework.org
  */
-public class CoreEventsDAO extends DAOBase {
+public class CoreEventsDAOImpl extends DAOBaseImpl
+        implements CoreEventsDAO {
   /** Constructor
    *
    * @param sess the session
    */
-  public CoreEventsDAO(final DbSession sess) {
+  public CoreEventsDAOImpl(final DbSession sess) {
     super(sess);
   }
 
   @Override
   public String getName() {
-    return CoreEventsDAO.class.getName();
+    return CoreEventsDAOImpl.class.getName();
   }
 
   private static final String eventsByNameQuery =
     "from " + BwEventObj.class.getName() + " as ev " +
       "where ev.name = :name and ev.tombstoned=false and ev.colPath = :colPath";
 
-  protected List<BwEvent> getEventsByName(final String colPath,
-                                          final String name) {
+  @Override
+  public List<BwEvent> getEventsByName(final String colPath,
+                                       final String name) {
     final var sess = getSess();
 
     sess.createQuery(eventsByNameQuery);
@@ -70,8 +73,10 @@ public class CoreEventsDAO extends DAOBase {
                   "ev.tombstoned=false and " +
                   "ev.override=false";
 
-  protected BwEventAnnotation getEventsAnnotationName(final String colPath,
-                                                      final String name) {
+  @Override
+  public BwEventAnnotation getEventsAnnotationName(
+          final String colPath,
+          final String name) {
     final var sess = getSess();
 
     sess.createQuery(eventAnnotationsByNameQuery);
@@ -97,8 +102,9 @@ public class CoreEventsDAO extends DAOBase {
                   "ev.colPath = :path and " +
                   "ev.uid = :uid";
 
-  protected void deleteTombstonedEvent(final String colPath,
-                                     final String uid) {
+  @Override
+  public void deleteTombstonedEvent(final String colPath,
+                                    final String uid) {
     final var sess = getSess();
 
     sess.createQuery(deleteTombstonedEventQuery);
@@ -121,8 +127,9 @@ public class CoreEventsDAO extends DAOBase {
                   // No deleted events for null sync-token
                   "ev.tombstoned = false";
 
-  protected List<?> getSynchEventObjects(final String path,
-                                         final String token) {
+  @Override
+  public List<?> getSynchEventObjects(final String path,
+                                      final String token) {
     final var sess = getSess();
     
     if (token != null) {
@@ -151,9 +158,11 @@ public class CoreEventsDAO extends DAOBase {
                   "ev.tombstoned = false " +
                   "order by ev.created, ev.name";
 
-  public List<String> getChildrenEntities(final String parentPath,
-                                          final int start,
-                                          final int count) {
+  @Override
+  public List<String> getChildrenEntities(
+          final String parentPath,
+          final int start,
+          final int count) {
     final var sess = getSess();
 
     sess.createQuery(getChildEntitiesQuery);
@@ -175,6 +184,7 @@ public class CoreEventsDAO extends DAOBase {
           "from " + BwEventAnnotation.class.getName() +
                   " where recurrenceId=null";
 
+  @Override
   public Iterator<BwEventAnnotation> getEventAnnotations() {
     final var sess = getSess();
 
@@ -193,7 +203,9 @@ public class CoreEventsDAO extends DAOBase {
                   " and target=:target";
 
   @SuppressWarnings("unchecked")
-  public Collection<BwEventAnnotation> getEventOverrides(final BwEvent ev) {
+  @Override
+  public Collection<BwEventAnnotation> getEventOverrides(
+          final BwEvent ev) {
     final var sess = getSess();
 
     sess.createQuery(getEventOverridesQuery);
@@ -216,9 +228,10 @@ public class CoreEventsDAO extends DAOBase {
   
   /* Return the name of any event which has the same uid
    */
-  protected String calendarGuidExists(final BwEvent val,
-                                      final boolean annotation,
-                                      final boolean adding) {
+  @Override
+  public String calendarGuidExists(final BwEvent val,
+                                   final boolean annotation,
+                                   final boolean adding) {
     final var sess = getSess();
 
     final StringBuilder sb = new StringBuilder();
@@ -294,9 +307,10 @@ public class CoreEventsDAO extends DAOBase {
           "select count(*) from " + BwEventAnnotation.class.getName() + " ev " +
                   "where ev.tombstoned = false and ";
 
-  protected boolean calendarNameExists(final BwEvent val,
-                                       final boolean annotation,
-                                       final boolean adding) {
+  @Override
+  public boolean calendarNameExists(final BwEvent val,
+                                    final boolean annotation,
+                                    final boolean adding) {
     final var sess = getSess();
 
     final StringBuilder sb = new StringBuilder();
@@ -361,7 +375,9 @@ public class CoreEventsDAO extends DAOBase {
                   " where target=:target";
 
   @SuppressWarnings("unchecked")
-  protected Collection<BwEventAnnotation> getAnnotations(final BwEvent val) {
+  @Override
+  public Collection<BwEventAnnotation> getAnnotations(
+          final BwEvent val) {
     final var sess = getSess();
 
     sess.createQuery(getAnnotationsQuery);
@@ -378,11 +394,13 @@ public class CoreEventsDAO extends DAOBase {
     return anns;
   }
 
-  protected <T extends BwEvent> List<T> eventQuery(final Class<T> cl,
-                            final String colPath,
-                            final String guid,
-                            final BwEvent master,
-                            final Boolean overrides) {
+  @Override
+  public <T extends BwEvent> List<T> eventQuery(
+          final Class<T> cl,
+          final String colPath,
+          final String guid,
+          final BwEvent master,
+          final Boolean overrides) {
     final var sess = getSess();
     final EventQueryBuilder qb = new EventQueryBuilder();
     final String qevName = "ev";

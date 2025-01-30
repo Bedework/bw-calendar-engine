@@ -18,6 +18,7 @@
 */
 package org.bedework.calcore.hibernate;
 
+import org.bedework.calcore.rw.common.dao.FilterDefsDAO;
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.database.db.DbSession;
@@ -28,18 +29,19 @@ import java.util.Collection;
  *
  * @author Mike Douglass       douglm - rpi.edu
  */
-class FilterDefsDAO extends DAOBase {
+class FilterDefsDAOImpl extends DAOBaseImpl
+        implements FilterDefsDAO {
   /** Constructor
   *
    * @param sess the session
   */
- public FilterDefsDAO(final DbSession sess) {
+ public FilterDefsDAOImpl(final DbSession sess) {
    super(sess);
  }
 
   @Override
   public String getName() {
-    return FilterDefsDAO.class.getName();
+    return FilterDefsDAOImpl.class.getName();
   }
 
   private static final String getAllFilterDefsQuery =
@@ -47,7 +49,9 @@ class FilterDefsDAO extends DAOBase {
                   " where ownerHref=:ownerHref";
 
   @SuppressWarnings("unchecked")
-  public Collection<BwFilterDef> getAllFilterDefs(final BwPrincipal owner) {
+  @Override
+  public Collection<BwFilterDef> getAllFilterDefs(
+          final BwPrincipal<?> owner) {
     final var sess = getSess();
 
     sess.createQuery(getAllFilterDefsQuery);
@@ -60,8 +64,9 @@ class FilterDefsDAO extends DAOBase {
           "from " + BwFilterDef.class.getName() +
                   " where ownerHref=:ownerHref and name=:name";
 
+  @Override
   public BwFilterDef fetch(final String name,
-                           final BwPrincipal owner) {
+                           final BwPrincipal<?> owner) {
     final var sess = getSess();
 
     sess.createQuery(fetchFilterDefQuery);

@@ -16,13 +16,16 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calcore.hibernate;
+package org.bedework.calcore.rw.common;
 
 import org.bedework.access.CurrentAccess;
+import org.bedework.base.exc.BedeworkAccessException;
 import org.bedework.base.exc.BedeworkDupNameException;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.base.response.GetEntityResponse;
 import org.bedework.calcore.ro.CalintfHelper;
+import org.bedework.calcore.rw.common.dao.CoreEventsDAO;
+import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI;
 import org.bedework.caldav.util.filter.FilterBase;
@@ -41,13 +44,12 @@ import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.AccessChecker;
-import org.bedework.calfacade.util.CalFacadeUtil.HrefRecurrenceId;
+import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.convert.RecurUtil;
 import org.bedework.convert.RecurUtil.RecurPeriods;
-import org.bedework.database.db.DbSession;
 import org.bedework.sysevents.events.StatsEvent;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.IcalDefs;
@@ -200,19 +202,18 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
   /** Constructor
    *
-   * @param sess persistance session
+   * @param dao for db access
    * @param intf interface
    * @param ac access checker
    * @param authProps - authorisation info
    * @param sessionless if true
    */
-  public CoreEvents(final DbSession sess,
-                    final CalintfImpl intf,
+  public CoreEvents(final CoreEventsDAO dao,
+                    final Calintf intf,
                     final AccessChecker ac,
                     final AuthProperties authProps,
                     final boolean sessionless) {
-    dao = new CoreEventsDAO(sess);
-    intf.registerDao(dao);
+    this.dao = dao;
     super.init(intf, ac, sessionless);
     this.authProps = authProps;
   }
@@ -316,11 +317,30 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     return ts;
   }
 
+  /**
+   * User: mike Date: 6/13/18 Time: 23:06
+   */
+  public static class PathAndName {
+    final String colPath;
+    final String name;
+
+    public PathAndName(final String href) {
+      final int pos = href.lastIndexOf("/");
+      if (pos < 0) {
+        throw new RuntimeException("Bad href: " + href);
+      }
+
+      name = href.substring(pos + 1);
+
+      colPath = href.substring(0, pos);
+    }
+  }
+
   @Override
   public CoreEventInfo getEvent(final String href) {
-    final HrefRecurrenceId hr = getHrefRecurrenceId(href);
+    final var hr = getHrefRecurrenceId(href);
 
-    final PathAndName pn = new PathAndName(hr.hrefNorid);
+    final var pn = new PathAndName(hr.hrefNorid);
     final List<BwEvent> evs = dao.getEventsByName(pn.colPath, pn.name);
 
     /* If this is availability we should have one vavailability and a number of
@@ -856,8 +876,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     final boolean shared;
 
     try {
-      final BwCalendar col = getEntityCollection(ev.getColPath(),
-                                                 privAny, scheduling, false);
+      final var col = getEntityCollection(ev.getColPath(),
+                                          privAny, scheduling, false);
       shared = col.getPublick() || col.getShared();
 
       if (!scheduling) {
@@ -951,7 +971,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         // Wasn't an rdate event
         master.addExdate(instDate);
       }
-      master.setDtstamps(getCurrentTimestamp());
+      master.setDtstamps(intf.getCurrentTimestamp());
       dao.update(master);
 
       der.eventDeleted = true;
@@ -1030,7 +1050,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
     if (from.getCalType() != BwCalendar.calTypePendingInbox) {
       final BwEvent tombstone = ev.cloneTombstone();
-      tombstone.setDtstamps(getCurrentTimestamp());
+      tombstone.setDtstamps(intf.getCurrentTimestamp());
 
       //tombstoneEvent(tombstone);
 
@@ -1093,7 +1113,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
     clearCollection(val.getAvailableUids()); // vavailability only
 
-    val.setDtstamps(getCurrentTimestamp());
+    val.setDtstamps(intf.getCurrentTimestamp());
     val.setTombstoned(true);
 
     dao.update(val);
@@ -1212,7 +1232,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       dao.update(override);
 
       /* Update the lastmod on the master event */
-      mstr.setDtstamps(getCurrentTimestamp());
+      mstr.setDtstamps(intf.getCurrentTimestamp());
       dao.update(mstr);
     } else {
       dao.update(override);
@@ -1435,13 +1455,70 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     uc.addDeleted(rid);
   }
 
+  private BwCalendar getEntityCollection(final String path,
+                                         final int nonSchedAccess,
+                                         final boolean scheduling,
+                                         final boolean alwaysReturn) {
+    final int desiredAccess;
+
+    if (!scheduling) {
+      desiredAccess = nonSchedAccess;
+    } else {
+      desiredAccess = privAny;
+    }
+
+    final BwCalendar cal =
+            intf.getCollection(path, desiredAccess,
+                               alwaysReturn | scheduling);
+    if (cal == null) {
+      return null;
+    }
+
+    if (!cal.getCalendarCollection()) {
+      throwException(new BedeworkAccessException());
+    }
+
+    if (!scheduling) {
+      return cal;
+    }
+
+    CurrentAccess ca;
+    final AccessUtilI access = ac.getAccessUtil();
+
+    if ((cal.getCalType() == BwCalendar.calTypeInbox) ||
+            (cal.getCalType() == BwCalendar.calTypePendingInbox)) {
+      ca = access.checkAccess(cal, privScheduleDeliver,
+                              true); //alwaysReturn
+      if (!ca.getAccessAllowed()) {
+        // try old style
+        ca = access.checkAccess(cal, privScheduleRequest,
+                                true); //alwaysReturn
+      }
+    } else if (cal.getCalType() == BwCalendar.calTypeOutbox) {
+      ca = access.checkAccess(cal, privScheduleSend, true);
+      if (!ca.getAccessAllowed()) {
+        // try old style
+        ca = access.checkAccess(cal, privScheduleReply,
+                                true); //alwaysReturn
+      }
+    } else {
+      throw new BedeworkAccessException();
+    }
+
+    if (!ca.getAccessAllowed()) {
+      return null;
+    }
+
+    return cal;
+  }
+
   private void fixReferringAnnotations(final BwEvent val,
                                        final boolean shared) {
     /* We may have annotations to annotations so we hunt them all down deleting
      * the leaf entries first.
      */
 
-    for (final BwEventAnnotation ev: dao.getAnnotations(val)) {
+    for (final var ev: dao.getAnnotations(val)) {
       /* The recursive call is intended to allow annotations to annotatiuons.
        * Unfortunately this in't going to work as the reference in the
        * annotation class is always to the master event. We need an extra column

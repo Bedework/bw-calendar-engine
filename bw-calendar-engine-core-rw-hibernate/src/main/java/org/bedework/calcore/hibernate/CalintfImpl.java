@@ -22,6 +22,14 @@ import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.ro.CalintfROImpl;
+import org.bedework.calcore.rw.common.CoreCalendars;
+import org.bedework.calcore.rw.common.CoreEventProperties;
+import org.bedework.calcore.rw.common.CoreEvents;
+import org.bedework.calcore.rw.common.CoreResources;
+import org.bedework.calcore.rw.common.dao.DAOBase;
+import org.bedework.calcore.rw.common.dao.EntityDAO;
+import org.bedework.calcore.rw.common.dao.FilterDefsDAO;
+import org.bedework.calcore.rw.common.dao.PrincipalsAndPrefsDAO;
 import org.bedework.calcorei.CalintfInfo;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventPropertiesI;
@@ -224,14 +232,21 @@ public class CalintfImpl extends CalintfROImpl {
       authProps = configs.getAuthenticatedAuthProperties();
     }
 
-    events = new CoreEvents(sess, this,
+    final var evDao = new CoreEventsDAOImpl(sess);
+    registerDao(evDao);
+    events = new CoreEvents(evDao, this,
                             ac, authProps, sessionless);
 
-    calendars = new CoreCalendars(sess, this,
-                                  ac, readOnlyMode, sessionless);
+    final var calDao = new CoreCalendarsDAOImpl(sess);
+    registerDao(calDao);
+    calendars = new CoreCalendars(calDao,
+                                  this,
+                                  ac, sessionless);
 
-    resources = new CoreResources(sess, this,
-                                  ac, readOnlyMode, sessionless);
+    final var resDao = new CoreResourcesDAOImpl(sess);
+    registerDao(resDao);
+    resources = new CoreResources(resDao, this,
+                                  ac, sessionless);
 
     access.setCollectionGetter(calendars);
   }
@@ -266,8 +281,8 @@ public class CalintfImpl extends CalintfROImpl {
     dbStats.setStatisticsEnabled(enable);
   }
 
-  public void registerDao(final DAOBase dao) {
-    final DAOBase entry = getDaos().get(dao.getName());
+  private void registerDao(final DAOBase dao) {
+    final var entry = getDaos().get(dao.getName());
 
     if (entry != null) {
       error("******************************************\n" +
@@ -292,9 +307,9 @@ public class CalintfImpl extends CalintfROImpl {
     return DbStatistics.getStats(dbStats);
   }
 
-  /* ====================================================================
+  /* ==========================================================
    *                   Indexing
-   * ==================================================================== */
+   * ========================================================== */
 
   public void closeIndexers() {
     try {
@@ -346,9 +361,9 @@ public class CalintfImpl extends CalintfROImpl {
     }
   }
 
-  /* ====================================================================
+  /* ==========================================================
    *                   Misc methods
-   * ==================================================================== */
+   * ========================================================== */
 
   @Override
   public void open(final FilterParserFetcher filterParserFetcher,
@@ -378,33 +393,30 @@ public class CalintfImpl extends CalintfROImpl {
     }
 
     if (sess == null) {
+      sess = new HibSessionImpl();
+      sess.init(getSessionFactory());
       if (debug()) {
         debug(format("New database session (class %s) for %s",
                      sess.getClass(), getTraceId()));
       }
-      sess = new HibSessionImpl();
-      sess.init(getSessionFactory());
-      if (debug()) {
-        debug("Open session for " + getTraceId());
-      }
     }
 
     if (entityDao == null) {
-      entityDao = new EntityDAO(sess);
+      entityDao = new EntityDAOImpl(sess);
       registerDao(entityDao);
     }
 
     if (principalsAndPrefs == null) {
-      principalsAndPrefs = new PrincipalsAndPrefsDAO(sess);
+      principalsAndPrefs = new PrincipalsAndPrefsDAOImpl(sess);
       registerDao(principalsAndPrefs);
     }
 
     if (filterDefs == null) {
-      filterDefs = new FilterDefsDAO(sess);
+      filterDefs = new FilterDefsDAOImpl(sess);
       registerDao(filterDefs);
     }
     
-    for (final DAOBase dao: daos.values()) {
+    for (final var dao: daos.values()) {
       dao.setSess(sess);
     }
   }
@@ -1229,9 +1241,9 @@ public class CalintfImpl extends CalintfROImpl {
     entityDao.delete(val);
   }
 
-  /* ====================================================================
+  /* =========================================================
    *                       principals + prefs
-   * ==================================================================== */
+   * ========================================================= */
 
   @Override
   public BwPrincipal<?> getPrincipal(final String href) {
@@ -1383,9 +1395,9 @@ public class CalintfImpl extends CalintfROImpl {
     return principalsAndPrefs.getGroups(val, true);
   }
 
-  /* ====================================================================
+  /* ==========================================================
    *                       calendar suites
-   * ==================================================================== */
+   * ========================================================== */
 
   @Override
   public BwCalSuite get(final BwAdminGroup group) {
@@ -1445,10 +1457,14 @@ public class CalintfImpl extends CalintfROImpl {
   public <T extends BwEventProperty<?>> CoreEventPropertiesI<T> getEvPropsHandler(final Class<T> cl) {
     if (cl.equals(BwCategory.class)) {
       if (categoriesHandler == null) {
+        final var dao = new CoreEventPropertiesDAOImpl(
+                sess,
+                BwCategory.class.getName());
+        registerDao(dao);
+
         categoriesHandler =
-            new CoreEventProperties<>(sess, this,
-                                      ac, readOnlyMode, sessionless,
-                                      BwCategory.class.getName());
+            new CoreEventProperties<>(dao, this,
+                                      ac, sessionless);
       }
 
       return (CoreEventPropertiesI<T>)categoriesHandler;
@@ -1456,21 +1472,31 @@ public class CalintfImpl extends CalintfROImpl {
 
     if (cl.equals(BwContact.class)) {
       if (contactsHandler == null) {
+        final var dao = new CoreEventPropertiesDAOImpl(
+                sess,
+                BwContact.class.getName());
+        registerDao(dao);
+
         contactsHandler =
-                new CoreEventProperties<>(sess, this,
-                                          ac, readOnlyMode, sessionless,
-                                          BwContact.class.getName());
+                new CoreEventProperties<>(dao, this,
+                                          ac,
+                                          sessionless);
       }
 
       return (CoreEventPropertiesI<T>)contactsHandler;
     }
 
     if (cl.equals(BwLocation.class)) {
+      final var dao = new CoreEventPropertiesDAOImpl(
+              sess,
+              BwLocation.class.getName());
+      registerDao(dao);
+
       if (locationsHandler == null) {
         locationsHandler =
-                new CoreEventProperties<>(sess, this,
-                                          ac, readOnlyMode, sessionless,
-                                          BwLocation.class.getName());
+                new CoreEventProperties<>(dao, this,
+                                          ac,
+                                          sessionless);
       }
 
       return (CoreEventPropertiesI<T>)locationsHandler;

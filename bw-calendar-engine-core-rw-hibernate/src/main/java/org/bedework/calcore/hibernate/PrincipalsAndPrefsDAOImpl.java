@@ -5,6 +5,7 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.access.WhoDefs;
 import org.bedework.base.exc.BedeworkException;
+import org.bedework.calcore.rw.common.dao.PrincipalsAndPrefsDAO;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -34,31 +35,34 @@ import java.util.TreeSet;
  * Date: 11/21/16
  * Time: 23:30
  */
-public class PrincipalsAndPrefsDAO extends DAOBase {
+public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
+        implements PrincipalsAndPrefsDAO {
   /**
    * @param sess             the session
    */
-  public PrincipalsAndPrefsDAO(final DbSession sess) {
+  public PrincipalsAndPrefsDAOImpl(final DbSession sess) {
     super(sess);
   }
 
   @Override
   public String getName() {
-    return PrincipalsAndPrefsDAO.class.getName();
+    return PrincipalsAndPrefsDAOImpl.class.getName();
   }
 
+  @Override
   public void add(final BwGroupEntry val) {
     getSess().add(val);
   }
 
-  /* ====================================================================
+  /* =====================================================
    *                       principals + prefs
-   * ==================================================================== */
+   * ===================================================== */
 
   private final static String getPrincipalQuery =
           "from " + BwUser.class.getName() +
                   " as u where u.principalRef = :href";
 
+  @Override
   public BwPrincipal<?> getPrincipal(final String href) {
     final var sess = getSess();
 
@@ -88,6 +92,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
           "select u.principalRef from " + BwUser.class.getName() +
                   " u order by u.principalRef";
 
+  @Override
   public List<String> getPrincipalHrefs(final int start,
                                         final int count) {
     final var sess = getSess();
@@ -111,6 +116,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
           "from " + BwPreferences.class.getName() + " p " +
                   "where p.ownerHref=:ownerHref";
 
+  @Override
   public BwPreferences getPreferences(final String principalHref) {
     final var sess = getSess();
 
@@ -120,9 +126,9 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
     return (BwPreferences)sess.getUnique();
   }
 
-  /* ====================================================================
+  /* ======================================================
    *                       admin groups
-   * ==================================================================== */
+   * ====================================================== */
 
   private static final String getAdminGroupQuery =
           "from " + BwAdminGroup.class.getName() + " ag " +
@@ -132,8 +138,9 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
           "from " + BwGroup.class.getName() + " g " +
                   "where g.account = :account";
 
+  @Override
   public BwGroup<?> findGroup(final String account,
-                           final boolean admin) {
+                              final boolean admin) {
     final var sess = getSess();
 
     if (admin) {
@@ -161,12 +168,8 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "where g.id = ge.groupId and " +
                   "ge.memberId=:grpid and ge.memberIsGroup=true";
 
-  /**
-   * @param group the group
-   * @param admin          true for an admin group
-   * @return Collection
-   */
   @SuppressWarnings("unchecked")
+  @Override
   public Collection<BwGroup<?>> findGroupParents(
           final BwGroup<?> group,
           final boolean admin) {
@@ -203,12 +206,9 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "org.bedework.calfacade.BwGroupEntry " +
                   "where memberId=:mbrId and memberIsGroup=:isgroup";
 
-  /** Delete a group
-   *
-   * @param  group           BwGroup group object to delete
-   */
-  public  void removeGroup(final BwGroup<?> group,
-                           final boolean admin) {
+  @Override
+  public void removeGroup(final BwGroup<?> group,
+                          final boolean admin) {
     final var sess = getSess();
 
     if (admin) {
@@ -247,6 +247,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
           "from org.bedework.calfacade.BwGroupEntry " +
                   "where grp=:grp and memberId=:mbrId and memberIsGroup=:isgroup";
 
+  @Override
   public void removeMember(final BwGroup<?> group,
                            final BwPrincipal<?> val,
                            final boolean admin) {
@@ -308,6 +309,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "ge.grp=:gr and ge.memberIsGroup=true";
 
   @SuppressWarnings("unchecked")
+  @Override
   public Collection<BwPrincipal<?>> getMembers(final BwGroup<?> group,
                                                final boolean admin) {
     final var sess = getSess();
@@ -346,7 +348,9 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "order by g.account";
 
   @SuppressWarnings("unchecked")
-  public <T extends BwGroup<?>> Collection<T> getAllGroups(final boolean admin) {
+  @Override
+  public <T extends BwGroup<?>> Collection<T> getAllGroups(
+          final boolean admin) {
     final var sess = getSess();
 
     if (admin) {
@@ -373,6 +377,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "where g.memberId=:entId and g.memberIsGroup=:isgroup";
 
   @SuppressWarnings("unchecked")
+  @Override
   public <T extends BwGroup<?>> Collection<T> getGroups(
           final BwPrincipal<?> val,
           final boolean admin) {
@@ -432,6 +437,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
           "delete from " + BwAuthUserPrefsContact.class.getName() +
                   " where contactid=:id";
 
+  @Override
   public void removeFromAllPrefs(final BwShareableDbentity<?> val) {
     final var sess = getSess();
 
@@ -455,9 +461,9 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
     sess.executeUpdate();
   }
 
-  /* ====================================================================
+  /* ==========================================================
    *                       auth users
-   * ==================================================================== */
+   * ========================================================== */
 
   private final static String getUserQuery =
           "from " +
@@ -465,6 +471,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   " as au " +
                   "where au.userHref = :userHref";
 
+  @Override
   public BwAuthUser getAuthUser(final String href) {
     final var sess = getSess();
     
@@ -481,6 +488,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "order by au.userHref";
 
   @SuppressWarnings("unchecked")
+  @Override
   public List<BwAuthUser> getAllAuthUsers() {
     final var sess = getSess();
 
