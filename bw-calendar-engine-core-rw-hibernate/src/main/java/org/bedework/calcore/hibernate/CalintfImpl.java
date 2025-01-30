@@ -148,7 +148,7 @@ public class CalintfImpl extends CalintfROImpl {
    */
   //sprivate boolean readOnly;
 
-  /** Current hibernate session - exists only across one user interaction
+  /** Current database session - exists only across one user interaction
    */
   private DbSession sess;
 
@@ -379,7 +379,8 @@ public class CalintfImpl extends CalintfROImpl {
 
     if (sess == null) {
       if (debug()) {
-        debug("New hibernate session for " + getTraceId());
+        debug(format("New database session (class %s) for %s",
+                     sess.getClass(), getTraceId()));
       }
       sess = new HibSessionImpl();
       sess.init(getSessionFactory());

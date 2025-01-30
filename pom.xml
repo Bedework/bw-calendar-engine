@@ -28,6 +28,7 @@
     <module>bw-calendar-engine-tools</module>
     <module>bw-calendar-engine-core-rw-openjpa</module>
     <module>bw-calendar-engine-indexing</module>
+    <module>bw-calendar-engine-core-rw-common</module>
   </modules>
 
   <scm>
