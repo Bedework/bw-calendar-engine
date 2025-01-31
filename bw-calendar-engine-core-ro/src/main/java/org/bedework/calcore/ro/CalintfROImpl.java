@@ -159,7 +159,7 @@ public class CalintfROImpl extends CalintfBase
   public void initPinfo(final PrincipalInfo principalInfo) {
     super.initPinfo(principalInfo);
 
-    access.setCollectionGetter(this);
+    accessUtil.setCollectionGetter(this);
   }
 
   public IfInfo getIfInfo() {
@@ -254,8 +254,8 @@ public class CalintfROImpl extends CalintfBase
     this.sessionless = sessionless;
     this.dontKill = dontKill;
 
-    if (access != null) {
-      access.open();
+    if (accessUtil != null) {
+      accessUtil.open();
     }
 
     ac = new CIAccessChecker();
@@ -419,26 +419,26 @@ public class CalintfROImpl extends CalintfBase
   public void changeAccess(final ShareableEntity ent,
                            final Collection<Ace> aces,
                            final boolean replaceAll) {
-    throw new RuntimeException("Read only version");
+    throw new BedeworkException("Read only version");
   }
 
   @Override
   public void changeAccess(final BwCalendar cal,
                            final Collection<Ace> aces,
                            final boolean replaceAll) {
-    throw new RuntimeException("Read only version");
+    throw new BedeworkException("Read only version");
   }
 
   @Override
   public void defaultAccess(final ShareableEntity ent,
                             final AceWho who) {
-    throw new RuntimeException("Read only version");
+    throw new BedeworkException("Read only version");
   }
 
   @Override
   public void defaultAccess(final BwCalendar cal,
                             final AceWho who) {
-    throw new RuntimeException("Read only version");
+    throw new BedeworkException("Read only version");
   }
 
   @Override
@@ -446,14 +446,14 @@ public class CalintfROImpl extends CalintfBase
                   checkAccess(final Collection<? extends ShareableEntity> ents,
                                          final int desiredAccess,
                                          final boolean alwaysReturn) {
-    return access.checkAccess(ents, desiredAccess, alwaysReturn);
+    return accessUtil.checkAccess(ents, desiredAccess, alwaysReturn);
   }
 
   @Override
   public CurrentAccess checkAccess(final ShareableEntity ent,
                                    final int desiredAccess,
                                    final boolean returnResult) {
-    return access.checkAccess(ent, desiredAccess, returnResult);
+    return accessUtil.checkAccess(ent, desiredAccess, returnResult);
   }
 
   public BwCalendar checkAccess(final CalendarWrapper col,
@@ -1266,8 +1266,8 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public void add(final BwUnversionedDbentity<?> val) {
-    throw new RuntimeException("Read only version");
+  public void addRestoredEntity(final BwUnversionedDbentity<?> val) {
+    throw new BedeworkException("Read only version");
   }
 
   /* ====================================================================
@@ -1275,18 +1275,8 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public void add(final BwEventProperty<?> val) {
-    throw new RuntimeException("Read only version");
-  }
-
-  @Override
-  public void update(final BwEventProperty<?> val) {
-    throw new RuntimeException("Read only version");
-  }
-
-  @Override
   public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) {
-    throw new RuntimeException("Read only version");
+    throw new BedeworkException("Read only version");
   }
 
   @Override
@@ -1384,7 +1374,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public List<BwAuthUser> getAll() {
+  public List<BwAuthUser> getAllAuthUsers() {
     throw new RuntimeException("Read only version");
   }
 
@@ -1648,7 +1638,7 @@ public class CalintfROImpl extends CalintfBase
   @Override
   public <T extends BwEventProperty<?>> CoreEventPropertiesI<T> getEvPropsHandler(
           final Class<T> cl) {
-    throw new RuntimeException("Read only version");
+    throw new BedeworkException("Read only version");
   }
 
   /* ====================================================================

@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * User: mike Date: 2/1/20 Time: 14:46
  */
-public interface CorePrincialsAndPrefsI {
+public interface CorePrincipalsAndPrefsI {
   /* ======================================================
    *                       User Auth
    * ====================================================== */
@@ -37,7 +37,7 @@ public interface CorePrincialsAndPrefsI {
   /**
    * @return list of all auth user entries
    */
-  List<BwAuthUser> getAll();
+  List<BwAuthUser> getAllAuthUsers();
 
   /* ======================================================
    *                       principals + prefs
@@ -189,4 +189,34 @@ public interface CorePrincialsAndPrefsI {
    */
   Collection<BwAdminGroup> getAdminGroups(
           BwPrincipal<?> val);
+
+  /**
+   * @param val principal
+   */
+  void add(BwPrincipal<?> val);
+
+  /**
+   * @param val principal
+   */
+  void update(BwPrincipal<?> val);
+
+  /**
+   * @param val the preferences
+   */
+  void add(BwPreferences val);
+
+  /**
+   * @param val the preferences
+   */
+  void update(BwPreferences val);
+
+  /**
+   * @param val auth user entry to delete
+   */
+  void delete(BwAuthUser val);
+
+  /**
+   * @param val the preferences
+   */
+  void delete(BwPreferences val);
 }

@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calcore.hibernate;
+package org.bedework.calcore.hibernate.daoimpl;
 
 import org.bedework.calcore.rw.common.dao.FilterDefsDAO;
 import org.bedework.calfacade.BwFilterDef;
@@ -29,7 +29,7 @@ import java.util.Collection;
  *
  * @author Mike Douglass       douglm - rpi.edu
  */
-class FilterDefsDAOImpl extends DAOBaseImpl
+public class FilterDefsDAOImpl extends DAOBaseImpl
         implements FilterDefsDAO {
   /** Constructor
   *

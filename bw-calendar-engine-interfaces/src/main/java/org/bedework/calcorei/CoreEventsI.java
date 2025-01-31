@@ -43,9 +43,9 @@ import java.util.Set;
  */
 public interface CoreEventsI extends Serializable {
 
-  /* ====================================================================
+  /* ============================================================
    *                   Events
-   * ==================================================================== */
+   * ============================================================ */
 
   /** Return one or more events using the calendar path and guid.
    *
@@ -189,9 +189,9 @@ public interface CoreEventsI extends Serializable {
   /** This class allows the implementations to pass back some information
    * about what happened. If possible it should fill in the supplied fields.
    *
-   * A result of zero for counts does not necessarily indicate nothing
+   * <p>A result of zero for counts does not necessarily indicate nothing
    * happened, for example, the implementation may store elarms as part of
-   * the event object and they just go as part of event deletion.
+   * the event object, and they just go as part of event deletion.
    */
   class DelEventResult {
     /**  false if it didn't exist
@@ -242,7 +242,7 @@ public interface CoreEventsI extends Serializable {
    *
    * @param path - must be non-null
    * @param lastmod - limit search, may be null
-   * @return list of events.
+   * @return set of events.
    */
   Set<CoreEventInfo> getSynchEvents(String path,
                                     String lastmod);

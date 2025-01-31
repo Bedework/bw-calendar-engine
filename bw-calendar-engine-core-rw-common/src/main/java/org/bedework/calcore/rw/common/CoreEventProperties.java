@@ -21,7 +21,7 @@ package org.bedework.calcore.rw.common;
 
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.ro.CalintfHelper;
-import org.bedework.calcore.rw.common.dao.CoreEventPropertiesDAO;
+import org.bedework.calcore.rw.common.dao.EventPropertiesDAO;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CoreEventPropertiesI;
 import org.bedework.calfacade.BwEventProperty;
@@ -41,7 +41,7 @@ import java.util.List;
  */
 public class CoreEventProperties <T extends BwEventProperty<?>>
         extends CalintfHelper implements CoreEventPropertiesI<T> {
-  private final CoreEventPropertiesDAO dao;
+  private final EventPropertiesDAO dao;
 
   /** Constructor
    *
@@ -50,7 +50,7 @@ public class CoreEventProperties <T extends BwEventProperty<?>>
    * @param ac access checker
    * @param sessionless if true
    */
-  public CoreEventProperties(final CoreEventPropertiesDAO dao,
+  public CoreEventProperties(final EventPropertiesDAO dao,
                              final Calintf intf,
                              final AccessChecker ac,
                              final boolean sessionless) {
@@ -62,6 +62,16 @@ public class CoreEventProperties <T extends BwEventProperty<?>>
   public <T> T throwException(final BedeworkException be) {
     dao.rollback();
     throw be;
+  }
+
+  @Override
+  public void add(final T val) {
+    dao.add(val);
+  }
+
+  @Override
+  public void update(final T val) {
+    dao.update(val);
   }
 
   @SuppressWarnings("unchecked")

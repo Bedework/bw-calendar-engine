@@ -24,6 +24,7 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CollectionAliases;
 import org.bedework.calfacade.CollectionSynchInfo;
+import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.base.response.GetEntityResponse;
@@ -332,4 +333,11 @@ public interface CoreCalendarsI extends Serializable {
   BwCalendar checkAccess(CalendarWrapper col,
                          int desiredAccess,
                          boolean alwaysReturnResult);
+
+  /** Not sure this is the right thing to do.
+   *
+   * @param val to merge
+   * @return merged entity
+   */
+  BwUnversionedDbentity<?> merge(BwUnversionedDbentity<?> val);
 }

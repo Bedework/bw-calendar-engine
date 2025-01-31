@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calcore.hibernate;
+package org.bedework.calcore.hibernate.daoimpl;
 
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.rw.common.dao.DAOBase;

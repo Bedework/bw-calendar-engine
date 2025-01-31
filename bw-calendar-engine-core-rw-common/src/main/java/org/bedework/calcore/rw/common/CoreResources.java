@@ -9,7 +9,7 @@ import org.bedework.base.exc.BedeworkException;
 import org.bedework.base.response.GetEntityResponse;
 import org.bedework.base.response.Response;
 import org.bedework.calcore.ro.CalintfHelper;
-import org.bedework.calcore.rw.common.dao.CoreResourcesDAO;
+import org.bedework.calcore.rw.common.dao.ResourcesDAO;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CoreResourcesI;
 import org.bedework.calfacade.BwResource;
@@ -28,7 +28,7 @@ import static org.bedework.calfacade.indexing.BwIndexer.docTypeResourceContent;
  */
 public class CoreResources extends CalintfHelper
         implements CoreResourcesI {
-  private final CoreResourcesDAO entityDao;
+  private final ResourcesDAO entityDao;
 
   /** Constructor
    *
@@ -37,7 +37,7 @@ public class CoreResources extends CalintfHelper
    * @param ac access checker
    * @param sessionless if true
    */
-  public CoreResources(final CoreResourcesDAO dao,
+  public CoreResources(final ResourcesDAO dao,
                        final Calintf intf,
                        final AccessChecker ac,
                        final boolean sessionless) {
@@ -87,7 +87,7 @@ public class CoreResources extends CalintfHelper
                                                      final int desiredAccess) {
     final int pos = href.lastIndexOf("/");
     if (pos <= 0) {
-      throw new RuntimeException("Bad href: " + href);
+      throw new BedeworkException("Bad href: " + href);
     }
 
     final String name = href.substring(pos + 1);

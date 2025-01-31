@@ -18,10 +18,7 @@
 */
 package org.bedework.calcorei;
 
-import org.bedework.access.Ace;
-import org.bedework.access.AceWho;
 import org.bedework.access.CurrentAccess;
-import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwDateTime;
@@ -36,17 +33,12 @@ import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
-import org.bedework.calfacade.svc.BwAdminGroup;
-import org.bedework.calfacade.svc.BwAuthUser;
-import org.bedework.calfacade.svc.BwCalSuite;
-import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.events.SysEventBase;
 
 import java.sql.Timestamp;
 import java.util.Collection;
-import java.util.Iterator;
 
 /** This is the low level interface to the calendar database.
  *
@@ -66,11 +58,44 @@ import java.util.Iterator;
  * @author Mike Douglass   douglm  rpi.edu
  */
 public interface Calintf
-        extends CoreCalendarsI, CoreEventsI, CoreFilterDefsI,
-        CorePrincialsAndPrefsI, CoreResourcesI {
+        extends CoreAccessI, CoreAlarmsI, CoreCalendarsI,
+        CoreCalSuitesI, CoreDumpRestoreI, CoreEventsI,
+        CoreFilterDefsI, CorePrincipalsAndPrefsI, CoreResourcesI {
   interface FilterParserFetcher {
     SimpleFilterParser getFilterParser();
   }
+
+  /** Signal the start of a sequence of operations. These overlap transactions
+   * in that there may be 0 to many transactions started and ended within an
+   * open/close call and many open/close calls within a transaction.
+   *
+   * <p>This will be called directly after creating the object and
+   * <p>During the initial opening of a new object we may not be fully
+   * initialised.
+   *
+   * @param filterParserFetcher for the parsing of filters
+   * @param logId for tracing
+   * @param configs for configuration info
+   * @param forRestore true if this is for a system restore
+   * @param indexRebuild  true if we are rebuilding the index.
+   * @param publicAdmin boolean true if this is a public events admin app
+   * @param publicAuth boolean true if this is authenticated public events app
+   * @param publicSubmission true for the submit app
+   * @param sessionless true if this is a sessionless client
+   * @param authenticated true for an authenticated user
+   * @param dontKill true if this is a system process
+   */
+  void open(FilterParserFetcher filterParserFetcher,
+            String logId,
+            Configurations configs,
+            boolean forRestore,
+            boolean indexRebuild,
+            boolean publicAdmin,
+            boolean publicAuth,
+            boolean publicSubmission,
+            boolean authenticated,
+            boolean sessionless,
+            boolean dontKill);
 
   /** Must be called once we know the principal.
    *
@@ -171,37 +196,6 @@ public interface Calintf
    * @return CalintfInfo
    */
   CalintfInfo getInfo();
-
-  /** Signal the start of a sequence of operations. These overlap transactions
-   * in that there may be 0 to many transactions started and ended within an
-   * open/close call and many open/close calls within a transaction.
-   *
-   * <p>During the initial opening of a new object we may not be fully
-   * initialised.
-   *
-   * @param filterParserFetcher for the parsing of filters
-   * @param logId for tracing
-   * @param configs for configuration info
-   * @param forRestore true if this is for a system restore
-   * @param indexRebuild  true if we are rebuilding the index.
-   * @param publicAdmin boolean true if this is a public events admin app
-   * @param publicAuth boolean true if this is authenticated public events app
-   * @param publicSubmission true for the submit app
-   * @param sessionless true if this is a sessionless client
-   * @param authenticated true for an authenticated user
-   * @param dontKill true if this is a system process
-   */
-  void open(FilterParserFetcher filterParserFetcher,
-            String logId,
-            Configurations configs,
-            boolean forRestore,
-            boolean indexRebuild,
-            boolean publicAdmin,
-            boolean publicAuth,
-            boolean publicSubmission,
-            boolean authenticated,
-            boolean sessionless,
-            boolean dontKill);
 
   /** Call on the way out after handling a request.
    *
@@ -351,27 +345,14 @@ public interface Calintf
    */
   void clearNotifications();
 
-  /* ====================================================================
+  /**
+   * @return href for current principal
+   */
+  String getPrincipalRef();
+
+  /* ==============================================================
    *                   Access
-   * ==================================================================== */
-
-  /** Change the access to the given calendar entity.
-   *
-   * @param ent      BwShareableDbentity
-   * @param aces     Collection of ace
-   * @param replaceAll true to replace the entire access list.
-   */
-  void changeAccess(ShareableEntity ent,
-                    Collection<Ace> aces,
-                    boolean replaceAll);
-
-  /** Remove any explicit access for the given who to the given calendar entity.
-   *
-   * @param ent      A shareable entity
-   * @param who      AceWho
-   */
-  void defaultAccess(ShareableEntity ent,
-                     AceWho who);
+   * ============================================================== */
 
   /** Return a Collection of the objects after checking access
    *
@@ -396,30 +377,6 @@ public interface Calintf
   CurrentAccess checkAccess(ShareableEntity ent,
                             int desiredAccess,
                             boolean returnResult);
-
-  /* ====================================================================
-   *                   Alarms
-   * ==================================================================== */
-
-  /** Return all unexpired alarms before a given time. If time is 0 all
-   * unexpired alarms will be retrieved.
-   *
-   * <p>Any cancelled alarms will be excluded from the result.
-   *
-   * <p>Typically the system will call this with a time set into the near future
-   * and then queue up alarms that are near to triggering.
-   *
-   * @param triggerTime limit
-   * @return Collection of unexpired alarms.
-   */
-  Collection<BwAlarm> getUnexpiredAlarms(long triggerTime);
-
-  /** Given an alarm return the associated event(s)
-   *
-   * @param alarm to search for
-   * @return an event.
-   */
-  Collection<BwEvent> getEventsByAlarm(BwAlarm alarm);
 
   /* ==========================================================
    *                   Some general helpers
@@ -473,73 +430,9 @@ public interface Calintf
                              int desiredAccess,
                              boolean nullForNoAccess);
 
-  /* ====================================================================
-   *                       Restore methods
-   * ==================================================================== */
-
-  /**
-   * @param val an entity to restore
-   */
-  void add(BwUnversionedDbentity<?> val);
-
   /* ==========================================================
    *                       General db methods
    * ========================================================== */
-
-  /**
-   * @param val principal
-   */
-  void add(BwPrincipal<?> val);
-
-  /**
-   * @param val principal
-   */
-  void update(BwPrincipal<?> val);
-
-  /**
-   * @param val the event property
-   */
-  void add(BwEventProperty<?> val);
-
-  /**
-   * @param val the event property
-   */
-  void update(BwEventProperty<?> val);
-
-  /**
-   * @param val the preferences
-   */
-  void add(BwPreferences val);
-
-  /**
-   * @param val the preferences
-   */
-  void update(BwPreferences val);
-
-  /**
-   * @param val auth user entry to delete
-   */
-  void delete(BwAuthUser val);
-
-  /**
-   * @param val the preferences
-   */
-  void delete(BwPreferences val);
-
-  /**
-   * @param val to add and index
-   */
-  void add(BwCalSuite val);
-
-  /**
-   * @param val to update and index
-   */
-  void update(BwCalSuite val);
-
-  /**
-   * @param val calsuite to delete and unindex
-   */
-  void delete(BwCalSuite val);
 
   /**
    * @param val the entity
@@ -547,77 +440,9 @@ public interface Calintf
    */
   BwUnversionedDbentity<?> merge(BwUnversionedDbentity<?> val);
 
-  /* ====================================================================
-   *                       dump/restore methods
-   *
-   * These are used to handle the needs of dump/restore. Perhaps we
-   * can eliminate the need at some point...
-   * ==================================================================== */
-
-  /**
-   *
-   * @param cl Class of objects
-   * @return iterator over all the objects
-   */
-  <T> Iterator<T> getObjectIterator(Class<T> cl);
-
-  /**
-   *
-   * @param cl Class of objects
-   * @return iterator over all the objects for current principal
-   */
-  <T> Iterator<T> getPrincipalObjectIterator(Class<T> cl);
-
-  /**
-   *
-   * @param cl Class of objects
-   * @return iterator over all the public objects
-   */
-  <T> Iterator<T> getPublicObjectIterator(Class<T> cl);
-
-  /**
-   *
-   * @param cl Class of objects
-   * @param colPath for objects
-   * @return iterator over all the objects with the given col path
-   */
-  <T> Iterator<T> getObjectIterator(Class<T> cl,
-                                    String colPath);
-
-  /** Return an iterator over hrefs for events.
-   *
-   * @param start first object
-   * @return iterator over the objects
-   */
-  Iterator<String> getEventHrefs(int start);
-
-  /* ==========================================================
-   *                       calendar suites
-   * ========================================================== */
-
-  /** Get a detached instance of the calendar suite given the 'owning' group
-   *
-   * @param  group     BwAdminGroup
-   * @return BwCalSuite null for unknown calendar suite
-   */
-  BwCalSuite get(BwAdminGroup group);
-
-  /** Get a (live) calendar suite given the name
-   *
-   * @param  name     String name of calendar suite
-   * @return BwCalSuiteWrapper null for unknown calendar suite
-   */
-  BwCalSuite getCalSuite(String name);
-
-  /** Get calendar suites to which this user has access
-   *
-   * @return Collection     of BwCalSuiteWrapper
-   */
-  Collection<BwCalSuite> getAllCalSuites();
-
-   /* ====================================================================
+   /* ============================================================
     *                   Event Properties Factories
-    * ==================================================================== */
+    * ============================================================ */
 
   /** Return an event properties handler.
    *

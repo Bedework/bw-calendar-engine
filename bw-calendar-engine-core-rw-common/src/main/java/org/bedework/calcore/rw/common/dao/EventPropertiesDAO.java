@@ -6,7 +6,7 @@ import org.bedework.calfacade.EventPropertiesReference;
 
 import java.util.List;
 
-public interface CoreEventPropertiesDAO extends DAOBase {
+public interface EventPropertiesDAO extends DAOBase {
   List<BwEventProperty<?>> getAll(String ownerHref);
 
   BwEventProperty<?> get(String uid);

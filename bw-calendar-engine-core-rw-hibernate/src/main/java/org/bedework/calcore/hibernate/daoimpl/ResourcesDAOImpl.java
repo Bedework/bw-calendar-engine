@@ -1,10 +1,10 @@
 /* ********************************************************************
     Appropriate copyright notice
 */
-package org.bedework.calcore.hibernate;
+package org.bedework.calcore.hibernate.daoimpl;
 
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calcore.rw.common.dao.CoreResourcesDAO;
+import org.bedework.calcore.rw.common.dao.ResourcesDAO;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
@@ -18,19 +18,19 @@ import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWi
 /**
  * User: mike Date: 2/1/20 Time: 15:23
  */
-public class CoreResourcesDAOImpl extends DAOBaseImpl implements
-        CoreResourcesDAO {
+public class ResourcesDAOImpl extends DAOBaseImpl implements
+        ResourcesDAO {
   /** Constructor
    *
    * @param sess the session
    */
-  CoreResourcesDAOImpl(final DbSession sess) {
+  public ResourcesDAOImpl(final DbSession sess) {
     super(sess);
   }
 
   @Override
   public String getName() {
-    return CoreResourcesDAOImpl.class.getName();
+    return ResourcesDAOImpl.class.getName();
   }
 
   private static final String getResourceQuery =

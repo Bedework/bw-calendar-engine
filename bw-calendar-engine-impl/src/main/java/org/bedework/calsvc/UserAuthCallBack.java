@@ -66,6 +66,6 @@ public class UserAuthCallBack extends UserAuth.CallBack {
 
   @Override
   public List<BwAuthUser> getAll() {
-    return svci.getCal().getAll();
+    return svci.getCal().getAllAuthUsers();
   }
 }

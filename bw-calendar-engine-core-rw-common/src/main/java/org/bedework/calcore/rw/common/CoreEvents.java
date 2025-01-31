@@ -24,7 +24,7 @@ import org.bedework.base.exc.BedeworkDupNameException;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.base.response.GetEntityResponse;
 import org.bedework.calcore.ro.CalintfHelper;
-import org.bedework.calcore.rw.common.dao.CoreEventsDAO;
+import org.bedework.calcore.rw.common.dao.EventsDAO;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI;
@@ -196,7 +196,7 @@ import static org.bedework.calfacade.util.CalFacadeUtil.getHrefRecurrenceId;
  * @author Mike Douglass   douglm  - rpi.edu
  */
 public class CoreEvents extends CalintfHelper implements CoreEventsI {
-  private final CoreEventsDAO dao;
+  private final EventsDAO dao;
 
   private final AuthProperties authProps;
 
@@ -208,7 +208,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
    * @param authProps - authorisation info
    * @param sessionless if true
    */
-  public CoreEvents(final CoreEventsDAO dao,
+  public CoreEvents(final EventsDAO dao,
                     final Calintf intf,
                     final AccessChecker ac,
                     final AuthProperties authProps,

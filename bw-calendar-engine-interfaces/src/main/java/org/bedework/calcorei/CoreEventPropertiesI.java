@@ -37,6 +37,16 @@ import java.util.List;
  * @param <T> type of property, Location, Sponsor etc.
  */
 public interface CoreEventPropertiesI <T extends BwEventProperty> extends Serializable {
+  /**
+   * @param val the event property
+   */
+  void add(T val);
+
+  /**
+   * @param val the event property
+   */
+  void update(T val);
+
   /** Return all entities satisfying the conditions and to which the current
    * user has access.
    *

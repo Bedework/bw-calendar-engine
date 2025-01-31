@@ -17,10 +17,10 @@
     under the License.
 */
 
-package org.bedework.calcore.hibernate;
+package org.bedework.calcore.hibernate.daoimpl;
 
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calcore.rw.common.dao.CoreEventPropertiesDAO;
+import org.bedework.calcore.rw.common.dao.EventPropertiesDAO;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -43,7 +43,7 @@ import java.util.List;
  * @version 1.0
  */
 public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
-        implements CoreEventPropertiesDAO {
+        implements EventPropertiesDAO {
   private final String className;
 
   /* This was easier with named queries */

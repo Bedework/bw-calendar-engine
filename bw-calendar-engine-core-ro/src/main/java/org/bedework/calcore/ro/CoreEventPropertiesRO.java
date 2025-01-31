@@ -60,6 +60,16 @@ public class CoreEventPropertiesRO<T extends BwEventProperty>
     throw be;
   }
 
+  @Override
+  public void add(final T val) {
+    throw new BedeworkException("Read only version");
+  }
+
+  @Override
+  public void update(final T val) {
+    throw new BedeworkException("Read only version");
+  }
+
   @SuppressWarnings("unchecked")
   @Override
   public Collection<T> getAll(final String ownerHref) {
@@ -89,14 +99,14 @@ public class CoreEventPropertiesRO<T extends BwEventProperty>
   @SuppressWarnings("unchecked")
   @Override
   public T get(final String uid) {
-    throw new RuntimeException("Read only version");
+    throw new BedeworkException("Read only version");
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public T find(final BwString val,
                 final String ownerHref) {
-    throw new RuntimeException("Read only version");
+    throw new BedeworkException("Read only version");
   }
 
   @Override

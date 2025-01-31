@@ -16,10 +16,10 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calcore.hibernate;
+package org.bedework.calcore.hibernate.daoimpl;
 
 import org.bedework.base.exc.BedeworkBadRequest;
-import org.bedework.calcore.rw.common.dao.CoreCalendarsDAO;
+import org.bedework.calcore.rw.common.dao.CalendarsDAO;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwEventObj;
@@ -40,19 +40,19 @@ import java.util.List;
  * @author douglm
  *
  */
-class CoreCalendarsDAOImpl extends DAOBaseImpl
-        implements CoreCalendarsDAO {
+public class CalendarsDAOImpl extends DAOBaseImpl
+        implements CalendarsDAO {
   /** Initialise with a session
    *
    * @param sess the session
    */
-  CoreCalendarsDAOImpl(final DbSession sess) {
+  public CalendarsDAOImpl(final DbSession sess) {
     init(sess);
   }
 
   @Override
   public String getName() {
-    return CoreCalendarsDAOImpl.class.getName();
+    return CalendarsDAOImpl.class.getName();
   }
   
   /* ====================================================================

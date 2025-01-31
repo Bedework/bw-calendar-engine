@@ -262,7 +262,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
     }
 
     try {
-      getCal().add(val);
+      getCoreHdlr().add(val);
       ((Preferences)getSvc().getPrefsHandler())
               .updateAdminPrefs(false, val);
 
@@ -296,7 +296,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       throw new BedeworkAccessException();
     }
 
-    getCal().update(val);
+    getCoreHdlr().update(val);
     ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(false, val);
 
     getCoreHdlr().checkUnique(val.getFinderKeyValue(), val.getOwnerHref());

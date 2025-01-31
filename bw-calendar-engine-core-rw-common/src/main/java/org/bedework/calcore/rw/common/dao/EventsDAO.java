@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-public interface CoreEventsDAO extends DAOBase {
+public interface EventsDAO extends DAOBase {
   List<BwEvent> getEventsByName(String colPath,
                                 String name);
 

@@ -29,7 +29,7 @@ import org.bedework.base.response.GetEntityResponse;
 import org.bedework.calcore.ro.AccessUtil;
 import org.bedework.calcore.ro.CalintfHelper;
 import org.bedework.calcore.ro.CollectionCache;
-import org.bedework.calcore.rw.common.dao.CoreCalendarsDAO;
+import org.bedework.calcore.rw.common.dao.CalendarsDAO;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CoreCalendarsI;
 import org.bedework.calfacade.BwCalendar;
@@ -38,6 +38,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CollectionAliases;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.base.BwLastMod;
+import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.indexing.BwIndexer;
@@ -68,7 +69,7 @@ public class CoreCalendars extends CalintfHelper
          implements AccessUtil.CollectionGetter, Transactions,
         CoreCalendarsI {
   private final Calintf intf;
-  private final CoreCalendarsDAO dao;
+  private final CalendarsDAO dao;
   private final String userCalendarRootPath;
   //private String groupCalendarRootPath;
 
@@ -81,7 +82,7 @@ public class CoreCalendars extends CalintfHelper
    * @param ac access checker
    * @param sessionless if true
    */
-  public CoreCalendars(final CoreCalendarsDAO dao,
+  public CoreCalendars(final CalendarsDAO dao,
                        final Calintf intf,
                        final AccessChecker ac,
                        final boolean sessionless) {
@@ -562,7 +563,7 @@ public class CoreCalendars extends CalintfHelper
       usercal = dao.getCollection(path);
       if (i == (upath.length - 1)) {
         if (usercal != null) {
-          throw new RuntimeException(
+          throw new BedeworkException(
                   "User calendar already exists at " + path);
         }
 
@@ -575,7 +576,7 @@ public class CoreCalendars extends CalintfHelper
         usercal.setPath(path);
         usercal.setColPath(parentCal.getPath());
 
-        final BwCollectionLastmod lm = usercal.getLastmod();
+        final var lm = usercal.getLastmod();
         lm.updateLastmod(getCurrentTimestamp());
 
         dao.addCollection(usercal);
@@ -609,11 +610,11 @@ public class CoreCalendars extends CalintfHelper
     }
 
     if (usercal == null) {
-      throw new RuntimeException("Invalid user " + user);
+      throw new BedeworkException("Invalid user " + user);
     }
 
     /* Create a default calendar */
-    final BwCalendar cal = new BwCalendar();
+    final var cal = new BwCalendar();
     cal.setName(BasicSystemProperties.userDefaultCalendar);
     cal.setCreatorHref(user.getPrincipalRef());
     cal.setOwnerHref(user.getPrincipalRef());
@@ -624,13 +625,14 @@ public class CoreCalendars extends CalintfHelper
     cal.setCalType(BwCalendar.calTypeCalendarCollection);
     cal.setAffectsFreeBusy(true);
 
-    final BwCollectionLastmod lm = cal.getLastmod();
+    final var lm = cal.getLastmod();
     lm.updateLastmod(getCurrentTimestamp());
 
     dao.addCollection(cal);
 
     indexEntity(cal);
     notify(SysEvent.SysCode.COLLECTION_ADDED, cal);
+    dao.update(user);
   }
 
   @Override
@@ -1133,6 +1135,12 @@ public class CoreCalendars extends CalintfHelper
     }
 
     return col;
+  }
+
+  @Override
+  public BwUnversionedDbentity<?> merge(
+          final BwUnversionedDbentity<?> val) {
+    return dao.merge(val);
   }
 
   private void notify(final SysEvent.SysCode code,

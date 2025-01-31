@@ -432,8 +432,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return null;
     }
 
-    if ((path.length() > 1) &&
-        (path.startsWith(CalFacadeDefs.bwUriPrefix))) {
+    if (path.startsWith(CalFacadeDefs.bwUriPrefix)) {
       path = path.substring(CalFacadeDefs.bwUriPrefix.length());
     }
 
@@ -450,8 +449,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return null;
     }
 
-    if ((path.length() > 1) &&
-            (path.startsWith(CalFacadeDefs.bwUriPrefix))) {
+    if ((path.startsWith(CalFacadeDefs.bwUriPrefix))) {
       path = path.substring(CalFacadeDefs.bwUriPrefix.length());
     }
 
@@ -474,7 +472,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   public BwCalendar getSpecial(final String principal,
                                final int calType,
                                final boolean create) {
-    final BwPrincipal pr;
+    final BwPrincipal<?> pr;
 
     if (principal == null) {
       pr = getPrincipal();

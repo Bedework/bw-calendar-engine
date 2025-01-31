@@ -18,6 +18,7 @@
 */
 package org.bedework.calcore.hibernate;
 
+import org.bedework.base.exc.BedeworkBadDateException;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
@@ -26,7 +27,6 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.misc.Util;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -85,7 +85,7 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
     sb.append("from ");
   }
 
-  public void addClass(final Class cl, final String name) {
+  public void addClass(final Class<?> cl, final String name) {
     sb.append(cl.getName());
     sb.append(" ");
     sb.append(name);
@@ -96,7 +96,7 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
   }
 
   public void and() {
-    if (sb.length() == 0) {
+    if (sb.isEmpty()) {
       return;
     }
 
@@ -173,7 +173,7 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
   public boolean appendPublicOrOwnerTerm(final String entName,
                                          final boolean publick,
                                          final boolean ignoreCreator) {
-    boolean all = publick || ignoreCreator;
+    final boolean all = publick || ignoreCreator;
     boolean setUser = false;
 
     and();
@@ -182,15 +182,15 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
       sb.append("(");
     }
 
-    sb.append(entName);
-    sb.append(".publick=");
-    sb.append(String.valueOf(publick));
+    sb.append(entName)
+      .append(".publick=")
+      .append(publick);
 
     if (!all) {
-      sb.append(") and (");
-      sb.append(entName);
-      sb.append(".ownerHref=:userHref");
-      sb.append(")");
+      sb.append(") and (")
+        .append(entName)
+        .append(".ownerHref=:userHref")
+        .append(")");
       setUser = true;
     }
     sb.append(")");
@@ -201,13 +201,13 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
   private void appendDrtestTerms(final boolean floatingTest,
                                  final String evname,
                                  final BwDateTime from, final BwDateTime to) {
-    String startField = evname + ".dtstart.date";
-    String endField = evname + ".dtend.date";
+    final String startField = evname + ".dtstart.date";
+    final String endField = evname + ".dtend.date";
 
-    String startFloatTest;
-    String endFloatTest;
-    String toVal;
-    String fromVal;
+    final String startFloatTest;
+    final String endFloatTest;
+    final String toVal;
+    final String fromVal;
 
     if (floatingTest) {
       startFloatTest = evname + ".dtstart.floatFlag=true and ";
@@ -237,24 +237,22 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
      */
 
     if (from == null) {
-      sb.append("(");
-      sb.append(startFloatTest);
-
-      sb.append(startField);
-      sb.append(" < :");
-      sb.append(toVal);
-      sb.append(")");
+      sb.append("(")
+        .append(startFloatTest)
+        .append(startField)
+        .append(" < :")
+        .append(toVal)
+        .append(")");
       return;
     }
 
     if (to == null) {
-      sb.append("(");
-      sb.append(endFloatTest);
-
-      sb.append(endField);
-      sb.append(" >= :");
-      sb.append(fromVal);
-      sb.append(")");
+      sb.append("(")
+        .append(endFloatTest)
+        .append(endField)
+        .append(" >= :")
+        .append(fromVal)
+        .append(")");
       return;
     }
 
@@ -314,7 +312,7 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
   }
 
   private String makeUtcformat(final String dt) {
-    int len = dt.length();
+    final int len = dt.length();
 
     if (len == 16) {
       return dt;
@@ -330,46 +328,7 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
 
     try {
       sess.rollback();
-    } catch (Throwable t) {}
-    throw new RuntimeException("Bad date " + dt);
-  }
-
-  public static class EventsQueryResult {
-    /* BwEvent or event instances. */
-    public Collection es;
-    public Filters flt;
-
-    /* Calendar clause fields */
-    public boolean empty;
-
-    /* Set true to suppress filtering. Will be set false. */
-    public boolean suppressFilter;
-
-    /* This is set to the calendars we should search. */
-    public Collection<String> colPaths;
-
-    /* This is any hrefs we should retrieve - for a multiget or an event list. */
-    public Collection<String> hrefs;
-
-    public void reset() {
-      es = null;
-      empty = true;
-    }
-
-    public void addColPath(final String val) {
-      if (colPaths == null) {
-        colPaths = new ArrayList<String>();
-      }
-
-      colPaths.add(val);
-    }
-
-    void addHref(final String val) {
-      if (hrefs == null) {
-        hrefs = new ArrayList<String>();
-      }
-
-      hrefs.add(val);
-    }
+    } catch (final Throwable ignored) {}
+    throw new BedeworkBadDateException("Bad date " + dt);
   }
 }

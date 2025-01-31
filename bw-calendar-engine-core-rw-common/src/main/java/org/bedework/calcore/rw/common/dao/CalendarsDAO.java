@@ -6,7 +6,7 @@ import org.bedework.calfacade.CollectionSynchInfo;
 import java.sql.Timestamp;
 import java.util.List;
 
-public interface CoreCalendarsDAO extends DAOBase {
+public interface CalendarsDAO extends DAOBase {
   CollectionSynchInfo getSynchInfo(String path,
                                    String token);
 

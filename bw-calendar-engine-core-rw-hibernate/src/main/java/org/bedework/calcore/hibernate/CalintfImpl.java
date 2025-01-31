@@ -18,58 +18,45 @@
 */
 package org.bedework.calcore.hibernate;
 
-import org.bedework.access.Ace;
-import org.bedework.access.AceWho;
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calcore.ro.CalintfROImpl;
+import org.bedework.calcore.hibernate.daoimpl.AccessDAOImpl;
+import org.bedework.calcore.hibernate.daoimpl.AlarmsDAOImpl;
+import org.bedework.calcore.hibernate.daoimpl.CalSuitesDAOImpl;
+import org.bedework.calcore.hibernate.daoimpl.CalendarsDAOImpl;
+import org.bedework.calcore.hibernate.daoimpl.CoreEventPropertiesDAOImpl;
+import org.bedework.calcore.hibernate.daoimpl.EventsDAOImpl;
+import org.bedework.calcore.hibernate.daoimpl.FilterDefsDAOImpl;
+import org.bedework.calcore.hibernate.daoimpl.IteratorsDAOImpl;
+import org.bedework.calcore.hibernate.daoimpl.PrincipalsAndPrefsDAOImpl;
+import org.bedework.calcore.hibernate.daoimpl.ResourcesDAOImpl;
+import org.bedework.calcore.rw.common.CalintfCommonImpl;
+import org.bedework.calcore.rw.common.CoreAccess;
+import org.bedework.calcore.rw.common.CoreAlarms;
+import org.bedework.calcore.rw.common.CoreCalSuites;
 import org.bedework.calcore.rw.common.CoreCalendars;
+import org.bedework.calcore.rw.common.CoreDumpRestore;
 import org.bedework.calcore.rw.common.CoreEventProperties;
 import org.bedework.calcore.rw.common.CoreEvents;
+import org.bedework.calcore.rw.common.CoreFilterDefs;
+import org.bedework.calcore.rw.common.CorePrincipalsAndPrefs;
 import org.bedework.calcore.rw.common.CoreResources;
 import org.bedework.calcore.rw.common.dao.DAOBase;
-import org.bedework.calcore.rw.common.dao.EntityDAO;
-import org.bedework.calcore.rw.common.dao.FilterDefsDAO;
-import org.bedework.calcore.rw.common.dao.PrincipalsAndPrefsDAO;
 import org.bedework.calcorei.CalintfInfo;
-import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventPropertiesI;
-import org.bedework.calfacade.BwAlarm;
-import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
-import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.BwEventAnnotation;
-import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProperty;
-import org.bedework.calfacade.BwFilterDef;
-import org.bedework.calfacade.BwGroup;
-import org.bedework.calfacade.BwGroupEntry;
 import org.bedework.calfacade.BwLocation;
-import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwResource;
-import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
 import org.bedework.calfacade.BwSystem;
-import org.bedework.calfacade.CollectionSynchInfo;
-import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
-import org.bedework.calfacade.base.ShareableEntity;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.Configurations;
-import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
-import org.bedework.calfacade.svc.BwAdminGroup;
-import org.bedework.calfacade.svc.BwAdminGroupEntry;
-import org.bedework.calfacade.svc.BwAuthUser;
-import org.bedework.calfacade.svc.BwCalSuite;
-import org.bedework.calfacade.svc.BwPreferences;
-import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
-import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
 import org.bedework.database.db.DbSession;
-import org.bedework.util.misc.Util;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -79,16 +66,12 @@ import java.io.StringReader;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 import static java.lang.String.format;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
-import static org.bedework.calfacade.indexing.BwIndexer.docTypePreferences;
-import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
 
 /** Implementation of CalIntf which uses hibernate as its persistance engine.
  *
@@ -121,7 +104,7 @@ import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
  * @author Mike Douglass   douglm rpi.edu
  */
 @SuppressWarnings("unused")
-public class CalintfImpl extends CalintfROImpl {
+public class CalintfImpl extends CalintfCommonImpl {
   private static final BwStats stats = new BwStats();
 
   private static final CalintfInfo info = new CalintfInfo(
@@ -132,24 +115,30 @@ public class CalintfImpl extends CalintfROImpl {
 
   private final IfInfo ifInfo = new IfInfo();
 
-  private EntityDAO entityDao;
+  private CoreAccess access;
 
-  private PrincipalsAndPrefsDAO principalsAndPrefs;
-
-  private CoreEvents events;
+  private CoreAlarms alarms;
 
   private CoreCalendars calendars;
 
-  private CoreResources resources;
+  private CoreCalSuites calSuites;
 
-  private FilterDefsDAO filterDefs;
+  private CoreDumpRestore dumpRestore;
+
+  private CoreEvents events;
 
   private CoreEventPropertiesI<BwCategory> categoriesHandler;
 
   private CoreEventPropertiesI<BwLocation> locationsHandler;
 
   private CoreEventPropertiesI<BwContact> contactsHandler;
-  
+
+  private CoreFilterDefs filterDefs;
+
+  private CorePrincipalsAndPrefs principalsAndPrefs;
+
+  private CoreResources resources;
+
   private final Map<String, DAOBase> daos = new HashMap<>();
 
   /* Prevent updates.
@@ -165,7 +154,7 @@ public class CalintfImpl extends CalintfROImpl {
   /** We make this static for this implementation so that there is only one
    * SessionFactory per server for the calendar.
    *
-   * <p>static fields used this way are illegal in the j2ee specification
+   * <p>static fields used this way may be illegal in the j2ee specification
    * though we might get away with it here as the session factory only
    * contains parsed mappings for the calendar configuration. This should
    * be the same for any machine in a cluster so it might work OK.
@@ -177,7 +166,7 @@ public class CalintfImpl extends CalintfROImpl {
   
   private final static Object syncher = new Object();
 
-  static class IndexEntry {
+  protected static class IndexEntry {
     final BwIndexer indexer;
     final BwUnversionedDbentity<?> entity;
     boolean forTouch;
@@ -221,6 +210,87 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
+  public void open(final FilterParserFetcher filterParserFetcher,
+                   final String logId,
+                   final Configurations configs,
+                   final boolean forRestore,
+                   final boolean indexRebuild,
+                   final boolean publicAdmin,
+                   final boolean publicAuth,
+                   final boolean publicSubmission,
+                   final boolean authenticated,
+                   final boolean sessionless,
+                   final boolean dontKill) {
+    final long start = System.currentTimeMillis();
+    super.open(filterParserFetcher, logId, configs,
+               forRestore, indexRebuild,
+               publicAdmin, publicAuth, publicSubmission,
+               authenticated, sessionless, dontKill);
+    if (trace()) {
+      trace(format("CalintfImpl.open after super.open() %s",
+                   System.currentTimeMillis() - start));
+    }
+
+    if (sess != null) {
+      warn("Session is not null. Will close");
+      close();
+    }
+
+    if (sess == null) {
+      sess = new HibSessionImpl();
+      sess.init(getSessionFactory());
+      if (debug()) {
+        debug(format("New database session (class %s) for %s",
+                     sess.getClass(), getTraceId()));
+      }
+    }
+
+    if (access == null) {
+      final var dao = new AccessDAOImpl(sess);
+      registerDao(dao);
+      access = new CoreAccess(dao, this, ac, sessionless);
+    }
+
+    if (alarms == null) {
+      final var dao = new AlarmsDAOImpl(sess);
+      registerDao(dao);
+      alarms = new CoreAlarms(dao, this, ac, sessionless);
+    }
+
+    if (calSuites == null) {
+      final var dao = new CalSuitesDAOImpl(sess);
+      registerDao(dao);
+      calSuites = new CoreCalSuites(dao, this, ac, sessionless);
+    }
+
+    if (dumpRestore == null) {
+      final var dao = new IteratorsDAOImpl(sess);
+      registerDao(dao);
+      dumpRestore = new CoreDumpRestore(dao, this, ac, sessionless);
+    }
+
+    if (principalsAndPrefs == null) {
+      final var dao = new PrincipalsAndPrefsDAOImpl(sess);
+      registerDao(dao);
+      principalsAndPrefs = new CorePrincipalsAndPrefs(dao,
+                                                      this,
+                                                      ac, sessionless);
+    }
+
+    if (filterDefs == null) {
+      final var dao = new FilterDefsDAOImpl(sess);
+      registerDao(dao);
+      filterDefs = new CoreFilterDefs(dao, this, ac, sessionless);
+    }
+
+    /* Reset the session in the daos.
+     */
+    for (final var dao: daos.values()) {
+      dao.setSess(sess);
+    }
+  }
+
+  @Override
   public void initPinfo(final PrincipalInfo principalInfo) {
     super.initPinfo(principalInfo);
 
@@ -232,36 +302,72 @@ public class CalintfImpl extends CalintfROImpl {
       authProps = configs.getAuthenticatedAuthProperties();
     }
 
-    final var evDao = new CoreEventsDAOImpl(sess);
+    final var evDao = new EventsDAOImpl(sess);
     registerDao(evDao);
     events = new CoreEvents(evDao, this,
                             ac, authProps, sessionless);
 
-    final var calDao = new CoreCalendarsDAOImpl(sess);
+    final var calDao = new CalendarsDAOImpl(sess);
     registerDao(calDao);
     calendars = new CoreCalendars(calDao,
                                   this,
                                   ac, sessionless);
 
-    final var resDao = new CoreResourcesDAOImpl(sess);
+    final var resDao = new ResourcesDAOImpl(sess);
     registerDao(resDao);
     resources = new CoreResources(resDao, this,
                                   ac, sessionless);
 
-    access.setCollectionGetter(calendars);
+    accessUtil.setCollectionGetter(calendars);
   }
 
-  public IfInfo getIfInfo() {
-    final long now = System.currentTimeMillis();
-    
-    ifInfo.setLogid(getLogId());
-    ifInfo.setId(getTraceId());
-    ifInfo.setDontKill(getDontKill());
-    ifInfo.setLastStateTime(getLastStateTime());
-    ifInfo.setState(getState());
-    ifInfo.setSeconds((now - getStartMillis()) / 1000);
-    
-    return ifInfo;
+  /* ====================================================================
+   *                   abstract methods implementations
+   * ==================================================================== */
+
+  @Override
+  protected CoreAccess access() {
+    return access;
+  }
+
+  @Override
+  protected CoreAlarms alarms() {
+    return alarms;
+  }
+
+  @Override
+  protected CoreCalendars calendars() {
+    return calendars;
+  }
+
+  @Override
+  protected CoreCalSuites calSuites() {
+    return calSuites;
+  }
+
+  @Override
+  protected CoreDumpRestore dumpRestore() {
+    return dumpRestore;
+  }
+
+  @Override
+  protected CoreEvents events() {
+    return events;
+  }
+
+  @Override
+  protected CoreFilterDefs filterDefs() {
+    return filterDefs;
+  }
+
+  @Override
+  protected CorePrincipalsAndPrefs principalsAndPrefs() {
+    return principalsAndPrefs;
+  }
+
+  @Override
+  protected CoreResources resources() {
+    return resources;
   }
 
   protected Map<String, DAOBase> getDaos() {
@@ -308,118 +414,8 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   /* ==========================================================
-   *                   Indexing
+   *                   Db methods
    * ========================================================== */
-
-  public void closeIndexers() {
-    try {
-      if (!awaitingIndex.isEmpty()) {
-        final var vals = awaitingIndex.values();
-        final var sz = vals.size();
-        var ct = 1;
-
-        for (final IndexEntry ie : vals) {
-          try {
-            ie.indexer.indexEntity(ie.entity,
-                                   ct == sz,
-                                   ie.forTouch); // wait
-            ct++;
-          } catch (final BedeworkException be) {
-            if (debug()) {
-              error(be);
-            }
-            throw be;
-          }
-        }
-      }
-    } finally {
-      awaitingIndex.clear();
-
-      super.closeIndexers();
-    }
-  }
-
-  @Override
-  public void indexEntity(final BwUnversionedDbentity<?> entity) {
-    indexEntity(getIndexer(entity), entity, false);
-  }
-
-  @Override
-  public void indexEntityNow(final BwCalendar entity) {
-    indexEntity(getIndexer(entity), entity, true);
-  }
-
-  public void indexEntity(final BwIndexer indexer,
-                          final BwUnversionedDbentity<?> entity,
-                          final boolean forTouch) {
-    //indexer.indexEntity(entity, wait);
-
-    final var ie = new IndexEntry(indexer, entity, forTouch);
-    final var prevEntry = awaitingIndex.put(ie.getKey(), ie);
-    if (forTouch && (prevEntry != null) && !prevEntry.forTouch) {
-      ie.forTouch = false;
-    }
-  }
-
-  /* ==========================================================
-   *                   Misc methods
-   * ========================================================== */
-
-  @Override
-  public void open(final FilterParserFetcher filterParserFetcher,
-                   final String logId,
-                   final Configurations configs,
-                   final boolean forRestore,
-                   final boolean indexRebuild,
-                   final boolean publicAdmin,
-                   final boolean publicAuth,
-                   final boolean publicSubmission,
-                   final boolean authenticated,
-                   final boolean sessionless,
-                   final boolean dontKill) {
-    final long start = System.currentTimeMillis();
-    super.open(filterParserFetcher, logId, configs,
-               forRestore, indexRebuild,
-               publicAdmin, publicAuth, publicSubmission,
-               authenticated, sessionless, dontKill);
-    if (trace()) {
-      trace(format("CalintfImpl.open after super.open() %s",
-                   System.currentTimeMillis() - start));
-    }
-
-    if (sess != null) {
-      warn("Session is not null. Will close");
-      close();
-    }
-
-    if (sess == null) {
-      sess = new HibSessionImpl();
-      sess.init(getSessionFactory());
-      if (debug()) {
-        debug(format("New database session (class %s) for %s",
-                     sess.getClass(), getTraceId()));
-      }
-    }
-
-    if (entityDao == null) {
-      entityDao = new EntityDAOImpl(sess);
-      registerDao(entityDao);
-    }
-
-    if (principalsAndPrefs == null) {
-      principalsAndPrefs = new PrincipalsAndPrefsDAOImpl(sess);
-      registerDao(principalsAndPrefs);
-    }
-
-    if (filterDefs == null) {
-      filterDefs = new FilterDefsDAOImpl(sess);
-      registerDao(filterDefs);
-    }
-    
-    for (final var dao: daos.values()) {
-      dao.setSess(sess);
-    }
-  }
 
   @Override
   public synchronized void close() {
@@ -467,8 +463,8 @@ public class CalintfImpl extends CalintfROImpl {
         isOpen = false;
       }
 
-      if (access != null) {
-        access.close();
+      if (accessUtil != null) {
+        accessUtil.close();
       }
     } finally {
       flushNotifications();
@@ -633,821 +629,6 @@ public class CalintfImpl extends CalintfROImpl {
     super.kill();
   }
 
-  /* ==============================================================
-   *                   Access
-   * ============================================================== */
-
-  @Override
-  public void changeAccess(final ShareableEntity ent,
-                           final Collection<Ace> aces,
-                           final boolean replaceAll) {
-    if (ent instanceof BwCalendar) {
-      changeAccess((BwCalendar)ent, aces, replaceAll);
-      return;
-    }
-    checkOpen();
-    access.changeAccess(ent, aces, replaceAll);
-    entityDao.update((BwUnversionedDbentity<?>)ent);
-  }
-
-  @Override
-  public void changeAccess(final BwCalendar cal,
-                           final Collection<Ace> aces,
-                           final boolean replaceAll) {
-    checkOpen();
-    calendars.changeAccess(cal, aces, replaceAll);
-  }
-
-  @Override
-  public void defaultAccess(final ShareableEntity ent,
-                            final AceWho who) {
-    if (ent instanceof BwCalendar) {
-      defaultAccess((BwCalendar)ent, who);
-      return;
-    }
-    checkOpen();
-    checkAccess(ent, privWriteAcl, false);
-    access.defaultAccess(ent, who);
-    entityDao.update((BwUnversionedDbentity<?>)ent);
-  }
-
-  @Override
-  public void defaultAccess(final BwCalendar cal,
-                            final AceWho who) {
-    checkOpen();
-    calendars.defaultAccess(cal, who);
-  }
-
-  /* ====================================================================
-   *                   Alarms
-   * ==================================================================== */
-
-  @Override
-  public Collection<BwAlarm> getUnexpiredAlarms(final long triggerTime) {
-    checkOpen();
-
-    return entityDao.getUnexpiredAlarms(triggerTime);
-  }
-
-  @Override
-  public Collection<BwEvent> getEventsByAlarm(final BwAlarm alarm) {
-    checkOpen();
-
-    return entityDao.getEventsByAlarm(alarm);
-  }
-
-  /* ====================================================================
-   *                       Calendars
-   * ==================================================================== */
-
-  @Override
-  public void principalChanged() {
-    calendars.principalChanged();
-  }
-
-  @Override
-  public CollectionSynchInfo getSynchInfo(final String path,
-                                          final String token) {
-    checkOpen();
-
-    return calendars.getSynchInfo(path, token);
-  }
-
-  @Override
-  public Collection<BwCalendar> getCalendars(final BwCalendar cal,
-                                             final BwIndexer indexer) {
-    checkOpen();
-
-    return calendars.getCalendars(cal, indexer);
-  }
-
-  @Override
-  public BwCalendar resolveAlias(final BwCalendar val,
-                                 final boolean resolveSubAlias,
-                                 final boolean freeBusy,
-                                 final BwIndexer indexer) {
-    checkOpen();
-
-    return calendars.resolveAlias(val, resolveSubAlias,
-                                  freeBusy, indexer);
-  }
-
-  @Override
-  public List<BwCalendar> findAlias(final String val) {
-    checkOpen();
-
-    return calendars.findAlias(val);
-  }
-
-  @Override
-  public BwCalendar getCalendar(final String path,
-                                final int desiredAccess,
-                                final boolean alwaysReturnResult) {
-    checkOpen();
-
-    return calendars.getCalendar(path, desiredAccess, alwaysReturnResult);
-  }
-
-  @Override
-  public GetSpecialCalendarResult getSpecialCalendar(
-          final BwIndexer indexer,
-          final BwPrincipal<?> owner,
-          final int calType,
-          final boolean create,
-          final int access) {
-    return calendars.getSpecialCalendar(indexer,
-                                        owner, calType, create, access);
-  }
-
-  @Override
-  public BwCalendar add(final BwCalendar val,
-                                final String parentPath) {
-    checkOpen();
-
-    return calendars.add(val, parentPath);
-  }
-
-  @Override
-  public void touchCalendar(final String path) {
-    checkOpen();
-    calendars.touchCalendar(path);
-  }
-
-  @Override
-  public void touchCalendar(final BwCalendar col) {
-    checkOpen();
-    calendars.touchCalendar(col);
-  }
-
-  @Override
-  public void updateCalendar(final BwCalendar val) {
-    checkOpen();
-    calendars.updateCalendar(val);
-  }
-
-  @Override
-  public void renameCalendar(final BwCalendar val,
-                             final String newName) {
-    checkOpen();
-    calendars.renameCalendar(val, newName);
-  }
-
-  @Override
-  public void moveCalendar(final BwCalendar val,
-                           final BwCalendar newParent) {
-    checkOpen();
-    calendars.moveCalendar(val, newParent);
-  }
-
-  @Override
-  public boolean deleteCalendar(final BwCalendar val,
-                                final boolean reallyDelete) {
-    checkOpen();
-
-    return calendars.deleteCalendar(val, reallyDelete);
-  }
-
-  @Override
-  public boolean isEmpty(final BwCalendar val) {
-    checkOpen();
-
-    return calendars.isEmpty(val);
-  }
-
-  @Override
-  public void addNewCalendars(final BwPrincipal<?> user) {
-    checkOpen();
-
-    calendars.addNewCalendars(user);
-    entityDao.update(user);
-  }
-
-  @Override
-  public Collection<String> getChildCollections(final String parentPath,
-                                        final int start,
-                                        final int count) {
-    checkOpen();
-
-    return calendars.getChildCollections(parentPath, start, count);
-  }
-
-  @Override
-  public Set<BwCalendar> getSynchCols(final String path,
-                                      final String lastmod) {
-    return calendars.getSynchCols(path, lastmod);
-  }
-
-  @Override
-  public Collection<String> getChildEntities(final String parentPath,
-                                             final int start,
-                                             final int count) {
-    checkOpen();
-
-    return events.getChildEntities(parentPath, start, count);
-  }
-
-  /* ====================================================================
-   *                   Events
-   * ==================================================================== */
-
-  @Override
-  public Collection<CoreEventInfo> getEvent(final String colPath,
-                                            final String guid) {
-    checkOpen();
-    return events.getEvent(colPath, guid);
-  }
-
-  @Override
-  public UpdateEventResult addEvent(final EventInfo ei,
-                                    final boolean scheduling,
-                                    final boolean rollbackOnError) {
-    checkOpen();
-    final UpdateEventResult uer = 
-            events.addEvent(ei, scheduling,
-                            rollbackOnError);
-
-    if (!forRestore && uer.addedUpdated) {
-      calendars.touchCalendar(ei.getEvent().getColPath());
-    }
-
-    return uer;
-  }
-
-  @Override
-  public UpdateEventResult updateEvent(final EventInfo ei) {
-    checkOpen();
-    final UpdateEventResult ue;
-
-    try {
-      calendars.touchCalendar(ei.getEvent().getColPath());
-
-      ue = events.updateEvent(ei);
-    } catch (final BedeworkException be) {
-      rollbackTransaction();
-      reindex(ei);
-      throw be;
-    }
-
-    return ue;
-  }
-
-  @Override
-  public DelEventResult deleteEvent(final EventInfo ei,
-                                    final boolean scheduling,
-                                    final boolean reallyDelete) {
-    checkOpen();
-    final String colPath = ei.getEvent().getColPath();
-    try {
-      try {
-        return events.deleteEvent(ei, scheduling, reallyDelete);
-      } catch (final BedeworkException be) {
-        rollbackTransaction();
-        reindex(ei);
-
-        throw be;
-      }
-    } finally {
-      calendars.touchCalendar(colPath);
-    }
-  }
-
-  @Override
-  public void moveEvent(final EventInfo ei,
-                        final BwCalendar from,
-                        final BwCalendar to) {
-    checkOpen();
-    events.moveEvent(ei, from, to);
-  }
-
-  @Override
-  public Set<CoreEventInfo> getSynchEvents(final String path,
-                                           final String lastmod) {
-    return events.getSynchEvents(path, lastmod);
-  }
-
-  @Override
-  public CoreEventInfo getEvent(final String href) {
-    checkOpen();
-    return events.getEvent(href);
-  }
-
-  /* ====================================================================
-   *                       Restore methods
-   * ==================================================================== */
-
-  @Override
-  public void add(final BwUnversionedDbentity<?> val) {
-    entityDao.add(val);
-  }
-
-  /* ====================================================================
-   *                       General db methods
-   * ==================================================================== */
-
-  @Override
-  public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) {
-    return entityDao.merge(val);
-  }
-
-  private class ObjectIterator<T> implements Iterator<T> {
-    protected final String className;
-    protected final Class<T> cl;
-    protected final String colPath;
-    protected final String ownerHref;
-    protected final boolean publicAdmin;
-    protected List<?> batch;
-    protected int index;
-    protected boolean done;
-    protected int start;
-    protected final int batchSize = 100;
-
-    private ObjectIterator(final Class<T> cl) {
-      this(cl, null, null, false, 0);
-    }
-
-    private ObjectIterator(final Class<T> cl,
-                           final String colPath) {
-      this(cl, colPath, null, false, 0);
-    }
-
-    private ObjectIterator(final Class<T> cl,
-                           final String colPath,
-                           final String ownerHref,
-                           final boolean publicAdmin,
-                           final int start) {
-      this.className = cl.getName();
-      this.cl = cl;
-      this.colPath = colPath;
-      this.ownerHref = ownerHref;
-      this.publicAdmin = publicAdmin;
-      this.start = start;
-    }
-
-    @Override
-    public boolean hasNext() {
-      return more();
-    }
-
-    @Override
-    public synchronized T next() {
-      if (!more()) {
-        return null;
-      }
-
-      index++;
-      return (T)batch.get(index - 1);
-    }
-
-    @Override
-    public void remove() {
-      throw new RuntimeException("Forbidden");
-    }
-
-    protected synchronized boolean more() {
-      if (done) {
-        return false;
-      }
-
-      if ((batch == null) || (index == batch.size())) {
-        nextBatch();
-      }
-
-      return !done;
-    }
-
-    protected void nextBatch() {
-      try {
-        String query = "from " + className;
-
-        boolean doneWhere = false;
-
-        if (colPath != null) {
-          query += " where colPath=:colPath";
-          doneWhere = true;
-        }
-
-        if ((ownerHref != null) | publicAdmin) {
-          if (!doneWhere) {
-            query += " where";
-            doneWhere = true;
-          } else {
-            query += " and";
-          }
-          query += " ownerHref=:ownerHref";
-        }
-
-        sess.createQuery(query);
-
-        if (colPath != null) {
-          sess.setString("colPath", colPath);
-        }
-
-        if (publicAdmin) {
-          sess.setString("ownerHref", BwPrincipal.publicUserHref);
-        } else if (ownerHref != null) {
-          sess.setString("ownerHref", ownerHref);
-        }
-
-        sess.setFirstResult(start);
-        sess.setMaxResults(batchSize);
-
-        start += batchSize;
-
-        batch = sess.getList();
-        index = 0;
-
-        if (Util.isEmpty(batch)) {
-          done = true;
-        }
-      } catch (final Throwable t) {
-        throw new RuntimeException(t);
-      }
-    }
-  }
-  
-  private class EventHrefIterator extends ObjectIterator {
-    private EventHrefIterator(final int start) {
-      super(BwEventObj.class, null, null, false, start);
-    }
-
-    @Override
-    public synchronized Object next() {
-      if (!more()) {
-        return null;
-      }
-
-      final Object[] pathName = (Object[])batch.get(index);
-      index++;
-      
-      if ((pathName.length != 2) || 
-              (!(pathName[0] instanceof String)) ||
-              (!(pathName[1] instanceof String))) {
-        throw new RuntimeException("Expected 2 strings");
-      }
-      
-      return pathName[0] + "/" + pathName[1];
-    }
-
-    @Override
-    protected void nextBatch() {
-      try {
-        sess.createQuery("select colPath, name from " + className + 
-                                 " order by dtstart.dtval desc");
-
-        sess.setFirstResult(start);
-        sess.setMaxResults(batchSize);
-
-        start += batchSize;
-
-        batch = sess.getList();
-        index = 0;
-
-        if (Util.isEmpty(batch)) {
-          done = true;
-        }
-      } catch (final Throwable t) {
-        throw new RuntimeException(t);
-      }
-    }
-  }
-
-  @Override
-  public <T> Iterator<T> getObjectIterator(final Class<T> cl) {
-    return new ObjectIterator(cl);
-  }
-
-  @Override
-  public <T> Iterator<T> getPrincipalObjectIterator(final Class<T> cl) {
-    return new ObjectIterator(cl, null, getPrincipalRef(), false, 0);
-  }
-
-  @Override
-  public <T> Iterator<T> getPublicObjectIterator(final Class<T> cl) {
-    return new ObjectIterator(cl, null, null, true, 0);
-  }
-
-  @Override
-  public <T> Iterator<T> getObjectIterator(final Class<T> cl,
-                                           final String colPath) {
-    return new ObjectIterator<T>(cl, colPath);
-  }
-
-  @Override
-  public Iterator<String> getEventHrefs(final int start) {
-    return new EventHrefIterator(start);
-  }
-
-  @Override
-  public Iterator<BwEventAnnotation> getEventAnnotations() {
-    return events.getEventAnnotations();
-  }
-
-  @Override
-  public Collection<BwEventAnnotation> getEventOverrides(final BwEvent ev) {
-    return events.getEventOverrides(ev);
-  }
-
-  /* ====================================================================
-   *                       filter defs
-   * ==================================================================== */
-
-  @Override
-  public void add(final BwFilterDef val,
-                  final BwPrincipal<?> owner) {
-    final BwFilterDef fd = filterDefs.fetch(val.getName(), owner);
-
-    if (fd != null) {
-      throw new BedeworkException(CalFacadeErrorCode.duplicateFilter,
-                                   val.getName());
-    }
-
-    entityDao.add(val);
-  }
-
-  @Override
-  public BwFilterDef getFilterDef(final String name,
-                                  final BwPrincipal<?> owner) {
-    return filterDefs.fetch(name, owner);
-  }
-
-  @Override
-  public Collection<BwFilterDef> getAllFilterDefs(final BwPrincipal<?> owner) {
-    return filterDefs.getAllFilterDefs(owner);
-  }
-
-  @Override
-  public void update(final BwFilterDef val) {
-    entityDao.update(val);
-  }
-
-  @Override
-  public void deleteFilterDef(final String name,
-                              final BwPrincipal<?> owner) {
-    final BwFilterDef fd = filterDefs.fetch(name, owner);
-
-    if (fd == null) {
-      throw new BedeworkException(CalFacadeErrorCode.unknownFilter, name);
-    }
-
-    entityDao.delete(fd);
-  }
-
-  /* ====================================================================
-   *                       user auth
-   * ==================================================================== */
-
-  @Override
-  public void addAuthUser(final BwAuthUser val) {
-    final BwAuthUser ck = getAuthUser(val.getUserHref());
-
-    if (ck != null) {
-      throw new BedeworkException(CalFacadeErrorCode.targetExists);
-    }
-
-    entityDao.add(val);
-  }
-
-  @Override
-  public BwAuthUser getAuthUser(final String href) {
-    final BwAuthUser au = principalsAndPrefs.getAuthUser(href);
-
-    if (au == null) {
-      // Not an authorised user
-      return null;
-    }
-
-    BwAuthUserPrefs prefs = au.getPrefs();
-
-    if (prefs == null) {
-      prefs = BwAuthUserPrefs.makeAuthUserPrefs();
-      au.setPrefs(prefs);
-    }
-
-    return au;
-  }
-
-  @Override
-  public void updateAuthUser(final BwAuthUser val) {
-    entityDao.update(val);
-  }
-
-  @Override
-  public List<BwAuthUser> getAll() {
-    return principalsAndPrefs.getAllAuthUsers();
-  }
-
-  @Override
-  public void delete(final BwAuthUser val) {
-    entityDao.delete(val);
-  }
-
-  /* =========================================================
-   *                       principals + prefs
-   * ========================================================= */
-
-  @Override
-  public BwPrincipal<?> getPrincipal(final String href) {
-    return principalsAndPrefs.getPrincipal(href);
-  }
-
-  @Override
-  public void add(final BwPrincipal<?> val) {
-    entityDao.add(val);
-    getIndexer(val.getPrincipalRef(),
-               docTypePrincipal).indexEntity(val);
-  }
-
-  @Override
-  public void update(final BwPrincipal<?> val) {
-    entityDao.update(val);
-    getIndexer(val.getPrincipalRef(),
-               docTypePrincipal).indexEntity(val);
-  }
-
-  @Override
-  public List<String> getPrincipalHrefs(final int start,
-                                        final int count) {
-    return principalsAndPrefs.getPrincipalHrefs(start, count);
-  }
-
-  @Override
-  public BwPreferences getPreferences(final String principalHref) {
-    return principalsAndPrefs.getPreferences(principalHref);
-  }
-
-  @Override
-  public void add(final BwPreferences val) {
-    entityDao.add(val);
-    indexEntity(val);
-  }
-
-  @Override
-  public void update(final BwPreferences val) {
-    entityDao.update(val);
-    indexEntity(val);
-  }
-
-  @Override
-  public void delete(final BwPreferences val) {
-    entityDao.delete(val);
-    getIndexer(docTypePreferences).unindexEntity(val.getHref());
-  }
-
-  /* ====================================================================
-   *                       adminprefs
-   * ==================================================================== */
-  
-  @Override
-  public void removeFromAllPrefs(final BwShareableDbentity<?> val) {
-    principalsAndPrefs.removeFromAllPrefs(val);
-  }
-
-  /* ====================================================================
-   *                       groups
-   * ==================================================================== */
-
-  @Override
-  public BwGroup<?> findGroup(final String account,
-                           final boolean admin) {
-    return principalsAndPrefs.findGroup(account, admin);
-  }
-
-  @Override
-  public Collection<BwGroup<?>> findGroupParents(final BwGroup group,
-                                       final boolean admin) {
-    return principalsAndPrefs.findGroupParents(group, admin);
- }
- 
-  @Override
-  public void addGroup(final BwGroup group,
-                       final boolean admin) {
-    principalsAndPrefs.add(group);
-    indexEntity(group);
-  }
-
-  @Override
-  public void updateGroup(final BwGroup group,
-                          final boolean admin) {
-    principalsAndPrefs.update(group);
-    indexEntity(group);
-  }
-
-  @Override
-  public void removeGroup(final BwGroup group,
-                          final boolean admin) {
-    principalsAndPrefs.removeGroup(group, admin);
-    getIndexer(docTypePrincipal).unindexEntity(group.getHref());
-  }
-
-  @Override
-  public void addMember(final BwGroup group,
-                        final BwPrincipal val,
-                        final boolean admin) {
-    final BwGroupEntry ent;
-
-    if (admin) {
-      ent = new BwAdminGroupEntry();
-    } else {
-      ent = new BwGroupEntry();
-    }
-
-    ent.setGrp(group);
-    ent.setMember(val);
-
-    principalsAndPrefs.add(ent);
-    indexEntity(group);
-  }
-
-  @Override
-  public void removeMember(final BwGroup group,
-                           final BwPrincipal val,
-                           final boolean admin) {
-    principalsAndPrefs.removeMember(group, val, admin);
-    indexEntity(group);
-  }
-
-  @Override
-  public Collection<BwPrincipal<?>> getMembers(final BwGroup group,
-                                               final boolean admin) {
-    return principalsAndPrefs.getMembers(group, admin);
-  }
-
-  @Override
-  public Collection<BwGroup<?>> getAllGroups(final boolean admin) {
-    return principalsAndPrefs.getAllGroups(admin);
-  }
-
-  @Override
-  public Collection<BwAdminGroup> getAdminGroups() {
-    return principalsAndPrefs.getAllGroups(false);
-  }
-
-  @Override
-  public Collection<BwGroup<?>> getGroups(
-          final BwPrincipal<?> val,
-          final boolean admin) {
-    return principalsAndPrefs.getGroups(val, admin);
-  }
-
-  @Override
-  public Collection<BwAdminGroup> getAdminGroups(
-          final BwPrincipal<?> val) {
-    return principalsAndPrefs.getGroups(val, true);
-  }
-
-  /* ==========================================================
-   *                       calendar suites
-   * ========================================================== */
-
-  @Override
-  public BwCalSuite get(final BwAdminGroup group) {
-    return entityDao.get(group);
-  }
-  
-  @Override
-  public BwCalSuite getCalSuite(final String name) {
-    return entityDao.getCalSuite(name);
-  }
-
-  @Override
-  public Collection<BwCalSuite> getAllCalSuites() {
-    return entityDao.getAllCalSuites();
-  }
-
-  @Override
-  public void add(final BwCalSuite val) {
-    entityDao.add(val);
-    indexEntity(val);
-  }
-
-  @Override
-  public void update(final BwCalSuite val) {
-    entityDao.update(val);
-    indexEntity(val);
-  }
-
-  @Override
-  public void delete(final BwCalSuite val) {
-    entityDao.delete(val);
-    getIndexer(docTypePrincipal).unindexEntity(val.getHref());
-  }
-
-  /* ====================================================================
-   *                   Event Properties
-   * ==================================================================== */
-
-  @Override
-  public void add(final BwEventProperty<?> val) {
-    entityDao.add(val);
-    indexEntity(val);
-  }
-
-  @Override
-  public void update(final BwEventProperty<?> val) {
-    entityDao.update(val);
-    indexEntity(val);
-  }
-
   /* ====================================================================
    *                   Event Properties Factories
    * ==================================================================== */
@@ -1502,71 +683,7 @@ public class CalintfImpl extends CalintfROImpl {
       return (CoreEventPropertiesI<T>)locationsHandler;
     }
 
-    throw new RuntimeException("Should not get here");
-  }
-
-  /* ====================================================================
-   *                       resources
-   * ==================================================================== */
-
-  @Override
-  public BwResource getResource(final String href,
-                                final int desiredAccess) {
-    return resources.getResource(href, desiredAccess);
-  }
-
-  @Override
-  public void getResourceContent(final BwResource val) {
-    resources.getResourceContent(val);
-  }
-
-  @Override
-  public List<BwResource> getResources(final String path,
-                                       final boolean forSynch,
-                                       final String token,
-                                       final int count) {
-    return resources.getResources(path,
-                                  forSynch,
-                                  token,
-                                  count);
-  }
-
-  @Override
-  public void add(final BwResource val) {
-    resources.add(val);
-  }
-
-  @Override
-  public void addContent(final BwResource r,
-                         final BwResourceContent rc) {
-    resources.addContent(r, rc);
-  }
-
-  @Override
-  public void update(final BwResource val) {
-    resources.update(val);
-  }
-
-  @Override
-  public void updateContent(final BwResource r,
-                            final BwResourceContent val) {
-    resources.updateContent(r, val);
-  }
-
-  @Override
-  public void deleteResource(final String href) {
-    resources.deleteResource(href);
-  }
-
-  @Override
-  public void delete(final BwResource r) {
-    resources.delete(r);
-  }
-
-  @Override
-  public void deleteContent(final BwResource r,
-                            final BwResourceContent val) {
-    resources.deleteContent(r, val);
+    throw new BedeworkException("Should not get here");
   }
 
   /* ====================================================================

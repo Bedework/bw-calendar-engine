@@ -1,7 +1,7 @@
 /* ********************************************************************
     Appropriate copyright notice
 */
-package org.bedework.calcore.hibernate;
+package org.bedework.calcore.hibernate.daoimpl;
 
 import org.bedework.access.WhoDefs;
 import org.bedework.base.exc.BedeworkException;

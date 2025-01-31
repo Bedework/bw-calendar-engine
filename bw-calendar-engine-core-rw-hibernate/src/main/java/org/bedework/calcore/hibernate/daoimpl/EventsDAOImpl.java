@@ -16,9 +16,10 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calcore.hibernate;
+package org.bedework.calcore.hibernate.daoimpl;
 
-import org.bedework.calcore.rw.common.dao.CoreEventsDAO;
+import org.bedework.calcore.hibernate.EventQueryBuilder;
+import org.bedework.calcore.rw.common.dao.EventsDAO;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
@@ -34,19 +35,19 @@ import java.util.List;
  * 
  * @author Mike Douglass   douglm  - bedework.org
  */
-public class CoreEventsDAOImpl extends DAOBaseImpl
-        implements CoreEventsDAO {
+public class EventsDAOImpl extends DAOBaseImpl
+        implements EventsDAO {
   /** Constructor
    *
    * @param sess the session
    */
-  public CoreEventsDAOImpl(final DbSession sess) {
+  public EventsDAOImpl(final DbSession sess) {
     super(sess);
   }
 
   @Override
   public String getName() {
-    return CoreEventsDAOImpl.class.getName();
+    return EventsDAOImpl.class.getName();
   }
 
   private static final String eventsByNameQuery =

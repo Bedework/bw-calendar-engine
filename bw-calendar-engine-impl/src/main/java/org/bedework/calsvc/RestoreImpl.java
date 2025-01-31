@@ -123,7 +123,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       startTransaction();
 
       o.markUnsaved();
-      getCal().add(o);
+      getCal().addRestoredEntity(o);
     } finally {
       endTransaction();
     }
@@ -135,7 +135,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       startTransaction();
 
       o.markUnsaved();
-      getCal().add((BwUnversionedDbentity<?>)o);
+      getCal().addRestoredEntity((BwUnversionedDbentity<?>)o);
     } catch (final Throwable t) {
       handleException(t, "Exception restoring user " + o);
     } finally {
@@ -149,7 +149,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       startTransaction();
 
       o.markUnsaved();
-      getCal().add((BwUnversionedDbentity<?>)o);
+      getCal().addRestoredEntity((BwUnversionedDbentity<?>)o);
 
       if (debug()) {
         log.debug("Saved admin group " + o);
@@ -183,7 +183,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     try {
       startTransaction();
 
-      getCal().add(o);
+      getCal().addRestoredEntity(o);
     } finally {
       endTransaction();
     }
@@ -259,7 +259,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     try {
       startTransaction();
 
-      getCal().add(o);
+      getCal().addRestoredEntity(o);
     } finally {
       endTransaction();
     }
@@ -284,7 +284,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       startTransaction();
 
       o.markUnsaved();
-      getCal().add(o);
+      getCal().addRestoredEntity(o);
     } finally {
       endTransaction();
     }
@@ -296,7 +296,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       startTransaction();
 
       o.markUnsaved();
-      getCal().add(o);
+      getCal().addRestoredEntity(o);
     } finally {
       endTransaction();
     }
@@ -308,7 +308,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       startTransaction();
 
       o.markUnsaved();
-      getCal().add(o);
+      getCal().addRestoredEntity(o);
     } finally {
       endTransaction();
     }
@@ -346,23 +346,22 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       if (p != null) {
         warn("Found instance of preferences for " + o.getOwnerHref());
         o.setId(p.getId());
+        o.setSeq(p.getSeq());
         //noinspection UnusedAssignment
-        p = (BwPreferences)getSvc().merge(o);
+        getCal().update(o);
       } else {
-        p = o;
-
         /* Ensure views are unsaved objects */
-        final Collection<BwView> v = p.getViews();
+        final Collection<BwView> v = o.getViews();
         if (v != null) {
           for (final BwView view: v) {
             view.markUnsaved();
           }
         }
 
-        p.markUnsaved();
-      }
+        o.markUnsaved();
 
-      getCal().add(o);
+        getCal().add(o);
+      }
     } finally {
       endTransaction();
     }
@@ -411,7 +410,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     try {
       startTransaction();
 
-      getCal().add(val);
+      getCal().addRestoredEntity(val);
     } finally {
       endTransaction();
     }
@@ -425,7 +424,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     try {
       startTransaction();
 
-      getCal().add(o);
+      getCal().addRestoredEntity(o);
       curBatchSize++;
     } finally {
       endTransaction();

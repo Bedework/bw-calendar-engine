@@ -4,7 +4,7 @@ import org.bedework.calfacade.BwResource;
 
 import java.util.List;
 
-public interface CoreResourcesDAO extends DAOBase {
+public interface ResourcesDAO extends DAOBase {
   BwResource getResource(String name,
                          String colPath,
                          int desiredAccess);

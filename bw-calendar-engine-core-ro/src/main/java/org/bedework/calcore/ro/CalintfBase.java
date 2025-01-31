@@ -125,7 +125,7 @@ public abstract class CalintfBase implements Logged, Calintf {
 
   /** For evaluating access control
    */
-  protected AccessUtil access;
+  protected AccessUtil accessUtil;
 
   private final BwIndexFetcher indexFetcher = new BwIndexFetcherImpl();
 
@@ -134,7 +134,7 @@ public abstract class CalintfBase implements Logged, Calintf {
     public CurrentAccess checkAccess(final BwShareableDbentity<?> ent,
                                          final int desiredAccess,
                                          final boolean returnResult) {
-      return access.checkAccess(ent, desiredAccess, returnResult);
+      return accessUtil.checkAccess(ent, desiredAccess, returnResult);
     }
 
     @Override
@@ -170,7 +170,7 @@ public abstract class CalintfBase implements Logged, Calintf {
 
     @Override
     public AccessUtilI getAccessUtil() {
-      return access;
+      return accessUtil;
     }
   }
 
@@ -200,8 +200,8 @@ public abstract class CalintfBase implements Logged, Calintf {
     this.principalInfo = principalInfo;
 
     try {
-      access = new AccessUtil();
-      access.init(principalInfo);
+      accessUtil = new AccessUtil();
+      accessUtil.init(principalInfo);
     } catch (final Throwable t) {
       throw new BedeworkException(t);
     }
@@ -663,7 +663,7 @@ public abstract class CalintfBase implements Logged, Calintf {
   /**
    * @return BwPrincipal object for current principal
    */
-  public BwPrincipal getPrincipal() {
+  public BwPrincipal<?> getPrincipal() {
     if (principalInfo == null) {
       return null;
     }

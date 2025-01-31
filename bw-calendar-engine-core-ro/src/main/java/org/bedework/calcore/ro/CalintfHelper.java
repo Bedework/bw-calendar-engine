@@ -30,6 +30,7 @@ import org.bedework.calfacade.base.AttachmentsEntity;
 import org.bedework.calfacade.base.AttendeesEntity;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
+import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.base.CommentedEntity;
 import org.bedework.calfacade.base.ContactedEntity;
@@ -234,9 +235,9 @@ public abstract class CalintfHelper
     }
   }
 
-  protected void indexEntity(final BwCalendar col) {
+  protected void indexEntity(final BwUnversionedDbentity<?> ent) {
     if (!getForRestore()) {
-      intf.indexEntity(col);
+      intf.indexEntity(ent);
     }
   }
 
