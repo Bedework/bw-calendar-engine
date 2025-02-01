@@ -23,7 +23,6 @@ import org.bedework.calcore.rw.common.dao.EventsDAO;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
-import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.database.db.DbSession;
 
@@ -51,7 +50,7 @@ public class EventsDAOImpl extends DAOBaseImpl
   }
 
   private static final String eventsByNameQuery =
-    "from " + BwEventObj.class.getName() + " as ev " +
+    "select ev from BwEventObj ev " +
       "where ev.name = :name and ev.tombstoned=false and ev.colPath = :colPath";
 
   @Override
@@ -68,7 +67,7 @@ public class EventsDAOImpl extends DAOBaseImpl
   }
 
   private static final String eventAnnotationsByNameQuery =
-          "from " + BwEventAnnotation.class.getName() + " as ev " +
+          "select ev from BwEventAnnotation ev " +
                   "where ev.name = :name and " +
                   "ev.colPath = :colPath and " +
                   "ev.tombstoned=false and " +
@@ -91,13 +90,13 @@ public class EventsDAOImpl extends DAOBaseImpl
      we try to do this. For the moment move them to a purged
      collection until I figure out how to avoid the deadlocks
   private final static String deleteTombstonedEventQuery =
-          "delete from " + BwEventObj.class.getName() + " ev " +
+          "delete from BwEventObj ev " +
                   "where ev.tombstoned = true and " +
                   "ev.colPath = :path and " + 
                   "ev.uid = :uid";
    */
   private final static String deleteTombstonedEventQuery =
-          "update " + BwEventObj.class.getName() + " ev " +
+          "update BwEventObj ev " +
                   "set ev.colPath = '**purged**' " +
                   "where ev.tombstoned = true and " +
                   "ev.colPath = :path and " +
@@ -117,13 +116,13 @@ public class EventsDAOImpl extends DAOBaseImpl
   }
   
   private static final String getSynchEventObjectsTokenQuery =
-          "from " + BwEventObj.class.getName() + " ev " +
+          "select ev from BwEventObj ev " +
                   "where ev.colPath = :path and " +
                   "ev.ctoken is not null and " + // XXX Only because we reused column
                   "ev.ctoken > :token";
         
   private static final String getSynchEventObjectsQuery =
-          "from " + BwEventObj.class.getName() + " ev " +
+          "select ev from BwEventObj ev " +
                   "where ev.colPath = :path and " +
                   // No deleted events for null sync-token
                   "ev.tombstoned = false";
@@ -153,7 +152,7 @@ public class EventsDAOImpl extends DAOBaseImpl
    * ==================================================================== */
   
   private final static String getChildEntitiesQuery =
-          "select ev.name from " + BwEventObj.class.getName() + " ev " +
+          "select ev.name from BwEventObj ev " +
                   "where ev.colPath=:colPath and " +
                   // No deleted events
                   "ev.tombstoned = false " +
@@ -177,13 +176,13 @@ public class EventsDAOImpl extends DAOBaseImpl
     return (List<String>)sess.getList();
   }
 
-  /* ====================================================================
+  /* ==========================================================
    *                       dumprestore support - to go in 4.0
-   * ==================================================================== */
+   * ========================================================== */
 
   private static final String getEventAnnotationsQuery =
-          "from " + BwEventAnnotation.class.getName() +
-                  " where recurrenceId=null";
+          "select ev from BwEventAnnotation ev " +
+                  "where ev.recurrenceId=null";
 
   @Override
   public Iterator<BwEventAnnotation> getEventAnnotations() {
@@ -199,9 +198,9 @@ public class EventsDAOImpl extends DAOBaseImpl
   }
 
   private static final String getEventOverridesQuery =
-          "from " + BwEventAnnotation.class.getName() +
-                  " where recurrenceId<>null " +
-                  " and target=:target";
+          "select ev from BwEventAnnotation ev " +
+                  "where ev.recurrenceId<>null " +
+                  "and ev.target=:target";
 
   @SuppressWarnings("unchecked")
   @Override
@@ -215,16 +214,16 @@ public class EventsDAOImpl extends DAOBaseImpl
     return (Collection<BwEventAnnotation>)sess.getList();
   }
 
-  /* ====================================================================
+  /* ==========================================================
    *                   Private methods
-   * ==================================================================== */
+   * ========================================================== */
 
   private final static String calendarGuidExistsQuery =
-          "select ev.name from " + BwEventObj.class.getName() + " ev " +
+          "select ev.name from BwEventObj ev " +
                   "where ev.tombstoned = false and ";
 
   private final static String calendarGuidAnnotationExistsQuery =
-          "select ev.name from " + BwEventAnnotation.class.getName() + " ev " +
+          "select ev.name from BwEventAnnotation ev " +
                   "where ev.tombstoned = false and ";
   
   /* Return the name of any event which has the same uid
@@ -301,11 +300,11 @@ public class EventsDAOImpl extends DAOBaseImpl
   }
 
   private final static String calendarNameExistsQuery =
-          "select count(*) from " + BwEventObj.class.getName() + " ev " +
+          "select count(*) from BwEventObj ev " +
                   "where ev.tombstoned = false and ";
 
   private final static String calendarNameAnnotationExistsQuery =
-          "select count(*) from " + BwEventAnnotation.class.getName() + " ev " +
+          "select count(*) from BwEventAnnotation ev " +
                   "where ev.tombstoned = false and ";
 
   @Override
@@ -372,7 +371,7 @@ public class EventsDAOImpl extends DAOBaseImpl
   }
 
   private final static String getAnnotationsQuery =
-          "from " + BwEventAnnotation.class.getName() + " ev " +
+          "select ev from BwEventAnnotation ev " +
                   " where target=:target";
 
   @SuppressWarnings("unchecked")

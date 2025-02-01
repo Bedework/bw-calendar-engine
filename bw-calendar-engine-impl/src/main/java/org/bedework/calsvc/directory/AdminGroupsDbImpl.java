@@ -228,20 +228,6 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
     cb.removeGroup(group, true);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.svc.AdminGroups#findGroupByEventOwner(org.bedework.calfacade.BwUser)
-   * /
-  @Override
-  public BwAdminGroup findGroupByEventOwner(final BwUser owner) {
-    HibSession sess = getSess();
-
-    sess.createQuery("from " + BwAdminGroup.class.getName() + " ag " +
-                     "where ag.ownerHref = :ownerHref");
-    sess.setString("ownerHref", owner.getPrincipalRef());
-
-    return (BwAdminGroup)sess.getUnique();
-  } */
-
   @Override
   public void updateGroup(final BwGroup<?> group) {
     cb.updateGroup(group, true);

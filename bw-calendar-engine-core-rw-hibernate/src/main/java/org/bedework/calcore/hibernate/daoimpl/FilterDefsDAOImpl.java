@@ -45,7 +45,7 @@ public class FilterDefsDAOImpl extends DAOBaseImpl
   }
 
   private static final String getAllFilterDefsQuery =
-          "from " + BwFilterDef.class.getName() +
+          "select ent from BwFilterDef ent" +
                   " where ownerHref=:ownerHref";
 
   @SuppressWarnings("unchecked")
@@ -61,8 +61,8 @@ public class FilterDefsDAOImpl extends DAOBaseImpl
   }
 
   private static final String fetchFilterDefQuery =
-          "from " + BwFilterDef.class.getName() +
-                  " where ownerHref=:ownerHref and name=:name";
+          "select ent from BwFilterDef ent " +
+                  "where ownerHref=:ownerHref and name=:name";
 
   @Override
   public BwFilterDef fetch(final String name,

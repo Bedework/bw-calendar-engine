@@ -640,7 +640,7 @@ public class CalintfImpl extends CalintfCommonImpl {
       if (categoriesHandler == null) {
         final var dao = new CoreEventPropertiesDAOImpl(
                 sess,
-                BwCategory.class.getName());
+                BwCategory.class);
         registerDao(dao);
 
         categoriesHandler =
@@ -655,7 +655,7 @@ public class CalintfImpl extends CalintfCommonImpl {
       if (contactsHandler == null) {
         final var dao = new CoreEventPropertiesDAOImpl(
                 sess,
-                BwContact.class.getName());
+                BwContact.class);
         registerDao(dao);
 
         contactsHandler =
@@ -670,7 +670,7 @@ public class CalintfImpl extends CalintfCommonImpl {
     if (cl.equals(BwLocation.class)) {
       final var dao = new CoreEventPropertiesDAOImpl(
               sess,
-              BwLocation.class.getName());
+              BwLocation.class);
       registerDao(dao);
 
       if (locationsHandler == null) {

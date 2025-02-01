@@ -30,7 +30,7 @@ public class CalSuitesDAOImpl extends DAOBaseImpl
   }
 
   private static final String getCalSuiteByGroupQuery =
-          "from org.bedework.calfacade.svc.BwCalSuite cal " +
+          "select cal from BwCalSuite cal " +
                   "where cal.group=:group";
 
   @Override
@@ -51,7 +51,7 @@ public class CalSuitesDAOImpl extends DAOBaseImpl
   }
 
   private static final String getCalSuiteQuery =
-          "from org.bedework.calfacade.svc.BwCalSuite cal " +
+          "select cal from BwCalSuite cal " +
                   "where cal.name=:name";
 
   @Override
@@ -66,7 +66,7 @@ public class CalSuitesDAOImpl extends DAOBaseImpl
   }
 
   private static final String getAllCalSuitesQuery =
-          "from " + BwCalSuite.class.getName();
+          "select ent from BwCalSuite ent";
 
   @SuppressWarnings("unchecked")
   @Override

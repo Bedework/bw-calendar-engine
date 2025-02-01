@@ -13,15 +13,9 @@ import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwGroupEntry;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.base.BwShareableDbentity;
-import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwPreferences;
-import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCalendar;
-import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCategory;
-import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsContact;
-import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsLocation;
 import org.bedework.database.db.DbSession;
 import org.bedework.util.misc.Util;
 
@@ -59,8 +53,8 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
    * ===================================================== */
 
   private final static String getPrincipalQuery =
-          "from " + BwUser.class.getName() +
-                  " as u where u.principalRef = :href";
+          "select u from BwUser u " +
+                  "where u.principalRef = :href";
 
   @Override
   public BwPrincipal<?> getPrincipal(final String href) {
@@ -89,8 +83,8 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
   }
 
   private static final String getPrincipalHrefsQuery =
-          "select u.principalRef from " + BwUser.class.getName() +
-                  " u order by u.principalRef";
+          "select u.principalRef from BwUser u " +
+                  "order by u.principalRef";
 
   @Override
   public List<String> getPrincipalHrefs(final int start,
@@ -113,7 +107,7 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
   }
 
   private static final String getOwnerPreferencesQuery =
-          "from " + BwPreferences.class.getName() + " p " +
+          "select p from BwPreferences p " +
                   "where p.ownerHref=:ownerHref";
 
   @Override
@@ -131,11 +125,11 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
    * ====================================================== */
 
   private static final String getAdminGroupQuery =
-          "from " + BwAdminGroup.class.getName() + " ag " +
+          "select ag from BwAdminGroup ag " +
                   "where ag.account = :account";
 
   private static final String getGroupQuery =
-          "from " + BwGroup.class.getName() + " g " +
+          "select g from BwGroup g " +
                   "where g.account = :account";
 
   @Override
@@ -155,16 +149,12 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
   }
 
   private static final String getAdminGroupParentsQuery =
-          "select ag from " +
-                  "org.bedework.calfacade.svc.BwAdminGroupEntry age, " +
-                  "org.bedework.calfacade.svc.BwAdminGroup ag " +
+          "select ag from BwAdminGroupEntry age, BwAdminGroup ag " +
                   "where ag.id = age.groupId and " +
                   "age.memberId=:grpid and age.memberIsGroup=true";
 
   private static final String getGroupParentsQuery =
-          "select g from " +
-                  "org.bedework.calfacade.BwGroupEntry ge, " +
-                  "org.bedework.calfacade.BwGroup g " +
+          "select g from BwGroupEntry ge, BwGroup g " +
                   "where g.id = ge.groupId and " +
                   "ge.memberId=:grpid and ge.memberIsGroup=true";
 
@@ -187,23 +177,18 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
   }
 
   private static final String removeAllAdminGroupMemberRefsQuery =
-          "delete from " +
-                  "org.bedework.calfacade.svc.BwAdminGroupEntry " +
+          "delete from BwAdminGroupEntry " +
                   "where grp=:gr";
   private static final String removeAllGroupMembersQuery =
-          "delete from " +
-
-                  "org.bedework.calfacade.BwGroupEntry " +
+          "delete from BwGroupEntry " +
                   "where grp=:gr";
 
   private static final String removeFromAllAdminGroupsQuery =
-          "delete from " +
-                  "org.bedework.calfacade.svc.BwAdminGroupEntry " +
+          "delete from BwAdminGroupEntry " +
                   "where memberId=:mbrId and memberIsGroup=:isgroup";
 
   private static final String removeFromAllGroupsQuery =
-          "delete from " +
-                  "org.bedework.calfacade.BwGroupEntry " +
+          "delete from BwGroupEntry " +
                   "where memberId=:mbrId and memberIsGroup=:isgroup";
 
   @Override
@@ -240,12 +225,14 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
   }
 
   private static final String findAdminGroupEntryQuery =
-          "from org.bedework.calfacade.svc.BwAdminGroupEntry " +
-                  "where grp=:grp and memberId=:mbrId and memberIsGroup=:isgroup";
+          "select age from BwAdminGroupEntry age " +
+                  "where age.grp=:grp and age.memberId=:mbrId " +
+                  "and age.memberIsGroup=:isgroup";
 
   private static final String findGroupEntryQuery =
-          "from org.bedework.calfacade.BwGroupEntry " +
-                  "where grp=:grp and memberId=:mbrId and memberIsGroup=:isgroup";
+          "select ge from BwGroupEntry " +
+                  "where ge.grp=:grp and ge.memberId=:mbrId " +
+                  "and ge.memberIsGroup=:isgroup";
 
   @Override
   public void removeMember(final BwGroup<?> group,
@@ -281,30 +268,23 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
   }
 
   private static final String getAdminGroupUserMembersQuery =
-          "select u from " +
-                  "org.bedework.calfacade.svc.BwAdminGroupEntry age, " +
-                  "org.bedework.calfacade.BwUser u " +
+          "select u from BwAdminGroupEntry age, BwUser u " +
                   "where u.id = age.memberId and " +
                   "age.grp=:gr and age.memberIsGroup=false";
 
   private static final String getAdminGroupGroupMembersQuery =
-          "select ag from " +
-                  "org.bedework.calfacade.svc.BwAdminGroupEntry age, " +
-                  "org.bedework.calfacade.svc.BwAdminGroup ag " +
+          "select ag from BwAdminGroupEntry age, " +
+                  "BwAdminGroup ag " +
                   "where ag.id = age.memberId and " +
                   "age.grp=:gr and age.memberIsGroup=true";
 
   private static final String getGroupUserMembersQuery =
-          "select u from " +
-                  "org.bedework.calfacade.BwGroupEntry ge, " +
-                  "org.bedework.calfacade.BwUser u " +
+          "select u from BwGroupEntry ge, BwUser u " +
                   "where u.id = ge.memberId and " +
                   "ge.grp=:gr and ge.memberIsGroup=false";
 
   private static final String getGroupGroupMembersQuery =
-          "select g from " +
-                  "org.bedework.calfacade.BwGroupEntry ge, " +
-                  "org.bedework.calfacade.BwGroup g " +
+          "select g from BwGroupEntry ge, BwGroup g " +
                   "where g.id = ge.memberId and " +
                   "ge.grp=:gr and ge.memberIsGroup=true";
 
@@ -340,11 +320,11 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
   }
 
   private static final String getAllAdminGroupsQuery =
-          "from " + BwAdminGroup.class.getName() + " ag " +
+          "select ag from BwAdminGroup ag " +
                   "order by ag.account";
 
   private static final String getAllGroupsQuery =
-          "from " + BwGroup.class.getName() + " g " +
+          "select g from BwGroup g " +
                   "order by g.account";
 
   @SuppressWarnings("unchecked")
@@ -364,16 +344,16 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
 
   /* Groups principal is a member of */
   private static final String getAdminGroupsQuery =
-          "select ag.grp from org.bedework.calfacade.svc.BwAdminGroupEntry ag " +
+          "select ag.grp from BwAdminGroupEntry ag " +
                   "where ag.memberId=:entId and ag.memberIsGroup=:isgroup";
 
   /* Groups principal is a event owner for */
   private static final String getAdminGroupsByEventOwnerQuery =
-          "from org.bedework.calfacade.svc.BwAdminGroup ag " +
+          "select ag from BwAdminGroup ag " +
                   "where ag.ownerHref=:ownerHref";
 
   private static final String getGroupsQuery =
-          "select g.grp from org.bedework.calfacade.BwGroupEntry g " +
+          "select g.grp from BwGroupEntry g " +
                   "where g.memberId=:entId and g.memberIsGroup=:isgroup";
 
   @SuppressWarnings("unchecked")
@@ -417,25 +397,25 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
     return (Collection<T>)gs;
   }
 
-  /* ====================================================================
+  /* ==========================================================
    *                       adminprefs
-   * ==================================================================== */
+   * ========================================================== */
 
   private static final String removeCalendarPrefForAllQuery =
-          "delete from " + BwAuthUserPrefsCalendar.class.getName() +
-                  " where calendarid=:id";
+          "delete from BwAuthUserPrefsCalendar " +
+                  "where calendarid=:id";
 
   private static final String removeCategoryPrefForAllQuery =
-          "delete from " + BwAuthUserPrefsCategory.class.getName() +
-                  " where categoryid=:id";
+          "delete from BwAuthUserPrefsCategory " +
+                  "where categoryid=:id";
 
   private static final String removeLocationPrefForAllQuery =
-          "delete from " + BwAuthUserPrefsLocation.class.getName() +
-                  " where locationid=:id";
+          "delete from BwAuthUserPrefsLocation " +
+                  "where locationid=:id";
 
   private static final String removeContactPrefForAllQuery =
-          "delete from " + BwAuthUserPrefsContact.class.getName() +
-                  " where contactid=:id";
+          "delete from BwAuthUserPrefsContact " +
+                  "where contactid=:id";
 
   @Override
   public void removeFromAllPrefs(final BwShareableDbentity<?> val) {
@@ -466,9 +446,7 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
    * ========================================================== */
 
   private final static String getUserQuery =
-          "from " +
-                  BwAuthUser.class.getName() +
-                  " as au " +
+          "select au from BwAuthUser au " +
                   "where au.userHref = :userHref";
 
   @Override
@@ -482,9 +460,7 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
   }
 
   private final static String getAllAuthUsersQuery =
-          "from " +
-                  BwAuthUser.class.getName() +
-                  " au " +
+          "select au from BwAuthUser au " +
                   "order by au.userHref";
 
   @SuppressWarnings("unchecked")

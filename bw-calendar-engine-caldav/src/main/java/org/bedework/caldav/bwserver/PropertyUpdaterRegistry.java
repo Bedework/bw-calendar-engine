@@ -19,6 +19,7 @@
 
 package org.bedework.caldav.bwserver;
 
+import org.bedework.base.exc.BedeworkException;
 import org.bedework.caldav.bwserver.stdupdaters.AttendeePropUpdater;
 import org.bedework.caldav.bwserver.stdupdaters.CategoryPropUpdater;
 import org.bedework.caldav.bwserver.stdupdaters.ClassPropUpdater;
@@ -173,9 +174,9 @@ public class PropertyUpdaterRegistry {
         }
 
         if (!(o instanceof PropertyUpdater)) {
-          throw new RuntimeException("Class " + ue.className +
-                                    " is not a subclass of " +
-                                    PropertyUpdater.class.getName());
+          throw new BedeworkException("Class " + ue.className +
+                                              " is not a subclass of " +
+                                              PropertyUpdater.class.getName());
         }
 
         ue.updater = (PropertyUpdater)o;

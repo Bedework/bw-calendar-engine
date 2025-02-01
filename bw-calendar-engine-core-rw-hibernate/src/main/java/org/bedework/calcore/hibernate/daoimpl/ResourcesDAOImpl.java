@@ -34,9 +34,9 @@ public class ResourcesDAOImpl extends DAOBaseImpl implements
   }
 
   private static final String getResourceQuery =
-          "from " + BwResource.class.getName() +
-                  " where name=:name and colPath=:path" +
-                  " and (encoding is null or encoding <> :tsenc)";
+          "select r from BwResource r " +
+                  " where r.name=:name and r.colPath=:path" +
+                  " and (r.encoding is null or r.encoding <> :tsenc)";
 
   @Override
   public BwResource getResource(final String name,
@@ -54,8 +54,8 @@ public class ResourcesDAOImpl extends DAOBaseImpl implements
   }
 
   private static final String getResourceContentQuery =
-          "from " + BwResourceContent.class.getName() +
-                  " as rc where rc.colPath=:path and rc.name=:name";
+          "select rc from BwResourceContent rc " +
+                  "where rc.colPath=:path and rc.name=:name";
 
   @Override
   public void getResourceContent(final BwResource val) {
@@ -74,14 +74,14 @@ public class ResourcesDAOImpl extends DAOBaseImpl implements
   }
 
   private static final String getAllResourcesQuery =
-          "from " + BwResource.class.getName() +
-                  " as r where r.colPath=:path" +
+          "select r from BwResource r " +
+                  "where r.colPath=:path" +
                   // No deleted collections for null sync-token or not sync
                   " and (r.encoding is null or r.encoding <> :tsenc)";
 
   private static final String getAllResourcesSynchQuery =
-          "from " + BwResource.class.getName() +
-                  " as r where r.colPath=:path" +
+          "select r from BwResource r " +
+                  "where r.colPath=:path" +
                   // Include deleted resources after the token.
                   " and (r.lastmod>:lastmod" +
                   " or (r.lastmod=:lastmod and r.sequence>:seq))"+

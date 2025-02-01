@@ -6,7 +6,6 @@ package org.bedework.calcore.hibernate.daoimpl;
 import org.bedework.calcore.rw.common.dao.AlarmsDAO;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.BwEventObj;
 import org.bedework.database.db.DbSession;
 
 import java.util.Collection;
@@ -35,12 +34,12 @@ public class AlarmsDAOImpl extends DAOBaseImpl
    * ========================================================== */
 
   private static final String getUnexpiredAlarmsQuery =
-          "from " + BwAlarm.class.getName() + " as al " +
+          "select al from BwAlarm al " +
                   "where al.expired = false";
 
   /* Return all unexpired alarms before the given time */
   private static final String getUnexpiredAlarmsTimeQuery =
-          "from " + BwAlarm.class.getName() + " as al " +
+          "select al from BwAlarm al " +
                   "where al.expired = false and " +
                   "al.triggerTime <= :tt";
 
@@ -61,7 +60,7 @@ public class AlarmsDAOImpl extends DAOBaseImpl
   }
 
   private static final String eventByAlarmQuery =
-          "select count(*) from " + BwEventObj.class.getName() + " as ev " +
+          "select count(*) from BwEventObj ev " +
                   "where ev.tombstoned=false and :alarm in alarms";
 
   @SuppressWarnings("unchecked")

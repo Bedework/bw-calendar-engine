@@ -21,17 +21,12 @@ package org.bedework.calcore.hibernate.daoimpl;
 
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.rw.common.dao.EventPropertiesDAO;
-import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
-import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
-import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCategory;
-import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsContact;
-import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsLocation;
 import org.bedework.database.db.DbSession;
 
 import java.util.Collection;
@@ -44,7 +39,8 @@ import java.util.List;
  */
 public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
         implements EventPropertiesDAO {
-  private final String className;
+  private final String entityName;
+  private final Class<?> cl;
 
   /* This was easier with named queries */
   private static class ClassString {
@@ -60,20 +56,20 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
       this.locQuery = locQuery;
     }
 
-    String get(final String className) {
-      if (className.equals(BwCategory.class.getName())) {
+    String get(final Class<?> cl) {
+      if (cl.equals(BwCategory.class)) {
         return catQuery;
       }
 
-      if (className.equals(BwContact.class.getName())) {
+      if (cl.equals(BwContact.class)) {
         return contactQuery;
       }
 
-      if (className.equals(BwLocation.class.getName())) {
+      if (cl.equals(BwLocation.class)) {
         return locQuery;
       }
 
-      throw new RuntimeException("Should never happen");
+      throw new BedeworkException("Should never happen");
     }
   }
 
@@ -90,35 +86,35 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
   static {
     refsQuery = new ClassString(
             "select new org.bedework.calfacade.EventPropertiesReference(ev.colPath, ev.uid)" +
-                    "from " + BwEvent.class.getName() + " as ev " +
+                    "from BwEvent ev " +
                     "where :ent in elements(ev.categories)",
 
             "select new org.bedework.calfacade.EventPropertiesReference(ev.colPath, ev.uid)" +
-                    "from " + BwEvent.class.getName() + " as ev " +
+                    "from BwEvent ev " +
                     "where :ent in elements(ev.contacts)",
 
             "select new org.bedework.calfacade.EventPropertiesReference(ev.colPath, ev.uid)" +
-                    "from " + BwEvent.class.getName() + " as ev " +
+                    "from BwEvent ev " +
                     "where ev.location = :ent"
     );
     refsCountQuery = new ClassString(
-            "select count(*) from " + BwEvent.class.getName() + " as ev " +
+            "select count(*) from BwEvent ev " +
                     "where :ent in elements(ev.categories)",
 
-            "select count(*) from " + BwEvent.class.getName() + " as ev " +
+            "select count(*) from BwEvent ev " +
                     "where :ent in elements(ev.contacts)",
 
-            "select count(*) from " + BwEvent.class.getName() + " as ev " +
+            "select count(*) from BwEvent ev " +
                     "where ev.location = :ent");
 
     delPrefsQuery = new ClassString(
-            "delete from " + BwAuthUserPrefsCategory.class.getName() +
+            "delete from BwAuthUserPrefsCategory" +
                     " where categoryid=:id",
 
-            "delete from " + BwAuthUserPrefsContact.class.getName() +
+            "delete from BwAuthUserPrefsContact" +
                     " where contactid=:id",
 
-            "delete from " + BwAuthUserPrefsLocation.class.getName() +
+            "delete from BwAuthUserPrefsLocation" +
                     " where locationid=:id");
 
     keyFields = new ClassString("word",
@@ -138,21 +134,22 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
   /** Constructor
    *
    * @param sess the session
-   * @param className of class we act for
+   * @param cl class we act for
    */
   public CoreEventPropertiesDAOImpl(final DbSession sess,
-                                    final String className) {
+                                    final Class<?> cl) {
     super(sess);
 
-    this.className = className;
+    this.cl = cl;
+    entityName = cl.getSimpleName();
 
-    keyFieldName = keyFields.get(className);
-    finderFieldName = finderFields.get(className);
+    keyFieldName = keyFields.get(cl);
+    finderFieldName = finderFields.get(cl);
   }
 
   @Override
   public String getName() {
-    return CoreEventPropertiesDAOImpl.class.getName() + "-" + className;
+    return CoreEventPropertiesDAOImpl.class.getName() + "-" + entityName;
   }
 
   private String getAllQuery;
@@ -161,9 +158,9 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
   @Override
   public List<BwEventProperty<?>> getAll(final String ownerHref) {
     if (getAllQuery == null) {
-      getAllQuery = "from " + className + " ent where " +
-              " ent.ownerHref=:ownerHref" +
-              " order by ent." + keyFieldName;
+      getAllQuery = "from " + entityName + " ent " +
+              "where ent.ownerHref=:ownerHref " +
+              "order by ent." + keyFieldName;
     }
     
     final var sess = getSess();
@@ -184,7 +181,8 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
   @Override
   public BwEventProperty<?> get(final String uid) {
     if (getQuery == null) {
-      getQuery = "from " + className + " ent where uid=:uid";
+      getQuery = "from " + entityName + " ent " +
+              "where uid=:uid";
     }
 
     final var sess = getSess();
@@ -202,7 +200,7 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
 
     final var v = (BwEventProperty<?>)sess.merge(val);
 
-    sess.createQuery(delPrefsQuery.get(className));
+    sess.createQuery(delPrefsQuery.get(cl));
     sess.setInt("id", v.getId());
     sess.executeUpdate();
 
@@ -212,8 +210,8 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
   @Override
   public List<EventPropertiesReference> getRefs(
           final BwEventProperty<?> val) {
-    final List<EventPropertiesReference> refs = getRefs(val,
-                                                  refsQuery.get(className));
+    final List<EventPropertiesReference> refs =
+            getRefs(val, refsQuery.get(cl));
 
     /* The parameterization doesn't quite cut it for categories. They can appear
      * on collections as well
@@ -221,7 +219,7 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
     if (val instanceof BwCategory) {
       refs.addAll(getRefs(val,
                           "select new org.bedework.calfacade.EventPropertiesReference(col.path) " +
-                                  "from " + BwCalendar.class.getName() + " as col " +
+                                  "from BwCalendar col " +
                                   "where :ent in elements(col.categories)"));
     }
 
@@ -230,14 +228,14 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
 
   @Override
   public long getRefsCount(final BwEventProperty<?> val) {
-    long total = getRefsCount(val, refsCountQuery.get(className));
+    long total = getRefsCount(val, refsCountQuery.get(cl));
 
     /* The parameterization doesn't quite cut it for categories. They can appear
      * on collections as well
      */
     if (val instanceof BwCategory) {
       total += getRefsCount(val,
-                            "select count(*) from " + BwCalendar.class.getName() + " as col " +
+                            "select count(*) from BwCalendar col " +
                                     "where :ent in elements(col.categories)");
     }
 
@@ -251,7 +249,7 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
   public BwEventProperty<?> find(final BwString val,
                                  final String ownerHref) {
     if (findQuery == null) {
-      findQuery = "from " + className + " ent where ";
+      findQuery = "from " + entityName + " ent where ";
     }
 
     doFind(findQuery, val, ownerHref);
@@ -262,7 +260,8 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
   public void checkUnique(final BwString val,
                           final String ownerHref) {
     if (findCountQuery == null) {
-      findCountQuery = "select count(*) from " + className + " ent where ";
+      findCountQuery =
+              "select count(*) from " + entityName + " ent where ";
     }
 
     doFind(findCountQuery, val, ownerHref);

@@ -9,7 +9,6 @@ import org.bedework.calcore.ro.CalintfHelper;
 import org.bedework.calcore.rw.common.dao.IteratorsDAO;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CoreDumpRestoreI;
-import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.util.misc.Util;
@@ -56,7 +55,7 @@ public class CoreDumpRestore extends CalintfHelper
                            final boolean publicAdmin,
                            final int start) {
       this.dao = dao;
-      this.className = cl.getName();
+      this.className = cl.getSimpleName();
       this.cl = cl;
       this.colPath = colPath;
       this.ownerHref = ownerHref;
@@ -135,7 +134,7 @@ public class CoreDumpRestore extends CalintfHelper
 
     @Override
     protected void nextBatch() {
-      batch = dao.getBatch(BwEventObj.class.getName(),
+      batch = dao.getBatch("BwEventObj",
                            start, batchSize);
 
       start += batchSize;
