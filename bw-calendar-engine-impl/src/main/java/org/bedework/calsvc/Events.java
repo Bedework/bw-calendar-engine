@@ -22,6 +22,8 @@ import org.bedework.access.AccessPrincipal;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.base.exc.BedeworkForbidden;
+import org.bedework.base.response.GetEntitiesResponse;
+import org.bedework.base.response.Response;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
 import org.bedework.caldav.util.filter.BooleanFilter;
@@ -79,8 +81,6 @@ import org.bedework.sysevents.events.SysEventBase.SysCode;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
-import org.bedework.base.response.GetEntitiesResponse;
-import org.bedework.base.response.Response;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
@@ -100,16 +100,15 @@ import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
-import javax.xml.ws.Holder;
 
-import static org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
-import static org.bedework.calsvci.EventsI.SetEntityCategoriesResult.success;
 import static org.bedework.base.response.Response.Status.failed;
 import static org.bedework.base.response.Response.Status.forbidden;
 import static org.bedework.base.response.Response.Status.limitExceeded;
 import static org.bedework.base.response.Response.Status.noAccess;
 import static org.bedework.base.response.Response.fromResponse;
 import static org.bedework.base.response.Response.notOk;
+import static org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
+import static org.bedework.calsvci.EventsI.SetEntityCategoriesResult.success;
 
 /** This class handles fetching and updates of events.
  *
@@ -2052,13 +2051,12 @@ class Events extends CalSvcDb implements EventsI {
            * We should leave it if it's an external id.
            */
 
-      final Holder<Boolean> trunc = new Holder<>();
-      final List<BwPrincipalInfo> groupPis =
+      final var groupPisRes =
               dirs.find(att.getCalendarAddress(),
                         att.getKind(),
-                        true,  // expand
-                        trunc);
+                        true);  // expand
 
+      final var groupPis = groupPisRes.principals();
       if ((groupPis == null) || (groupPis.size() != 1)) {
         continue;
       }

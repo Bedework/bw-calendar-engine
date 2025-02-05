@@ -81,7 +81,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.ws.Holder;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
 
@@ -313,11 +312,10 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   }
 
   @Override
-  public List<BwPrincipalInfo> find(
+  public FindPrincipalsResult find(
           final List<WebdavProperty> props,
           final List<WebdavProperty> returnProps,
-          final String cutype,
-          final Holder<Boolean> truncated) {
+          final String cutype) {
     final CardDavInfo cdi = getCardDavInfo(false);
 
     if ((cdi == null) || (cdi.getUrl() == null)) {
@@ -344,7 +342,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       try {
         cdc = new PooledHttpClient(new URI(cdi.getUrl()));
       } catch (final URISyntaxException e) {
-        throw new RuntimeException(e);
+        throw new BedeworkException(e);
       }
       final List<MatchResult> mrs = matching(cdc,
                                              path,
@@ -354,7 +352,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       final List<BwPrincipalInfo> pis = new ArrayList<>();
 
       if (mrs == null) {
-        return pis;
+        return new FindPrincipalsResult(pis, false);
       }
 
       for (final MatchResult mr: mrs) {
@@ -364,7 +362,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
         pis.add(pi);
       }
 
-      return pis;
+      return new FindPrincipalsResult(pis, false);
     } finally {
       if (cdc != null) {
         cdc.release();
@@ -373,10 +371,9 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   }
 
   @Override
-  public List<BwPrincipalInfo> find(final String cua,
-                                    final String cutype,
-                                    final boolean expand,
-                                    final Holder<Boolean> truncated) {
+  public FindPrincipalsResult find(final String cua,
+                                   final String cutype,
+                                   final boolean expand) {
     final CardDavInfo cdi = getCardDavInfo(false);
 
     if ((cdi == null) || (cdi.getUrl() == null)) {
@@ -396,7 +393,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
                                              cua, cutype);
 
       if (!expand) {
-        return pis;
+        return new FindPrincipalsResult(pis, false);
       }
 
       /* if any of the returned entities represent a group then get
@@ -429,7 +426,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
         pi.setMembers(memberPis);
       }
 
-      return pis;
+      return new FindPrincipalsResult(pis, false);
     } finally {
       if (cdc != null) {
         cdc.release();

@@ -27,6 +27,8 @@ import org.bedework.base.exc.BedeworkAccessException;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.base.exc.BedeworkForbidden;
 import org.bedework.base.exc.persist.BedeworkStaleStateException;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 import org.bedework.caldav.server.CalDAVCollection;
 import org.bedework.caldav.server.CalDAVEvent;
 import org.bedework.caldav.server.CalDAVResource;
@@ -109,8 +111,6 @@ import org.bedework.util.calendar.XcalUtil;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
-import org.bedework.base.response.GetEntityResponse;
-import org.bedework.base.response.Response;
 import org.bedework.util.xml.XmlEmit;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.WebdavTags;
@@ -153,7 +153,6 @@ import java.util.TreeSet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
-import javax.xml.ws.Holder;
 
 import static org.bedework.base.response.Response.Status.limitExceeded;
 import static org.bedework.base.response.Response.Status.noAccess;
@@ -828,18 +827,17 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
     if (!props.isEmpty()) {
       // Directory search
-      final Holder<Boolean> truncated = new Holder<>();
       if (principals == null) {
         principals = new ArrayList<>();
       }
 
-      final List<BwPrincipalInfo> pis =
+      final var pis =
               getSvci().getDirectories().find(props,
                                               pps.pr.props,
-                                              cutype, truncated);
+                                              cutype);
 
       if (pis != null) {
-        for (final BwPrincipalInfo pi: pis) {
+        for (final BwPrincipalInfo pi: pis.principals()) {
           principals.add(getCalPrincipalInfo(pi));
         }
       }
