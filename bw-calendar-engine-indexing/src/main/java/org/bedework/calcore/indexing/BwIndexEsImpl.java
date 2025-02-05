@@ -3735,7 +3735,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                    final String recurid,
                                    final boolean waitForIt) {
     try {
-      ei.getEvent().onSave(); // Ensure all up to date
+      ei.getEvent().beforeAdd(); // Ensure all up to date
       final DocBuilder db = getDocBuilder();
       final EsDocInfo di = db.makeDoc(ei,
                                       kind,
