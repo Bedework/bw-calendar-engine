@@ -10,6 +10,7 @@
   </parent>
 
   <artifactId>bw-calendar-engine-core-rw-common</artifactId>
+  <name>Bedework: calendar engine - common core rw classes</name>
 
   <dependencies>
     <dependency>
