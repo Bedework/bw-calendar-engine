@@ -16,6 +16,20 @@
       <groupId>org.bedework.caleng</groupId>
       <artifactId>bw-calendar-engine-core-ro</artifactId>
       <version>${project.version}</version>
+      <!-- For some reason maven is not picking up the
+           correct version for indexing -->
+      <exclusions>
+        <exclusion>
+          <groupId>org.bedework.caleng</groupId>
+          <artifactId>bw-calendar-engine-indexing</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.bedework.caleng</groupId>
+      <artifactId>bw-calendar-engine-indexing</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
