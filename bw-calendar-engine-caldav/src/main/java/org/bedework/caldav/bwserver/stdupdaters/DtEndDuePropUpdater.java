@@ -25,12 +25,11 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.calendar.IcalDefs;
-import org.bedework.webdav.servlet.shared.WebdavException;
 
 import ietf.params.xml.ns.icalendar_2.DateDatetimePropertyType;
 import ietf.params.xml.ns.icalendar_2.DuePropType;
 
-import javax.xml.ws.Holder;
+import jakarta.xml.ws.Holder;
 
 /**
  * @author douglm

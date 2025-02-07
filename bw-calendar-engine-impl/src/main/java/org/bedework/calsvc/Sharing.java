@@ -63,7 +63,7 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.xml.namespace.QName;
-import javax.xml.ws.Holder;
+import jakarta.xml.ws.Holder;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
 

@@ -30,7 +30,7 @@ import java.io.StringWriter;
 import java.net.URI;
 import java.util.List;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 /** Handles interactions with the bedework notification engine.
  *

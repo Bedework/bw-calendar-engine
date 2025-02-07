@@ -56,7 +56,7 @@ import org.oasis_open.docs.ws_calendar.ns.soap.StatusType;
 import java.net.URL;
 
 import javax.xml.namespace.QName;
-import javax.xml.ws.BindingProvider;
+import jakarta.xml.ws.BindingProvider;
 
 import static org.bedework.base.response.Response.Status.failed;
 import static org.bedework.base.response.Response.Status.noAccess;

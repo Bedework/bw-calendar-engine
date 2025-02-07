@@ -80,7 +80,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
 

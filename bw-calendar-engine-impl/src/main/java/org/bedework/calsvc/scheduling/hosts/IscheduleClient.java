@@ -60,7 +60,7 @@ import java.security.PrivateKey;
 import java.util.Collection;
 import java.util.Iterator;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;

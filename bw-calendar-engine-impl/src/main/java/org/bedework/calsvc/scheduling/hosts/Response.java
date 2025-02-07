@@ -26,7 +26,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * @author Mike Douglass

@@ -24,12 +24,11 @@ import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.util.misc.Util;
-import org.bedework.webdav.servlet.shared.WebdavException;
 
 import ietf.params.xml.ns.icalendar_2.DateDatetimePropertyType;
 import ietf.params.xml.ns.icalendar_2.TzidParamType;
 
-import javax.xml.ws.Holder;
+import jakarta.xml.ws.Holder;
 
 /** Base class for DateDatetime properties - might also be used for alarm
  * properties
