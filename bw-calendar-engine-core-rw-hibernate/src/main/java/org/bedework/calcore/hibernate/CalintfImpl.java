@@ -709,7 +709,7 @@ public class CalintfImpl extends CalintfCommonImpl {
 
         final StringBuilder sb = new StringBuilder();
 
-        final List<String> ps = dbConf.getHibernateProperties();
+        final List<String> ps = dbConf.getOrmProperties();
 
         for (final String p: ps) {
           sb.append(p);

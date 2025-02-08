@@ -19,7 +19,7 @@
 package org.bedework.calcore.hibernate;
 
 import org.bedework.util.config.ConfInfo;
-import org.bedework.util.config.HibernateConfigBase;
+import org.bedework.util.config.OrmConfigBase;
 import org.bedework.base.ToString;
 
 /** Class defining the configuration for the database.
@@ -29,7 +29,7 @@ import org.bedework.base.ToString;
  */
 @ConfInfo(elementName = "bwcore-dbconfig")
 public class DbConfig<T extends DbConfig>
-        extends HibernateConfigBase<T> {
+        extends OrmConfigBase<T> {
 
   /** Add our stuff
    *
