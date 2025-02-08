@@ -57,18 +57,13 @@ import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.database.db.DbSession;
+import org.bedework.database.db.DbSessionFactoryProvider;
+import org.bedework.database.db.DbSessionFactoryProviderImpl;
 
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.stat.Statistics;
-
-import java.io.StringReader;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import static java.lang.String.format;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
@@ -151,18 +146,10 @@ public class CalintfImpl extends CalintfCommonImpl {
 
   private Timestamp curTimestamp;
 
-  /** We make this static for this implementation so that there is only one
-   * SessionFactory per server for the calendar.
-   *
-   * <p>static fields used this way may be illegal in the j2ee specification
-   * though we might get away with it here as the session factory only
-   * contains parsed mappings for the calendar configuration. This should
-   * be the same for any machine in a cluster so it might work OK.
-   *
-   * <p>It might be better to find some other approach for the j2ee world.
+  /* Factory used to obtain a session
    */
-  private static SessionFactory sessionFactory;
-  private static Statistics dbStats;
+  private static DbSessionFactoryProvider factoryProvider;
+  //private static Statistics dbStats;
   
   private final static Object syncher = new Object();
 
@@ -231,14 +218,21 @@ public class CalintfImpl extends CalintfCommonImpl {
                    System.currentTimeMillis() - start));
     }
 
+    final DbConfig<?> dbConf = CoreConfigurations.getConfigs().getDbConfig();
+
+    if (factoryProvider == null) {
+      factoryProvider =
+              new DbSessionFactoryProviderImpl()
+                      .init(dbConf.getOrmProperties());
+    }
+
     if (sess != null) {
       warn("Session is not null. Will close");
       close();
     }
 
     if (sess == null) {
-      sess = new HibSessionImpl();
-      sess.init(getSessionFactory());
+      sess = factoryProvider.getNewSession();
       if (debug()) {
         debug(format("New database session (class %s) for %s",
                      sess.getClass(), getTraceId()));
@@ -374,8 +368,20 @@ public class CalintfImpl extends CalintfCommonImpl {
     return daos;
   }
 
+  private void registerDao(final DAOBase dao) {
+    final var entry = getDaos().get(dao.getName());
+
+    if (entry != null) {
+      error("******************************************\n" +
+                    "dao: " + dao.getName() + " already registered");
+    }
+    getDaos().put(dao.getName(), dao);
+  }
+
   @Override
   public void setDbStatsEnabled(final boolean enable) {
+    warn("Statistics unimplemented");
+    /*
     if (!enable && (dbStats == null)) {
       return;
     }
@@ -385,32 +391,24 @@ public class CalintfImpl extends CalintfCommonImpl {
     }
 
     dbStats.setStatisticsEnabled(enable);
-  }
-
-  private void registerDao(final DAOBase dao) {
-    final var entry = getDaos().get(dao.getName());
-
-    if (entry != null) {
-      error("******************************************\n" +
-                              "dao: " + dao.getName() + " already registered");
-    }
-    getDaos().put(dao.getName(), dao);
+     */
   }
 
   @Override
   public boolean getDbStatsEnabled() {
-    return dbStats != null && dbStats.isStatisticsEnabled();
-
+    return false;
+    //return dbStats != null && dbStats.isStatisticsEnabled();
   }
 
   @Override
   public void dumpDbStats() {
-    DbStatistics.dumpStats(dbStats);
+    //DbStatistics.dumpStats(dbStats);
   }
 
   @Override
   public Collection<StatsEntry> getDbStats() {
-    return DbStatistics.getStats(dbStats);
+    //return DbStatistics.getStats(dbStats);
+    return null;
   }
 
   /* ==========================================================
@@ -684,51 +682,5 @@ public class CalintfImpl extends CalintfCommonImpl {
     }
 
     throw new BedeworkException("Should not get here");
-  }
-
-  /* ====================================================================
-   *                   Private methods
-   * ==================================================================== */
-
-  private SessionFactory getSessionFactory() {
-    if (sessionFactory != null) {
-      return sessionFactory;
-    }
-
-    synchronized (syncher) {
-      if (sessionFactory != null) {
-        return sessionFactory;
-      }
-
-      /* Get a new hibernate session factory. This is configured from an
-       * application resource hibernate.cfg.xml together with some run time values
-       */
-      try {
-        final DbConfig<?> dbConf = CoreConfigurations.getConfigs().getDbConfig();
-        final Configuration conf = new Configuration();
-
-        final StringBuilder sb = new StringBuilder();
-
-        final List<String> ps = dbConf.getOrmProperties();
-
-        for (final String p: ps) {
-          sb.append(p);
-          sb.append("\n");
-        }
-
-        final Properties hprops = new Properties();
-        hprops.load(new StringReader(sb.toString()));
-
-        conf.addProperties(hprops).configure();
-
-        sessionFactory = conf.buildSessionFactory();
-
-        return sessionFactory;
-      } catch (final Throwable t) {
-        // Always bad.
-        error(t);
-        throw new BedeworkException(t);
-      }
-    }
   }
 }
