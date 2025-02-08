@@ -48,7 +48,6 @@ import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwStats;
-import org.bedework.calfacade.BwStats.StatsEntry;
 import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.configs.AuthProperties;
@@ -59,6 +58,7 @@ import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.database.db.DbSession;
 import org.bedework.database.db.DbSessionFactoryProvider;
 import org.bedework.database.db.DbSessionFactoryProviderImpl;
+import org.bedework.database.db.StatsEntry;
 
 import java.sql.Timestamp;
 import java.util.Collection;

@@ -26,7 +26,6 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwStats;
-import org.bedework.calfacade.BwStats.StatsEntry;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.ShareableEntity;
 import org.bedework.calfacade.configs.Configurations;
@@ -35,6 +34,7 @@ import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.database.db.StatsEntry;
 import org.bedework.sysevents.events.SysEventBase;
 
 import java.sql.Timestamp;
