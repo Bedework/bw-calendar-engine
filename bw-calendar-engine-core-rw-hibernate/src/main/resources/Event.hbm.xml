@@ -45,7 +45,7 @@
     </property>
 
     <component name="dtstart"
-               class="org.bedework.calfacade.BwDateTime" >
+               class="org.bedework.calfacade.BwDateTimeDtStart" >
       <property name="dateType" column="start_date_type" type="true_false" />
       <property name="timezoneId" column="start_tzid" type="string" />
       <property name="dtval" column="start_dtval" type="string" length="16" />
@@ -58,7 +58,7 @@
     <!-- All day events and events which end when they start have no
          end date/time -->
     <component name="dtend"
-               class="org.bedework.calfacade.BwDateTime" >
+               class="org.bedework.calfacade.BwDateTimeDtEnd" >
       <property name="dateType" column="end_date_type" type="true_false" />
       <property name="timezoneId" column="end_tzid" type="string" />
       <property name="dtval" column="end_dtval" type="string" length="16" />
@@ -239,7 +239,7 @@
          cascade="all-delete-orphan">
       <key column="eventid" foreign-key="bw_event_rdate_fk" />
       <composite-element
-                 class="org.bedework.calfacade.BwDateTime" >
+                 class="org.bedework.calfacade.BwDateTimeRdate" >
         <property name="dateType" column="r_date_type" type="true_false"
                   not-null="true" />
         <property name="timezoneId" column="r_tzid" type="string" />
@@ -265,7 +265,7 @@
          cascade="all-delete-orphan">
       <key column="eventid" foreign-key="bw_event_edate_fk" />
       <composite-element
-                 class="org.bedework.calfacade.BwDateTime" >
+                 class="org.bedework.calfacade.BwDateTimeExdate" >
         <property name="dateType" column="ex_date_type" type="true_false"
                   not-null="true" />
         <property name="timezoneId" column="ex_tzid" type="string" />
