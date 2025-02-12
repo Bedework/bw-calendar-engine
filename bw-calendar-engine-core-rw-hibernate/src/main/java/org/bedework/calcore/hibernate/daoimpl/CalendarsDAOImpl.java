@@ -91,7 +91,7 @@ public class CalendarsDAOImpl extends DAOBaseImpl
                   "where cal.calType=:caltype " +
                   "and ownerHref=:owner " +
                   "and aliasUri=:alias " +
-                  "and (cal.filterExpr = null or cal.filterExpr <> :tsfilter)";
+                  "and (cal.filterExpr is null or cal.filterExpr <> :tsfilter)";
           
   @Override
   public List<BwCalendar> findCollectionAlias(final String aliasPath,
@@ -112,7 +112,7 @@ public class CalendarsDAOImpl extends DAOBaseImpl
   private static final String getCalendarByPathQuery =
          "select cal from BwCalendar cal " +
            "where cal.path=:path and " +
-           "(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')";
+           "(cal.filterExpr is null or cal.filterExpr <> '--TOMBSTONED--')";
 
   @Override
   public BwCalendar getCollection(final String path) {
@@ -127,7 +127,7 @@ public class CalendarsDAOImpl extends DAOBaseImpl
   private final static String collectionExistsQuery =
           "select count(*) from BwCalendar col " +
                   "where col.path=:path and " +
-                  "(col.filterExpr = null or col.filterExpr <> '--TOMBSTONED--')";
+                  "(col.filterExpr is null or col.filterExpr <> '--TOMBSTONED--')";
 
   @Override
   public boolean collectionExists(final String path) {
@@ -217,7 +217,7 @@ public class CalendarsDAOImpl extends DAOBaseImpl
   private static final String countCalendarChildrenQuery =
       "select count(*) from BwCalendar cal " +
         "where cal.colPath = :colPath and " +
-        "(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')";
+        "(cal.filterExpr is null or cal.filterExpr <> '--TOMBSTONED--')";
 
   @Override
   public boolean isEmptyCollection(final BwCalendar val) {

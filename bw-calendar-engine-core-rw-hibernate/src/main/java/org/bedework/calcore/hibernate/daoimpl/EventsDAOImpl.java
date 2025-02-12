@@ -182,7 +182,7 @@ public class EventsDAOImpl extends DAOBaseImpl
 
   private static final String getEventAnnotationsQuery =
           "select ev from BwEventAnnotation ev " +
-                  "where ev.recurrenceId=null";
+                  "where ev.recurrenceId is null";
 
   @Override
   public Iterator<BwEventAnnotation> getEventAnnotations() {
