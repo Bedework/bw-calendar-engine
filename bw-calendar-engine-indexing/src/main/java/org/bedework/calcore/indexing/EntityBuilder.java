@@ -27,6 +27,8 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
+import org.bedework.calfacade.BwDateTimeExdate;
+import org.bedework.calfacade.BwDateTimeRdate;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventObj;
@@ -1001,6 +1003,11 @@ public class EntityBuilder extends EntityBuilderBase {
                                                         tzid,
                                                         floating);
 
+        if (pi == PropertyInfoIndex.EXDATE) {
+          tms.add(BwDateTimeExdate.make(tm));
+        } else {
+          tms.add(BwDateTimeRdate.make(tm));
+        }
         tms.add(tm);
       } catch (final Throwable t) {
         throw new BedeworkException(t);
