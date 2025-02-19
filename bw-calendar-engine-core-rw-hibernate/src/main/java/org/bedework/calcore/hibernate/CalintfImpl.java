@@ -234,7 +234,7 @@ public class CalintfImpl extends CalintfCommonImpl {
     if (sess == null) {
       sess = factoryProvider.getNewSession();
       if (debug()) {
-        debug(format("New database session (class %s) for %s",
+        debug(format("New database session (%s) for %s",
                      sess.getClass(), getTraceId()));
       }
     }
