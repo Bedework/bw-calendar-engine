@@ -35,6 +35,7 @@ import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.IscheduleTags;
 import org.bedework.util.xml.tagdefs.WebdavTags;
 
+import jakarta.servlet.http.HttpServletResponse;
 import net.fortuna.ical4j.model.Calendar;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -47,10 +48,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
@@ -60,15 +58,13 @@ import java.security.PrivateKey;
 import java.util.Collection;
 import java.util.Iterator;
 
-import jakarta.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import static org.bedework.util.http.HttpUtil.findMethod;
 import static org.bedework.util.http.HttpUtil.getFirstHeaderValue;
 import static org.bedework.util.http.HttpUtil.getStatus;
 import static org.bedework.util.http.HttpUtil.setContent;
+import static org.bedework.util.xml.XmlUtil.safeParseDocument;
 
 /** Handle interactions with ischedule servers.
  *
@@ -407,17 +403,8 @@ public class IscheduleClient implements Logged {
         return null;
       }
 
-      final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-      factory.setNamespaceAware(true);
-      factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-
-      final DocumentBuilder builder = factory.newDocumentBuilder();
-
-      final InputStream in = entity.getContent();
-
-      return builder.parse(new InputSource(new InputStreamReader(in)));
-    } catch (final SAXException e) {
-      throw new BedeworkException(e.getMessage());
+      return safeParseDocument(true,
+                               new InputStreamReader(entity.getContent()));
     } catch (final Throwable t) {
       throw new BedeworkException(t);
     }
