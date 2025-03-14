@@ -195,9 +195,9 @@ class BwSysiIcalendar extends SysiIcalendar implements Logged {
     }
 
     if (debug()) {
-      debug("putContent: next() has event with uid %s " +
-                    " and summary %s " +
-                    " and new event %b ",
+      debug("putContent: next() has event with uid {0} " +
+                    " and summary {1} " +
+                    " and new event {2} ",
             ev.getUid(),
             ev.getSummary(),
             ev.isNew());
