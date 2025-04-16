@@ -1929,7 +1929,7 @@ public class CalSvc
 
         return resp;
       } catch (final Throwable t) {
-        return Response.error(resp, t);
+        return resp.error(t);
       }
     }
 

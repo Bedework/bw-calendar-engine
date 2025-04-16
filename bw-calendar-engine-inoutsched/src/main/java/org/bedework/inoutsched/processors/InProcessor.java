@@ -47,7 +47,8 @@ public abstract class InProcessor extends CalSvcHelperRw {
   }
 
   /** Result from processing */
-  public static class ProcessResult extends ScheduleResult {
+  public static class ProcessResult
+          extends ScheduleResult<ProcessResult> {
     /** processors set this true when appropriate */
     public boolean noInboxChange;
 
@@ -57,10 +58,9 @@ public abstract class InProcessor extends CalSvcHelperRw {
     /** Update was just attendee accepting */
     public boolean attendeeAccepting;
 
-    public void toStringSegment(final ToString ts) {
-      super.toStringSegment(ts);
-
-      ts.append("noInboxChange", noInboxChange);
+    public ToString toStringSegment(final ToString ts) {
+      return super.toStringSegment(ts)
+                  .append("noInboxChange", noInboxChange);
     }
   }
 
@@ -79,11 +79,11 @@ public abstract class InProcessor extends CalSvcHelperRw {
    * @param forceDelete - it's inbox noise, delete it
    * @return status
    */
-  public Response pendingToInbox(final EventInfo ei,
-                                 final String inboxOwnerHref,
-                                 final boolean attendeeAccepting,
-                                 final boolean forceDelete) {
-    final var resp = new Response();
+  public Response<?> pendingToInbox(final EventInfo ei,
+                                    final String inboxOwnerHref,
+                                    final boolean attendeeAccepting,
+                                    final boolean forceDelete) {
+    final var resp = new Response<>();
     final var events = getSvc().getEventsHandler();
     boolean delete = forceDelete;
 
@@ -121,7 +121,7 @@ public abstract class InProcessor extends CalSvcHelperRw {
         return resp;
       }
 
-      return Response.fromResponse(resp, delResp);
+      return resp.fromResponse(delResp);
     }
 
     try {
@@ -141,7 +141,7 @@ public abstract class InProcessor extends CalSvcHelperRw {
                                        ev.getUid());
 
       if (inevs.isError()) {
-        return Response.fromResponse(resp, inevs);
+        return resp.fromResponse(inevs);
       }
 
       for (final EventInfo inei : inevs.getEntities()) {
@@ -158,9 +158,9 @@ public abstract class InProcessor extends CalSvcHelperRw {
                   .getName());
         }
 
-        final Response delResp = events.delete(inei, true, false);
+        final var delResp = events.delete(inei, true, false);
         if (!resp.isOk()) {
-          return Response.fromResponse(resp, delResp);
+          return resp.fromResponse(delResp);
         }
       }
 //      }
@@ -184,10 +184,10 @@ public abstract class InProcessor extends CalSvcHelperRw {
                                                ev.getName(),
                                                false, false, false);
       if (!cmnResp.isOk()) {
-        return Response.fromResponse(resp, cmnResp);
+        return resp.fromResponse(cmnResp);
       }
     } catch (final BedeworkException be) {
-      return Response.error(resp, be);
+      return resp.error(be);
     }
 
     return resp;

@@ -84,6 +84,7 @@ import org.bedework.util.misc.Util;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
+import jakarta.servlet.http.HttpServletResponse;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.parameter.CuType;
 
@@ -98,15 +99,12 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import jakarta.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 
 import static org.bedework.base.response.Response.Status.failed;
 import static org.bedework.base.response.Response.Status.forbidden;
 import static org.bedework.base.response.Response.Status.limitExceeded;
 import static org.bedework.base.response.Response.Status.noAccess;
-import static org.bedework.base.response.Response.fromResponse;
-import static org.bedework.base.response.Response.notOk;
 import static org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
 import static org.bedework.calsvci.EventsI.SetEntityCategoriesResult.success;
 
@@ -408,15 +406,15 @@ class Events extends CalSvcDb implements EventsI {
   }
 
   @Override
-  public Response delete(final EventInfo ei,
-                         final boolean sendSchedulingMessage) {
+  public Response<?> delete(final EventInfo ei,
+                            final boolean sendSchedulingMessage) {
     return delete(ei, false, sendSchedulingMessage);
   }
 
   @Override
-  public Response delete(final EventInfo ei,
-                         final boolean scheduling,
-                         final boolean sendSchedulingMessage) {
+  public Response<?> delete(final EventInfo ei,
+                            final boolean scheduling,
+                            final boolean sendSchedulingMessage) {
     return delete(ei, scheduling, sendSchedulingMessage, false);
   }
 
@@ -430,7 +428,7 @@ class Events extends CalSvcDb implements EventsI {
 
     try {
       if (getSvc().getPrincipalInfo().getSubscriptionsOnly()) {
-        return notOk(updResult, noAccess,
+        return updResult.notOk(noAccess,
                               "User has read only access");
       }
       
@@ -452,13 +450,13 @@ class Events extends CalSvcDb implements EventsI {
             event.addCategory(cat);
           }
         } else {
-          return fromResponse(updResult, resp);
+          return updResult.fromResponse(resp);
         }
       }
 
       final RealiasResult raResp = reAlias(event);
       if (!raResp.isOk()) {
-        return fromResponse(updResult, raResp);
+        return updResult.fromResponse(raResp);
       }
 
       event.assignGuid(getSvc().getSystemProperties()
@@ -475,8 +473,8 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       if (!cal.isSupportedComponent(event.getEntityType())) {
-        return notOk(updResult, noAccess,
-                     "Invalid component type for this collection");
+        return updResult.notOk(noAccess,
+                               "Invalid component type for this collection");
       }
 
       final BwEventProxy proxy;
@@ -530,7 +528,7 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       if (!cal.getCalendarCollection()) {
-        return notOk(updResult, noAccess);
+        return updResult.notOk(noAccess);
       }
 
       if (!event.getPublick() && Util.isEmpty(event.getAlarms())) {
@@ -553,8 +551,8 @@ class Events extends CalSvcDb implements EventsI {
       if ((maxAttendees != null) &&
               !Util.isEmpty(atts) &&
               (atts.size() > maxAttendees)) {
-        return notOk(updResult, limitExceeded,
-                              CalFacadeErrorCode.schedulingTooManyAttendees);
+        return updResult.notOk(limitExceeded,
+                               CalFacadeErrorCode.schedulingTooManyAttendees);
       }
 
       final var currentTimestamp = getCurrentTimestamp();
@@ -578,7 +576,7 @@ class Events extends CalSvcDb implements EventsI {
           if ((maxAttendees != null) &&
                   !Util.isEmpty(ovAtts) &&
                   (ovAtts.size() > maxAttendees)) {
-            return notOk(updResult, limitExceeded,
+            return updResult.notOk(limitExceeded,
                                   CalFacadeErrorCode.schedulingTooManyAttendees);
           }
 
@@ -623,7 +621,7 @@ class Events extends CalSvcDb implements EventsI {
                                                 rollbackOnError);
 
       if (uer.errorCode != null) {
-        return notOk(updResult, failed,
+        return updResult.notOk(failed,
                               "Status " + uer.errorCode + " from addEvent");
       }
 
@@ -634,7 +632,7 @@ class Events extends CalSvcDb implements EventsI {
                   getCal().addEvent(oei,
                                     schedulingInbox, rollbackOnError);
           if (auer.errorCode != null) {
-            return notOk(updResult, failed,
+            return updResult.notOk(failed,
                                   "Status " + auer.errorCode + " from addEvent");
           }
         }
@@ -677,7 +675,7 @@ class Events extends CalSvcDb implements EventsI {
       getSvc().rollbackTransaction();
       reindex(ei);
 
-      return Response.error(updResult, t);
+      return updResult.error(t);
     }
   }
 
@@ -732,7 +730,7 @@ class Events extends CalSvcDb implements EventsI {
 
       final RealiasResult raResp = reAlias(event);
       if (!raResp.isOk()) {
-        return fromResponse(updResult, raResp);
+        return updResult.fromResponse(raResp);
       }
 
       boolean organizerSchedulingObject = false;
@@ -906,7 +904,7 @@ class Events extends CalSvcDb implements EventsI {
       getSvc().rollbackTransaction();
       reindex(ei);
 
-      return Response.error(updResult, t);
+      return updResult.error(t);
     }
   }
 
@@ -1103,13 +1101,13 @@ class Events extends CalSvcDb implements EventsI {
   }
 
   @Override
-  public Response copyMoveNamed(final EventInfo fromEi,
-                                final BwCalendar to,
-                                String name,
-                                final boolean copy,
-                                final boolean overwrite,
-                                final boolean newGuidOK) {
-    final Response resp = new Response();
+  public Response<?> copyMoveNamed(final EventInfo fromEi,
+                                   final BwCalendar to,
+                                   String name,
+                                   final boolean copy,
+                                   final boolean overwrite,
+                                   final boolean newGuidOK) {
+    final var resp = new Response<>();
     final BwEvent ev = fromEi.getEvent();
     final String fromPath = ev.getColPath();
 
@@ -1130,13 +1128,13 @@ class Events extends CalSvcDb implements EventsI {
 
       if (destEi != null) {
         if (!overwrite) {
-          return Response.notOk(resp, forbidden,
-                                "destination exists: " + name);
+          return resp.notOk(forbidden,
+                            "destination exists: " + name);
         }
 
         if (!destEi.getEvent().getUid().equals(ev.getUid())) {
           // Not allowed to change uid.
-          return Response.notOk(resp, forbidden, "Cannot change uid");
+          return resp.notOk(forbidden, "Cannot change uid");
         }
 
         //deleteEvent(destEi.getEvent(), true);
@@ -1211,10 +1209,10 @@ class Events extends CalSvcDb implements EventsI {
       return resp;
     } catch (final BedeworkException be) {
       if (be.getMessage().equals(CalFacadeErrorCode.duplicateGuid)) {
-        return Response.notOk(resp, forbidden, "duplicate uid");
+        return resp.notOk(forbidden, "duplicate uid");
       }
 
-      return Response.error(resp, be);
+      return resp.error(be);
     }
   }
 
@@ -1292,7 +1290,7 @@ class Events extends CalSvcDb implements EventsI {
 
       return resp;
     } catch (final Throwable t) {
-      return Response.error(resp, t);
+      return resp.error(t);
     }
   }
 
@@ -1321,8 +1319,7 @@ class Events extends CalSvcDb implements EventsI {
         }
       }
     } catch (final Throwable t) {
-      Response.error(new RealiasResult(null),
-                     t.getMessage());
+      new RealiasResult(null).error(t.getMessage());
     }
   }
 
@@ -1481,7 +1478,7 @@ class Events extends CalSvcDb implements EventsI {
 
           removeCats.add(cat);
           if (!eeer.isOk()) {
-            fromResponse(updResult, eeer);
+            updResult.fromResponse(eeer);
             return false;
           }
 
@@ -1506,7 +1503,7 @@ class Events extends CalSvcDb implements EventsI {
                                                    ct.getOwnerHref());
 
       if (!eeers.isOk()) {
-        fromResponse(updResult, eeers);
+        updResult.fromResponse(eeers);
         return false;
       }
 
@@ -1526,7 +1523,7 @@ class Events extends CalSvcDb implements EventsI {
                                                           loc.getOwnerHref());
 
       if (!eeerl.isOk()) {
-        fromResponse(updResult, eeerl);
+        updResult.fromResponse(eeerl);
         return false;
       }
 
@@ -1606,14 +1603,14 @@ class Events extends CalSvcDb implements EventsI {
     return postProcess(getCal().getSynchEvents(path, lastmod));
   }
 
-  Response delete(final EventInfo ei,
-                  final boolean scheduling,
-                  final boolean sendSchedulingMessage,
-                  final boolean reallyDelete) {
-    final Response resp = new Response();
+  Response<?> delete(final EventInfo ei,
+                     final boolean scheduling,
+                     final boolean sendSchedulingMessage,
+                     final boolean reallyDelete) {
+    final var resp = new Response<>();
 
     if (ei == null) {
-      return Response.invalid(resp, "Null event");
+      return resp.invalid("Null event");
     }
 
     final BwEvent event = ei.getEvent();
@@ -1629,7 +1626,7 @@ class Events extends CalSvcDb implements EventsI {
       try {
         cal = getCols().get(event.getColPath());
       } catch (final BedeworkException be) {
-        return Response.error(resp, be);
+        return resp.error(be);
       }
 
       boolean schedulingObject = false;
@@ -1683,7 +1680,7 @@ class Events extends CalSvcDb implements EventsI {
 
           event.setSequence(event.getSequence() + 1);
           if (!sched.implicitSchedule(ei, false).isOk()) {
-            return Response.fromResponse(resp, uer);
+            return resp.fromResponse(uer);
           }
         }
       }
@@ -1695,7 +1692,7 @@ class Events extends CalSvcDb implements EventsI {
                                 reallyDelete).eventDeleted) {
         getSvc().rollbackTransaction();
         // Assume not found?
-        return Response.notFound(resp);
+        return resp.notFound();
       }
 
       if (event.getEntityType() != IcalDefs.entityTypeVavailability) {
@@ -1708,13 +1705,13 @@ class Events extends CalSvcDb implements EventsI {
                                   true).eventDeleted) {
           getSvc().rollbackTransaction();
           // Assume not found?
-          return Response.notFound(resp);
+          return resp.notFound();
         }
       }
 
       return resp;
     } catch (final BedeworkException be) {
-      return Response.error(resp, be);
+      return resp.error(be);
     }
   }
 
@@ -2061,7 +2058,7 @@ class Events extends CalSvcDb implements EventsI {
         continue;
       }
 
-      final BwPrincipalInfo pi = groupPis.get(0);
+      final BwPrincipalInfo pi = groupPis.getFirst();
 
       if (pi.getMembers() == null) {
         continue;

@@ -440,15 +440,12 @@ public abstract class CalintfBase implements Logged, Calintf {
                 .fetchCat(href, PropertyIndex.PropertyInfoIndex.HREF);
 
         if (ent == null) {
-          return Response.notOk(resp,
-                                Response.Status.notFound);
+          return resp.notOk(Response.Status.notFound);
         }
 
-        resp.setEntity(ent);
-
-        return Response.ok(resp, null);
+        return resp.setEntity(ent).ok();
       } catch (final Throwable t) {
-        return Response.error(resp, t);
+        return resp.error(t);
       }
     }
 
@@ -463,14 +460,12 @@ public abstract class CalintfBase implements Logged, Calintf {
                 .fetchContact(href, PropertyIndex.PropertyInfoIndex.HREF);
 
         if (ent == null) {
-          return Response.notOk(resp, Response.Status.notFound);
+          return resp.notOk(Response.Status.notFound);
         }
 
-        resp.setEntity(ent);
-
-        return Response.ok(resp, null);
+        return resp.setEntity(ent).ok();
       } catch (final Throwable t) {
-        return Response.error(resp, t);
+        return resp.error(t);
       }
     }
 
@@ -485,14 +480,12 @@ public abstract class CalintfBase implements Logged, Calintf {
                 .fetchLocation(href, PropertyIndex.PropertyInfoIndex.HREF);
 
         if (ent == null) {
-          return Response.notOk(resp, Response.Status.notFound);
+          return resp.notOk(Response.Status.notFound);
         }
 
-        resp.setEntity(ent);
-
-        return Response.ok(resp, null);
+        return resp.setEntity(ent).ok();
       } catch (final Throwable t) {
-        return Response.error(resp, t);
+        return resp.error(t);
       }
     }
 
@@ -506,7 +499,7 @@ public abstract class CalintfBase implements Logged, Calintf {
     }
   }
 
-  protected String makeHref(final BwPrincipal principal,
+  protected String makeHref(final BwPrincipal<?> principal,
                             final String userRoot,
                             final String colPathElement,
                             final String dir,
@@ -690,10 +683,10 @@ public abstract class CalintfBase implements Logged, Calintf {
     }
   }
 
-  protected boolean checkOpen(final Response resp) {
+  protected boolean checkOpen(final Response<?> resp) {
     if (!killed && !isOpen) {
-      resp.setStatus(failed);
-      resp.setMessage("Calintf call when closed");
+      resp.setStatus(failed)
+          .setMessage("Calintf call when closed");
       return false;
     }
 

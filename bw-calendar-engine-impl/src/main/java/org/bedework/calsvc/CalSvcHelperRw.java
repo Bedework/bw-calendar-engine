@@ -105,7 +105,7 @@ public class CalSvcHelperRw extends CalSvcDb {
 
       return resp;
     } catch (final Throwable t) {
-      return Response.error(resp, t);
+      return resp.error(t);
     }
   }
 }

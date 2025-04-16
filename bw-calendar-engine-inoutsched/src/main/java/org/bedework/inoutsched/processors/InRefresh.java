@@ -18,13 +18,12 @@
 */
 package org.bedework.inoutsched.processors;
 
-import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.SchedulingI;
 import org.bedework.util.calendar.ScheduleMethods;
-import org.bedework.base.response.Response;
 
 /** Handles incoming method REFRESH scheduling messages.
  *
@@ -58,7 +57,7 @@ public class InRefresh extends InProcessor {
     final var recipientResp = si.getOnlyParticipant();
 
     if (!recipientResp.isOk()) {
-      return Response.fromResponse(pr, recipientResp);
+      return pr.fromResponse(recipientResp);
     }
 
     final Participant att = recipientResp.getEntity();
@@ -81,11 +80,11 @@ public class InRefresh extends InProcessor {
       return pr;
     }
 
-    final Response resp = getSvc().getEventsHandler()
-                                  .delete(ei, false);
+    final var resp = getSvc().getEventsHandler()
+                             .delete(ei, false);
 
     if (!resp.isOk()) {
-      return Response.fromResponse(pr, resp);
+      return pr.fromResponse(resp);
     }
 
     return pr;

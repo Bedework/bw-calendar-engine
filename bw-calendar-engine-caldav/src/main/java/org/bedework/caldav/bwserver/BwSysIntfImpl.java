@@ -67,7 +67,6 @@ import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.ScheduleResult;
-import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
@@ -130,6 +129,8 @@ import org.bedework.webdav.servlet.shared.WebdavUnauthorized;
 import ietf.params.xml.ns.caldav.ExpandType;
 import ietf.params.xml.ns.caldav.LimitRecurrenceSetType;
 import ietf.params.xml.ns.icalendar_2.IcalendarType;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.TimeZone;
@@ -150,8 +151,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 
 import static org.bedework.base.response.Response.Status.limitExceeded;
@@ -2554,7 +2553,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
    * @param sr schedule result
    * @return recipient results
    */
-  private Collection<SchedRecipientResult> checkStatus(final ScheduleResult sr) {
+  private Collection<SchedRecipientResult> checkStatus(final ScheduleResult<?> sr) {
     final String errorCode;
     final var exc = sr.getException();
 
@@ -2568,8 +2567,10 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         (errorCode.equals(CalFacadeErrorCode.schedulingNoRecipients))) {
       final Collection<SchedRecipientResult> srrs = new ArrayList<>();
 
-      for (final ScheduleRecipientResult bwsrr: sr.recipientResults.values()) {
-        final SchedRecipientResult srr = new SchedRecipientResult();
+      final var x = sr.recipientResults.get("x");
+      debug(x.toString());
+      for (final var bwsrr: sr.getRecipientResults().values()) {
+        final var srr = new SchedRecipientResult();
 
         srr.recipient = bwsrr.recipient;
         srr.status = bwsrr.getStatus();

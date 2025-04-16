@@ -27,7 +27,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.ScheduleResult;
-import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
+import org.bedework.calfacade.ScheduleRecipientResult;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
@@ -65,7 +65,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
   /* Send the meeting request. If recipient is non-null send only to that recipient
    * (used for REFRESH handling), otherwise send to recipients in event.
    */
-  protected void sendSchedule(final ScheduleResult sr,
+  protected void sendSchedule(final ScheduleResult<?> sr,
                               final EventInfo ei,
                               final String recipient,
                               final String fromAttUri,
@@ -183,11 +183,11 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
    * @param fromOrganizer - true if it's coming from the organizer
    * @return status
    */
-  private Response addToInbox(final String inboxPath,
-                              final BwPrincipal<?> attPrincipal,
-                              final EventInfo senderEi,
-                              final boolean fromOrganizer) {
-    final var resp = new Response();
+  private Response<?> addToInbox(final String inboxPath,
+                                 final BwPrincipal<?> attPrincipal,
+                                 final EventInfo senderEi,
+                                 final boolean fromOrganizer) {
+    final var resp = new Response<>();
     final EventInfo ei = copyEventInfo(senderEi, fromOrganizer, attPrincipal);
     final BwEvent ev = ei.getEvent();
 
@@ -250,7 +250,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
                                        ev.getUid());
 
       if (inevs.isError()) {
-        return Response.fromResponse(resp, inevs);
+        return resp.fromResponse(inevs);
       }
 
       for (final EventInfo inei: inevs.getEntities()) {
@@ -260,7 +260,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
 
         if (cres <= 0) {
           // Discard the new one
-          return Response.ok();
+          return new Response<>().ok();
         }
 
         /* Discard the earlier message */
@@ -274,7 +274,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
         final var delResp = getSvc().getEventsHandler()
                                     .delete(ei, true, false);
         if (delResp.isError()) {
-          return Response.fromResponse(resp, delResp);
+          return resp.fromResponse(delResp);
         }
       }
     }
@@ -286,7 +286,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
                                  true);
 
     if (!addResp.isOk()) {
-      return Response.fromResponse(resp, addResp);
+      return resp.fromResponse(addResp);
     }
 
     if (debug()) {
@@ -322,7 +322,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
   private void getRecipientInbox(final EventInfo ei,
                                  final String recip,
                                  final String fromAttUri,
-                                 final ScheduleResult sr,
+                                 final ScheduleResult<?> sr,
                                  final boolean freeBusyRequest) {
     final BwEvent ev = ei.getEvent();
     if (debug()) {
@@ -355,7 +355,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     if (ui.getStatus() == ScheduleStates.scheduleDeferred) {
       sr.externalRcs.add(recip);
     } else if (ui.getStatus() == ScheduleStates.scheduleNoAccess) {
-      Response.error(sr, new BedeworkException(
+      sr.error(new BedeworkException(
               CalFacadeErrorCode.schedulingAttendeeAccessDisallowed));
 
       if (att != null) {
@@ -379,7 +379,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
    * to send the message. If so sets the path of the inbox.
    */
   private UserInbox getInbox(final BwEvent ev,
-                             final ScheduleResult sr,
+                             final ScheduleResult<?> sr,
                              final String recipient,
                              final boolean freeBusyRequest) {
     UserInbox ui = (UserInbox)sr.recipientResults.get(recipient);

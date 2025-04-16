@@ -25,7 +25,6 @@ import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.SchedulingI;
-import org.bedework.base.response.Response;
 
 /** Handles method CANCEL scheduling messages.
  *
@@ -57,9 +56,8 @@ public class InCancel extends InProcessor {
 
     check: {
       if (ev.getOriginator() == null) {
-        return Response.error(pr,
-                              new BedeworkException(
-                                      CalFacadeErrorCode.schedulingNoOriginator));
+        return pr.error(new BedeworkException(
+                CalFacadeErrorCode.schedulingNoOriginator));
       }
 
       final BwPreferences prefs = getPrefs();
@@ -88,12 +86,12 @@ public class InCancel extends InProcessor {
         getSvc().getEventsHandler().update(colEi, true, null,
                                            false); // autocreate
       } else {
-        final Response resp = getSvc().getEventsHandler()
-                                      .delete(ei, false);
+        final var resp = getSvc().getEventsHandler()
+                                 .delete(ei, false);
 
         if (!resp.isOk()) {
           pr.removeInboxEntry = false;
-          return Response.fromResponse(pr, resp);
+          return pr.fromResponse(resp);
         }
       }
 

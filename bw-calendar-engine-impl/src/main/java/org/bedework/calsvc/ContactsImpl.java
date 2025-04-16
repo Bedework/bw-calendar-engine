@@ -81,13 +81,13 @@ public class ContactsImpl
   }
 
   @Override
-  public boolean exists(final Response resp,
+  public boolean exists(final Response<?> resp,
                         final BwContact val) {
     final var getResp = findPersistent(val.getFinderKeyValue(),
                                        val.getOwnerHref());
 
     if (getResp.isError()) {
-      Response.fromResponse(resp, getResp);
+      resp.fromResponse(getResp);
       return false;
     }
 
@@ -110,7 +110,8 @@ public class ContactsImpl
                                                             null);
 
     if (!pr.ok) {
-      return Response.error(new GetEntitiesResponse<>(), pr.message);
+      return new GetEntitiesResponse<BwContact>()
+              .error(pr.message);
     }
 
     return getIndexer().findContacts(pr.filter, from, size);

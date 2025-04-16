@@ -32,7 +32,6 @@ import org.bedework.convert.Icalendar;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
-import org.bedework.base.response.Response;
 
 /** Rather than have a single class steering calls to a number of smaller classes
  * we will build up a full implementation by progressively implementing abstract
@@ -53,11 +52,11 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
   }
 
   @Override
-  public ScheduleResult schedule(final EventInfo ei,
-                                 final String recipient,
-                                 final String fromAttUri,
-                                 final boolean iSchedule,
-                                 final ScheduleResult res) {
+  public ScheduleResult<?> schedule(final EventInfo ei,
+                                    final String recipient,
+                                    final String fromAttUri,
+                                    final boolean iSchedule,
+                                    final ScheduleResult<?> res) {
     /* A request (that is we are (re)sending a meeting request) or a publish
      *
      * <p>We handle the following iTIP methods<ul>
@@ -79,10 +78,10 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
      * If any external recipients - leave in outbox with unprocessed status.
      * </pre>
      */
-    final ScheduleResult sr;
+    final ScheduleResult<?> sr;
 
     if (res == null) {
-      sr = new ScheduleResult();
+      sr = new ScheduleResult<>();
     } else {
       sr = res;
     }
@@ -91,7 +90,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
 
     try {
       if (!Icalendar.itipRequestMethodType(ev.getScheduleMethod())) {
-        return Response.error(sr, new BedeworkException(
+        return sr.error(new BedeworkException(
                 CalFacadeErrorCode.schedulingBadMethod));
       }
 
@@ -115,7 +114,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
       /* For a request type action the organizer should be the current user. */
 
       if (!initScheduleEvent(ei, false, iSchedule)) {
-        return Response.notFound(sr, "Unable to initialise schedule");
+        return sr.notFound("Unable to initialise schedule");
       }
 
       /* Do this here to check we have access. We might need the outbox later
@@ -147,21 +146,21 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
         final var addResp = addToOutBox(ei, outBox, sr.externalRcs);
 
         if (!addResp.isOk()) {
-          return Response.fromResponse(sr, addResp);
+          return sr.fromResponse(addResp);
         }
       }
 
       return sr;
     } catch (final Throwable t) {
       getSvc().rollbackTransaction();
-      return Response.error(sr, t);
+      return sr.error(t);
     }
   }
 
   @Override
-  public ScheduleResult declineCounter(final EventInfo ei,
-                                       final String comment,
-                                       final BwAttendee fromAtt) {
+  public ScheduleResult<?> declineCounter(final EventInfo ei,
+                                          final String comment,
+                                          final BwAttendee fromAtt) {
     final EventInfo outEi = copyEventInfo(ei, getPrincipal());
     final BwEvent ev = outEi.getEvent();
     ev.setScheduleMethod(ScheduleMethods.methodTypeDeclineCounter);

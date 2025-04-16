@@ -19,6 +19,7 @@
 package org.bedework.calsvc;
 
 import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.response.Response;
 import org.bedework.caldav.server.soap.synch.SynchConnection;
 import org.bedework.caldav.server.soap.synch.SynchConnectionsMBean;
 import org.bedework.calfacade.BwCalendar;
@@ -48,15 +49,14 @@ import org.bedework.synch.wsmessages.SynchRemoteServicePortType;
 import org.bedework.synch.wsmessages.UnsubscribeRequestType;
 import org.bedework.synch.wsmessages.UnsubscribeResponseType;
 import org.bedework.util.jmx.MBeanUtil;
-import org.bedework.base.response.Response;
 
+import jakarta.xml.ws.BindingProvider;
 import org.oasis_open.docs.ws_calendar.ns.soap.BaseResponseType;
 import org.oasis_open.docs.ws_calendar.ns.soap.StatusType;
 
 import java.net.URL;
 
 import javax.xml.namespace.QName;
-import jakarta.xml.ws.BindingProvider;
 
 import static org.bedework.base.response.Response.Status.failed;
 import static org.bedework.base.response.Response.Status.noAccess;
@@ -302,16 +302,16 @@ class Synch extends CalSvcDb implements SynchI {
   }
 
   @Override
-  public Response refresh(final BwCalendar val) {
+  public Response<?> refresh(final BwCalendar val) {
     if (val.getSubscriptionId() == null) {
-      return Response.ok(); // just noop it
+      return new Response<>().ok(); // just noop it
     }
 
     final SConnection sconn = (SConnection)getSynchConnection();
-    final Response resp = new Response();
+    final var resp = new Response<>();
 
     if ((sconn == null) || (sconn.sc == null)) {
-      return Response.error(resp, "No active synch connection");
+      return resp.error("No active synch connection");
     }
 
     final SynchConnection sc = sconn.sc;
@@ -562,7 +562,7 @@ class Synch extends CalSvcDb implements SynchI {
     }
   }
 
-  private Response fromSynchResponse(final Response resp,
+  private Response<?> fromSynchResponse(final Response<?> resp,
                                      final BaseResponseType respType) {
     switch (respType.getStatus()) {
       case OK -> {

@@ -48,7 +48,6 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
-import org.bedework.base.response.Response;
 import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.Period;
@@ -198,7 +197,7 @@ public class InRequest extends InProcessor {
     if (adding) {
       final String namePrefix = ourCopy.getEvent().getUid();
 
-      final Response resp =
+      final var resp =
               sched.addEvent(ourCopy, namePrefix,
                              BwCalendar.calTypeCalendarCollection,
                              noInvites);
@@ -208,7 +207,7 @@ public class InRequest extends InProcessor {
                 " adding event for " + owner);
         }
 
-        return Response.fromResponse(pr, resp);
+        return pr.fromResponse(resp);
       }
     } else {
       final UpdateResult ur = 
@@ -223,7 +222,7 @@ public class InRequest extends InProcessor {
       }
 
       if (!ur.isOk()) {
-        return Response.fromResponse(pr, ur);
+        return pr.fromResponse(ur);
       }
     }
 

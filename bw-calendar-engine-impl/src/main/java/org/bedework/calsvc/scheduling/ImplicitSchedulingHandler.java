@@ -36,7 +36,6 @@ import org.bedework.calsvci.EventsI;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
-import org.bedework.base.response.Response;
 
 import static java.lang.String.format;
 
@@ -57,8 +56,9 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
   }
 
   @Override
-  public ScheduleResult implicitSchedule(final EventInfo ei,
-                                         final boolean noInvites) {
+  public ScheduleResult<?> implicitSchedule(
+          final EventInfo ei,
+          final boolean noInvites) {
     UpdateResult uer = ei.getUpdResult();
     uer.wasScheduled = true;
 
@@ -102,13 +102,12 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
         debug(format("Not a scheduling object: uid=\"%s\", just return",
                      ev.getUid()));
       }
-      return Response.ok(uer);
+      return uer.ok();
     }
 
     if (orgCalAddr == null) {
-      return Response.error(uer,
-                            new BedeworkBadRequest(
-                                    CalFacadeErrorCode.missingEventProperty));
+      return uer.error(new BedeworkBadRequest(
+              CalFacadeErrorCode.missingEventProperty));
     }
 
     // Ensure we have an originator for ischedule
@@ -183,8 +182,8 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
 
         final EventInfo cei = new EventInfo(cncl);
 
-        final ScheduleResult cnclr = schedule(cei,
-                                              null, null, false, null);
+        final var cnclr = schedule(cei,
+                                   null, null, false, null);
         if (debug()) {
           trace(cnclr.toString());
         }
@@ -201,10 +200,10 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
                                            ei.getInboxEventName());
 
       if (inboxei != null) {
-        final Response resp = events.delete(inboxei, false);
+        final var resp = events.delete(inboxei, false);
 
         if (!resp.isOk()) {
-          return Response.fromResponse(uer, resp);
+          return uer.fromResponse(resp);
         }
       }
     }
@@ -213,21 +212,21 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
   }
 
   @Override
-  public ScheduleResult sendReply(final EventInfo ei,
-                                  final int partstat,
-                                  final String comment) {
-    final ScheduleResult sr = new ScheduleResult();
+  public ScheduleResult<?> sendReply(final EventInfo ei,
+                                     final int partstat,
+                                     final String comment) {
+    final var sr = new ScheduleResult<>();
     final BwEvent ev = ei.getEvent();
 
     if (!ev.getAttendeeSchedulingObject()) {
-      return Response.error(sr, new BedeworkException(
+      return sr.error(new BedeworkException(
               CalFacadeErrorCode.schedulingBadMethod));
     }
 
     final Participant att = findUserAttendee(ei);
 
     if (att == null) {
-      return Response.error(sr, new BedeworkException(
+      return sr.error(new BedeworkException(
               CalFacadeErrorCode.schedulingNotAttendee));
     }
 

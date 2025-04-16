@@ -81,13 +81,13 @@ public class CategoriesImpl
   }
 
   @Override
-  public boolean exists(final Response resp,
+  public boolean exists(final Response<?> resp,
                         final BwCategory cat) {
-    var getResp = findPersistent(cat.getWord(),
-                                 cat.getOwnerHref());
+    final var getResp = findPersistent(cat.getWord(),
+                                       cat.getOwnerHref());
 
     if (getResp.isError()) {
-      Response.fromResponse(resp, getResp);
+      resp.fromResponse(getResp);
       return false;
     }
 
@@ -111,7 +111,8 @@ public class CategoriesImpl
                                                             null);
 
     if (!pr.ok) {
-      return Response.error(new GetEntitiesResponse<>(), pr.message);
+      return new GetEntitiesResponse<BwCategory>()
+              .error(pr.message);
     }
 
     return getIndexer()

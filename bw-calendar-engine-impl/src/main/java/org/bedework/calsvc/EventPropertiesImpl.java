@@ -97,7 +97,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
    * @param val the entity
    * @return true if exists, false for error
    */
-  abstract boolean exists(Response resp, T val);
+  abstract boolean exists(Response<?> resp, T val);
 
   /** Constructor
   *
@@ -167,7 +167,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       ent = fetchIndexedByUid(uid);
 
       if (ent == null) {
-        return Response.notFound(resp);
+        return resp.notFound();
       }
 
       putCachedByUid(uid, ent);
@@ -175,7 +175,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       resp.setEntity(ent);
       return resp;
     } catch (final Throwable t) {
-      return Response.error(resp, t);
+      return resp.error(t);
     }
   }
 
@@ -203,7 +203,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
         continue;
       }
 
-      return Response.fromResponse(resp, ent);
+      return resp.fromResponse(ent);
     }
 
     return resp;
@@ -217,25 +217,24 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
   @Override
   public GetEntityResponse<T> findPersistent(final BwString val) {
     final var resp = new GetEntityResponse<T>();
-    final BwPrincipal owner = getSvc().getEntityOwner();
+    final BwPrincipal<?> owner = getSvc().getEntityOwner();
 
     try {
       final T ent = getCoreHdlr().find(val, owner.getPrincipalRef());
 
       if (ent == null) {
-        return Response.notFound(resp);
+        return resp.notFound();
       }
-      resp.setEntity(ent);
 
-      return Response.ok(resp, null);
+      return resp.setEntity(ent).ok();
     } catch (final Throwable t) {
-      return Response.error(resp, t);
+      return resp.error(t);
     }
   }
 
   @Override
-  public Response add(final T val) {
-    final Response resp = new Response();
+  public Response<?> add(final T val) {
+    final var resp = new Response<>();
     getSvc().setupSharableEntity(val, getPrincipal().getPrincipalRef());
 
     if (!updateOK(resp, val)) {
@@ -248,8 +247,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
     }
 
     if (exists) {
-      resp.setStatus(Response.Status.exists);
-      return resp;
+      return resp.setStatus(Response.Status.exists);
     }
 
     if (debug()) {
@@ -258,7 +256,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
 
     if ((val.getCreatorHref() == null) ||
         (val.getOwnerHref() == null)) {
-      return Response.error(resp, "Owner and creator must be set");
+      return resp.error("Owner and creator must be set");
     }
 
     try {
@@ -281,7 +279,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
 
       return resp;
     } catch (final Throwable t) {
-      return Response.error(resp, t);
+      return resp.error(t);
     }
   }
 
@@ -379,7 +377,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       final var resp = findPersistent(val, oh);
 
       if (resp.isError()) {
-        Response.fromResponse(eeer, resp);
+        eeer.fromResponse(resp);
         return eeer;
       }
 
@@ -394,20 +392,20 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       final var addResp = add(val);
 
       if (!addResp.isOk()) {
-        return Response.fromResponse(eeer, addResp);
+        return (EnsureEntityExistsResult<T>)eeer.fromResponse(addResp);
       }
       eeer.setAdded(true);
       eeer.setEntity(val);
 
       return eeer;
     } catch (final Throwable t) {
-      return Response.error(eeer, t);
+      return (EnsureEntityExistsResult<T>)eeer.error(t);
     }
   }
 
   @Override
   public int reindex(final BwIndexer indexer) {
-    final BwPrincipal owner = getSvc().getEntityOwner();
+    final BwPrincipal<?> owner = getSvc().getEntityOwner();
 
     final Collection<T> ents =
             getCoreHdlr().getAll(owner.getPrincipalRef());
@@ -519,7 +517,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
 
       return resp;
     } catch (final BedeworkException be) {
-      return Response.error(resp, be);
+      return resp.error(be);
     }
   }
 
@@ -632,7 +630,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
    * admin users. It is applied in addition to the normal access checks
    * applied at the lower levels.
    */
-  private boolean updateOK(final Response resp,
+  private boolean updateOK(final Response<?> resp,
                            final Object o) {
     if (isGuest()) {
       resp.setStatus(Response.Status.noAccess);
@@ -644,7 +642,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       return true;
     }
 
-    if (!(o instanceof BwShareableDbentity)) {
+    if (!(o instanceof final BwShareableDbentity<?> ent)) {
       resp.setStatus(Response.Status.noAccess);
       return false;
     }
@@ -653,8 +651,6 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       // Normal access checks apply
       return true;
     }
-
-    final BwShareableDbentity<?> ent = (BwShareableDbentity<?>)o;
 
     if (adminCanEditAllPublic ||
             ent.getCreatorHref().equals(getPrincipal().getPrincipalRef())) {

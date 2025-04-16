@@ -549,7 +549,7 @@ public class CalintfROImpl extends CalintfBase
       resolveAlias(val, true, false,
                    cai, getColIndexer());
     } catch (final BedeworkException be) {
-      return Response.error(res, be);
+      return res.error(be);
     }
 
     res.setEntity(cai);
@@ -1655,19 +1655,19 @@ public class CalintfROImpl extends CalintfBase
               getIndexer(BwIndexer.docTypeResource)
                       .fetchResource(href);
       if (res == null) {
-        return Response.notFound(resp);
+        return resp.notFound();
       }
 
       final CurrentAccess ca = checkAccess(res, desiredAccess, true);
 
       if (!ca.getAccessAllowed()) {
-        return Response.notOk(resp, Response.Status.forbidden);
+        return resp.notOk(Response.Status.forbidden);
       }
 
       resp.setEntity(res);
       return resp;
     } catch (final BedeworkException be) {
-      return Response.error(resp, be);
+      return resp.error(be);
     }
   }
 

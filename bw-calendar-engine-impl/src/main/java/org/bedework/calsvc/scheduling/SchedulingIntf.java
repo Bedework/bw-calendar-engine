@@ -75,8 +75,8 @@ public interface SchedulingIntf extends SchedulingI {
    * @param noInvites true for send no invites
    * @return null if added, error code otherwise
    */
-  Response addEvent(EventInfo ei,
-                    String namePrefix,
-                    int calType,
-                    boolean noInvites);
+  Response<?> addEvent(EventInfo ei,
+                       String namePrefix,
+                       int calType,
+                       boolean noInvites);
 }

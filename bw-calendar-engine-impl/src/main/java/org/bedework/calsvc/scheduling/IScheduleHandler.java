@@ -23,7 +23,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.Participant;
 import org.bedework.calfacade.ScheduleResult;
-import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
+import org.bedework.calfacade.ScheduleRecipientResult;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvc.scheduling.hosts.HostInfo;

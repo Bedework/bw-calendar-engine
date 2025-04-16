@@ -469,10 +469,10 @@ public abstract class SchedulingBase extends CalSvcHelperRw
   private static final AtomicLong suffixValue = new AtomicLong();
 
   @Override
-  public Response addEvent(final EventInfo ei,
-                           final String namePrefix,
-                           final int calType,
-                           final boolean noInvites) {
+  public Response<?> addEvent(final EventInfo ei,
+                              final String namePrefix,
+                              final int calType,
+                              final boolean noInvites) {
     final BwEvent ev = ei.getEvent();
     String prefix = namePrefix;
 
@@ -523,8 +523,8 @@ public abstract class SchedulingBase extends CalSvcHelperRw
 
     getSvc().rollbackTransaction();
 
-    return Response.notOk(new Response(), Response.Status.failed,
-                          CalFacadeErrorCode.duplicateName);
+    return new Response<>().notOk(Response.Status.failed,
+                                  CalFacadeErrorCode.duplicateName);
   }
 
   /** Find the attendee in this event which corresponds to the current user

@@ -34,7 +34,6 @@ import org.bedework.convert.Icalendar;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
-import org.bedework.base.response.Response;
 
 /** Rather than have a single class steering calls to a number of smaller classes
  * we will build up a full implementation by progressively implementing abstract
@@ -53,20 +52,20 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
   }
 
   @Override
-  public ScheduleResult requestRefresh(final EventInfo ei,
-                                       final String comment) {
-    final ScheduleResult sr = new ScheduleResult();
+  public ScheduleResult<?> requestRefresh(final EventInfo ei,
+                                          final String comment) {
+    final var sr = new ScheduleResult<>();
     final BwEvent ev = ei.getEvent();
 
     if (ev.getScheduleMethod() != ScheduleMethods.methodTypeRequest) {
-      return Response.error(sr, new BedeworkException(
+      return sr.error(new BedeworkException(
               CalFacadeErrorCode.schedulingBadMethod));
     }
 
     final Participant att = findUserAttendee(ei);
 
     if (att == null) {
-      return Response.error(sr, new BedeworkException(
+      return sr.error(new BedeworkException(
               CalFacadeErrorCode.schedulingNotAttendee));
     }
 
@@ -110,13 +109,14 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
   }
 
   @Override
-  public ScheduleResult attendeeRespond(final EventInfo ei,
-                                        final int method,
-                                        final ScheduleResult res) {
-    final ScheduleResult sr;
+  public ScheduleResult<?> attendeeRespond(
+          final EventInfo ei,
+          final int method,
+          final ScheduleResult<?> res) {
+    final ScheduleResult<?> sr;
 
     if (res == null) {
-      sr = new ScheduleResult();
+      sr = new ScheduleResult<>();
     } else {
       sr = res;
     }
@@ -130,12 +130,12 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     final Participant att = findUserAttendee(ei);
 
     if (att == null) {
-      return Response.error(sr, new BedeworkException(
+      return sr.error(new BedeworkException(
               CalFacadeErrorCode.schedulingNotAttendee));
     }
 
     if (ev.getOriginator() == null) {
-      return Response.error(sr, new BedeworkException(
+      return sr.error(new BedeworkException(
               CalFacadeErrorCode.schedulingNoOriginator));
     }
 
@@ -321,8 +321,9 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
   */
 
   @Override
-  public ScheduleResult scheduleResponse(final EventInfo ei,
-                                         final ScheduleResult res) {
+  public ScheduleResult<?> scheduleResponse(
+          final EventInfo ei,
+          final ScheduleResult<?> res) {
     /* As an attendee, respond to a scheduling request.
      *
      *    Copy event
@@ -330,13 +331,13 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
      *    Add to organizers inbox if internal
      *    Put in outbox if external.
      */
-    final ScheduleResult sr = new ScheduleResult();
+    final var sr = new ScheduleResult<>();
 
     try {
       final int smethod = ei.getEvent().getScheduleMethod();
 
       if (!Icalendar.itipReplyMethodType(smethod)) {
-        return Response.error(sr, new BedeworkException(
+        return sr.error(new BedeworkException(
                 CalFacadeErrorCode.schedulingBadMethod));
       }
 
@@ -350,7 +351,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
       /* There should only be one attendee for a reply */
       if (ei.getMaxAttendees() > 1) {
-        return Response.error(sr, new BedeworkException(
+        return sr.error(new BedeworkException(
                 CalFacadeErrorCode.schedulingBadAttendees));
       }
 
@@ -375,14 +376,14 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
         final var addResp = addToOutBox(ei, outBox, sr.externalRcs);
 
         if (!addResp.isOk()) {
-          return Response.fromResponse(sr, addResp);
+          return sr.fromResponse(addResp);
         }
       }
 
       return sr;
     } catch (final Throwable t) {
       getSvc().rollbackTransaction();
-      return Response.error(sr, t);
+      return sr.error(t);
     }
   }
 

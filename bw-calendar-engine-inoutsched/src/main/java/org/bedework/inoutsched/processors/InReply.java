@@ -35,7 +35,6 @@ import org.bedework.calsvci.SchedulingI;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.ScheduleMethods;
-import org.bedework.base.response.Response;
 import org.bedework.util.timezones.Timezones;
 import org.bedework.util.timezones.TimezonesException;
 
@@ -90,7 +89,7 @@ public class InReply extends InProcessor {
       }
 
       if (ev.getOriginator() == null) {
-        return Response.error(pr, new BedeworkException(
+        return pr.error(new BedeworkException(
                 CalFacadeErrorCode.schedulingNoOriginator));
       }
 
@@ -102,7 +101,7 @@ public class InReply extends InProcessor {
         final var recipientResp = si.getOnlyParticipant();
 
         if (!recipientResp.isOk()) {
-          return Response.fromResponse(pr, recipientResp);
+          return pr.fromResponse(recipientResp);
         }
 
         final Participant att = recipientResp.getEntity();
@@ -122,7 +121,7 @@ public class InReply extends InProcessor {
           final var recipients = si.getRecipientParticipants();
 
           if (recipients.size() != 1) {
-            return Response.error(pr, new BedeworkException(
+            return pr.error(new BedeworkException(
                     CalFacadeErrorCode.schedulingExpectOneAttendee));
           }
 
@@ -136,14 +135,14 @@ public class InReply extends InProcessor {
           if (attUri == null) {
             attUri = att.getCalendarAddress();
           } else if (!attUri.equals(att.getCalendarAddress())) {
-            return Response.error(pr, new BedeworkException(
+            return pr.error(new BedeworkException(
                     CalFacadeErrorCode.schedulingExpectOneAttendee));
           }
         }
       }
 
       if (attUri == null) {
-        return Response.error(pr, new BedeworkException(
+        return pr.error(new BedeworkException(
                 CalFacadeErrorCode.schedulingExpectOneAttendee));
       }
 
@@ -171,10 +170,11 @@ public class InReply extends InProcessor {
                       Private methods
      ============================================================= */
 
-  private boolean updateOrganizerPollCopy(final EventInfo colEi,
-                                          final EventInfo inBoxEi,
-                                          final String attUri,
-                                          @SuppressWarnings("UnusedParameters") final ScheduleResult sr) {
+  private boolean updateOrganizerPollCopy(
+          final EventInfo colEi,
+          final EventInfo inBoxEi,
+          final String attUri,
+          @SuppressWarnings("UnusedParameters") final ScheduleResult<?> sr) {
     /* We have a single voter and their responses to each item.
        Update the Participant component for that respondee.
      */
@@ -225,7 +225,7 @@ public class InReply extends InProcessor {
   private boolean updateOrganizerCopy(final EventInfo colEi,
                                       final EventInfo inBoxEi,
                                       final String attUri,
-                                      final ScheduleResult sr) {
+                                      final ScheduleResult<?> sr) {
     final BwEvent inBoxEv = inBoxEi.getEvent();
     final BwEvent calEv = colEi.getEvent();
     final ChangeTable chg = calEv.getChangeset(getPrincipalHref());
@@ -240,7 +240,7 @@ public class InReply extends InProcessor {
     }
 
     if (inBoxEv.getScheduleMethod() != ScheduleMethods.methodTypeReply) {
-      Response.error(sr, new BedeworkException(
+      sr.error(new BedeworkException(
               CalFacadeErrorCode.schedulingExpectOneAttendee));
       return false;
     }
@@ -263,7 +263,7 @@ public class InReply extends InProcessor {
         if (debug()) {
           debug("Not an attendee of " + calEv);
         }
-        Response.error(sr, new BedeworkException(
+        sr.error(new BedeworkException(
                 CalFacadeErrorCode.schedulingUnknownAttendee,
                 attUri));
         return false;

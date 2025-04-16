@@ -77,18 +77,16 @@ public class LocationsImpl
                                      PropertyInfoIndex.LOC_COMBINED_VALUES);
 
       if (loc == null) {
-        return Response.notOk(resp, Response.Status.notFound);
+        return resp.notOk(Response.Status.notFound);
       }
 
       if (!persisted) {
-        resp.setEntity(loc);
-      } else {
-        resp.setEntity(getPersistent(loc.getUid()));
+        return resp.setEntity(loc).ok();
       }
 
-      return Response.ok(resp, null);
+      return resp.setEntity(getPersistent(loc.getUid())).ok();
     } catch (final BedeworkException be) {
-      return Response.error(resp, be);
+      return resp.error(be);
     }
   }
 
@@ -116,13 +114,13 @@ public class LocationsImpl
   }
 
   @Override
-  public boolean exists(final Response resp,
+  public boolean exists(final Response<?> resp,
                         final BwLocation val) {
     final var getResp = findPersistent(val.getFinderKeyValue(),
                                        val.getOwnerHref());
 
     if (getResp.isError()) {
-      Response.fromResponse(resp, getResp);
+      resp.fromResponse(getResp);
       return false;
     }
 
@@ -145,7 +143,8 @@ public class LocationsImpl
                                                             null);
 
     if (!pr.ok) {
-      return Response.error(new GetEntitiesResponse<>(), pr.message);
+      return new GetEntitiesResponse<BwLocation>()
+              .error(pr.message);
     }
 
     return getIndexer().findLocations(pr.filter, from, size);

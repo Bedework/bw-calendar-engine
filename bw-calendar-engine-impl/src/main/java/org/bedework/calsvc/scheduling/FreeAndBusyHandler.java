@@ -36,7 +36,6 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.ScheduleResult;
-import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
 import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.svc.EventInfo;
@@ -354,10 +353,12 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
   }
 
   @Override
-  public FbResponses aggregateFreeBusy(final ScheduleResult sr,
-                                       final BwDateTime start, final BwDateTime end,
-                                       final BwDuration granularity) {
-    final FbResponses resps = new FbResponses();
+  public FbResponses aggregateFreeBusy(
+          final ScheduleResult<?> sr,
+          final BwDateTime start,
+          final BwDateTime end,
+          final BwDuration granularity) {
+    final var resps = new FbResponses();
 
     if (start.getDateType() || end.getDateType()) {
       throw new BedeworkException(CalFacadeErrorCode.schedulingBadGranulatorDt);
@@ -373,7 +374,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
     allResponses.setEnd(end);
     resps.setAggregatedResponse(allResponses);
 
-    for (final ScheduleRecipientResult srr: sr.recipientResults.values()) {
+    for (final var srr: sr.recipientResults.values()) {
       final FbGranulatedResponse fb = new FbGranulatedResponse();
 
       resps.getResponses().add(fb);

@@ -630,7 +630,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     try {
       indexName = newIndex();
     } catch (final Throwable t) {
-      return Response.error(resp, t);
+      return resp.error(t);
     }
 
     // Only retrieve masters - we'll query for the overrides
@@ -645,7 +645,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     final var clResp = sch.getClient();
 
     if (!clResp.isOk()) {
-      return Response.fromResponse(resp, clResp);
+      return resp.fromResponse(clResp);
     }
 
     final var cl = clResp.getEntity();
@@ -807,7 +807,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     final var clResp = sch.getClient();
 
     if (!clResp.isOk()) {
-      return Response.fromResponse(resp, clResp);
+      return resp.fromResponse(clResp);
     }
 
     final var cl = clResp.getEntity();
@@ -1113,7 +1113,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
             entity = eb.makeLocation();
             break;
           case docTypeEvent:
-            final Response evrestResp = new Response();
+            final var evrestResp = new Response<>();
             entity = makeEvent(eb, evrestResp, kval,
                                res.recurRetrieval.mode == Rmode.expanded);
             final EventInfo ei = (EventInfo)entity;
@@ -1267,7 +1267,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
   }
 
-  private boolean addOverrides(final Response resp,
+  private boolean addOverrides(final Response<?> resp,
                                final EventInfo ei) {
     try {
       final BwEvent ev = ei.getEvent();
@@ -1582,7 +1582,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
   }
 
-  private EsDocInfo makeDoc(final Response resp,
+  private EsDocInfo makeDoc(final Response<?> resp,
                             final EventInfo ei,
                             final ItemKind kind,
                             final BwDateTime start,
@@ -1708,7 +1708,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       dqr.setRefresh(true);
       dqr.setQuery(qb);
 
-      BulkByScrollResponse bulkResponse =
+      final BulkByScrollResponse bulkResponse =
               getClient().deleteByQuery(dqr, RequestOptions.DEFAULT);
 
       markUpdated();
@@ -1951,7 +1951,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
               fetchEntity(docTypeEvent, qb, expectedObjects);
 
       if (hits == null) {
-        return notFound(resp);
+        return resp.error(notFound);
       }
 
       final EventInfo ei;
@@ -1960,7 +1960,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         // Master only
         ei = makeEvent(resp, hits[0]);
         if (ei == null) {
-          return notFound(resp);
+          return resp.error(notFound);
         }
       } else {
         // Make events then create proxy.
@@ -1968,7 +1968,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         final EventInfo ei0 = makeEvent(resp, hits[0]);
         final EventInfo ei1 = makeEvent(resp, hits[1]);
         if ((ei0 == null) || (ei1 == null)) {
-          return notFound(resp);
+          return resp.error(notFound);
         }
 
         final BwEvent mstr;
@@ -1995,7 +1995,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
               accessCheck.checkAccess(ev, privRead, true);
 
       if ((ca == null) || !ca.getAccessAllowed()) {
-        return notFound(resp);
+        return resp.error(notFound);
       }
 
       ei.setCurrentAccess(ca);
@@ -2091,7 +2091,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     BwCalendar entity;
 
     if ((val == null) || (val.isEmpty())) {
-      return Response.notOk(resp, notFound);
+      return resp.notOk(notFound);
     }
 
     if ((index.length == 1) &&
@@ -2101,12 +2101,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       if (entity != null) {
         if (entity.getTombstoned()) {
-          resp.setStatus(notFound);
-          return resp;
+          return resp.error(notFound);
         }
-        resp.setEntity(entity);
 
-        return Response.ok(resp, null);
+        return resp.setEntity(entity).ok();
       }
     }
 
@@ -2126,8 +2124,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       if (debug()) {
         debug("Not found");
       }
-      resp.setStatus(notFound);
-      return resp;
+      return resp.error(notFound);
     }
 
     entity = makeCollection(eb);
@@ -2141,7 +2138,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         debug("Return ok - any access");
       }
 
-      return Response.ok(resp, null);
+      return resp.ok();
     }
 
     entity = accessCheck.checkAccess(entity,
@@ -2151,7 +2148,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       if (debug()) {
         debug("No access");
       }
-      return Response.notOk(resp, noAccess);
+      return resp.notOk(noAccess);
     }
     caches.put(entity, desiredAccess);
     resp.setEntity(entity);
@@ -2159,7 +2156,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     if (debug()) {
       debug("Return ok - access ok");
     }
-    return Response.ok(resp, null);
+    return resp.ok();
   }
 
   @Override
@@ -2236,20 +2233,19 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     try {
 
-      resp.setEntities(fetchEntities(docTypePrincipal,
-                                     new BuildEntity<>() {
-                                       @Override
-                                       BwGroup<?> make(final EntityBuilder eb,
-                                                    final String id) {
-                                         return (BwGroup<?>)eb.makePrincipal();
-                                       }
-                                     },
-                                     qb,
-                                     -1));
-
-      return Response.ok(resp, null);
+      return resp.setEntities(
+              fetchEntities(docTypePrincipal,
+                            new BuildEntity<>() {
+                              @Override
+                              BwGroup<?> make(final EntityBuilder eb,
+                                              final String id) {
+                                return (BwGroup<?>)eb.makePrincipal();
+                              }
+                            },
+                            qb,
+                            -1)).ok();
     } catch (final Throwable t) {
-      return Response.error(resp, t);
+      return resp.error(t);
     }
   }
 
@@ -2259,21 +2255,19 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     final GetEntitiesResponse<BwAdminGroup> resp = new GetEntitiesResponse<>();
 
     try {
-
-      resp.setEntities(fetchEntities(docTypePrincipal,
-                                     new BuildEntity<>() {
-                                       @Override
-                                       BwAdminGroup make(final EntityBuilder eb,
-                                                    final String id) {
-                                         return (BwAdminGroup)eb.makePrincipal();
-                                       }
-                                     },
-                                     qb,
-                                     -1));
-
-      return Response.ok(resp, null);
+      return resp.setEntities(
+              fetchEntities(docTypePrincipal,
+                            new BuildEntity<>() {
+                              @Override
+                              BwAdminGroup make(final EntityBuilder eb,
+                                                final String id) {
+                                return (BwAdminGroup)eb.makePrincipal();
+                              }
+                            },
+                            qb,
+                            -1)).ok();
     } catch (final Throwable t) {
-      return Response.error(resp, t);
+      return resp.error(t);
     }
   }
 
@@ -2339,21 +2333,19 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
             new GetEntitiesResponse<>();
 
     try {
-
-      resp.setEntities(fetchEntities(docTypePrincipal,
-                                     new BuildEntity<>() {
-                                       @Override
-                                       BwGroup<?> make(final EntityBuilder eb,
-                                                       final String id) {
-                                         return (BwGroup<?>)eb.makePrincipal();
-                                       }
-                                     },
-                                     qb,
-                                     -1));
-
-      return Response.ok(resp, null);
+      return resp.setEntities(
+              fetchEntities(docTypePrincipal,
+                            new BuildEntity<>() {
+                              @Override
+                              BwGroup<?> make(final EntityBuilder eb,
+                                              final String id) {
+                                return (BwGroup<?>)eb.makePrincipal();
+                              }
+                            },
+                            qb,
+                            -1)).ok();
     } catch (final Throwable t) {
-      return Response.error(resp, t);
+      return resp.error(t);
     }
   }
 
@@ -2365,21 +2357,19 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
             new GetEntitiesResponse<>();
 
     try {
-
-      resp.setEntities(fetchEntities(docTypePrincipal,
-                                     new BuildEntity<>() {
-                                       @Override
-                                       BwAdminGroup make(final EntityBuilder eb,
-                                                    final String id) {
-                                         return (BwAdminGroup)eb.makePrincipal();
-                                       }
-                                     },
-                                     qb,
-                                     -1));
-
-      return Response.ok(resp, null);
+      return resp.setEntities(
+              fetchEntities(docTypePrincipal,
+                            new BuildEntity<>() {
+                              @Override
+                              BwAdminGroup make(final EntityBuilder eb,
+                                                final String id) {
+                                return (BwAdminGroup)eb.makePrincipal();
+                              }
+                            },
+                            qb,
+                            -1)).ok();
     } catch (final Throwable t) {
-      return Response.error(resp, t);
+      return resp.error(t);
     }
   }
 
@@ -2596,7 +2586,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                                      val));
 
       if (hit == null) {
-        return notFound(resp);
+        return resp.error(notFound);
       }
 
       final EntityBuilder eb = getEntityBuilder(hit.getSourceAsMap());
@@ -2604,7 +2594,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       final BwLocation loc = eb.makeLocation();
 
       if (loc == null) {
-        return notFound(resp);
+        return resp.error(notFound);
       }
 
       resp.setEntity(loc);
@@ -2695,8 +2685,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       }
 
       if (qb instanceof MatchNoneQueryBuilder) {
-        resp.setStatus(notFound);
-        return resp;
+        return resp.error(notFound);
       }
 
       final EsSearchResult esr = new EsSearchResult(this);
@@ -2726,7 +2715,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       return resp;
     } catch (final Throwable t) {
-      return Response.error(resp, t);
+      return resp.error(t);
     }
   }
 
@@ -3376,7 +3365,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
   }
 
-  private EsDocInfo makeDoc(final Response resp,
+  private EsDocInfo makeDoc(final Response<?> resp,
                             final Object rec) {
     try {
       if (rec instanceof EventInfo) {
@@ -3840,7 +3829,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                 return null;
                               }
 
-                              final Response resp = new Response();
+                              final var resp = new Response<>();
                               restoreEvent(resp, entity);
                               if (!resp.isOk()) {
                                 throw new BedeworkException(resp.toString());
@@ -3978,7 +3967,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return suffix.toString();
   }
 
-  private Object makeEntity(final Response resp,
+  private Object makeEntity(final Response<?> resp,
                             final SearchHit hit,
                             final RecurringRetrievalMode rrm) {
     final String kval = hit.getId();
@@ -4015,7 +4004,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return entity;
   }
 
-  private EventInfo makeEvent(final Response resp,
+  private EventInfo makeEvent(final Response<?> resp,
                               final SearchHit hit) {
     if (hit.getId() == null) {
       throw new RuntimeException("Missing key");
@@ -4027,7 +4016,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   private EventInfo makeEvent(final EntityBuilder eb,
-                              final Response resp,
+                              final Response<?> resp,
                               final String kval,
                               final boolean expanded) {
     final EventInfo entity = eb.makeEvent(kval, expanded);
@@ -4041,7 +4030,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return entity;
   }
 
-  private void restoreEvent(final Response resp,
+  private void restoreEvent(final Response<?> resp,
                             final Collection<EventInfo> eis) {
     if (Util.isEmpty(eis)) {
       return;
@@ -4052,7 +4041,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
   }
 
-  private void restoreEvent(final Response resp,
+  private void restoreEvent(final Response<?> resp,
                             final EventInfo ei) {
     if (ei == null) {
       return;
@@ -4137,37 +4126,35 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return new DocBuilder();
   }
 
-  private <T extends Response> T errorReturn(final T resp,
-                                             final Throwable t) {
+  private <T extends Response<?>> T errorReturn(
+          final T resp,
+          final Throwable t) {
     return errorReturn(resp, t, failed);
   }
 
-  private <T extends Response> T errorReturn(final T resp,
-                                             final Throwable t,
-                                             final Response.Status st) {
+  private <T extends Response<?>> T errorReturn(
+          final T resp,
+          final Throwable t,
+          final Response.Status st) {
     if (debug()) {
       error(t);
     }
     return errorReturn(resp, t.getMessage(), st);
   }
 
-  private <T extends Response> T errorReturn(final T resp,
-                                             final String msg,
-                                             final Response.Status st) {
+  private <T extends Response<?>> T errorReturn(
+          final T resp,
+          final String msg,
+          final Response.Status st) {
     resp.setMessage(msg);
     resp.setStatus(st);
 
     return resp;
   }
 
-  private <T extends Response> T notFound(final T resp) {
-    resp.setStatus(notFound);
-
-    return resp;
-  }
-
-  private <T extends Response> T errorReturn(final T resp,
-                                             final String msg) {
+  private <T extends Response<?>> T errorReturn(
+          final T resp,
+          final String msg) {
     if (resp == null) {
       return null;
     }

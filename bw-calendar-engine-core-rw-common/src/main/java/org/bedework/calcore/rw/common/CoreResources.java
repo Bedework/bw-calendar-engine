@@ -104,7 +104,7 @@ public class CoreResources extends CalintfHelper
       final BwResource res = entityDao.getResource(name, colPath,
                                                    desiredAccess);
       if (res == null) {
-        return Response.notFound(resp);
+        return resp.notFound();
       }
 
       final CurrentAccess ca =
@@ -112,13 +112,13 @@ public class CoreResources extends CalintfHelper
                       .checkAccess(res, desiredAccess, true);
 
       if (!ca.getAccessAllowed()) {
-        return Response.notOk(resp, Response.Status.forbidden);
+        return resp.notOk(Response.Status.forbidden);
       }
 
       resp.setEntity(res);
       return resp;
     } catch (final BedeworkException be) {
-      return Response.error(resp, be);
+      return resp.error(be);
     }
   }
 
