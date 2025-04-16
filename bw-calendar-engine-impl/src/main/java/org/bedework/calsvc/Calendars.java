@@ -694,8 +694,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public SynchStatusResponse getSynchStatus(final String path) {
-    return getSvc().getSynch().getSynchStatus(get(path));
+  public SynchStatusResponse getSynchStatus(final BwCalendar val) {
+    return getSvc().getSynch().getSynchStatus(val);
   }
 
   @Override
