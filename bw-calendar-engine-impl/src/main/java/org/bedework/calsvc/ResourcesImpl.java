@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static java.lang.String.format;
+import static org.bedework.calfacade.exc.CalFacadeErrorCode.collectionNotFound;
 
 /** This acts as an interface to the database for resources.
  *
@@ -125,7 +126,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       final BwCollection collTo = getCols().get(to);
 
       if (collTo == null) {
-        throw new BedeworkException(CalFacadeErrorCode.collectionNotFound, to);
+        throw new BedeworkException(collectionNotFound, to);
       }
 
       if (collTo.getCalType() != BwCollection.calTypeFolder) {
@@ -329,7 +330,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       final BwCollection coll = getCols().get(path);
 
       if (coll == null) {
-        throw new BedeworkException(CalFacadeErrorCode.collectionNotFound, path);
+        throw new BedeworkException(collectionNotFound, path);
       }
 
       if (forNotification) {

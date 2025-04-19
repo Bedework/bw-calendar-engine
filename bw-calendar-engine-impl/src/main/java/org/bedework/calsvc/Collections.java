@@ -699,11 +699,12 @@ class Collections extends CalSvcDb implements CollectionsI {
 
   @Override
   public CheckSubscriptionResult checkSubscription(final String path) {
-    return getSvc().getSynch().checkSubscription(get(path));
+    return getSvc().getSynch()
+                   .checkSubscription(get(path));
   }
 
   @Override
-  public Response refreshSubscription(final BwCollection val) {
+  public Response<?> refreshSubscription(final BwCollection val) {
     return getSvc().getSynch().refresh(val);
   }
 

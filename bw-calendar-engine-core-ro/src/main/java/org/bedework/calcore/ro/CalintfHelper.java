@@ -98,21 +98,7 @@ public abstract class CalintfHelper
     return throwException(new BedeworkException(err, extra));
   }
 
-  /** Used to fetch a collection from the cache
-   *
-   * @param path to collection
-   * @param desiredAccess we need
-   * @param alwaysReturn false to throw an exception if not accessible
-   * @return BwCollection
-   */
-  public BwCollection getCollection(final String path,
-                                    final int desiredAccess,
-                                    final boolean alwaysReturn) {
-    return intf.getCollection(path, desiredAccess,
-                            alwaysReturn);
-  }
-
-  protected BwPrincipal getAuthenticatedPrincipal() {
+  protected BwPrincipal<?> getAuthenticatedPrincipal() {
     if ((intf == null) || (intf.getPrincipalInfo() == null)) {
       return null;
     }
@@ -120,7 +106,7 @@ public abstract class CalintfHelper
     return intf.getPrincipalInfo().getAuthPrincipal();
   }
 
-  protected BwPrincipal getPrincipal() {
+  protected BwPrincipal<?> getPrincipal() {
     if ((intf == null) || (intf.getPrincipalInfo() == null)) {
       return null;
     }
@@ -129,7 +115,7 @@ public abstract class CalintfHelper
   }
 
   protected String authenticatedPrincipal() {
-    final BwPrincipal p = getAuthenticatedPrincipal();
+    final var p = getAuthenticatedPrincipal();
 
     if (p == null) {
       return null;
@@ -302,9 +288,7 @@ public abstract class CalintfHelper
       clearCollection(((DescriptionEntity<?>)val).getDescriptions());
     }
 
-    if (val instanceof RecurrenceEntity) {
-      final RecurrenceEntity re = (RecurrenceEntity)val;
-
+    if (val instanceof final RecurrenceEntity re) {
       re.setRecurring(false);
       clearCollection(re.getExdates());
       clearCollection(re.getExrules());

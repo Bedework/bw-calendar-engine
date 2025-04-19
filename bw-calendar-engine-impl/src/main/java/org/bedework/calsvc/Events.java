@@ -30,8 +30,8 @@ import org.bedework.caldav.util.filter.BooleanFilter;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttendee;
-import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
@@ -50,7 +50,6 @@ import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.configs.AuthProperties;
-import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.filter.RetrieveList;
 import org.bedework.calfacade.filter.SfpTokenizer;
 import org.bedework.calfacade.filter.SimpleFilterParser;
@@ -105,7 +104,12 @@ import static org.bedework.base.response.Response.Status.failed;
 import static org.bedework.base.response.Response.Status.forbidden;
 import static org.bedework.base.response.Response.Status.limitExceeded;
 import static org.bedework.base.response.Response.Status.noAccess;
-import static org.bedework.calcorei.CoreCollectionsI.GetSpecialCollectionResult;
+import static org.bedework.calfacade.exc.CalFacadeErrorCode.badRequest;
+import static org.bedework.calfacade.exc.CalFacadeErrorCode.collectionNotFound;
+import static org.bedework.calfacade.exc.CalFacadeErrorCode.duplicateGuid;
+import static org.bedework.calfacade.exc.CalFacadeErrorCode.missingEventProperty;
+import static org.bedework.calfacade.exc.CalFacadeErrorCode.noEventCalendar;
+import static org.bedework.calfacade.exc.CalFacadeErrorCode.schedulingTooManyAttendees;
 import static org.bedework.calsvci.EventsI.SetEntityCategoriesResult.success;
 
 /** This class handles fetching and updates of events.
@@ -312,7 +316,7 @@ class Events extends CalSvcDb implements EventsI {
                        final List<String> retrieveList)
           {
     if ((col == null) || (name == null)) {
-      throw new RuntimeException(CalFacadeErrorCode.badRequest);
+      throw new RuntimeException(badRequest);
     }
 
     if (col.getInternalAlias()) {
@@ -552,7 +556,7 @@ class Events extends CalSvcDb implements EventsI {
               !Util.isEmpty(atts) &&
               (atts.size() > maxAttendees)) {
         return updResult.notOk(limitExceeded,
-                               CalFacadeErrorCode.schedulingTooManyAttendees);
+                               schedulingTooManyAttendees);
       }
 
       final var currentTimestamp = getCurrentTimestamp();
@@ -577,7 +581,7 @@ class Events extends CalSvcDb implements EventsI {
                   !Util.isEmpty(ovAtts) &&
                   (ovAtts.size() > maxAttendees)) {
             return updResult.notOk(limitExceeded,
-                                  CalFacadeErrorCode.schedulingTooManyAttendees);
+                                  schedulingTooManyAttendees);
           }
 
           ovev.setDtstamps(currentTimestamp);
@@ -1208,7 +1212,7 @@ class Events extends CalSvcDb implements EventsI {
       resp.setMessage("created");
       return resp;
     } catch (final BedeworkException be) {
-      if (be.getMessage().equals(CalFacadeErrorCode.duplicateGuid)) {
+      if (be.getMessage().equals(duplicateGuid)) {
         return resp.notOk(forbidden, "duplicate uid");
       }
 
@@ -1622,9 +1626,13 @@ class Events extends CalSvcDb implements EventsI {
     if (!event.getTombstoned()) {
       // Handle some scheduling stuff.
 
-      final BwCollection cal;
+      final BwCollection col;
       try {
-        cal = getCols().get(event.getColPath());
+        col = getCols().get(event.getColPath());
+        if (col == null) {
+          return resp.error("Missing event collection " +
+                                    event.getColPath());
+        }
       } catch (final BedeworkException be) {
         return resp.error(be);
       }
@@ -1633,7 +1641,7 @@ class Events extends CalSvcDb implements EventsI {
       boolean organizerSchedulingObject = false;
 
       setScheduleState(event, false, false);
-      if (cal.getCollectionInfo().scheduling &&
+      if (col.getCollectionInfo().scheduling &&
               (event.getOrganizerSchedulingObject() ||
                        event.getAttendeeSchedulingObject())) {
         schedulingObject = true;
@@ -1646,7 +1654,7 @@ class Events extends CalSvcDb implements EventsI {
         for (final BwEventProxy ove: ei.getOverrideProxies()) {
           setScheduleState(ove, false, false);
 
-          if (cal.getCollectionInfo().scheduling &&
+          if (col.getCollectionInfo().scheduling &&
                   (ove.getOrganizerSchedulingObject() ||
                            ove.getAttendeeSchedulingObject())) {
             schedulingObject = true;
@@ -1664,7 +1672,7 @@ class Events extends CalSvcDb implements EventsI {
         /* According to CalDAV we're supposed to do this before we delete the
          * event. If it fails we now have no way to record that.
          *
-         * However that also requires a way to forcibly delete it so we need to
+         * However, that also requires a way to forcibly delete it so we need to
          * ensure we have that first. (Just don't set sendSchedulingMessage
          */
         final SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
@@ -1789,38 +1797,38 @@ class Events extends CalSvcDb implements EventsI {
                                 final boolean schedulingInbox,
                                 final boolean autoCreateCollection) {
     if (ev.getColPath() == null) {
-      throw new BedeworkException(CalFacadeErrorCode.noEventCalendar);
+      throw new BedeworkException(noEventCalendar);
     }
 
     if (ev.getNoStart() == null) {
-      throw new BedeworkException(CalFacadeErrorCode.missingEventProperty,
-                                   "noStart");
+      throw new BedeworkException(missingEventProperty,
+                                  "noStart");
     }
 
     if (ev.getDtstart() == null) {
-      throw new BedeworkException(CalFacadeErrorCode.missingEventProperty,
-                                   "dtstart");
+      throw new BedeworkException(missingEventProperty,
+                                  "dtstart");
     }
 
     if (ev.getDtend() == null) {
-      throw new BedeworkException(CalFacadeErrorCode.missingEventProperty,
-                                   "dtend");
+      throw new BedeworkException(missingEventProperty,
+                                  "dtend");
     }
 
     if (ev.getDuration() == null) {
-      throw new BedeworkException(CalFacadeErrorCode.missingEventProperty,
-                                   "duration");
+      throw new BedeworkException(missingEventProperty,
+                                  "duration");
     }
 
     if (ev.getRecurring() == null) {
-      throw new BedeworkException(CalFacadeErrorCode.missingEventProperty,
-                                   "recurring");
+      throw new BedeworkException(missingEventProperty,
+                                  "recurring");
     }
 
     if ((ev.getEntityType() != IcalDefs.entityTypeFreeAndBusy) &&
             (ev.getSummary() == null)) {
-      throw new BedeworkException(CalFacadeErrorCode.missingEventProperty,
-                                   "summary");
+      throw new BedeworkException(missingEventProperty,
+                                  "summary");
     }
 
     String checkedString = checkString(ev.getSummary());
@@ -1840,7 +1848,7 @@ class Events extends CalSvcDb implements EventsI {
     if (col == null) {
       if (!autoCreateCollection) {
         throw new BedeworkException(
-                CalFacadeErrorCode.collectionNotFound);
+                collectionNotFound);
       }
 
       // TODO - need a configurable default display name
@@ -1854,16 +1862,18 @@ class Events extends CalSvcDb implements EventsI {
         case Component.VTODO -> BwCollection.calTypeTasks;
         case Component.VPOLL -> BwCollection.calTypePoll;
         default -> throw new BedeworkException(
-                CalFacadeErrorCode.noEventCalendar);
+                noEventCalendar);
       };
 
-      final GetSpecialCollectionResult gscr =
-              getCal().getSpecialCollection(null, getPrincipal(), calType,
+      final var gscr =
+              getCal().getSpecialCollection(null,
+                                            getPrincipal(),
+                                            calType,
                                             true,
                                             PrivilegeDefs.privAny);
 
       if (gscr.cal == null) {
-        throw new BedeworkException(CalFacadeErrorCode.noEventCalendar);
+        throw new BedeworkException(noEventCalendar);
       }
 
       col = gscr.cal;

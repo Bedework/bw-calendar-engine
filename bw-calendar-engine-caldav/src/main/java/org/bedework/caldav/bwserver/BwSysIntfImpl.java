@@ -1589,10 +1589,10 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                           final String name,
                           final boolean copy,
                           final boolean overwrite) {
-    final Response resp = getSvci().getEventsHandler()
-                                   .copyMoveNamed(getEvinfo(from),
-                                                  unwrap(to), name,
-                                                  copy, overwrite, false);
+    final var resp = getSvci().getEventsHandler()
+                              .copyMoveNamed(getEvinfo(from),
+                                             unwrap(to), name,
+                                             copy, overwrite, false);
     if (resp.getException() != null) {
       throw new WebdavException(resp.getException());
     }

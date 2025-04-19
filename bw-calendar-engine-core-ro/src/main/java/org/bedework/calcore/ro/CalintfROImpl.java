@@ -816,7 +816,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public String getSyncToken(final String path) {
-    final BwCollection thisCol = this.getCollection(path, privAny, false);
+    final var thisCol = getCollection(path, privAny, false);
 
     if (thisCol == null) {
       return null;

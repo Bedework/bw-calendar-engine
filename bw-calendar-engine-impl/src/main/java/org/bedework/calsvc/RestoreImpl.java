@@ -26,8 +26,8 @@ import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
 import org.bedework.caldav.util.sharing.AccessType;
 import org.bedework.caldav.util.sharing.InviteType;
 import org.bedework.caldav.util.sharing.UserType;
-import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
@@ -38,7 +38,6 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwSystem;
-import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -135,7 +134,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       startTransaction();
 
       o.markUnsaved();
-      getCal().addRestoredEntity((BwUnversionedDbentity<?>)o);
+      getCal().addRestoredEntity(o);
     } catch (final Throwable t) {
       handleException(t, "Exception restoring user " + o);
     } finally {
@@ -149,7 +148,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       startTransaction();
 
       o.markUnsaved();
-      getCal().addRestoredEntity((BwUnversionedDbentity<?>)o);
+      getCal().addRestoredEntity(o);
 
       if (debug()) {
         log.debug("Saved admin group " + o);
@@ -341,17 +340,17 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
        * a preferences object being created. See if one exists.
        */
 
-      BwPreferences p = getSvc().getPreferences(o.getOwnerHref());
+      final BwPreferences p =
+              getSvc().getPreferences(o.getOwnerHref());
 
       if (p != null) {
         warn("Found instance of preferences for " + o.getOwnerHref());
         o.setId(p.getId());
         o.setSeq(p.getSeq());
-        //noinspection UnusedAssignment
         getCal().update(o);
       } else {
         /* Ensure views are unsaved objects */
-        final Collection<BwView> v = o.getViews();
+        final var v = o.getViews();
         if (v != null) {
           for (final BwView view: v) {
             view.markUnsaved();
