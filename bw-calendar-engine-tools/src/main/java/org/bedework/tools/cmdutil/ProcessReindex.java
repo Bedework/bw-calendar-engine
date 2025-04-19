@@ -19,7 +19,7 @@
 package org.bedework.tools.cmdutil;
 
 import org.bedework.base.exc.BedeworkAccessException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 
@@ -89,10 +89,10 @@ public class ProcessReindex extends CmdUtilHelper {
     int reindexed = 0;
 
     try {
-      BwCalendar col = null;
+      BwCollection col = null;
 
       try {
-        col = getSvci().getCalendarsHandler().get(path);
+        col = getSvci().getCollectionsHandler().get(path);
       } catch (final BedeworkAccessException ignored) {
         error("No access to " + path);
       }
@@ -164,7 +164,7 @@ public class ProcessReindex extends CmdUtilHelper {
       r.batchSize = 100;
     }
 
-    final BwCalendar col = getSvci().getCalendarsHandler().get(path);
+    final BwCollection col = getSvci().getCollectionsHandler().get(path);
 
     if (col == null) {
       warn("No collection");

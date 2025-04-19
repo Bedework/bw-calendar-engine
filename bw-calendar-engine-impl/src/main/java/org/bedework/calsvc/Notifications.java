@@ -22,7 +22,7 @@ import org.bedework.base.exc.BedeworkException;
 import org.bedework.caldav.util.notifications.NotificationType;
 import org.bedework.caldav.util.notifications.NotificationType.NotificationInfo;
 import org.bedework.caldav.util.notifications.parse.Parser;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
@@ -85,8 +85,8 @@ class Notifications extends CalSvcDb implements NotificationsI {
       return false;
     }
 
-    final BwCalendar ncol = getCols()
-            .getSpecial(BwCalendar.calTypeNotifications,
+    final BwCollection ncol = getCols()
+            .getSpecial(BwCollection.calTypeNotifications,
                         true);
 
     if (ncol == null) {
@@ -148,8 +148,8 @@ class Notifications extends CalSvcDb implements NotificationsI {
         return false;
       }
 
-      final BwCalendar ncol = getCols()
-              .getSpecial(BwCalendar.calTypeNotifications,
+      final BwCollection ncol = getCols()
+              .getSpecial(BwCollection.calTypeNotifications,
                           true);
 
       if (ncol == null) {
@@ -192,8 +192,8 @@ class Notifications extends CalSvcDb implements NotificationsI {
 
   @Override
   public NotificationType find(final String name) {
-    final BwCalendar ncol = getCols()
-            .getSpecial(BwCalendar.calTypeNotifications,
+    final BwCollection ncol = getCols()
+            .getSpecial(BwCollection.calTypeNotifications,
                         true);
 
     if (ncol == null) {
@@ -215,9 +215,9 @@ class Notifications extends CalSvcDb implements NotificationsI {
   @Override
   public NotificationType find(final String principalHref,
                                final String name) {
-    final BwCalendar ncol = getCols()
+    final BwCollection ncol = getCols()
             .getSpecial(principalHref,
-                        BwCalendar.calTypeNotifications,
+                        BwCollection.calTypeNotifications,
                         true);
 
     if (ncol == null) {
@@ -244,8 +244,8 @@ class Notifications extends CalSvcDb implements NotificationsI {
       return;
     }
 
-    final BwCalendar ncol = getCols()
-            .getSpecial(BwCalendar.calTypeNotifications,
+    final BwCollection ncol = getCols()
+            .getSpecial(BwCollection.calTypeNotifications,
                         true);
 
     if (ncol == null) {
@@ -265,9 +265,9 @@ class Notifications extends CalSvcDb implements NotificationsI {
       return;
     }
 
-    final BwCalendar ncol = getCols()
+    final BwCollection ncol = getCols()
             .getSpecial(principalHref,
-                        BwCalendar.calTypeNotifications,
+                        BwCollection.calTypeNotifications,
                         true);
 
     if (ncol == null) {
@@ -289,9 +289,9 @@ class Notifications extends CalSvcDb implements NotificationsI {
       return;
     }
 
-    final BwCalendar ncol = getCols()
+    final BwCollection ncol = getCols()
             .getSpecial(principalHref,
-                        BwCalendar.calTypeNotifications,
+                        BwCollection.calTypeNotifications,
                         true);
 
     if (ncol == null) {
@@ -310,9 +310,9 @@ class Notifications extends CalSvcDb implements NotificationsI {
       return;
     }
 
-    final BwCalendar ncol = getCols()
+    final BwCollection ncol = getCols()
             .getSpecial(principalHref,
-                        BwCalendar.calTypeNotifications,
+                        BwCollection.calTypeNotifications,
                         true);
 
     if (ncol == null) {
@@ -339,8 +339,8 @@ class Notifications extends CalSvcDb implements NotificationsI {
   public List<NotificationType> getMatching(final QName type) {
     final List<NotificationType> res = new ArrayList<>();
 
-    final BwCalendar ncol =
-            getCols().getSpecial(BwCalendar.calTypeNotifications,
+    final BwCollection ncol =
+            getCols().getSpecial(BwCollection.calTypeNotifications,
                                  true);
 
     if (ncol == null) {

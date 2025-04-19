@@ -22,7 +22,7 @@ import org.bedework.access.Access;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.WhoDefs;
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CollectionInfo;
@@ -227,13 +227,13 @@ class Users extends CalSvcDb implements UsersI {
     getSvc().initPrincipal(user);
     initPrincipal(user, getSvc());
 
-    for (final CollectionInfo ci: BwCalendar.getAllCollectionInfo()) {
+    for (final CollectionInfo ci: BwCollection.getAllCollectionInfo()) {
       if (!ci.provision) {
         continue;
       }
 
-      getCal().getSpecialCalendar(null, user, ci.collectionType,
-                                  true, PrivilegeDefs.privAny);
+      getCal().getSpecialCollection(null, user, ci.collectionType,
+                                    true, PrivilegeDefs.privAny);
     }
 
     getSvc().postNotification(
@@ -250,7 +250,7 @@ class Users extends CalSvcDb implements UsersI {
 
   @Override
   public void remove(final BwPrincipal<?> pr) {
-    final String userRoot = getSvc().getPrincipalInfo().getCalendarHomePath(pr);
+    final String userRoot = getSvc().getPrincipalInfo().getCollectionHomePath(pr);
 
     /* views */
 
@@ -269,9 +269,9 @@ class Users extends CalSvcDb implements UsersI {
 
     /* collections and user home */
 
-    final BwCalendar home = getSvc().getCalendarsHandler().get(userRoot);
+    final BwCollection home = getSvc().getCollectionsHandler().get(userRoot);
     if (home != null) {
-      ((Calendars)getCols()).delete(home, true, true, false, true);
+      ((Collections)getCols()).delete(home, true, true, false, true);
     }
 
     /* Remove preferences */
@@ -296,8 +296,8 @@ class Users extends CalSvcDb implements UsersI {
       I think this was a short-term fix that hung around.
       It's not a good idea. Makes session start inefficient. */
       getSvc().getCal()
-              .getSpecialCalendar(null, val, BwCalendar.calTypePoll,
-                                  true, PrivilegeDefs.privAny);
+              .getSpecialCollection(null, val, BwCollection.calTypePoll,
+                                    true, PrivilegeDefs.privAny);
     }
   }
 
@@ -322,9 +322,9 @@ class Users extends CalSvcDb implements UsersI {
 
     prefs.setDefaultCalendarPath(
       Util.buildPath(colPathEndsWithSlash,
-                     getSvc().getPrincipalInfo().getCalendarHomePath(principal),
+                     getSvc().getPrincipalInfo().getCollectionHomePath(principal),
                      "/",
-                     BasicSystemProperties.userDefaultCalendar));
+                     BasicSystemProperties.userDefaultCollection));
 
     // Add a default view for the calendar home
 
@@ -334,7 +334,7 @@ class Users extends CalSvcDb implements UsersI {
     view.setName(authPars.getDefaultUserViewName());
 
     // Add default subscription to the user root.
-    view.addCollectionPath(svc.getPrincipalInfo().getCalendarHomePath(principal));
+    view.addCollectionPath(svc.getPrincipalInfo().getCollectionHomePath(principal));
 
     prefs.addView(view);
     prefs.setPreferredView(view.getName());

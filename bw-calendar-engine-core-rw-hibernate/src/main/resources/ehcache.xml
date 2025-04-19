@@ -37,17 +37,17 @@
     <!-- Calendar cache - these change infrequently and we should be able to cache all entries
          in use
         -->
-    <cache alias="calendardb.org.bedework.calfacade.BwCalendar"
+    <cache alias="calendardb.org.bedework.calfacade.BwCollection"
            uses-template="caldefaults">
     </cache>
 
-    <cache alias="calendardb.org.bedework.calfacade.BwCalendar.children"
+    <cache alias="calendardb.org.bedework.calfacade.BwCollection.children"
            uses-template="caldefaults">
     </cache>
 
     <!-- calendar.categories cache - these change infrequently
         -->
-    <cache alias="calendardb.org.bedework.calfacade.BwCalendar.categories"
+    <cache alias="calendardb.org.bedework.calfacade.BwCollection.categories"
            uses-template="caldefaults">
     </cache>
 

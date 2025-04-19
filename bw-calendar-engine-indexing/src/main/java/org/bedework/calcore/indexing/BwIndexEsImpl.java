@@ -22,7 +22,7 @@ import org.bedework.access.CurrentAccess;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.indexing.DocBuilder.ItemKind;
 import org.bedework.caldav.util.filter.FilterBase;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
@@ -61,7 +61,7 @@ import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.util.AccessUtilI;
-import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.calfacade.wrappers.CollectionWrapper;
 import org.bedework.convert.RecurUtil;
 import org.bedework.convert.RecurUtil.RecurPeriods;
 import org.bedework.util.calendar.IcalDefs;
@@ -325,7 +325,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       }
     }
 
-    public CalendarWrapper checkAccess(final BwCalendar val) {
+    public CollectionWrapper checkAccess(final BwCollection val) {
       try {
         fetchAccessStart();
 
@@ -335,8 +335,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       }
     }
 
-    public CalendarWrapper checkAccess(final BwCalendar val,
-                                       final int desiredAccess) {
+    public CollectionWrapper checkAccess(final BwCollection val,
+                                         final int desiredAccess) {
       try {
         fetchAccessStart();
 
@@ -2084,11 +2084,11 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
-  public GetEntityResponse<BwCalendar> fetchCol(final String val,
-                                                final int desiredAccess,
-                                                final PropertyInfoIndex... index) {
-    final GetEntityResponse<BwCalendar> resp = new GetEntityResponse<>();
-    BwCalendar entity;
+  public GetEntityResponse<BwCollection> fetchCol(final String val,
+                                                  final int desiredAccess,
+                                                  final PropertyInfoIndex... index) {
+    final GetEntityResponse<BwCollection> resp = new GetEntityResponse<>();
+    BwCollection entity;
 
     if ((val == null) || (val.isEmpty())) {
       return resp.notOk(notFound);
@@ -2097,7 +2097,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     if ((index.length == 1) &&
             (index[0] == PropertyInfoIndex.HREF)) {
       checkCache();
-      entity = getCached(val, desiredAccess, CalendarWrapper.class);
+      entity = getCached(val, desiredAccess, CollectionWrapper.class);
 
       if (entity != null) {
         if (entity.getTombstoned()) {
@@ -2130,8 +2130,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     entity = makeCollection(eb);
 
     if (desiredAccess < 0) {
-      entity = new CalendarWrapper(entity,
-                                   accessCheck.getAccessUtil());
+      entity = new CollectionWrapper(entity,
+                                     accessCheck.getAccessUtil());
       caches.put(entity, desiredAccess);
       resp.setEntity(entity);
       if (debug()) {
@@ -2160,13 +2160,13 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
-  public Collection<BwCalendar> fetchChildren(final String href) {
+  public Collection<BwCollection> fetchChildren(final String href) {
     return fetchChildren(href, true);
   }
 
   @Override
-  public Collection<BwCalendar> fetchChildren(final String href,
-                                              final boolean excludeTombstoned) {
+  public Collection<BwCollection> fetchChildren(final String href,
+                                                final boolean excludeTombstoned) {
     if (debug()) {
       debug("fetchChildren for " + href);
     }
@@ -2179,12 +2179,12 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                               "false");
     }
 
-    final List<BwCalendar> cols =
+    final List<BwCollection> cols =
             fetchEntities(docTypeCollection,
                           new BuildEntity<>() {
                             @Override
-                            BwCalendar make(final EntityBuilder eb,
-                                            final String id) {
+                            BwCollection make(final EntityBuilder eb,
+                                              final String id) {
                               return accessCheck.checkAccess(
                                       makeCollection(eb));
                             }
@@ -2200,21 +2200,21 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
-  public Collection<BwCalendar> fetchChildrenDeep(final String href) {
+  public Collection<BwCollection> fetchChildrenDeep(final String href) {
     if (debug()) {
       debug("fetchChildrenDeep for " + href);
     }
 
-    final Collection<BwCalendar> cols = fetchChildren(href);
+    final Collection<BwCollection> cols = fetchChildren(href);
 
     if (Util.isEmpty(cols)) {
       return cols;
     }
 
-    final Collection<BwCalendar> res = new ArrayList<>(cols);
+    final Collection<BwCollection> res = new ArrayList<>(cols);
 
-    for (final BwCalendar col: cols) {
-      final Collection<BwCalendar> subcols = fetchChildren(col.getHref());
+    for (final BwCollection col: cols) {
+      final Collection<BwCollection> subcols = fetchChildren(col.getHref());
 
       if (Util.isEmpty(subcols)) {
         continue;
@@ -3290,9 +3290,9 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       final DocBuilder db = getDocBuilder();
 
-      if (rec instanceof BwCalendar) {
+      if (rec instanceof BwCollection) {
         mustBe(docTypeCollection);
-        di = db.makeDoc((BwCalendar)rec);
+        di = db.makeDoc((BwCollection)rec);
       }
 
       if (rec instanceof BwCategory) {
@@ -3379,8 +3379,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         return db.makeDoc((UpdateInfo)rec);
       }
 
-      if (rec instanceof BwCalendar) {
-        return db.makeDoc((BwCalendar)rec);
+      if (rec instanceof BwCollection) {
+        return db.makeDoc((BwCollection)rec);
       }
 
       if (rec instanceof BwCategory) {
@@ -3994,8 +3994,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
   }
 
-  private BwCalendar makeCollection(final EntityBuilder eb) {
-    final BwCalendar entity = eb.makeCollection();
+  private BwCollection makeCollection(final EntityBuilder eb) {
+    final BwCollection entity = eb.makeCollection();
 
     if (entity != null) {
       restoreCategories(entity);

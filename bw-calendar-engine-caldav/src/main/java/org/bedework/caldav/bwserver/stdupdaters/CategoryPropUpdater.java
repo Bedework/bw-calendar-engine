@@ -19,7 +19,7 @@
 
 package org.bedework.caldav.bwserver.stdupdaters;
 
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwString;
@@ -64,7 +64,7 @@ public class CategoryPropUpdater extends LangTextListPropUpdater {
     }
 
     if ((catMap != null) && (catMap.isTopicalArea())) {
-      final BwCalendar mapTo = ui.getCatMapInfo().getTopicalArea(catMap);
+      final BwCollection mapTo = ui.getCatMapInfo().getTopicalArea(catMap);
 
       if (mapTo == null) {
         // Should warn
@@ -73,11 +73,11 @@ public class CategoryPropUpdater extends LangTextListPropUpdater {
 
       // Add an x-prop to define the alias. Categories will be added by realias.
 
-      final BwCalendar aliasTarget = mapTo.getAliasTarget();
+      final BwCollection aliasTarget = mapTo.getAliasTarget();
       final BwXproperty xp = BwXproperty.makeBwAlias(
               mapTo.getName(),
               mapTo.getAliasUri().substring(
-                      BwCalendar.internalAliasUriPrefix.length()),
+                      BwCollection.internalAliasUriPrefix.length()),
               aliasTarget.getPath(),
               mapTo.getPath());
       ev.addXproperty(xp);

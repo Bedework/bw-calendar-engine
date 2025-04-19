@@ -28,7 +28,7 @@ import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.PrivilegeSet;
 import org.bedework.base.exc.BedeworkAccessException;
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEventProperty;
@@ -40,7 +40,7 @@ import org.bedework.calfacade.base.ShareableEntity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.AccessUtilI;
-import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.calfacade.wrappers.CollectionWrapper;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
@@ -55,7 +55,7 @@ import java.util.List;
  *
  * <p>It assumes access to the parent object when needed,
  * continuing on up to the root. For systems which do not allow for a
- * retrieval of the parent on calls to the getCalendar method, the getParent
+ * retrieval of the parent on calls to the getCollection method, the getParent
  * method for this class will need to be overridden. This would presumably
  * take place within the core implementation.
  *
@@ -73,10 +73,10 @@ public class AccessUtil implements Logged, AccessUtilI {
   public interface CollectionGetter {
     /** Get a collection given the path. No access checks are performed.
      *
-     * @param  path          String path of calendar
-     * @return BwCalendar null for unknown calendar
+     * @param  path          String path of collection
+     * @return BwCollection null for unknown collection
        */
-    BwCalendar getCollectionNoCheck(String path);
+    BwCollection getCollectionNoCheck(String path);
   }
 
   private CollectionGetter cg;
@@ -110,13 +110,13 @@ public class AccessUtil implements Logged, AccessUtilI {
   }
 
   /** Called to get the parent object for a shared entity. This method should be
-   * overriden if explicit calls to the back end calendar are required.
+   * overriden if explicit calls to the back end collection are required.
    *
    * @param val the shareable entity
-   * @return parent calendar or null.
+   * @return parent collection or null.
    */
   @Override
-  public BwCalendar getParent(final BwShareableContainedDbentity<?> val) {
+  public BwCollection getParent(final BwShareableContainedDbentity<?> val) {
     return cg.getCollectionNoCheck(val.getColPath());
   }
 
@@ -210,8 +210,8 @@ public class AccessUtil implements Logged, AccessUtilI {
       return null;
     }
 
-    if (ent instanceof CalendarWrapper) {
-      final CalendarWrapper col = (CalendarWrapper)ent;
+    if (ent instanceof CollectionWrapper) {
+      final CollectionWrapper col = (CollectionWrapper)ent;
 
       final CurrentAccess ca = col.getCurrentAccess(desiredAccess);
 
@@ -236,8 +236,8 @@ public class AccessUtil implements Logged, AccessUtilI {
     if (debug()) {
       final String cname = ent.getClass().getName();
       final String ident;
-      if (ent instanceof BwCalendar) {
-        ident = ((BwCalendar)ent).getPath();
+      if (ent instanceof BwCollection) {
+        ident = ((BwCollection)ent).getPath();
       } else {
         ident = ((BwUnversionedDbentity<?>)ent).getHref();
       }
@@ -271,8 +271,8 @@ public class AccessUtil implements Logged, AccessUtilI {
 
       final char[] aclChars;
 
-      if (ent instanceof BwCalendar) {
-        final BwCalendar cal = (BwCalendar)ent;
+      if (ent instanceof BwCollection) {
+        final BwCollection cal = (BwCollection)ent;
         final String path = cal.getPath();
 
         /* Special case the access to the user root e.g /user and
@@ -305,7 +305,7 @@ public class AccessUtil implements Logged, AccessUtilI {
           final var userCalPath = Util.buildPath(
                   BasicSystemProperties.colPathEndsWithSlash,
                   "/",
-                  BasicSystemProperties.userCalendarRoot);
+                  BasicSystemProperties.userCollectionRoot);
 
           if (userCalPath.equals(path)) {
             ca = Acl.defaultNonOwnerAccess;
@@ -382,8 +382,8 @@ public class AccessUtil implements Logged, AccessUtilI {
         ca = Acl.forceAccessAllowed(ca);
       }
 
-      if (ent instanceof CalendarWrapper) {
-        final CalendarWrapper col = (CalendarWrapper)ent;
+      if (ent instanceof CollectionWrapper) {
+        final CollectionWrapper col = (CollectionWrapper)ent;
 
         col.setCurrentAccess(ca, desiredAccess);
       }
@@ -412,18 +412,18 @@ public class AccessUtil implements Logged, AccessUtilI {
    * access then return the merged aces. We do this because we call getPathInfo
    * with a collection entity. That method will recurse up to the root.
    *
-   * For a calendar we just use the access for the calendar.
+   * For a collection we just use the access for the collection.
    *
-   * The calendar/container access might be cached in the pathInfoTable.
+   * The container access might be cached in the pathInfoTable.
    */
   private char[] getAclChars(final ShareableEntity ent,
                              final boolean isSuperUser) {
     if ((!(ent instanceof BwEventProperty)) &&
         (ent instanceof BwShareableContainedDbentity)) {
-      final BwCalendar container;
+      final BwCollection container;
 
-      if (ent instanceof BwCalendar) {
-        container = (BwCalendar)ent;
+      if (ent instanceof BwCollection) {
+        container = (BwCollection)ent;
       } else {
         container = getParent((BwShareableContainedDbentity<?>)ent);
       }
@@ -434,13 +434,13 @@ public class AccessUtil implements Logged, AccessUtilI {
 
       final String path = container.getPath();
 
-      final CalendarWrapper wcol = (CalendarWrapper)container;
+      final CollectionWrapper wcol = (CollectionWrapper)container;
 
       final String aclStr;
       char[] aclChars = null;
 
       /* Get access for the parent first if we have one */
-      final BwCalendar parent = getParent(wcol);
+      final BwCollection parent = getParent(wcol);
 
       if (parent != null) {
         aclStr = new String(merged(getAclChars(parent, isSuperUser),
@@ -469,7 +469,7 @@ public class AccessUtil implements Logged, AccessUtilI {
         aclChars = aclStr.toCharArray();
       }
 
-      if (ent instanceof BwCalendar) {
+      if (ent instanceof BwCollection) {
         return aclChars;
       }
 
@@ -549,10 +549,10 @@ public class AccessUtil implements Logged, AccessUtilI {
     }
   }
 
-  /* Create a merged Acl for the given calendar. Progresses up to the root of
+  /* Create a merged Acl for the given collection. Progresses up to the root of
    * the system merging acls as it goes.
    * /
-  private PathInfo getPathInfo(BwCalendar cal) {
+  private PathInfo getPathInfo(BwCollection cal) {
     PathInfo pi = new PathInfo();
     Collection<Ace> aces = new ArrayList<Ace>();
 
@@ -576,7 +576,7 @@ public class AccessUtil implements Logged, AccessUtilI {
         if (aclString == null) {
           if (cal.getColPath() == null) {
             // At root
-            throw new BedeworkException("Calendars must have default access set at root");
+            throw new BedeworkException("Collections must have default access set at root");
           }
         } else if (aces.isEmpty()) {
           aces.addAll(Acl.decode(aclString).getAces());
@@ -604,9 +604,9 @@ public class AccessUtil implements Logged, AccessUtilI {
     }
   } */
 
-  /* Update the merged Acl for the given calendar.
+  /* Update the merged Acl for the given collection.
    * Doesn't work because any children in the table need the access changing.
-  private void updatePathInfo(BwCalendar cal, Acl acl) {
+  private void updatePathInfo(BwCollection cal, Acl acl) {
     try {
       String path = cal.getPath();
       PathInfo pi = pathInfoMap.getInfo(path);

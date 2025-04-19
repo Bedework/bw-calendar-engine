@@ -39,7 +39,7 @@ import org.bedework.caldav.util.filter.EntityTypeFilter;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.caldav.util.filter.OrFilter;
 import org.bedework.calfacade.BwAlarm;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwContact;
@@ -80,7 +80,7 @@ import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.EventPeriod;
-import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.calfacade.wrappers.CollectionWrapper;
 import org.bedework.database.db.StatsEntry;
 import org.bedework.sysevents.events.EntityEvent;
 import org.bedework.sysevents.events.SysEventBase;
@@ -215,7 +215,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void indexEntityNow(final BwCalendar entity) {
+  public void indexEntityNow(final BwCollection entity) {
     throw new RuntimeException("Read only version");
   }
 
@@ -423,7 +423,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void changeAccess(final BwCalendar cal,
+  public void changeAccess(final BwCollection cal,
                            final Collection<Ace> aces,
                            final boolean replaceAll) {
     throw new BedeworkException("Read only version");
@@ -436,7 +436,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void defaultAccess(final BwCalendar cal,
+  public void defaultAccess(final BwCollection cal,
                             final AceWho who) {
     throw new BedeworkException("Read only version");
   }
@@ -456,9 +456,9 @@ public class CalintfROImpl extends CalintfBase
     return accessUtil.checkAccess(ent, desiredAccess, returnResult);
   }
 
-  public BwCalendar checkAccess(final CalendarWrapper col,
-                         final int desiredAccess,
-                         final boolean alwaysReturnResult) {
+  public BwCollection checkAccess(final CollectionWrapper col,
+                                  final int desiredAccess,
+                                  final boolean alwaysReturnResult) {
     if (col == null) {
       return null;
     }
@@ -513,18 +513,18 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public Collection<BwCalendar> getCalendars(final BwCalendar cal,
-                                             final BwIndexer indexer) {
+  public Collection<BwCollection> getCollections(final BwCollection cal,
+                                                 final BwIndexer indexer) {
     checkOpen();
 
     return getColIndexer(indexer).fetchChildren(cal.getHref());
   }
 
   @Override
-  public BwCalendar resolveAlias(final BwCalendar val,
-                                 final boolean resolveSubAlias,
-                                 final boolean freeBusy,
-                                 final BwIndexer indexer) {
+  public BwCollection resolveAlias(final BwCollection val,
+                                   final boolean resolveSubAlias,
+                                   final boolean freeBusy,
+                                   final BwIndexer indexer) {
     checkOpen();
 
     if ((val == null) || !val.getInternalAlias()) {
@@ -540,7 +540,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public GetEntityResponse<CollectionAliases> getAliasInfo(
-          final BwCalendar val) {
+          final BwCollection val) {
     final GetEntityResponse<CollectionAliases> res =
             new GetEntityResponse<>();
     final CollectionAliasesImpl cai = new CollectionAliasesImpl(val);
@@ -557,14 +557,14 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public List<BwCalendar> findAlias(final String val) {
+  public List<BwCollection> findAlias(final String val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public BwCalendar getCalendar(final String path,
-                                final int desiredAccess,
-                                final boolean alwaysReturnResult) {
+  public BwCollection getCollection(final String path,
+                                    final int desiredAccess,
+                                    final boolean alwaysReturnResult) {
     checkOpen();
 
     return getCollectionIdx(getColIndexer(),
@@ -572,31 +572,24 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public BwCalendar getCollectionNoCheck(final String path) {
+  public BwCollection getCollectionNoCheck(final String path) {
     checkOpen();
 
     return getCollectionIdx(getColIndexer(),
                             path, -1, true);
   }
 
-  public BwCalendar getCollection(final String path) {
+  public BwCollection getCollection(final String path) {
     checkOpen();
 
     return getCollectionIdx(getColIndexer(),
                             path, privAny, true);
   }
 
-  @Override
-  public BwCalendar getCollection(final String path,
-                                  final int desiredAccess,
-                                  final boolean alwaysReturnResult) {
-    return getCollectionIdx(getColIndexer(), path, desiredAccess, alwaysReturnResult);
-  }
-
-  private final static BwCalendar rootCol;
+  private final static BwCollection rootCol;
 
   static {
-    rootCol = new BwCalendar();
+    rootCol = new BwCollection();
     rootCol.setPath("/");
     rootCol.setPublick(false);
 
@@ -606,17 +599,17 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public BwCalendar getCollectionIdx(final BwIndexer indexer,
-                                     final String path,
-                                     final int desiredAccess,
-                                     final boolean alwaysReturnResult) {
+  public BwCollection getCollectionIdx(final BwIndexer indexer,
+                                       final String path,
+                                       final int desiredAccess,
+                                       final boolean alwaysReturnResult) {
     checkOpen();
 
     if ("/".equals(path)) {
       return rootCol;
     }
 
-    final GetEntityResponse<BwCalendar> ger =
+    final GetEntityResponse<BwCollection> ger =
             getColIndexer(indexer).fetchCol(path, desiredAccess,
                                          PropertyInfoIndex.HREF);
 
@@ -640,19 +633,19 @@ public class CalintfROImpl extends CalintfBase
   }
   
   @Override
-  public GetSpecialCalendarResult getSpecialCalendar(
+  public GetSpecialCollectionResult getSpecialCollection(
           final BwIndexer indexer,
           final BwPrincipal<?> owner,
           final int calType,
           final boolean create,
           final int access) {
-    final String name = getCalendarNameFromType(calType);
+    final String name = getCollectionNameFromType(calType);
     if (name == null) {
       // Not supported
       return null;
     }
 
-    final GetSpecialCalendarResult gscr = new GetSpecialCalendarResult();
+    final GetSpecialCollectionResult gscr = new GetSpecialCollectionResult();
 
     if (getPrincipalInfo() == null) {
       warn("No principal info - no special calendar");
@@ -660,7 +653,7 @@ public class CalintfROImpl extends CalintfBase
       return gscr;
     }
 
-    final String pathTo = getPrincipalInfo().getCalendarHomePath(owner);
+    final String pathTo = getPrincipalInfo().getCollectionHomePath(owner);
 
     if (getCollection(pathTo) == null) {
       gscr.noUserHome = true;
@@ -678,7 +671,7 @@ public class CalintfROImpl extends CalintfBase
     }
 
     // Return a fake one
-    gscr.cal = new BwCalendar();
+    gscr.cal = new BwCollection();
     gscr.cal.setName(name);
     gscr.cal.setPath(thePath);
     gscr.cal.setColPath(pathTo);
@@ -691,56 +684,56 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public BwCalendar add(final BwCalendar val,
-                        final String parentPath) {
+  public BwCollection add(final BwCollection val,
+                          final String parentPath) {
     checkOpen();
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void touchCalendar(final String path) {
+  public void touchCollection(final String path) {
     checkOpen();
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void touchCalendar(final BwCalendar col) {
+  public void touchCollection(final BwCollection col) {
     checkOpen();
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void updateCalendar(final BwCalendar val) {
+  public void updateCollection(final BwCollection val) {
     checkOpen();
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void renameCalendar(final BwCalendar val,
-                             final String newName) {
+  public void renameCollection(final BwCollection val,
+                               final String newName) {
     checkOpen();
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void moveCalendar(final BwCalendar val,
-                           final BwCalendar newParent) {
+  public void moveCollection(final BwCollection val,
+                             final BwCollection newParent) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public boolean deleteCalendar(final BwCalendar val,
-                                final boolean reallyDelete) {
+  public boolean deleteCollection(final BwCollection val,
+                                  final boolean reallyDelete) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public boolean isEmpty(final BwCalendar val) {
+  public boolean isEmpty(final BwCollection val) {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void addNewCalendars(final BwPrincipal<?> user) {
+  public void addNewCollections(final BwPrincipal<?> user) {
     throw new RuntimeException("Read only version");
   }
 
@@ -753,15 +746,15 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public Set<BwCalendar> getSynchCols(final String path,
-                                      final String token) {
-    final Collection<BwCalendar> cols;
+  public Set<BwCollection> getSynchCols(final String path,
+                                        final String token) {
+    final Collection<BwCollection> cols;
 
-    final Collection<BwCalendar> icols =
+    final Collection<BwCollection> icols =
             getColIndexer().fetchChildren(path, false);
     cols = new ArrayList<>();
 
-    for (final BwCalendar col: icols) {
+    for (final BwCollection col: icols) {
       if (token != null) {
         final String lastmod = token.substring(0, 16);
         final int seq = Integer.parseInt(token.substring(17), 16);
@@ -783,10 +776,10 @@ public class CalintfROImpl extends CalintfBase
       cols.add(col);
     }
 
-    final Set<BwCalendar> res = new TreeSet<>();
+    final Set<BwCollection> res = new TreeSet<>();
 
-    for (final BwCalendar col: cols) {
-      final BwCalendar wcol = wrap(col);
+    for (final BwCollection col: cols) {
+      final BwCollection wcol = wrap(col);
       final CurrentAccess ca = ac.checkAccess(wcol, privAny, true);
       if (!ca.getAccessAllowed()) {
         continue;
@@ -799,7 +792,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public boolean testSynchCol(final BwCalendar col,
+  public boolean testSynchCol(final BwCollection col,
                               final String token) {
     if (token == null) {
       return true;
@@ -823,7 +816,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public String getSyncToken(final String path) {
-    final BwCalendar thisCol = getCalendar(path, privAny, false);
+    final BwCollection thisCol = this.getCollection(path, privAny, false);
 
     if (thisCol == null) {
       return null;
@@ -840,18 +833,18 @@ public class CalintfROImpl extends CalintfBase
     final String fpath = fixPath(path); // Removes "/"
     final String fpathSlash = fpath + "/";
 
-    final Collection<BwCalendar> cols = getColIndexer().fetchChildrenDeep(fpath);
+    final Collection<BwCollection> cols = getColIndexer().fetchChildrenDeep(fpath);
 
     String token = thisCol.getLastmod().getTagValue();
 
-    for (final BwCalendar col: cols) {
+    for (final BwCollection col: cols) {
       final String colPath = col.getPath();
 
       if (!colPath.equals(fpath) && !colPath.startsWith(fpathSlash)) {
         continue;
       }
 
-      final BwCalendar wcol = wrap(col);
+      final BwCollection wcol = wrap(col);
       final CurrentAccess ca = ac.checkAccess(wcol, privAny, true);
       if (!ca.getAccessAllowed()) {
         continue;
@@ -892,7 +885,7 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public BwEvent getFreeBusy(final Collection<BwCalendar> cals,
+  public BwEvent getFreeBusy(final Collection<BwCollection> cals,
                              final BwPrincipal<?> who,
                              final BwDateTime start, final BwDateTime end,
                              final boolean returnAll,
@@ -1017,7 +1010,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public Collection<CoreEventInfo> getEvents(
-          final Collection <BwCalendar> calendars,
+          final Collection <BwCollection> calendars,
           final FilterBase filter,
           final BwDateTime startDate,
           final BwDateTime endDate,
@@ -1038,7 +1031,7 @@ public class CalintfROImpl extends CalintfBase
 
     if (!Util.isEmpty(calendars)) {
       FilterBase colfltr = null;
-      for (final BwCalendar c: calendars) {
+      for (final BwCollection c: calendars) {
         colfltr = FilterBase.addOrChild(colfltr,
                                         new BwCollectionFilter(null, c));
       }
@@ -1196,8 +1189,8 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public void moveEvent(final EventInfo ei,
-                        final BwCalendar from,
-                        final BwCalendar to) {
+                        final BwCollection from,
+                        final BwCollection to) {
     throw new RuntimeException("Read only version");
   }
 
@@ -1210,7 +1203,7 @@ public class CalintfROImpl extends CalintfBase
 
     final String fpath = fixPath(path);
 
-    final BwCalendar col = getCollection(fpath);
+    final BwCollection col = getCollection(fpath);
     ac.checkAccess(col, privAny, false);
     String lastmod = null;
     int seq = 0;
@@ -1331,7 +1324,7 @@ public class CalintfROImpl extends CalintfBase
     return getIndexer(owner.getPrincipalRef(),
                       BwIndexer.docTypeFilter).fetchFilter(
             makeHref(owner,
-                     BasicSystemProperties.userCalendarRoot,
+                     BasicSystemProperties.userCollectionRoot,
                      BasicSystemProperties.bedeworkResourceDirectory,
                      "filters", name));
   }
@@ -1844,16 +1837,16 @@ public class CalintfROImpl extends CalintfBase
    * @param indexer we use this one
    * @return targeted collection
    */
-  private BwCalendar resolveAlias(final BwCalendar val,
-                                  final boolean resolveSubAlias,
-                                  final boolean freeBusy,
-                                  final CollectionAliasesImpl cai,
-                                  final BwIndexer indexer) {
+  private BwCollection resolveAlias(final BwCollection val,
+                                    final boolean resolveSubAlias,
+                                    final boolean freeBusy,
+                                    final CollectionAliasesImpl cai,
+                                    final BwIndexer indexer) {
     if ((val == null) || !val.getInternalAlias()) {
       return val;
     }
 
-    final BwCalendar c = val.getAliasTarget();
+    final BwCollection c = val.getAliasTarget();
     if (c != null) {
       // Already fetched target
 
@@ -1861,9 +1854,9 @@ public class CalintfROImpl extends CalintfBase
         return c;
       }
 
-      final BwCalendar res = resolveAlias(c, true,
-                                          freeBusy, cai,
-                                          indexer);
+      final BwCollection res = resolveAlias(c, true,
+                                            freeBusy, cai,
+                                            indexer);
       res.setAliasOrigin(val);
 
       return res;
@@ -1878,7 +1871,7 @@ public class CalintfROImpl extends CalintfBase
       desiredAccess = privReadFreeBusy;
     }
 
-    BwCalendar col;
+    BwCollection col;
 
     try {
       col = getCollectionIdx(indexer,
@@ -1912,9 +1905,9 @@ public class CalintfROImpl extends CalintfBase
       return col;
     }
 
-    final BwCalendar res = resolveAlias(col, true,
-                                        freeBusy,
-                                        cai, indexer);
+    final BwCollection res = resolveAlias(col, true,
+                                          freeBusy,
+                                          cai, indexer);
     res.setAliasOrigin(val);
 
     return res;
@@ -1932,7 +1925,7 @@ public class CalintfROImpl extends CalintfBase
     return resChecked;
   }
 
-  private Collection<CoreEventInfo> getFreeBusyEntities(final Collection <BwCalendar> cals,
+  private Collection<CoreEventInfo> getFreeBusyEntities(final Collection <BwCollection> cals,
                                          final BwDateTime start, final BwDateTime end,
                                          final boolean ignoreTransparency) {
     /* Only events and freebusy for freebusy reports. */

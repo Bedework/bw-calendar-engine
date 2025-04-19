@@ -18,7 +18,7 @@
 */
 package org.bedework.tools.cmdutil;
 
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.svc.BwView;
 
 /**
@@ -113,7 +113,7 @@ public class ProcessAdd extends CmdUtilHelper {
         return false;
       }
 
-      final BwCalendar col = getCal();
+      final BwCollection col = getCal();
       
       if (col == null) {
         return false;

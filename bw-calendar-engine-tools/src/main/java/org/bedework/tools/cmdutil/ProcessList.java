@@ -18,7 +18,7 @@
 */
 package org.bedework.tools.cmdutil;
 
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 
 import java.util.ArrayList;
@@ -120,8 +120,8 @@ public class ProcessList extends CmdUtilHelper {
 
       open();
 
-      final BwCalendar home =
-              getSvci().getCalendarsHandler().getHome();
+      final BwCollection home =
+              getSvci().getCollectionsHandler().getHome();
 
       if (home == null) {
         error("No home");
@@ -136,11 +136,11 @@ public class ProcessList extends CmdUtilHelper {
     return true;
   }
 
-  private void listCollections(final BwCalendar col,
+  private void listCollections(final BwCollection col,
                                   final int depth) throws Throwable {
       listCol(col, depth);
 
-      if (col.getCalType() == BwCalendar.calTypeAlias) {
+      if (col.getCalType() == BwCollection.calTypeAlias) {
         return;
       }
 
@@ -148,14 +148,14 @@ public class ProcessList extends CmdUtilHelper {
         return;
       }
 
-      final Collection<BwCalendar> children =
-              getSvci().getCalendarsHandler().getChildren(col);
-      for (BwCalendar ch: children) {
+      final Collection<BwCollection> children =
+              getSvci().getCollectionsHandler().getChildren(col);
+      for (BwCollection ch: children) {
         listCollections(ch, depth + 1);
       }
   }
 
-  private void listCol(final BwCalendar col,
+  private void listCol(final BwCollection col,
                        final int depth) throws Throwable {
     final String s = col.toString();
 

@@ -37,9 +37,9 @@ public interface EventsDAO extends DAOBase {
                             boolean annotation,
                             boolean adding);
 
-  boolean calendarNameExists(BwEvent val,
-                             boolean annotation,
-                             boolean adding);
+  boolean collectionNameExists(BwEvent val,
+                               boolean annotation,
+                               boolean adding);
 
   @SuppressWarnings("unchecked")
   Collection<BwEventAnnotation> getAnnotations(

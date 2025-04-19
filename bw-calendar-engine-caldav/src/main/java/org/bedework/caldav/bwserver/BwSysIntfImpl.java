@@ -49,7 +49,7 @@ import org.bedework.caldav.util.sharing.InviteType;
 import org.bedework.caldav.util.sharing.ShareResultType;
 import org.bedework.caldav.util.sharing.ShareType;
 import org.bedework.caldav.util.sharing.UserType;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
@@ -89,7 +89,7 @@ import org.bedework.calfacade.svc.SharingReplyResult;
 import org.bedework.calfacade.util.CategoryMapInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.CalendarsI;
+import org.bedework.calsvci.CollectionsI;
 import org.bedework.calsvci.SynchReport;
 import org.bedework.calsvci.SynchReportItem;
 import org.bedework.convert.IcalTranslator;
@@ -445,13 +445,13 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
 
     /* This - or any target if an alias - cannot be filtered at the moment. */
-    final BwCalendar bwcol = ((BwCalDAVCollection)col).getCol();
+    final BwCollection bwcol = ((BwCalDAVCollection)col).getCol();
 
     if (bwcol.getFilterExpr() != null) {
       return false;
     }
 
-    BwCalendar leaf = bwcol;
+    BwCollection leaf = bwcol;
 
     while (leaf.getInternalAlias()) {
       leaf = resolveAlias(leaf, false);
@@ -476,7 +476,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       return false;
     }
 
-    return els[1].equals(BasicSystemProperties.userCalendarRoot);
+    return els[1].equals(BasicSystemProperties.userCollectionRoot);
   }
 
   @Override
@@ -662,11 +662,11 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     // SCHEDULE - just get home path and get default cal from user prefs.
 
     final String userHomePath = Util.buildPath(true,
-                                               getSvci().getPrincipalInfo().getCalendarHomePath(p));
+                                               getSvci().getPrincipalInfo().getCollectionHomePath(p));
 
     final String defaultCalendarPath =
             Util.buildPath(true, userHomePath, "/",
-                           BasicSystemProperties.userDefaultCalendar);
+                           BasicSystemProperties.userDefaultCollection);
     final String inboxPath =
             Util.buildPath(true, userHomePath, "/",
                            BasicSystemProperties.userInbox);
@@ -700,7 +700,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       // SCHEDULE - just get home path and get default cal from user prefs.
 
       String userHomePath = Util.buildPath(false, "/",
-                                           BasicSystemProperties.userCalendarRoot);
+                                           BasicSystemProperties.userCollectionRoot);
       if (pi.getPrincipalHref() == null) {
         return new CalPrincipalInfo(null,
                                     pi.getCard(),
@@ -728,7 +728,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       final String defaultCalendarPath =
               Util.buildPath(true, userHomePath, "/",
-                      BasicSystemProperties.userDefaultCalendar);
+                      BasicSystemProperties.userDefaultCollection);
       final String inboxPath =
               Util.buildPath(true, userHomePath, "/",
                              BasicSystemProperties.userInbox);
@@ -1037,15 +1037,15 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public Collection<String> getFreebusySet() {
     try {
-      final Collection<BwCalendar> cals = svci.getScheduler()
-                                              .getFreebusySet();
+      final Collection<BwCollection> cals = svci.getScheduler()
+                                                .getFreebusySet();
       final Collection<String> hrefs = new ArrayList<>();
 
       if (cals == null) {
         return hrefs;
       }
 
-      for (final BwCalendar cal: cals) {
+      for (final BwCollection cal: cals) {
         hrefs.add(getUrlHandler().prefix(cal.getPath()));
         //hrefs.add(getUrlPrefix() + cal.getPath());
       }
@@ -1391,7 +1391,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                                     final int depth,
                                     final TimeRange timeRange) {
     try {
-      final BwCalendar bwCol = unwrap(col);
+      final BwCollection bwCol = unwrap(col);
 
       final int calType = bwCol.getCalType();
 
@@ -1399,18 +1399,18 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         throw new WebdavForbidden(WebdavTags.supportedReport);
       }
 
-      final Collection<BwCalendar> cals = new ArrayList<>();
+      final Collection<BwCollection> cals = new ArrayList<>();
 
-      if (calType == BwCalendar.calTypeCalendarCollection) {
+      if (calType == BwCollection.calTypeCalendarCollection) {
         cals.add(bwCol);
       } else if (depth != 0) { /* Cannot return anything for 0 */
         /* Make new cal object with just calendar collections as children */
 
-        for (final BwCalendar ch: getSvci().getCalendarsHandler()
-                                           .getChildren(bwCol)) {
+        for (final BwCollection ch: getSvci().getCollectionsHandler()
+                                             .getChildren(bwCol)) {
           // For depth 1 we only add calendar collections
           if ((depth > 1) ||
-              (ch.getCalType() == BwCalendar.calTypeCalendarCollection)) {
+              (ch.getCalType() == BwCollection.calTypeCalendarCollection)) {
             cals.add(ch);
           }
         }
@@ -1502,12 +1502,12 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public CalDAVCollection<?> newCollectionObject(final boolean isCalendarCollection,
                                                  final String parentPath) {
-    final BwCalendar col = new BwCalendar();
+    final BwCollection col = new BwCollection();
 
     if (isCalendarCollection) {
-      col.setCalType(BwCalendar.calTypeCalendarCollection);
+      col.setCalType(BwCollection.calTypeCalendarCollection);
     } else {
-      col.setCalType(BwCalendar.calTypeFolder);
+      col.setCalType(BwCollection.calTypeFolder);
     }
 
     col.setColPath(parentPath);
@@ -1530,19 +1530,19 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
   @Override
   public int makeCollection(final CalDAVCollection<?> col) {
-    final BwCalendar bwCol = unwrap(col);
+    final BwCollection bwCol = unwrap(col);
 
     try {
-      getSvci().getCalendarsHandler().add(bwCol, bwCol.getColPath());
+      getSvci().getCollectionsHandler().add(bwCol, bwCol.getColPath());
       return HttpServletResponse.SC_CREATED;
     } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final BedeworkException be) {
       final String msg = be.getMessage();
-      if (CalFacadeErrorCode.duplicateCalendar.equals(msg)) {
+      if (CalFacadeErrorCode.duplicateCollection.equals(msg)) {
         throw new WebdavForbidden(WebdavTags.resourceMustBeNull);
       }
-      if (CalFacadeErrorCode.illegalCalendarCreation.equals(msg)) {
+      if (CalFacadeErrorCode.illegalCollectionCreation.equals(msg)) {
         throw new WebdavForbidden();
       }
       throw new WebdavException(be);
@@ -1557,8 +1557,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                        final boolean copy,
                        final boolean overwrite) {
     try {
-      final BwCalendar bwFrom = unwrap(from);
-      final BwCalendar bwTo = unwrap(to);
+      final BwCollection bwFrom = unwrap(from);
+      final BwCollection bwTo = unwrap(to);
 
       if (!copy) {
         /* Move the from collection to the new location "to".
@@ -1570,7 +1570,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
         if (bwFrom.getColPath().equals(bwTo.getColPath())) {
           // Rename
-          getSvci().getCalendarsHandler().rename(bwFrom, to.getName());
+          getSvci().getCollectionsHandler().rename(bwFrom, to.getName());
           return;
         }
       }
@@ -1616,13 +1616,13 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public CalDAVCollection<?> getCollection(final String path) {
     try {
-      final BwCalendar col = getSvci().getCalendarsHandler().get(path);
+      final BwCollection col = getSvci().getCollectionsHandler().get(path);
 
       if (col == null) {
         return null;
       }
 
-      getSvci().getCalendarsHandler().resolveAlias(col, true, false);
+      getSvci().getCollectionsHandler().resolveAlias(col, true, false);
 
       return new BwCalDAVCollection(this, col);
     } catch (final BedeworkAccessException ignored) {
@@ -1635,7 +1635,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public void updateCollection(final CalDAVCollection<?> col) {
     try {
-      getSvci().getCalendarsHandler().update(unwrap(col));
+      getSvci().getCollectionsHandler().update(unwrap(col));
     } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final BedeworkException be) {
@@ -1652,15 +1652,15 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   public void deleteCollection(final CalDAVCollection<?> col,
                                final boolean sendSchedulingMessage) {
     try {
-      getSvci().getCalendarsHandler().delete(unwrap(col), true,
-                                             sendSchedulingMessage);
+      getSvci().getCollectionsHandler().delete(unwrap(col), true,
+                                               sendSchedulingMessage);
     } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final BedeworkException be) {
       final String msg = be.getMessage();
 
       if (CalFacadeErrorCode.cannotDeleteDefaultCalendar.equals(msg) ||
-          CalFacadeErrorCode.cannotDeleteCalendarRoot.equals(msg)) {
+          CalFacadeErrorCode.cannotDeleteCollectionRoot.equals(msg)) {
         throw new WebdavForbidden();
       } else {
         throw new WebdavException(be);
@@ -1673,7 +1673,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public Collection<CalDAVCollection<?>> getCollections(final CalDAVCollection<?> col) {
     try {
-      final BwCalendar bwCol = unwrap(col);
+      final BwCollection bwCol = unwrap(col);
       boolean isUserHome = false;
       List<Integer> provisionedTypes = null;
 
@@ -1683,7 +1683,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         final String userHomePath =
                 Util.buildPath(true,
                                getSvci().getPrincipalInfo()
-                                        .getCalendarHomePath(
+                                        .getCollectionHomePath(
                                                 getPrincipal()));
 
         if (Util.buildPath(true, bwCol.getPath())
@@ -1692,7 +1692,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
           provisionedTypes = new ArrayList<>();
 
           for (final CollectionInfo ci:
-                  BwCalendar.getAllCollectionInfo()) {
+                  BwCollection.getAllCollectionInfo()) {
             if (ci.provision) {
               provisionedTypes.add(ci.collectionType);
             }
@@ -1700,8 +1700,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         }
       }
 
-      final CalendarsI ci = getSvci().getCalendarsHandler();
-      final Collection<BwCalendar> bwch = ci.getChildren(bwCol);
+      final CollectionsI ci = getSvci().getCollectionsHandler();
+      final Collection<BwCollection> bwch = ci.getChildren(bwCol);
 
       final Collection<CalDAVCollection<?>> ch = new ArrayList<>();
 
@@ -1709,7 +1709,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         return ch;
       }
 
-      for (final BwCalendar c: bwch) {
+      for (final BwCollection c: bwch) {
         if (bedeworkExtensionsEnabled() || !c.getName().startsWith(".")) {
           ci.resolveAlias(c, true, false);
           ch.add(new BwCalDAVCollection(this, c));
@@ -1723,7 +1723,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       if (isUserHome && !provisionedTypes.isEmpty()) {
         // Need to add some
         for (final int colType: provisionedTypes) {
-          final BwCalendar pcol =
+          final BwCollection pcol =
                   ci.getSpecial(currentPrincipal, colType,
                                 true, PrivilegeDefs.privAny);
 
@@ -1745,12 +1745,12 @@ public class BwSysIntfImpl implements Logged, SysIntf {
    * @param col to resolve
    * @param resolveSubAlias - if true and the alias points to an alias, resolve
    *                  down to a non-alias.
-   * @return BwCalendar
+   * @return BwCollection
    */
-  BwCalendar resolveAlias(final BwCalendar col,
-                          final boolean resolveSubAlias) {
+  BwCollection resolveAlias(final BwCollection col,
+                            final boolean resolveSubAlias) {
     try {
-      return getSvci().getCalendarsHandler().resolveAlias(col, resolveSubAlias, false);
+      return getSvci().getCollectionsHandler().resolveAlias(col, resolveSubAlias, false);
     } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
@@ -1890,14 +1890,14 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public String getSyncToken(final CalDAVCollection<?> col) {
     try {
-      final BwCalendar bwcol = ((BwCalDAVCollection)col).getCol();
+      final BwCollection bwcol = ((BwCalDAVCollection)col).getCol();
       String path = col.getPath();
 
       if (bwcol.getInternalAlias()) {
         path = bwcol.getAliasTarget().getPath();
       }
 
-      return "data:," + getSvci().getCalendarsHandler().getSyncToken(path);
+      return "data:," + getSvci().getCollectionsHandler().getSyncToken(path);
     } catch (final BedeworkAccessException ignored) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
@@ -2166,7 +2166,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
 
     try {
-      BwCalendar bwcol = null;
+      BwCollection bwcol = null;
       if (col != null) {
         bwcol = unwrap(col);
       }
@@ -2231,7 +2231,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     boolean rollback = true;
 
     try {
-      BwCalendar bwcol = null;
+      BwCollection bwcol = null;
       if (col != null) {
         bwcol = unwrap(col.resolveAlias(true));
       }
@@ -2400,7 +2400,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
     catMaps = ger.getEntity();
 
-    final Set<BwCalendar> topicalAreas;
+    final Set<BwCollection> topicalAreas;
 
     if (catMaps == null) {
       return new CategoryMapInfo(null, null);
@@ -2409,21 +2409,21 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     topicalAreas = new TreeSet<>();
 
     // We'll need all the topical areas for the calsuite
-    final BwCalendar home =
-            getSvci().getCalendarsHandler().get(getSvci().getPrincipalInfo().getCalendarHomePath());
+    final BwCollection home =
+            getSvci().getCollectionsHandler().get(getSvci().getPrincipalInfo().getCollectionHomePath());
     if (home == null) {
       throw new RuntimeException("No home directory");
     }
 
-    final Collection<BwCalendar> children = getSvci().
-            getCalendarsHandler().getChildren(home);
-    for (final BwCalendar child: children) {
+    final Collection<BwCollection> children = getSvci().
+            getCollectionsHandler().getChildren(home);
+    for (final BwCollection child: children) {
       if (!child.getIsTopicalArea()) {
         continue;
       }
 
       final GetEntityResponse<CollectionAliases> geca =
-              getSvci().getCalendarsHandler().getAliasInfo(child);
+              getSvci().getCollectionsHandler().getAliasInfo(child);
       if (!geca.isOk()) {
         throw new RuntimeException("Failed to get alias info: " +
                                            geca.getMessage());
@@ -2462,7 +2462,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       toRemove.add(cat);
 
       if (catMap.isTopicalArea()) {
-        final BwCalendar mapTo = cm.getTopicalArea(catMap);
+        final BwCollection mapTo = cm.getTopicalArea(catMap);
 
         if (mapTo == null) {
           // Should warn
@@ -2471,11 +2471,11 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
         // Add an x-prop to define the alias. Categories will be added by realias.
 
-        final BwCalendar aliasTarget = mapTo.getAliasTarget();
+        final BwCollection aliasTarget = mapTo.getAliasTarget();
         final BwXproperty xp = BwXproperty.makeBwAlias(
                 mapTo.getName(),
                 mapTo.getAliasUri().substring(
-                        BwCalendar.internalAliasUriPrefix.length()),
+                        BwCollection.internalAliasUriPrefix.length()),
                 aliasTarget.getPath(),
                 mapTo.getPath());
         ev.addXproperty(xp);
@@ -2600,7 +2600,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     throw new WebdavForbidden(errorCode);
   }
 
-  private BwCalendar unwrap(final CalDAVCollection<?> col) {
+  private BwCollection unwrap(final CalDAVCollection<?> col) {
     if (col == null) {
       return null;
     }

@@ -18,7 +18,7 @@
  */
 package org.bedework.calcore.ro;
 
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.CollectionAliases;
 
 import java.util.ArrayList;
@@ -35,15 +35,15 @@ import java.util.List;
 public class CollectionAliasesImpl implements CollectionAliases {
   /* The collection that was queried.
    */
-  private final BwCalendar collection;
+  private final BwCollection collection;
 
   /* Any aliases
    */
-  private final List<BwCalendar> aliased = new ArrayList<>();
+  private final List<BwCollection> aliased = new ArrayList<>();
 
   private boolean circular;
 
-  private BwCalendar invalidAlias;
+  private BwCollection invalidAlias;
 
   // Used while building the list
   private final ArrayList<String> pathElements = new ArrayList<>();
@@ -51,7 +51,7 @@ public class CollectionAliasesImpl implements CollectionAliases {
   /**
    * @param collection collection of interest
    */
-  public CollectionAliasesImpl(final BwCalendar collection) {
+  public CollectionAliasesImpl(final BwCollection collection) {
     this.collection = collection;
     pathElements.add(collection.getPath());
   }
@@ -59,7 +59,7 @@ public class CollectionAliasesImpl implements CollectionAliases {
   /**
    * @return collection that was queried.
    */
-  public BwCalendar getCollection() {
+  public BwCollection getCollection() {
     return collection;
   }
 
@@ -67,16 +67,16 @@ public class CollectionAliasesImpl implements CollectionAliases {
    * @return chain of aliases closest to collection first.
    *         Empty for none.
    */
-  public List<BwCalendar> getAliased() {
+  public List<BwCollection> getAliased() {
     return aliased;
   }
 
-  void setInvalidAlias(final BwCalendar val) {
+  void setInvalidAlias(final BwCollection val) {
     invalidAlias = val;
   }
 
   @Override
-  public BwCalendar getInvalidAlias() {
+  public BwCollection getInvalidAlias() {
     return invalidAlias;
   }
 
@@ -91,7 +91,7 @@ public class CollectionAliasesImpl implements CollectionAliases {
    * @param val collection
    * @return true added - false means we saw it before - list is circular
    */
-  boolean addCollection(final BwCalendar val) {
+  boolean addCollection(final BwCollection val) {
     final String path = val.getPath();
 
     if (pathElements.contains(path)) {
@@ -105,7 +105,7 @@ public class CollectionAliasesImpl implements CollectionAliases {
     return true;
   }
 
-  void markBad(final BwCalendar val) {
+  void markBad(final BwCollection val) {
     invalidAlias = val;
   }
 }

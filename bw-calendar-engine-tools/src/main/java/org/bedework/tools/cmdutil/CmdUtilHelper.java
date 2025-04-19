@@ -20,7 +20,7 @@ package org.bedework.tools.cmdutil;
 
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.caldav.util.filter.FilterBase;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
@@ -35,7 +35,7 @@ import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.CalendarsI;
+import org.bedework.calsvci.CollectionsI;
 import org.bedework.calsvci.EventsI;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
@@ -79,8 +79,8 @@ public abstract class CmdUtilHelper implements Logged {
     return pstate.getSvci();
   }
 
-  protected CalendarsI getCols() {
-    return pstate.getSvci().getCalendarsHandler();
+  protected CollectionsI getCols() {
+    return pstate.getSvci().getCollectionsHandler();
   }
 
   protected EventsI getEvents() {
@@ -134,20 +134,20 @@ public abstract class CmdUtilHelper implements Logged {
 
   /* expect a possibly quoted path next
    */
-  protected BwCalendar getCal() throws Throwable {
+  protected BwCollection getCal() throws Throwable {
     return getCal(wordOrQuotedVal());
   }
 
-  protected BwCalendar getCal(final String path) throws Throwable {
+  protected BwCollection getCal(final String path) throws Throwable {
     if (path == null) {
       error("Expected a path");
       return null;
     }
 
-    final BwCalendar cal = getSvci().getCalendarsHandler().get(path);
+    final BwCollection cal = getSvci().getCollectionsHandler().get(path);
 
     if (cal == null) {
-      error("Unable to access calendar " + path);
+      error("Unable to access collection " + path);
     }
 
     return cal;
@@ -269,16 +269,16 @@ public abstract class CmdUtilHelper implements Logged {
     return true;
   }
 
-  protected BwCalendar makeCollection(final String type,
-                                      final String parentPath,
-                                      final String calName,
-                                      final String calSummary,
-                                      final String aliasTarget,
-                                      final String ownerHref,
-                                      final String creatorHref,
-                                      final String description,
-                                      final String filter,
-                                      final List<String> catuids) throws Throwable {
+  protected BwCollection makeCollection(final String type,
+                                        final String parentPath,
+                                        final String calName,
+                                        final String calSummary,
+                                        final String aliasTarget,
+                                        final String ownerHref,
+                                        final String creatorHref,
+                                        final String description,
+                                        final String filter,
+                                        final List<String> catuids) throws Throwable {
     final int calType;
     boolean topicalArea  = false;
 
@@ -289,16 +289,16 @@ public abstract class CmdUtilHelper implements Logged {
 
     switch (type) {
       case "folder":
-        calType = BwCalendar.calTypeFolder;
+        calType = BwCollection.calTypeFolder;
         break;
       case "calendar":
-        calType = BwCalendar.calTypeCalendarCollection;
+        calType = BwCollection.calTypeCalendarCollection;
         break;
       case "alias":
-        calType = BwCalendar.calTypeAlias;
+        calType = BwCollection.calTypeAlias;
         break;
       case "topic":
-        calType = BwCalendar.calTypeAlias;
+        calType = BwCollection.calTypeAlias;
         topicalArea = true;
         break;
       default:
@@ -331,22 +331,22 @@ public abstract class CmdUtilHelper implements Logged {
       return null;
     }
 
-    final BwCalendar cal = new BwCalendar();
+    final BwCollection cal = new BwCollection();
 
     cal.setName(calName);
     cal.setSummary(calSummary);
     cal.setCalType(calType);
     //cal.setPath(parentPath + "/" + calName);
 
-    if (calType == BwCalendar.calTypeAlias) {
-      final BwCalendar target = getCal(aliasTarget);
+    if (calType == BwCollection.calTypeAlias) {
+      final BwCollection target = getCal(aliasTarget);
 
       if (target == null) {
         error("Require a target for alias");
         return null;
       }
 
-      cal.setAliasUri(BwCalendar.internalAliasUriPrefix +
+      cal.setAliasUri(BwCollection.internalAliasUriPrefix +
                               target.getPath());
 
       if (topicalArea) {
@@ -414,9 +414,9 @@ public abstract class CmdUtilHelper implements Logged {
     }
 
     try {
-      getSvci().getCalendarsHandler().add(cal, parentPath);
+      getSvci().getCollectionsHandler().add(cal, parentPath);
     } catch (final BedeworkException be) {
-      if (CalFacadeErrorCode.duplicateCalendar.equals(be.getMessage())) {
+      if (CalFacadeErrorCode.duplicateCollection.equals(be.getMessage())) {
         error("Collection " + calName + " already exists on path " + parentPath);
         return null;
       }
@@ -451,22 +451,22 @@ public abstract class CmdUtilHelper implements Logged {
     return loc;
   }
 
-  protected BwCalendar getAliasTarget(final BwCalendar col) throws Throwable {
-    return getSvci().getCalendarsHandler().resolveAlias(col,
-                                                        true,
-                                                        false);
+  protected BwCollection getAliasTarget(final BwCollection col) throws Throwable {
+    return getSvci().getCollectionsHandler().resolveAlias(col,
+                                                          true,
+                                                          false);
   }
 
   /* expect a possibly quoted path next
    */
   protected String getAliasPath() throws Throwable {
-    final BwCalendar cal = getCal();
+    final BwCollection cal = getCal();
 
     if (cal == null) {
       return null;
     }
 
-    if (cal.getCalType() != BwCalendar.calTypeAlias) {
+    if (cal.getCalType() != BwCollection.calTypeAlias) {
       error(cal.getPath() + " is not an alias");
       return null;
     }

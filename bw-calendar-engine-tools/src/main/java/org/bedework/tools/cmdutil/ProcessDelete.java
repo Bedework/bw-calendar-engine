@@ -19,7 +19,7 @@
 package org.bedework.tools.cmdutil;
 
 import org.bedework.base.exc.BedeworkAccessException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
@@ -107,7 +107,7 @@ public class ProcessDelete extends CmdUtilHelper {
   }
 
   private boolean deleteCollection() throws Throwable {
-    BwCalendar cal = null;
+    BwCollection cal = null;
 
     try {
       open();
@@ -120,7 +120,7 @@ public class ProcessDelete extends CmdUtilHelper {
 
       final boolean emptyIt = "recursive".equals(word());
 
-      getSvci().getCalendarsHandler().delete(cal, emptyIt, false);
+      getSvci().getCollectionsHandler().delete(cal, emptyIt, false);
 
       return true;
     } catch (final BedeworkAccessException ignored) {

@@ -19,7 +19,7 @@
 package org.bedework.inoutsched.processors;
 
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.ScheduleResult;
@@ -125,8 +125,8 @@ public abstract class InProcessor extends CalSvcHelperRw {
     }
 
     try {
-      final BwCalendar inbox = getSvc().getCalendarsHandler().
-              getSpecial(BwCalendar.calTypeInbox, false);
+      final BwCollection inbox = getSvc().getCollectionsHandler().
+                                         getSpecial(BwCollection.calTypeInbox, false);
       if (inbox == null) {
         return resp;
       }

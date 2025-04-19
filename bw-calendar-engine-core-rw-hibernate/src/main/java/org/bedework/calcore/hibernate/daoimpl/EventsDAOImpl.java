@@ -299,26 +299,26 @@ public class EventsDAOImpl extends DAOBaseImpl
     return res;
   }
 
-  private final static String calendarNameExistsQuery =
+  private final static String collectionNameExistsQuery =
           "select count(*) from BwEventObj ev " +
                   "where ev.tombstoned = false and ";
 
-  private final static String calendarNameAnnotationExistsQuery =
+  private final static String collectionNameAnnotationExistsQuery =
           "select count(*) from BwEventAnnotation ev " +
                   "where ev.tombstoned = false and ";
 
   @Override
-  public boolean calendarNameExists(final BwEvent val,
-                                    final boolean annotation,
-                                    final boolean adding) {
+  public boolean collectionNameExists(final BwEvent val,
+                                      final boolean annotation,
+                                      final boolean adding) {
     final var sess = getSess();
 
     final StringBuilder sb = new StringBuilder();
 
     if (!annotation) {
-      sb.append(calendarNameExistsQuery);
+      sb.append(collectionNameExistsQuery);
     } else {
-      sb.append(calendarNameAnnotationExistsQuery);
+      sb.append(collectionNameAnnotationExistsQuery);
     }
 
     BwEvent testEvent = null;

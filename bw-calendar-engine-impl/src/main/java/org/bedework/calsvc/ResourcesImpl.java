@@ -21,7 +21,7 @@ package org.bedework.calsvc;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.base.exc.BedeworkForbidden;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.configs.BasicSystemProperties;
@@ -101,7 +101,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         getCal().updateContent(val, rc);
       }
 
-      getSvc().touchCalendar(getCols().get(val.getColPath()));
+      getSvc().touchCollection(getCols().get(val.getColPath()));
     } catch (final BedeworkException be) {
       getSvc().rollbackTransaction();
       throw be;
@@ -122,13 +122,13 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     try {
       getSvc().setupSharableEntity(val, getPrincipal().getPrincipalRef());
 
-      final BwCalendar collTo = getCols().get(to);
+      final BwCollection collTo = getCols().get(to);
 
       if (collTo == null) {
         throw new BedeworkException(CalFacadeErrorCode.collectionNotFound, to);
       }
 
-      if (collTo.getCalType() != BwCalendar.calTypeFolder) {
+      if (collTo.getCalType() != BwCollection.calTypeFolder) {
         // Only allowed into a folder.
         throw new BedeworkException(CalFacadeErrorCode.badRequest, to);
       }
@@ -197,14 +197,14 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       if (!copy) {
         // Delete the old one
 
-        final BwCalendar collFrom = getCols().get(val.getColPath());
+        final BwCollection collFrom = getCols().get(val.getColPath());
         checkAccess(collFrom, PrivilegeDefs.privUnbind, false);
 
         getCal().delete(val);
-        getSvc().touchCalendar(val.getColPath());
+        getSvc().touchCollection(val.getColPath());
       }
 
-      getSvc().touchCalendar(to);
+      getSvc().touchCollection(to);
 
       return createdNew;
     } catch (final BedeworkException be) {
@@ -230,7 +230,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     }
 
     final Set<String> checkedCollections = new TreeSet<>();
-    final var cols = getSvc().getCalendarsHandler();
+    final var cols = getSvc().getCollectionsHandler();
 
     while (ents.hasNext()) {
       final BwResource ent = ents.next();
@@ -258,11 +258,11 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
       if (!checkedCollections.contains(parentPath)) {
         try {
-          final BwCalendar col = cols.get(parentPath);
+          final BwCollection col = cols.get(parentPath);
           if (col != null) {
             create = false;
 
-            if (getSvc().getCalendarsHandler().getIdx(parentPath) == null) {
+            if (getSvc().getCollectionsHandler().getIdx(parentPath) == null) {
               // Ensure it's indexed
               collectionIndexer.indexEntity(col);
             }
@@ -275,9 +275,9 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
           info("Resources: manufacture parent for resource " + ent.getHref());
 
           final SplitResult sr = splitUri(parentPath);
-          final BwCalendar parent = new BwCalendar();
+          final BwCollection parent = new BwCollection();
 
-          parent.setCalType(BwCalendar.calTypeFolder);
+          parent.setCalType(BwCollection.calTypeFolder);
           parent.setColPath(sr.path);
           parent.setPath(parentPath);
           parent.setName(sr.name);
@@ -287,8 +287,8 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
           try {
             // This will get indexed in the wrong place
-            final BwCalendar newCol =
-                    getSvc().getCalendarsHandler().add(parent, sr.path);
+            final BwCollection newCol =
+                    getSvc().getCollectionsHandler().add(parent, sr.path);
 
             collectionIndexer.indexEntity(newCol);
           } catch (final Throwable t) {
@@ -326,7 +326,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       }
 
 
-      final BwCalendar coll = getCols().get(path);
+      final BwCollection coll = getCols().get(path);
 
       if (coll == null) {
         throw new BedeworkException(CalFacadeErrorCode.collectionNotFound, path);
@@ -334,7 +334,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
       if (forNotification) {
         // We allow this for subscription only
-        if (coll.getCalType() != BwCalendar.calTypeNotifications) {
+        if (coll.getCalType() != BwCollection.calTypeNotifications) {
           throw new BedeworkException(CalFacadeErrorCode.badRequest, path);
         }
       } else if (getSvc().getPrincipalInfo().getSubscriptionsOnly()) {
@@ -363,8 +363,8 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
       val.setColPath(path);
 
-      if ((coll.getCalType() == BwCalendar.calTypeCalendarCollection) ||
-              (coll.getCalType() == BwCalendar.calTypeExtSub)) {
+      if ((coll.getCalType() == BwCollection.calTypeCalendarCollection) ||
+              (coll.getCalType() == BwCollection.calTypeExtSub)) {
         throw new BedeworkException(CalFacadeErrorCode.badRequest, path);
       }
 
@@ -378,7 +378,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
       getCal().addContent(val, rc);
 
-      getSvc().touchCalendar(coll);
+      getSvc().touchCollection(coll);
 
       return true;
     } catch (final BedeworkException be) {

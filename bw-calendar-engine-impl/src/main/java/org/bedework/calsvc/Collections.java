@@ -23,12 +23,11 @@ import org.bedework.access.PrivilegeDefs;
 import org.bedework.base.exc.BedeworkAccessException;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.base.exc.BedeworkForbidden;
-import org.bedework.calcorei.Calintf;
-import org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
+import org.bedework.calcorei.CoreCollectionsI.GetSpecialCollectionResult;
 import org.bedework.caldav.util.sharing.InviteType;
 import org.bedework.caldav.util.sharing.UserType;
 import org.bedework.calfacade.AliasesInfo;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
@@ -40,7 +39,7 @@ import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.calsvci.CalendarsI;
+import org.bedework.calsvci.CollectionsI;
 import org.bedework.calsvci.ResourcesI;
 import org.bedework.calsvci.SynchI;
 import org.bedework.util.caching.FlushMap;
@@ -66,56 +65,56 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
-import static org.bedework.calfacade.configs.BasicSystemProperties.publicCalendarRootPath;
+import static org.bedework.calfacade.configs.BasicSystemProperties.publicCollectionRootPath;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeCollection;
 
-/** This acts as an interface to the database for calendars.
+/** This acts as an interface to the database for collections.
  *
  * @author Mike Douglass       douglm - rpi.edu
  */
-class Calendars extends CalSvcDb implements CalendarsI {
+class Collections extends CalSvcDb implements CollectionsI {
   /** Constructor
    *
    * @param svci interface
    */
-  Calendars(final CalSvc svci) {
+  Collections(final CalSvc svci) {
     super(svci);
 
-    //userCalendarRootPath = "/" + getBasicSyspars().getUserCalendarRoot();
+    //userCollectionRootPath = "/" + getBasicSyspars().getUserCollectionRoot();
   }
 
   @Override
-  public String getPublicCalendarsRootPath() {
-    return publicCalendarRootPath;
+  public String getPublicCollectionsRootPath() {
+    return publicCollectionRootPath;
   }
 
   @Override
-  public BwCalendar getPublicCalendars() {
+  public BwCollection getPublicCollections() {
     return getCal().getCollectionIdx(getSvc().getIndexer(true, docTypeCollection),
-                                     publicCalendarRootPath,
+                                     publicCollectionRootPath,
                                      PrivilegeDefs.privRead, true);
   }
 
-  public BwCalendar getPrimaryPublicPath() {
+  public BwCollection getPrimaryPublicPath() {
     try {
-      return findPrimary(getPublicCalendars());
+      return findPrimary(getPublicCollections());
     } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
   }
 
-  private BwCalendar findPrimary(final BwCalendar root) {
+  private BwCollection findPrimary(final BwCollection root) {
     if (root.getAlias()) {
       return null;
     }
 
-    final BwCalendar col = resolveAlias(root, true, false);
+    final BwCollection col = resolveAlias(root, true, false);
     if (col == null) {
       // No access or gone
       return null;
     }
 
-    if (col.getCalType() == BwCalendar.calTypeCalendarCollection) {
+    if (col.getCalType() == BwCollection.calTypeCalendarCollection) {
       if (col.getPrimaryCollection()) {
         return col;
       }
@@ -128,7 +127,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return null;
     }
 
-    for (final BwCalendar ch: getChildren(root)) {
+    for (final BwCollection ch: getChildren(root)) {
       final var res = findPrimary(ch);
       if (res != null) {
         return res;
@@ -141,7 +140,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   @Override
   public String getHomePath() {
     if (isGuest()) {
-      return publicCalendarRootPath;
+      return publicCollectionRootPath;
     }
 
     if (!isPublicAdmin()) {
@@ -150,11 +149,11 @@ class Calendars extends CalSvcDb implements CalendarsI {
                               getSvc().getSystemProperties().getSubmissionRoot());
       }
 
-      return getSvc().getPrincipalInfo().getCalendarHomePath();
+      return getSvc().getPrincipalInfo().getCollectionHomePath();
     }
 
     if (!getSvc().getSystemProperties().getWorkflowEnabled()) {
-      return publicCalendarRootPath;
+      return publicCollectionRootPath;
     }
 
     final BwAuthUser au = getSvc().getUserAuth()
@@ -164,7 +163,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     final boolean isApprover = isSuper() ||
             ((au != null) && au.isApproverUser());
     if (isApprover) {
-      return publicCalendarRootPath;
+      return publicCollectionRootPath;
     }
 
     // Otherwise we point them at the unapproved home.
@@ -173,11 +172,11 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public BwCalendar getHome() {
+  public BwCollection getHome() {
     final var home = getHomePath();
     final var cal =
-            getCal().getCalendar(home,
-                                 PrivilegeDefs.privRead, true);
+            getCal().getCollection(home,
+                                   PrivilegeDefs.privRead, true);
     if (cal == null) {
       warn("No home directory: " + home);
     }
@@ -186,21 +185,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public BwCalendar getHome(final BwPrincipal principal,
-                            final boolean freeBusy) {
-    final int priv;
-    if (freeBusy) {
-      priv = PrivilegeDefs.privReadFreeBusy;
-    } else {
-      priv = PrivilegeDefs.privRead;
-    }
-    return getCal().getCollectionIdx(getSvc().getIndexer(false, docTypeCollection),
-                                     getSvc().getPrincipalInfo().getCalendarHomePath(principal),
-                                     priv, true);
-  }
-
-  @Override
-  public BwCalendar getHomeDb(final BwPrincipal principal,
+  public BwCollection getHome(final BwPrincipal principal,
                               final boolean freeBusy) {
     final int priv;
     if (freeBusy) {
@@ -208,11 +193,25 @@ class Calendars extends CalSvcDb implements CalendarsI {
     } else {
       priv = PrivilegeDefs.privRead;
     }
-    return getCal().getCalendar(getSvc().getPrincipalInfo().getCalendarHomePath(principal),
-                                priv, true);
+    return getCal().getCollectionIdx(getSvc().getIndexer(false, docTypeCollection),
+                                     getSvc().getPrincipalInfo().getCollectionHomePath(principal),
+                                     priv, true);
+  }
+
+  @Override
+  public BwCollection getHomeDb(final BwPrincipal principal,
+                                final boolean freeBusy) {
+    final int priv;
+    if (freeBusy) {
+      priv = PrivilegeDefs.privReadFreeBusy;
+    } else {
+      priv = PrivilegeDefs.privRead;
+    }
+    return getCal().getCollection(getSvc().getPrincipalInfo().getCollectionHomePath(principal),
+                                  priv, true);
   }
   
-  private final Map<String, List<BwCalendar>> vpathCache = new HashMap<>();
+  private final Map<String, List<BwCollection>> vpathCache = new HashMap<>();
   
   private long lastVpathFlush = System.currentTimeMillis();
   
@@ -225,7 +224,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   private final int maxVpathCached = 250;
 
   @Override
-  public Collection<BwCalendar> decomposeVirtualPath(final String vpath) {
+  public Collection<BwCollection> decomposeVirtualPath(final String vpath) {
     vpathCalls++;
     if (debug() && ((vpathCalls % 250) == 0)) {
       debug("Vpath calls: " + vpathCalls);
@@ -254,7 +253,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       cacheKey = pr.getPrincipalRef() + "|" + vpath;
     }
     
-    List<BwCalendar> cols = vpathCache.get(cacheKey);
+    List<BwCollection> cols = vpathCache.get(cacheKey);
     
     if (cols != null) {
       vpathHits++;
@@ -267,7 +266,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
      * personal calendar users.
      */
 
-    BwCalendar startCol = getIdx(vpath);
+    BwCollection startCol = getIdx(vpath);
 
     if ((startCol != null) && !startCol.getAlias()) {
       cols.add(startCol);
@@ -285,7 +284,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return cols;
     }
 
-    /* First, keep adding elements until we get a BwCalendar result.
+    /* First, keep adding elements until we get a BwCollection result.
      * This handles the user root not being accessible
      */
 
@@ -319,7 +318,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return null;
     }
 
-    BwCalendar curCol = startCol;
+    BwCollection curCol = startCol;
 
     buildCollection:
     for (;;) {
@@ -331,7 +330,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
       // Follow the chain of references for curCol until we reach a non-alias
       if (curCol.getInternalAlias()) {
-        final BwCalendar nextCol = resolveAliasIdx(curCol, false, false);
+        final BwCollection nextCol = resolveAliasIdx(curCol, false, false);
 
         if (nextCol == null) {
           // Bad vpath
@@ -356,13 +355,13 @@ class Calendars extends CalSvcDb implements CalendarsI {
        * element as a child name
        */
 
-      if (curCol.getCalType() != BwCalendar.calTypeFolder) {
+      if (curCol.getCalType() != BwCollection.calTypeFolder) {
         // Bad vpath
         return null;
       }
 
       /*
-      for (BwCalendar col: getChildren(curCol)) {
+      for (BwCollection col: getChildren(curCol)) {
         if (col.getName().equals(pathEls[pathi])) {
           // Found our child
           pathi++;
@@ -371,10 +370,10 @@ class Calendars extends CalSvcDb implements CalendarsI {
         }
       }
       */
-      final BwCalendar col = getIdx(Util.buildPath(colPathEndsWithSlash,
-                                                curCol.getPath(),
-                                                "/",
-                                                pathEls[pathi]));
+      final BwCollection col = getIdx(Util.buildPath(colPathEndsWithSlash,
+                                                     curCol.getPath(),
+                                                     "/",
+                                                     pathEls[pathi]));
 
       if (col == null) {
         /* Child not found - bad vpath */
@@ -393,41 +392,41 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public Collection<BwCalendar> getChildren(final BwCalendar col) {
-    if (col.getCalType() == BwCalendar.calTypeAlias) {
+  public Collection<BwCollection> getChildren(final BwCollection col) {
+    if (col.getCalType() == BwCollection.calTypeAlias) {
       resolveAlias(col, true, false);
     }
-    return getCal().getCalendars(col.getAliasedEntity(), null);
+    return getCal().getCollections(col.getAliasedEntity(), null);
   }
 
   @Override
-  public Collection<BwCalendar> getChildrenIdx(final BwCalendar col) {
-    if (col.getCalType() == BwCalendar.calTypeAlias) {
+  public Collection<BwCollection> getChildrenIdx(final BwCollection col) {
+    if (col.getCalType() == BwCollection.calTypeAlias) {
       resolveAliasIdx(col, true, false);
     }
-    return getCal().getCalendars(col.getAliasedEntity(),
-                                 getIndexer(docTypeCollection));
+    return getCal().getCollections(col.getAliasedEntity(),
+                                   getIndexer(docTypeCollection));
   }
 
   @Override
-  public Set<BwCalendar> getAddContentCollections(
+  public Set<BwCollection> getAddContentCollections(
           final boolean includeAliases,
           final boolean isApprover) {
-    final Set<BwCalendar> cals = new TreeSet<>();
+    final Set<BwCollection> cals = new TreeSet<>();
 
-    getAddContentCalendarCollections(includeAliases,
-                                     isApprover, getHome(), cals);
+    getAddContentCollectionCollections(includeAliases,
+                                       isApprover, getHome(), cals);
 
     return cals;
   }
 
   @Override
-  public boolean isEmpty(final BwCalendar val) {
+  public boolean isEmpty(final BwCollection val) {
     return getSvc().getCal().isEmpty(val);
   }
 
   @Override
-  public BwCalendar get(String path) {
+  public BwCollection get(String path) {
     if (path == null) {
       return null;
     }
@@ -440,11 +439,11 @@ class Calendars extends CalSvcDb implements CalendarsI {
       path = path.substring(0, path.length() - 1);
     }
 
-    return getCal().getCalendar(path, PrivilegeDefs.privAny, false);
+    return getCal().getCollection(path, PrivilegeDefs.privAny, false);
   }
 
   @Override
-  public BwCalendar getIdx(String path) {
+  public BwCollection getIdx(String path) {
     if (path == null) {
       return null;
     }
@@ -463,15 +462,15 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public BwCalendar getSpecial(final int calType,
-                               final boolean create) {
+  public BwCollection getSpecial(final int calType,
+                                 final boolean create) {
     return getSpecial(null, calType, create);
   }
 
   @Override
-  public BwCalendar getSpecial(final String principal,
-                               final int calType,
-                               final boolean create) {
+  public BwCollection getSpecial(final String principal,
+                                 final int calType,
+                                 final boolean create) {
     final BwPrincipal<?> pr;
 
     if (principal == null) {
@@ -480,19 +479,19 @@ class Calendars extends CalSvcDb implements CalendarsI {
       pr = getPrincipal(principal);
     }
 
-    final Calintf.GetSpecialCalendarResult gscr =
-            getSpecialCalendar(pr, calType, create);
+    final GetSpecialCollectionResult gscr =
+            getSpecialCollection(pr, calType, create);
     if (!gscr.noUserHome) {
       return gscr.cal;
     }
 
     getSvc().getUsersHandler().add(getPrincipal().getAccount());
 
-    return getSpecialCalendar(pr, calType, create).cal;
+    return getSpecialCollection(pr, calType, create).cal;
   }
 
   @Override
-  public void setPreferred(final BwCalendar val) {
+  public void setPreferred(final BwCollection val) {
     final BwPreferences prefs = getPrefs();
     prefs.setDefaultCalendarPath(val.getPath());
     getSvc().getPrefsHandler().update(prefs);
@@ -510,30 +509,30 @@ class Calendars extends CalSvcDb implements CalendarsI {
           return path;
         }
 
-        calType = BwCalendar.calTypeCalendarCollection;
+        calType = BwCollection.calTypeCalendarCollection;
         break;
       case Component.VTODO:
-        calType = BwCalendar.calTypeTasks;
+        calType = BwCollection.calTypeTasks;
         break;
       case Component.VPOLL:
-        calType = BwCalendar.calTypePoll;
+        calType = BwCollection.calTypePoll;
         break;
       default:
         return null;
     }
 
-    final GetSpecialCalendarResult gscr =
-            getSpecialCalendar(getPrincipal(), calType, true);
+    final GetSpecialCollectionResult gscr =
+            getSpecialCollection(getPrincipal(), calType, true);
 
     return gscr.cal.getPath();
   }
 
   @Override
-  public BwCalendar add(BwCalendar val,
-                        final String parentPath) {
+  public BwCollection add(BwCollection val,
+                          final String parentPath) {
     if (getSvc().getPrincipalInfo().getSubscriptionsOnly()) {
       // Only allow the creation of an alias
-      if (val.getCalType() != BwCalendar.calTypeAlias) {
+      if (val.getCalType() != BwCollection.calTypeAlias) {
         throw new BedeworkForbidden("User has read only access");
       }
     }
@@ -566,21 +565,21 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public void rename(final BwCalendar val,
+  public void rename(final BwCollection val,
                      final String newName) {
-    getSvc().getCal().renameCalendar(val, newName);
+    getSvc().getCal().renameCollection(val, newName);
   }
 
   @Override
-  public void move(final BwCalendar val,
-                   final BwCalendar newParent) {
-    getSvc().getCal().moveCalendar(val, newParent);
+  public void move(final BwCollection val,
+                   final BwCollection newParent) {
+    getSvc().getCal().moveCollection(val, newParent);
   }
 
   @Override
-  public void update(final BwCalendar val) {
+  public void update(final BwCollection val) {
     /* Ensure it's not in admin prefs if it's a folder.
-     * User may have switched from calendar to folder.
+     * User may have switched from collection to folder.
      */
     if (!val.getCalendarCollection() && isPublicAdmin()) {
       /* Remove from preferences */
@@ -595,18 +594,18 @@ class Calendars extends CalSvcDb implements CalendarsI {
       encryptPw(val);
     }
 
-    getCal().updateCalendar(val);
+    getCal().updateCollection(val);
   }
 
   @Override
-  public boolean delete(final BwCalendar val,
+  public boolean delete(final BwCollection val,
                         final boolean emptyIt,
                         final boolean sendSchedulingMessage) {
     return delete(val, emptyIt, false, sendSchedulingMessage, true);
   }
 
   @Override
-  public boolean isUserRoot(final BwCalendar cal) {
+  public boolean isUserRoot(final BwCollection cal) {
     if ((cal == null) || (cal.getPath() == null)) {
       return false;
     }
@@ -615,26 +614,26 @@ class Calendars extends CalSvcDb implements CalendarsI {
     final int pathLength = ss.length - 1;  // First element is empty string
 
     return (pathLength == 2) &&
-           (ss[1].equals(BasicSystemProperties.userCalendarRoot));
+           (ss[1].equals(BasicSystemProperties.userCollectionRoot));
   }
 
   @Override
-  public BwCalendar resolveAlias(final BwCalendar val,
-                                 final boolean resolveSubAlias,
-                                 final boolean freeBusy) {
+  public BwCollection resolveAlias(final BwCollection val,
+                                   final boolean resolveSubAlias,
+                                   final boolean freeBusy) {
     return getCal().resolveAlias(val, resolveSubAlias, freeBusy,
                                  null);
   }
 
   @Override
-  public GetEntityResponse<CollectionAliases> getAliasInfo(final BwCalendar val) {
+  public GetEntityResponse<CollectionAliases> getAliasInfo(final BwCollection val) {
     return getCal().getAliasInfo(val);
   }
 
   @Override
-  public BwCalendar resolveAliasIdx(final BwCalendar val,
-                                    final boolean resolveSubAlias,
-                                    final boolean freeBusy) {
+  public BwCollection resolveAliasIdx(final BwCollection val,
+                                      final boolean resolveSubAlias,
+                                      final boolean freeBusy) {
     return getCal().resolveAlias(val, resolveSubAlias, freeBusy,
                                  getIndexer(docTypeCollection));
   }
@@ -694,7 +693,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public SynchStatusResponse getSynchStatus(final BwCalendar val) {
+  public SynchStatusResponse getSynchStatus(final BwCollection val) {
     return getSvc().getSynch().getSynchStatus(val);
   }
 
@@ -704,7 +703,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public Response refreshSubscription(final BwCalendar val) {
+  public Response refreshSubscription(final BwCollection val) {
     return getSvc().getSynch().refresh(val);
   }
 
@@ -761,7 +760,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   public Set<BwCategory> getCategorySet(final String href) {
     /* The set of categories referenced by the alias and its parents */
 
-    final Collection<BwCalendar> cols;
+    final Collection<BwCollection> cols;
 
     cols = decomposeVirtualPath(href);
 
@@ -778,10 +777,10 @@ class Calendars extends CalSvcDb implements CalendarsI {
      * categories in.
      */
 
-    BwCalendar curCol = null;
+    BwCollection curCol = null;
     final Set<BwCategory> cats = new TreeSet<>();
 
-    for (final BwCalendar col : cols) {
+    for (final BwCollection col : cols) {
       int numCats = 0;
       final Set<BwCategory> colCats = col.getCategories();
       if (!Util.isEmpty(colCats)) {
@@ -826,43 +825,43 @@ class Calendars extends CalSvcDb implements CalendarsI {
     return cats;
   }
 
-  public BwCalendar getSpecial(final BwPrincipal owner,
-                               final int calType,
-                               final boolean create,
-                               final int access) {
-    final Calintf.GetSpecialCalendarResult gscr =
-            getSpecialCalendar(owner, calType, create);
+  public BwCollection getSpecial(final BwPrincipal owner,
+                                 final int calType,
+                                 final boolean create,
+                                 final int access) {
+    final GetSpecialCollectionResult gscr =
+            getSpecialCollection(owner, calType, create);
     if (gscr.noUserHome) {
       getSvc().getUsersHandler().add(owner.getAccount());
     }
 
-    return getSpecialCalendar(owner, calType, create).cal;
+    return getSpecialCollection(owner, calType, create).cal;
   }
 
   /* ====================================================================
    *                   package private methods
    * ==================================================================== */
-  GetSpecialCalendarResult getSpecialCalendar(final BwPrincipal owner,
-                                              final int calType,
-                                              final boolean create) {
-    return getCal().getSpecialCalendar(null, owner, calType, create,
-                                       PrivilegeDefs.privAny);
+  GetSpecialCollectionResult getSpecialCollection(final BwPrincipal owner,
+                                                  final int calType,
+                                                  final boolean create) {
+    return getCal().getSpecialCollection(null, owner, calType, create,
+                                         PrivilegeDefs.privAny);
   }
 
   /**
    * @param val an href
    * @return list of any aliases for the current user pointing at the given href
    */
-  List<BwCalendar> findUserAlias(final String val) {
+  List<BwCollection> findUserAlias(final String val) {
     return getCal().findAlias(val);
   }
 
-  Set<BwCalendar> getSynchCols(final String path,
-                               final String lastmod) {
+  Set<BwCollection> getSynchCols(final String path,
+                                 final String lastmod) {
     return getCal().getSynchCols(path, lastmod);
   }
 
-  boolean delete(final BwCalendar val,
+  boolean delete(final BwCollection val,
                  final boolean emptyIt,
                  final boolean reallyDelete,
                  final boolean sendSchedulingMessage,
@@ -928,7 +927,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
         }
       }
 
-      for (final BwCalendar cal: getChildren(val)) {
+      for (final BwCollection cal: getChildren(val)) {
         if (!delete(cal, true, true, sendSchedulingMessage, true)) {
           // Somebody else at it
           getSvc().rollbackTransaction();
@@ -947,7 +946,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
     /* Attempt to tombstone it
      */
-    return getSvc().getCal().deleteCalendar(val, reallyDelete);
+    return getSvc().getCal().deleteCollection(val, reallyDelete);
   }
 
   /* ====================================================================
@@ -976,9 +975,9 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return ai;
     }
 
-    final BwCalendar col = getCal().getCalendar(collectionHref,
-                                                PrivilegeDefs.privAny,
-                                                true);
+    final BwCollection col = getCal().getCollection(collectionHref,
+                                                    PrivilegeDefs.privAny,
+                                                    true);
     if (col == null) {
       return null;
     }
@@ -990,7 +989,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     return updateAliasInfoMap(ai);
   }
 
-  private void findAliases(final BwCalendar col,
+  private void findAliases(final BwCollection col,
                            final AliasesInfo rootAi) {
     final String collectionHref = col.getPath();
 
@@ -1004,10 +1003,10 @@ class Calendars extends CalSvcDb implements CalendarsI {
       rootAi.setNotificationsEnabled(true);
     }
     
-    /* Handle aliases that are not a result of calendar sharing.  These could be public or private.
+    /* Handle aliases that are not a result of collection sharing.  These could be public or private.
      */
-    for (final BwCalendar alias:
-            ((Calendars)getCols()).findUserAlias(collectionHref)) {
+    for (final BwCollection alias:
+            ((Collections)getCols()).findUserAlias(collectionHref)) {
       final AliasesInfo ai = new AliasesInfo(getPrincipal().getPrincipalRef(),
                                              alias,
                                              null);
@@ -1047,7 +1046,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       try {
         getSvc().pushPrincipal(principal);
 
-        for (final BwCalendar alias: ((Calendars)getCols()).findUserAlias(collectionHref)) {
+        for (final BwCollection alias: ((Collections)getCols()).findUserAlias(collectionHref)) {
           if (!notificationsEnabled(alias, defaultEnabled)) {
             continue;
           }
@@ -1070,7 +1069,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
    *
    * For public collections we always notify
    */
-  private boolean notificationsEnabled(final BwCalendar col,
+  private boolean notificationsEnabled(final BwCollection col,
                                        final boolean defaultEnabled) {
     if (col.getPublick()) {
       return true;
@@ -1119,22 +1118,22 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
   }
 
-  private void getAddContentCalendarCollections(
+  private void getAddContentCollectionCollections(
           final boolean includeAliases,
           final boolean isApprover,
-          final BwCalendar root,
-          final Set<BwCalendar> cals) {
+          final BwCollection root,
+          final Set<BwCollection> cals) {
     if (!includeAliases && root.getAlias()) {
       return;
     }
 
-    final BwCalendar col = resolveAlias(root, true, false);
+    final BwCollection col = resolveAlias(root, true, false);
     if (col == null) {
       // No access or gone
       return;
     }
 
-    if (col.getCalType() == BwCalendar.calTypeCalendarCollection) {
+    if (col.getCalType() == BwCollection.calTypeCalendarCollection) {
       if (isPublicAdmin() && isApprover && !col.getPrimaryCollection()) {
         return;
       }
@@ -1158,14 +1157,14 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return;
     }
 
-    for (final BwCalendar ch: getChildren(root)) {
-      getAddContentCalendarCollections(includeAliases,
-                                       isApprover,
-                                       ch, cals);
+    for (final BwCollection ch: getChildren(root)) {
+      getAddContentCollectionCollections(includeAliases,
+                                         isApprover,
+                                         ch, cals);
     }
   }
 
-  private void encryptPw(final BwCalendar val) {
+  private void encryptPw(final BwCollection val) {
     try {
       val.setRemotePw(getSvc().getEncrypter().encrypt(val.getRemotePw()));
     } catch (final Throwable t) {

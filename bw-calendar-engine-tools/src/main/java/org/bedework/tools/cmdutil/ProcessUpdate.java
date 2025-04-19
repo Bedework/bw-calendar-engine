@@ -18,7 +18,7 @@
 */
 package org.bedework.tools.cmdutil;
 
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.UserAuth;
@@ -93,10 +93,10 @@ public class ProcessUpdate extends CmdUtilHelper {
     try {
       open();
 
-      final BwCalendar col = getCal();
+      final BwCollection col = getCal();
 
       if (col == null) {
-        warn("No path or no calendar");
+        warn("No path or no collection");
         return true;
       }
 
@@ -131,7 +131,7 @@ public class ProcessUpdate extends CmdUtilHelper {
         }
       }
       
-      getSvci().getCalendarsHandler().update(col);
+      getSvci().getCollectionsHandler().update(col);
 
       return true;
     } catch (final Throwable t) {

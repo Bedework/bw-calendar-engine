@@ -15,7 +15,7 @@
     <mapping resource="Attachment.hbm.xml"/>
     <mapping resource="Attendee.hbm.xml"/>
     <mapping resource="AuthUser.hbm.xml"/>
-    <mapping resource="Calendar.hbm.xml"/>
+    <mapping resource="Collection.hbm.xml"/>
     <mapping resource="Event.hbm.xml"/>
     <mapping resource="EventAnnotation.hbm.xml"/>
     <mapping resource="Filter.hbm.xml"/>

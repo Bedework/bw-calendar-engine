@@ -21,7 +21,7 @@ package org.bedework.calsvc.scheduling;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwAttendee;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.ScheduleResult;
@@ -119,12 +119,12 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
 
       /* Do this here to check we have access. We might need the outbox later
        */
-      BwCalendar outBox = null;
+      BwCollection outBox = null;
 
       final BwPrincipal<?> currentUser = getPrincipal();
       if (!currentUser.getUnauthenticated()) {
         outBox = getSpecialCalendar(getPrincipal(),
-                                    BwCalendar.calTypeOutbox,
+                                    BwCollection.calTypeOutbox,
                                     true, outAccess);
       }
 
@@ -186,7 +186,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
 
     EventInfo colEi = getStoredMeeting(ev);
 
-    BwCalendar inbox = getSvc().getCalendarsHandler().get(ev.getColPath());
+    BwCollection inbox = getSvc().getCalendarsHandler().get(ev.getColPath());
 
     /* The event should have a calendar set to the inbox it came from.
      * That inbox may be owned by somebody other than the current user if a
@@ -203,7 +203,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
         break check;
       }
 
-      if (inbox.getCalType() != BwCalendar.calTypeInbox) {
+      if (inbox.getCalType() != BwCollection.calTypeInbox) {
         sr.errorCode = CalFacadeErrorCode.schedulingBadSourceCalendar;
         break check;
       }

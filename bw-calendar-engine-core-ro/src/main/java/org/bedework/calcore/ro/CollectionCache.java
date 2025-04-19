@@ -18,10 +18,10 @@
 */
 package org.bedework.calcore.ro;
 
-import org.bedework.calcorei.CoreCalendarsI;
+import org.bedework.calcorei.CoreCollectionsI;
 import org.bedework.calfacade.BwStats.CacheStats;
 import org.bedework.calfacade.CollectionSynchInfo;
-import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.calfacade.wrappers.CollectionWrapper;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -36,15 +36,15 @@ import java.util.TreeSet;
  */
 public class CollectionCache implements Serializable {
   private static class CacheInfo {
-    CalendarWrapper col;
+    CollectionWrapper col;
     String token;
     boolean checked;
 
-    CacheInfo(final CalendarWrapper col) {
+    CacheInfo(final CollectionWrapper col) {
       setCol(col);
     }
 
-    void setCol(final CalendarWrapper col) {
+    void setCol(final CollectionWrapper col) {
       this.col = col;
       token = col.getLastmod().getTagValue();
       checked = true;
@@ -53,18 +53,18 @@ public class CollectionCache implements Serializable {
 
   private Map<String, CacheInfo> cache = new HashMap<>();
 
-  private CoreCalendarsI cols;
+  private CoreCollectionsI cols;
 
   CacheStats cs;
 
-  public CollectionCache(final CoreCalendarsI cols,
+  public CollectionCache(final CoreCollectionsI cols,
                   final CacheStats cs) {
     //this.stats = stats;
     this.cols = cols;
     this.cs = cs;
   }
 
-  public void put(final CalendarWrapper col) {
+  public void put(final CollectionWrapper col) {
     CacheInfo ci = cache.get(col.getPath());
 
     if (ci != null) {
@@ -84,7 +84,7 @@ public class CollectionCache implements Serializable {
     cache.remove(path);
   }
 
-  public CalendarWrapper get(final String path) {
+  public CollectionWrapper get(final String path) {
     CacheInfo ci = cache.get(path);
 
     if (ci == null) {
@@ -115,7 +115,7 @@ public class CollectionCache implements Serializable {
     return null;  // force refetch
   }
 
-  public CalendarWrapper get(final String path, final String token) {
+  public CollectionWrapper get(final String path, final String token) {
     CacheInfo ci = cache.get(path);
 
     if (ci == null) {
@@ -131,7 +131,7 @@ public class CollectionCache implements Serializable {
     return ci.col;
   }
 
-  public void flushAccess(final CoreCalendarsI cc) {
+  public void flushAccess(final CoreCollectionsI cc) {
     for (CacheInfo ci: cache.values()) {
 
       Set<Integer> accesses = ci.col.evaluatedAccesses();

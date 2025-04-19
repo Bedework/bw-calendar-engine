@@ -4,7 +4,7 @@
 package org.bedework.calcore.indexing;
 
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwFilterDef;
@@ -14,7 +14,7 @@ import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.svc.BwPreferences;
-import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.calfacade.wrappers.CollectionWrapper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,9 +42,9 @@ public class EntityCaches {
   private boolean updated;
 
   public EntityCaches() {
-    register(BwCalendar.class, docTypeCollection, new EntityCache<>());
+    register(BwCollection.class, docTypeCollection, new EntityCache<>());
 
-    register(CalendarWrapper.class, docTypeCollection, new EntityCache<>());
+    register(CollectionWrapper.class, docTypeCollection, new EntityCache<>());
 
     register(BwCategory.class, docTypeCategory, new EntityCache<>());
 

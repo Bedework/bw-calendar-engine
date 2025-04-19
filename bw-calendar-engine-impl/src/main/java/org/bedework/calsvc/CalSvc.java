@@ -33,7 +33,7 @@ import org.bedework.calcorei.CalintfFactory;
 import org.bedework.caldav.util.notifications.admin.AdminNoteParsers;
 import org.bedework.caldav.util.notifications.eventreg.EventregParsers;
 import org.bedework.caldav.util.notifications.suggest.SuggestParsers;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEventProperty;
@@ -71,7 +71,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.calfacade.svc.wrappers.BwCalSuiteWrapper;
-import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.calfacade.wrappers.CollectionWrapper;
 import org.bedework.calsvc.scheduling.Scheduling;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
 import org.bedework.calsvc.scheduling.hosts.BwHosts;
@@ -79,7 +79,7 @@ import org.bedework.calsvci.AdminI;
 import org.bedework.calsvci.CalSuitesI;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.CalendarsI;
+import org.bedework.calsvci.CollectionsI;
 import org.bedework.calsvci.Categories;
 import org.bedework.calsvci.Contacts;
 import org.bedework.calsvci.DumpIntf;
@@ -116,7 +116,6 @@ import org.apache.james.jdkim.api.JDKIM;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -184,7 +183,7 @@ public class CalSvc
 
   private FiltersI filtersHandler;
 
-  private CalendarsI calendarsHandler;
+  private CollectionsI collectionsHandler;
 
   private SysparsI sysparsHandler;
 
@@ -214,7 +213,7 @@ public class CalSvc
 
   /* ....................... ... ..................................... */
 
-  /** Core calendar interface
+  /** Core collection interface
    */
   private transient Calintf cali;
 
@@ -322,10 +321,10 @@ public class CalSvc
         //        if (pars.getCaldav() && !pars.isGuest()) {
         if (!pars.isGuest()) {
           /* Ensure scheduling resources exist */
-//          getCal().getSpecialCalendar(getPrincipal(), BwCalendar.calTypeInbox,
+//          getCal().getSpecialCollection(getPrincipal(), BwCollection.calTypeInbox,
   //                                    true, PrivilegeDefs.privAny);
 
-    //      getCal().getSpecialCalendar(getPrincipal(), BwCalendar.calTypeOutbox,
+    //      getCal().getSpecialCollection(getPrincipal(), BwCollection.calTypeOutbox,
       //                                true, PrivilegeDefs.privAny);
         }
       }
@@ -625,8 +624,8 @@ public class CalSvc
 
   @Override
   public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) {
-    if (val instanceof final CalendarWrapper w) {
-      w.putEntity((BwCalendar)getCal().merge(w.fetchEntity()));
+    if (val instanceof final CollectionWrapper w) {
+      w.putEntity((BwCollection)getCal().merge(w.fetchEntity()));
       return w;
     }
 
@@ -666,39 +665,39 @@ public class CalSvc
   }
 
   class SvcSimpleFilterParser extends SimpleFilterParser {
-    final FlushMap<String, BwCalendar> cols = new FlushMap<>(20, 60 * 1000,
-                                                             100);
+    final FlushMap<String, BwCollection> cols = new FlushMap<>(20, 60 * 1000,
+                                                               100);
 
     @Override
-    public BwCalendar getCollection(final String path) {
-      BwCalendar col = cols.get(path);
+    public BwCollection getCollection(final String path) {
+      BwCollection col = cols.get(path);
       if (col != null) {
         return col;
       }
 
-      col = getCalendarsHandler().get(path);
+      col = getCollectionsHandler().get(path);
       cols.put(path, col);
 
       return col;
     }
 
     @Override
-    public BwCalendar resolveAlias(final BwCalendar val,
-                                   final boolean resolveSubAlias) {
-      return getCalendarsHandler().resolveAlias(val, resolveSubAlias, false);
+    public BwCollection resolveAlias(final BwCollection val,
+                                     final boolean resolveSubAlias) {
+      return getCollectionsHandler().resolveAlias(val, resolveSubAlias, false);
     }
 
     @Override
-    public Collection<BwCalendar> getChildren(final BwCalendar col) {
+    public Collection<BwCollection> getChildren(final BwCollection col) {
       final String path = col.getPath();
-      BwCalendar cachedCol = cols.get(path);
+      BwCollection cachedCol = cols.get(path);
 
       if ((cachedCol != null) && (cachedCol.getChildren() != null)) {
         return col.getChildren();
       }
 
-      final Collection<BwCalendar> children =
-              getCalendarsHandler().getChildren(col);
+      final Collection<BwCollection> children =
+              getCollectionsHandler().getChildren(col);
 
       if (cachedCol == null) {
         cachedCol = col;
@@ -727,8 +726,8 @@ public class CalSvc
     }
 
     @Override
-    public Collection<BwCalendar> decomposeVirtualPath(final String vpath) {
-      return getCalendarsHandler().decomposeVirtualPath(vpath);
+    public Collection<BwCollection> decomposeVirtualPath(final String vpath) {
+      return getCollectionsHandler().decomposeVirtualPath(vpath);
     }
 
     @Override
@@ -814,13 +813,13 @@ public class CalSvc
   }
 
   @Override
-  public CalendarsI getCalendarsHandler() {
-    if (calendarsHandler == null) {
-      calendarsHandler = new Calendars(this);
-      handlers.add((CalSvcDb)calendarsHandler);
+  public CollectionsI getCollectionsHandler() {
+    if (collectionsHandler == null) {
+      collectionsHandler = new Collections(this);
+      handlers.add((CalSvcDb)collectionsHandler);
     }
 
-    return calendarsHandler;
+    return collectionsHandler;
   }
 
   @Override
@@ -1129,12 +1128,12 @@ public class CalSvc
     }
     getCal().changeAccess(ent, aces, replaceAll);
 
-    if (ent instanceof final BwCalendar col) {
-      if (col.getCalType() == BwCalendar.calTypeInbox) {
+    if (ent instanceof final BwCollection col) {
+      if (col.getCalType() == BwCollection.calTypeInbox) {
         // Same access as inbox
-        final BwCalendar pendingInbox =
-                getCalendarsHandler().getSpecial(BwCalendar.calTypePendingInbox,
-                                                 true);
+        final BwCollection pendingInbox =
+                getCollectionsHandler().getSpecial(BwCollection.calTypePendingInbox,
+                                                   true);
         if (pendingInbox == null) {
           warn("Unable to update pending inbox access");
         } else {
@@ -1174,7 +1173,7 @@ public class CalSvc
                                     final String token,
                                     final int limit,
                                     final boolean recurse) {
-    final BwCalendar col = getCalendarsHandler().get(path);
+    final BwCollection col = getCollectionsHandler().get(path);
     if (col == null) {
       return null;
     }
@@ -1216,12 +1215,12 @@ public class CalSvc
     return new SynchReport(items, resToken, true);
   }
 
-  private boolean canSync(final BwCalendar col) {
-    //if (col.getCalType() == BwCalendar.calTypeAlias) {
+  private boolean canSync(final BwCollection col) {
+    //if (col.getCalType() == BwCollection.calTypeAlias) {
     //  return false;
     //}
 
-    return col.getCalType() != BwCalendar.calTypeExtSub;
+    return col.getCalType() != BwCollection.calTypeExtSub;
   }
 
   /* ====================================================================
@@ -1243,7 +1242,7 @@ public class CalSvc
 
   /* This will get a calintf based on the supplied collection object.
    */
-  Calintf getCal(final BwCalendar cal) {
+  Calintf getCal(final BwCollection cal) {
     return getCal();
   }
 
@@ -1646,7 +1645,7 @@ public class CalSvc
   }
 
   void initPrincipal(final BwPrincipal<?> p) {
-    getCal().addNewCalendars(p);
+    getCal().addNewCollections(p);
   }
 
   /** Set the owner and creator on a shareable entity.
@@ -1797,7 +1796,7 @@ public class CalSvc
     final String caladdr =
             getDirectories().userToCaladdr(principal.getPrincipalRef());
     if (caladdr != null) {
-      final List<String> emails = Collections.singletonList(caladdr.substring("mailto:".length()));
+      final List<String> emails = java.util.Collections.singletonList(caladdr.substring("mailto:".length()));
       final Notifications notify = (Notifications)getNotificationsHandler();
       notify.subscribe(principal, emails);
     }
@@ -1954,14 +1953,14 @@ public class CalSvc
     pars.setAuthUser(auser);
   }
 
-  private String getSynchItems(final BwCalendar col,
+  private String getSynchItems(final BwCollection col,
                                final String vpath,
                                final String tokenPar,
                                final Set<SynchReportItem> items,
                                final boolean recurse) {
     final Events eventsH = (Events)getEventsHandler();
     final ResourcesImpl resourcesH = (ResourcesImpl)getResourcesHandler();
-    final Calendars colsH = (Calendars)getCalendarsHandler();
+    final Collections colsH = (Collections)getCollectionsHandler();
     final var path = col.getPath();
     String newToken = "";
 
@@ -1973,10 +1972,10 @@ public class CalSvc
       return tokenPar;
     }
 
-    final BwCalendar resolvedCol;
+    final BwCollection resolvedCol;
 
     if (col.getInternalAlias()) {
-      resolvedCol = getCalendarsHandler().resolveAlias(col, true, false);
+      resolvedCol = getCollectionsHandler().resolveAlias(col, true, false);
     } else {
       resolvedCol = col;
     }
@@ -2040,18 +2039,18 @@ public class CalSvc
     }
 
     final Set<SynchReportItem> colItems = new TreeSet<>();
-    final Set<BwCalendar> cols = colsH.getSynchCols(resolvedCol.getPath(), token);
+    final Set<BwCollection> cols = colsH.getSynchCols(resolvedCol.getPath(), token);
     
-    final List<BwCalendar> aliases = new ArrayList<>();
+    final List<BwCollection> aliases = new ArrayList<>();
 
-    for (final BwCalendar c: cols) {
+    for (final BwCollection c: cols) {
       final int calType = c.getCalType();
       
-      if (calType == BwCalendar.calTypePendingInbox) {
+      if (calType == BwCollection.calTypePendingInbox) {
         continue;
       }
 
-      if ((token != null) && (calType == BwCalendar.calTypeAlias)) {
+      if ((token != null) && (calType == BwCollection.calTypeAlias)) {
         aliases.add(c);
         continue;
       }
@@ -2072,8 +2071,8 @@ public class CalSvc
     if (!Util.isEmpty(aliases)) {
       /* Resolve each one and see if the target is a candidate
        */
-      for (final BwCalendar c: aliases) {
-        final BwCalendar resolved = getCalendarsHandler().resolveAlias(c, true, false);
+      for (final BwCollection c: aliases) {
+        final BwCollection resolved = getCollectionsHandler().resolveAlias(c, true, false);
         
         if (resolved == null) {
           continue;
@@ -2113,7 +2112,7 @@ public class CalSvc
         continue;
       }
 
-      final BwCalendar sricol = sri.getCol();
+      final BwCollection sricol = sri.getCol();
       final String t = getSynchItems(sricol,
                                      Util.buildPath(true, vpath, "/", sricol.getName()),
                                      token, items, true);
@@ -2135,12 +2134,12 @@ public class CalSvc
    *                   Package private methods
    * ==================================================================== */
 
-  void touchCalendar(final String href) {
-    getCal().touchCalendar(href);
+  void touchCollection(final String href) {
+    getCal().touchCollection(href);
   }
 
-  void touchCalendar(final BwCalendar col) {
-    getCal().touchCalendar(col);
+  void touchCollection(final BwCollection col) {
+    getCal().touchCollection(col);
   }
 
   PwEncryptionIntf getEncrypter() {

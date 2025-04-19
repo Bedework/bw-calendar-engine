@@ -131,7 +131,7 @@ class Views extends CalSvcDb implements ViewsI {
 
     final StringBuilder sb = new StringBuilder();
 
-    if (BasicSystemProperties.userCalendarRoot.equals(pathEls[0])) {
+    if (BasicSystemProperties.userCollectionRoot.equals(pathEls[0])) {
       sb.append(BwPrincipal.userPrincipalRoot);
     } else {
       return null;

@@ -26,7 +26,7 @@ import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
 import org.bedework.caldav.util.sharing.AccessType;
 import org.bedework.caldav.util.sharing.InviteType;
 import org.bedework.caldav.util.sharing.UserType;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEvent;
@@ -368,7 +368,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public BwCalendar getCalendar(final String path) {
+  public BwCollection getCalendar(final String path) {
     startTransaction();
 
     return getCols().get(path);
@@ -403,7 +403,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public void saveRootCalendar(final BwCalendar val) {
+  public void saveRootCalendar(final BwCollection val) {
     // Ensure id not set
     val.markUnsaved();
 
@@ -417,7 +417,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public void addCalendar(final BwCalendar o) {
+  public void addCalendar(final BwCollection o) {
     // Ensure id not set
     o.markUnsaved();
 
@@ -432,14 +432,14 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public FixAliasResult fixSharee(final BwCalendar col,
+  public FixAliasResult fixSharee(final BwCollection col,
                                   final String shareeHref,
                                   final AccessType a) {
     /* First ensure this alias is not circular */
 
     final Set<String> paths = new TreeSet<>();
 
-    BwCalendar curCol = col;
+    BwCollection curCol = col;
     while (curCol.getInternalAlias()) {
       if (paths.contains(curCol.getPath())) {
         return FixAliasResult.circular;

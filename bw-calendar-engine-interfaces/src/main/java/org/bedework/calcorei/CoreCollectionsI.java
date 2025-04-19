@@ -20,13 +20,13 @@ package org.bedework.calcorei;
 
 import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CollectionAliases;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.indexing.BwIndexer;
-import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.calfacade.wrappers.CollectionWrapper;
 import org.bedework.base.response.GetEntityResponse;
 
 import java.io.Serializable;
@@ -34,24 +34,24 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-/** This is the calendars section of the low level interface to the calendar
- * database. Calendars is something of a misnomer - we're really talking
- * collections here. The type property defines which type of collection we are
+/** This is the collections section of the low level interface to the collection
+ * database.
+ * The type property defines which type of collection we are
  * dealing with. The CalDAV spec defines what is allowable, e.g. no collections
  * inside a calendar collection.
  *
  * <p>To allow us to enforce access checks we wrap the object inside a wrapper
  * class which blocks access to the getChildren method. To retrieve the children
- * of a calendar object call the getCalendars(BwCalendar) method. The resulting
+ * of a collection object call the getCollections(BwCollection) method. The resulting
  * collection is a set of access checked, wrapped objects. Only accessible
  * children will be returned.
  *
  * @author Mike Douglass
  */
-public interface CoreCalendarsI extends Serializable {
+public interface CoreCollectionsI extends Serializable {
 
   /* ====================================================================
-   *                   Calendars
+   *                   Collections
    * ==================================================================== */
 
   /** Called whenever we start running under a new principal. May require a
@@ -67,17 +67,17 @@ public interface CoreCalendarsI extends Serializable {
   CollectionSynchInfo getSynchInfo(String path,
                                    String token);
 
-  /** Returns children of the given calendar to which the current user has
+  /** Returns children of the given collection to which the current user has
    * some access.
    *
-   * @param  cal          parent calendar
+   * @param  cal          parent collection
    * @param indexer not null means use indexer
-   * @return Collection   of BwCalendar
+   * @return Collection   of BwCollection
    */
-  Collection<BwCalendar> getCalendars(BwCalendar cal,
-                                      BwIndexer indexer);
+  Collection<BwCollection> getCollections(BwCollection cal,
+                                          BwIndexer indexer);
 
-  /** Attempt to get calendar referenced by the alias. For an internal alias
+  /** Attempt to get collection referenced by the alias. For an internal alias
    * the result will also be set in the aliasTarget property of the parameter.
    *
    * @param val the alias
@@ -85,198 +85,184 @@ public interface CoreCalendarsI extends Serializable {
    *                  down to a non-alias.
    * @param freeBusy determines required access
    * @param indexer not null means use indexer
-   * @return BwCalendar
+   * @return BwCollection
    */
-  BwCalendar resolveAlias(BwCalendar val,
-                          boolean resolveSubAlias,
-                          boolean freeBusy,
-                          BwIndexer indexer);
+  BwCollection resolveAlias(BwCollection val,
+                            boolean resolveSubAlias,
+                            boolean freeBusy,
+                            BwIndexer indexer);
 
   /**
    * @param val a collection to check
    * @return response with status and info.
    */
-  GetEntityResponse<CollectionAliases> getAliasInfo(BwCalendar val);
+  GetEntityResponse<CollectionAliases> getAliasInfo(BwCollection val);
 
   /** Find any aliases to the given collection.
    *
    * @param val - the alias
    * @return list of aliases
    */
-  List<BwCalendar> findAlias(String val);
+  List<BwCollection> findAlias(String val);
 
-  /** Get a calendar given the path. If the path is that of a 'special'
-   * calendar, for example the deleted calendar, it may not exist if it has
+  /** Get a collection given the path. If the path is that of a 'special'
+   * collection, for example the deleted collection, it may not exist if it has
    * not been used.
    *
-   * @param  path          String path of calendar
+   * @param  path          String path of collection
    * @param  desiredAccess int access we need
    * @param  alwaysReturnResult  false to raise access exceptions
    *                             true to return only those we have access to
-   * @return BwCalendar null for unknown calendar
+   * @return BwCollection null for unknown collection
    */
-  BwCalendar getCalendar(String path,
-                         int desiredAccess,
-                         boolean alwaysReturnResult);
+  BwCollection getCollection(String path,
+                             int desiredAccess,
+                             boolean alwaysReturnResult);
 
-  /** Get a calendar given the path. If the path is that of a 'special'
-   * calendar, for example the deleted calendar, it may not exist if it has
-   * not been used.
-   *
-   * @param  path          String path of calendar
-   * @param  desiredAccess int access we need
-   * @param  alwaysReturnResult  false to raise access exceptions
-   *                             true to return only those we have access to
-   * @return BwCalendar null for unknown calendar
-   */
-  BwCalendar getCollection(String path,
-                           int desiredAccess,
-                           boolean alwaysReturnResult);
-
-  /** Get a calendar given the path. If the path is that of a 'special'
-   * calendar, for example the deleted calendar, it may not exist if it has
+  /** Get a collection given the path. If the path is that of a 'special'
+   * collection, for example the deleted collection, it may not exist if it has
    * not been used.
    *
    * @param  indexer       Used to retrieve the object
-   * @param  path          String path of calendar
+   * @param  path          String path of collection
    * @param  desiredAccess int access we need
    * @param  alwaysReturnResult  false to raise access exceptions
    *                             true to return only those we have access to
-   * @return BwCalendar null for unknown calendar
+   * @return BwCollection null for unknown collection
    */
-  BwCalendar getCollectionIdx(BwIndexer indexer,
-                              String path,
-                              int desiredAccess,
-                              boolean alwaysReturnResult);
+  BwCollection getCollectionIdx(BwIndexer indexer,
+                                String path,
+                                int desiredAccess,
+                                boolean alwaysReturnResult);
 
-  /** Returned by getSpecialCalendar
+  /** Returned by getSpecialCollection
    */
-  class GetSpecialCalendarResult {
+  class GetSpecialCollectionResult {
     /** True if user does not exist
      */
     public boolean noUserHome;
 
-    /** True if calendar was created
+    /** True if collection was created
      */
     public boolean created;
 
     /**
      */
-    public BwCalendar cal;
+    public BwCollection cal;
   }
-  /** Get a special calendar (e.g. Trash) for the given user. If it does not
+  /** Get a special collection (e.g. Trash) for the given user. If it does not
    * exist and is supported by the target system it will be created.
    *
    * @param  indexer       Used to retrieve the object
    * @param  owner     of the entity
-   * @param  calType   int special calendar type.
+   * @param  calType   int special collection type.
    * @param  create    true if we should create it if non-existant.
    * @param  access    int desired access - from PrivilegeDefs
-   * @return GetSpecialCalendarResult null for unknown calendar
+   * @return GetSpecialCollectionResult null for unknown collection
    */
-  GetSpecialCalendarResult getSpecialCalendar(
+  GetSpecialCollectionResult getSpecialCollection(
           BwIndexer indexer,
           BwPrincipal<?> owner,
           int calType,
           boolean create,
           int access);
 
-  /** Add a calendar object
+  /** Add a collection object
    *
-   * <p>The new calendar object will be added to the db. If the indicated parent
-   * is null it will be added as a root level calendar.
+   * <p>The new collection object will be added to the db. If the indicated parent
+   * is null it will be added as a root level collection.
    *
    * <p>Certain restrictions apply, mostly because of interoperability issues.
-   * A calendar cannot be added to another calendar which already contains
+   * A collection cannot be added to another collection which already contains
    * entities, e.g. events etc.
    *
    * <p>Names cannot contain certain characters - (complete this)
    *
    * <p>Name must be unique at this level, i.e. all paths must be unique
    *
-   * @param  val     BwCalendar new object
+   * @param  val     BwCollection new object
    * @param  parentPath  String path to parent.
-   * @return BwCalendar object as added. Parameter val MUST be discarded
+   * @return BwCollection object as added. Parameter val MUST be discarded
    */
-  BwCalendar add(BwCalendar val,
-                 String parentPath);
+  BwCollection add(BwCollection val,
+                   String parentPath);
 
-  /** Change the name (path segment) of a calendar object.
+  /** Change the name (path segment) of a collection object.
    *
-   * @param  val         BwCalendar object
+   * @param  val         BwCollection object
    * @param  newName     String name
    */
-  void renameCalendar(BwCalendar val,
-                      String newName);
+  void renameCollection(BwCollection val,
+                        String newName);
 
-  /** Move a calendar object from one parent to another
+  /** Move a collection object from one parent to another
    *
-   * @param  val         BwCalendar object
-   * @param  newParent   BwCalendar potential parent
+   * @param  val         BwCollection object
+   * @param  newParent   BwCollection potential parent
    */
-  void moveCalendar(BwCalendar val,
-                    BwCalendar newParent);
+  void moveCollection(BwCollection val,
+                      BwCollection newParent);
 
   /** Mark collection as modified
    *
    * @param  path    String path for the collection
    */
-  void touchCalendar(String path);
+  void touchCollection(String path);
 
   /** Mark collection as modified
    *
-   * @param  col         BwCalendar object
+   * @param  col         BwCollection object
    */
-  void touchCalendar(BwCalendar col);
+  void touchCollection(BwCollection col);
 
-  /** Update a calendar object
+  /** Update a collection object
    *
-   * @param  val     BwCalendar object
+   * @param  val     BwCollection object
    */
-  void updateCalendar(BwCalendar val);
+  void updateCollection(BwCollection val);
 
-  /** Change the access to the given calendar entity.
+  /** Change the access to the given collection entity.
    *
-   * @param cal      Bwcalendar
+   * @param cal      BwCollection
    * @param aces     Collection of ace
    * @param replaceAll true to replace the entire access list.
    */
-  void changeAccess(BwCalendar cal,
+  void changeAccess(BwCollection cal,
                     Collection<Ace> aces,
                     boolean replaceAll);
 
-  /** Remove any explicit access for the given who to the given calendar entity.
+  /** Remove any explicit access for the given who to the given collection entity.
    *
-   * @param cal      Bwcalendar
+   * @param cal      BwCollection
    * @param who      AceWho
    */
-  void defaultAccess(BwCalendar cal,
+  void defaultAccess(BwCollection cal,
                      AceWho who);
 
-  /** Delete the given calendar
+  /** Delete the given collection
    *
    * <p>XXX Do we want a recursive flag or do we implement that higher up?
    *
-   * @param val      BwCalendar object to be deleted
+   * @param val      BwCollection object to be deleted
    * @param reallyDelete Really delete it - otherwise it's tombstoned
    * @return boolean false if it didn't exist, true if it was deleted.
    */
-  boolean deleteCalendar(BwCalendar val,
-                         boolean reallyDelete);
+  boolean deleteCollection(BwCollection val,
+                           boolean reallyDelete);
 
   /** Check to see if a collection is empty. A collection is not empty if it
    * contains other collections or calendar entities.
    *
-   * @param val      BwCalendar object to check
-   * @return boolean true if the calendar is empty
+   * @param val      BwCollection object to check
+   * @return boolean true if the collection is empty
    */
-  boolean isEmpty(BwCalendar val);
+  boolean isEmpty(BwCollection val);
 
   /** Called after a principal has been added to the system.
    *
    * @param principal the new principal
    */
-  void addNewCalendars(BwPrincipal<?> principal);
+  void addNewCollections(BwPrincipal<?> principal);
 
   /** Return all collections on the given path with a lastmod GREATER
    * THAN that supplied. The path may not be null. A null lastmod will
@@ -293,8 +279,8 @@ public interface CoreCalendarsI extends Serializable {
    * @param lastmod - limit search, may be null
    * @return set of collection paths.
    */
-  Set<BwCalendar> getSynchCols(String path,
-                               String lastmod);
+  Set<BwCollection> getSynchCols(String path,
+                                 String lastmod);
 
   /** Return true if the collection has changed as defined by the sync token.
    *
@@ -302,7 +288,7 @@ public interface CoreCalendarsI extends Serializable {
    * @param lastmod - the token
    * @return true if changes made.
    */
-  boolean testSynchCol(BwCalendar col,
+  boolean testSynchCol(BwCollection col,
                        String lastmod);
 
   /** Return the value to be used as the sync-token property for the given path.
@@ -330,9 +316,9 @@ public interface CoreCalendarsI extends Serializable {
                                          int start,
                                          int count);
 
-  BwCalendar checkAccess(CalendarWrapper col,
-                         int desiredAccess,
-                         boolean alwaysReturnResult);
+  BwCollection checkAccess(CollectionWrapper col,
+                           int desiredAccess,
+                           boolean alwaysReturnResult);
 
   /** Not sure this is the right thing to do.
    *

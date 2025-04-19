@@ -80,7 +80,7 @@ public class EntityProcessor extends Crawler {
                                               BwIndexer.docTypeEvent);
 
       final var evs = svci.getEventsHandler();
-      final var cols = svci.getCalendarsHandler();
+      final var cols = svci.getCollectionsHandler();
       var index = indexStart;
 
       for (final String name: entityNames) {

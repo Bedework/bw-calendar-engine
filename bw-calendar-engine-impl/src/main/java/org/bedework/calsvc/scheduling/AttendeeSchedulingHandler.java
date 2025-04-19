@@ -20,7 +20,7 @@ package org.bedework.calsvc.scheduling;
 
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwRequestStatus;
@@ -269,12 +269,12 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
     ScheduleResult sr = new ScheduleResult();
     BwEvent ev = ei.getEvent();
-    BwCalendar inbox = getSvc().getCalendarsHandler().get(ev.getColPath());
+    BwCollection inbox = getSvc().getCalendarsHandler().get(ev.getColPath());
 
     boolean forceDelete = true;
 
     check: {
-      if (inbox.getCalType() != BwCalendar.calTypeInbox) {
+      if (inbox.getCalType() != BwCollection.calTypeInbox) {
         sr.errorCode = CalFacadeErrorCode.schedulingBadSourceCalendar;
         break check;
       }
@@ -361,9 +361,9 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
       /* Do this here to check we have access. We might need the outbox later
        */
-      final BwCalendar outBox =
+      final BwCollection outBox =
               getSpecialCalendar(getPrincipal(),
-                                 BwCalendar.calTypeOutbox,
+                                 BwCollection.calTypeOutbox,
                                  true, outAccess);
 
       sendSchedule(sr, ei, null, null, false);

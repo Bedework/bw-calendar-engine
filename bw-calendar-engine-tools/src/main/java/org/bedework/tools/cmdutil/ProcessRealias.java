@@ -20,7 +20,7 @@ package org.bedework.tools.cmdutil;
 
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.caldav.util.filter.FilterBase;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwXproperty;
@@ -130,7 +130,7 @@ public class ProcessRealias extends CmdUtilHelper {
           return false;
         }
         
-        final BwCalendar col = getCal();
+        final BwCollection col = getCal();
 
         if (col == null) {
           return false;
@@ -150,14 +150,15 @@ public class ProcessRealias extends CmdUtilHelper {
            the value is the path of the alias itself.
          */
 
-        final BwCalendar aliasTarget = getAliasTarget(col);
+        final BwCollection aliasTarget = getAliasTarget(col);
         xp = new BwXproperty();
 
         xp.setName("X-BEDEWORK-ALIAS");
         xp.setPars("X-BEDEWORK-PARAM-DISPLAYNAME=" + col.getName() +
                            ";X-BEDEWORK-PARAM-PATH=" + 
                            col.getAliasUri().
-                                   substring(BwCalendar.internalAliasUriPrefix.length()) +
+                                   substring(
+                                           BwCollection.internalAliasUriPrefix.length()) +
                            ";X-BEDEWORK-PARAM-ALIASPATH=" + aliasTarget.getPath());
         
         xp.setValue(col.getPath());

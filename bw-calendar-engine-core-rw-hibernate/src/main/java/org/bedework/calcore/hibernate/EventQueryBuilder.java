@@ -285,8 +285,8 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
      */
   }
 
-  public void emitCalendarClause(final String qevName,
-                          final Collection<String> colPaths) {
+  public void emitCollectionClause(final String qevName,
+                                   final Collection<String> colPaths) {
     sb.append("(");
     sb.append(qevName);
     sb.append(".colPath in (:colPaths))");

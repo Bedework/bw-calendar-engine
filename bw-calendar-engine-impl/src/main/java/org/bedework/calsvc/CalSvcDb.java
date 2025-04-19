@@ -20,14 +20,14 @@ package org.bedework.calsvc;
 
 import org.bedework.access.CurrentAccess;
 import org.bedework.calcorei.Calintf;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.ShareableEntity;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.CalendarsI;
+import org.bedework.calsvci.CollectionsI;
 import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.ResourcesI;
 import org.bedework.calsvci.UsersI;
@@ -150,8 +150,8 @@ public class CalSvcDb implements Logged, Serializable {
     return svci;
   }
 
-  protected CalendarsI getCols() {
-    return svci.getCalendarsHandler();
+  protected CollectionsI getCols() {
+    return svci.getCollectionsHandler();
   }
 
   protected NotificationsI getNotes() {
@@ -182,7 +182,7 @@ public class CalSvcDb implements Logged, Serializable {
     }
   }
 
-  protected Calintf getCal(final BwCalendar cal) {
+  protected Calintf getCal(final BwCollection cal) {
     return svci.getCal(cal);
   }
 

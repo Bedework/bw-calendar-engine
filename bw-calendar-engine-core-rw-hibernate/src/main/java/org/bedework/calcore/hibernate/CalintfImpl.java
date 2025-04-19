@@ -22,7 +22,7 @@ import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.hibernate.daoimpl.AccessDAOImpl;
 import org.bedework.calcore.hibernate.daoimpl.AlarmsDAOImpl;
 import org.bedework.calcore.hibernate.daoimpl.CalSuitesDAOImpl;
-import org.bedework.calcore.hibernate.daoimpl.CalendarsDAOImpl;
+import org.bedework.calcore.hibernate.daoimpl.CollectionsDAOImpl;
 import org.bedework.calcore.hibernate.daoimpl.CoreEventPropertiesDAOImpl;
 import org.bedework.calcore.hibernate.daoimpl.EventsDAOImpl;
 import org.bedework.calcore.hibernate.daoimpl.FilterDefsDAOImpl;
@@ -33,7 +33,7 @@ import org.bedework.calcore.rw.common.CalintfCommonImpl;
 import org.bedework.calcore.rw.common.CoreAccess;
 import org.bedework.calcore.rw.common.CoreAlarms;
 import org.bedework.calcore.rw.common.CoreCalSuites;
-import org.bedework.calcore.rw.common.CoreCalendars;
+import org.bedework.calcore.rw.common.CoreCollections;
 import org.bedework.calcore.rw.common.CoreDumpRestore;
 import org.bedework.calcore.rw.common.CoreEventProperties;
 import org.bedework.calcore.rw.common.CoreEvents;
@@ -114,7 +114,7 @@ public class CalintfImpl extends CalintfCommonImpl {
 
   private CoreAlarms alarms;
 
-  private CoreCalendars calendars;
+  private CoreCollections collections;
 
   private CoreCalSuites calSuites;
 
@@ -301,18 +301,18 @@ public class CalintfImpl extends CalintfCommonImpl {
     events = new CoreEvents(evDao, this,
                             ac, authProps, sessionless);
 
-    final var calDao = new CalendarsDAOImpl(sess);
+    final var calDao = new CollectionsDAOImpl(sess);
     registerDao(calDao);
-    calendars = new CoreCalendars(calDao,
-                                  this,
-                                  ac, sessionless);
+    collections = new CoreCollections(calDao,
+                                      this,
+                                      ac, sessionless);
 
     final var resDao = new ResourcesDAOImpl(sess);
     registerDao(resDao);
     resources = new CoreResources(resDao, this,
                                   ac, sessionless);
 
-    accessUtil.setCollectionGetter(calendars);
+    accessUtil.setCollectionGetter(collections);
   }
 
   /* ====================================================================
@@ -330,8 +330,8 @@ public class CalintfImpl extends CalintfCommonImpl {
   }
 
   @Override
-  protected CoreCalendars calendars() {
-    return calendars;
+  protected CoreCollections collections() {
+    return collections;
   }
 
   @Override
@@ -476,8 +476,8 @@ public class CalintfImpl extends CalintfCommonImpl {
 
     curTimestamp = sess.getCurrentTimestamp(BwSystem.class);
 
-    if (calendars != null) {
-      calendars.startTransaction();
+    if (collections != null) {
+      collections.startTransaction();
     }
   }
 
@@ -493,10 +493,10 @@ public class CalintfImpl extends CalintfCommonImpl {
     }
 
     try {
-      if (calendars != null) {
-        calendars.endTransaction();
+      if (collections != null) {
+        collections.endTransaction();
         if (trace()) {
-          trace(format("CalintImpl.endTransaction after calendars.endTransaction() %s",
+          trace(format("CalintImpl.endTransaction after collections.endTransaction() %s",
                        System.currentTimeMillis() - start));
         }
       }

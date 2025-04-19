@@ -29,10 +29,10 @@ import org.bedework.base.response.GetEntityResponse;
 import org.bedework.calcore.ro.AccessUtil;
 import org.bedework.calcore.ro.CalintfHelper;
 import org.bedework.calcore.ro.CollectionCache;
-import org.bedework.calcore.rw.common.dao.CalendarsDAO;
+import org.bedework.calcore.rw.common.dao.CollectionsDAO;
 import org.bedework.calcorei.Calintf;
-import org.bedework.calcorei.CoreCalendarsI;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calcorei.CoreCollectionsI;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CollectionAliases;
@@ -43,7 +43,7 @@ import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.util.AccessChecker;
-import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.calfacade.wrappers.CollectionWrapper;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
@@ -65,13 +65,13 @@ import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWi
  * @author douglm
  *
  */
-public class CoreCalendars extends CalintfHelper
+public class CoreCollections extends CalintfHelper
          implements AccessUtil.CollectionGetter, Transactions,
-        CoreCalendarsI {
+        CoreCollectionsI {
   private final Calintf intf;
-  private final CalendarsDAO dao;
-  private final String userCalendarRootPath;
-  //private String groupCalendarRootPath;
+  private final CollectionsDAO dao;
+  private final String userCollectionRootPath;
+  //private String groupCollectionRootPath;
 
   private final CollectionCache colCache;
 
@@ -82,18 +82,18 @@ public class CoreCalendars extends CalintfHelper
    * @param ac access checker
    * @param sessionless if true
    */
-  public CoreCalendars(final CalendarsDAO dao,
-                       final Calintf intf,
-                       final AccessChecker ac,
-                       final boolean sessionless) {
+  public CoreCollections(final CollectionsDAO dao,
+                         final Calintf intf,
+                         final AccessChecker ac,
+                         final boolean sessionless) {
     this.dao = dao;
     this.intf = intf;
     super.init(intf, ac, sessionless);
 
-    userCalendarRootPath = 
+    userCollectionRootPath =
             Util.buildPath(colPathEndsWithSlash, 
-                           "/", BasicSystemProperties.userCalendarRoot);
-    //groupCalendarRootPath = userCalendarRootPath + "/" + "groups";
+                           "/", BasicSystemProperties.userCollectionRoot);
+    //groupCollectionRootPath = userCollectionRootPath + "/" + "groups";
 
     colCache =
             new CollectionCache(this,
@@ -123,17 +123,17 @@ public class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public BwCalendar getCollectionNoCheck(final String path) {
+  public BwCollection getCollectionNoCheck(final String path) {
     return getCollection(path);
   }
 
   @Override
-  public BwCalendar getCollection(final String path) {
+  public BwCollection getCollection(final String path) {
     if (path == null) {
       return null;
     }
 
-    BwCalendar col = colCache.get(path);
+    BwCollection col = colCache.get(path);
 
     if (col != null) {
       return col;
@@ -144,11 +144,12 @@ public class CoreCalendars extends CalintfHelper
     if (col == null) {
       if (path.equals("/")) {
         // Fake a root collection
-        col = new BwCalendar();
+        col = new BwCollection();
         col.setPath("/");
 
         // Use this for owner/creator
-        final BwCalendar userRoot = getCollection(userCalendarRootPath);
+        final BwCollection userRoot = getCollection(
+                userCollectionRootPath);
 
         if (userRoot == null) {
           return null;
@@ -161,7 +162,7 @@ public class CoreCalendars extends CalintfHelper
         /* Didn't find it. Is this a special collection we should create,
            Only try this if authenticated.
          */
-        final GetSpecialCalendarResult gscr = getIfSpecial(getPrincipal(), path);
+        final var gscr = getIfSpecial(getPrincipal(), path);
 
         if (gscr == null) {
           return null;
@@ -173,7 +174,7 @@ public class CoreCalendars extends CalintfHelper
       }
     }
 
-    final CalendarWrapper wcol = intf.wrap(col);
+    final CollectionWrapper wcol = intf.wrap(col);
     if (wcol != null) {
       colCache.put(wcol);
     }
@@ -181,9 +182,9 @@ public class CoreCalendars extends CalintfHelper
     return wcol;
   }
 
-  /* ====================================================================
-   *                   CalendarsI methods
-   * ==================================================================== */
+  /* ============================================================
+   *                   CollectionsI methods
+   * ============================================================ */
 
   @Override
   public void principalChanged() {
@@ -197,10 +198,10 @@ public class CoreCalendars extends CalintfHelper
   }
   
   @Override
-  public Collection<BwCalendar> getCalendars(final BwCalendar col,
-                                             final BwIndexer indexer) {
+  public Collection<BwCollection> getCollections(final BwCollection col,
+                                                 final BwIndexer indexer) {
     if (indexer == null) {
-      final Collection<BwCalendar> ch = getChildren(col);
+      final Collection<BwCollection> ch = getChildren(col);
 
       return checkAccess(ch, privAny, true);
     } else {
@@ -209,10 +210,10 @@ public class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public BwCalendar resolveAlias(final BwCalendar val,
-                                 final boolean resolveSubAlias,
-                                 final boolean freeBusy,
-                                 final BwIndexer indexer) {
+  public BwCollection resolveAlias(final BwCollection val,
+                                   final boolean resolveSubAlias,
+                                   final boolean freeBusy,
+                                   final BwIndexer indexer) {
     if ((val == null) || !val.getInternalAlias()) {
       return val;
     }
@@ -227,22 +228,22 @@ public class CoreCalendars extends CalintfHelper
 
   @Override
   public GetEntityResponse<CollectionAliases> getAliasInfo(
-          final BwCalendar val) {
+          final BwCollection val) {
     throw new RuntimeException("Should not be called");
   }
 
   @Override
-  public List<BwCalendar> findAlias(final String val) {
-    final List<BwCalendar> aliases = dao.findCollectionAlias(fixPath(val),
-                                                             currentPrincipal());
+  public List<BwCollection> findAlias(final String val) {
+    final List<BwCollection> aliases = dao.findCollectionAlias(fixPath(val),
+                                                               currentPrincipal());
 
-    final List<BwCalendar> waliases = new ArrayList<>();
+    final List<BwCollection> waliases = new ArrayList<>();
 
     if (Util.isEmpty(aliases)) {
       return waliases;
     }
 
-    for (final BwCalendar alias: aliases) {
+    for (final BwCollection alias: aliases) {
       waliases.add(intf.wrap(alias));
     }
 
@@ -250,37 +251,37 @@ public class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public BwCalendar getCalendar(final String path,
-                                final int desiredAccess,
-                                final boolean alwaysReturnResult) {
-    BwCalendar col = getCollection(path);
+  public BwCollection getCollection(final String path,
+                                    final int desiredAccess,
+                                    final boolean alwaysReturnResult) {
+    BwCollection col = getCollection(path);
     /* TODO - fix on import/export of 4.0. topical areas had wrong owner
       */
 
     if ((col != null) &&
-            (col.getCalType() == BwCalendar.calTypeAlias) &&
+            (col.getCalType() == BwCollection.calTypeAlias) &&
             (!col.getOwnerHref().equals(col.getCreatorHref())) &&
             ("/principals/users/public-user".equals(col.getOwnerHref()))) {
       col.setOwnerHref(col.getCreatorHref());
     }
 
-    col = checkAccess((CalendarWrapper)col, desiredAccess, alwaysReturnResult);
+    col = checkAccess((CollectionWrapper)col, desiredAccess, alwaysReturnResult);
 
     return col;
   }
 
   @Override
-  public BwCalendar getCollectionIdx(final BwIndexer indexer,
-                                     final String path,
-                                     final int desiredAccess,
-                                     final boolean alwaysReturnResult) {
-    final BwCalendar col = colCache.get(path);
+  public BwCollection getCollectionIdx(final BwIndexer indexer,
+                                       final String path,
+                                       final int desiredAccess,
+                                       final boolean alwaysReturnResult) {
+    final BwCollection col = colCache.get(path);
 
     if (col != null) {
       return col;
     }
 
-    final GetEntityResponse<BwCalendar> ger =
+    final GetEntityResponse<BwCollection> ger =
             indexer.fetchCol(path, desiredAccess,
                              PropertyInfoIndex.HREF);
 
@@ -304,34 +305,34 @@ public class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public GetSpecialCalendarResult getSpecialCalendar(
+  public GetSpecialCollectionResult getSpecialCollection(
           final BwIndexer indexer,
           final BwPrincipal<?> owner,
           final int calType,
           final boolean create,
           final int access) {
-    return getSpecialCalendar(owner, calType, create, true, access,
-                              indexer);
+    return getSpecialCollection(owner, calType, create, true, access,
+                                indexer);
   }
 
   @Override
-  public BwCalendar add(final BwCalendar val,
-                        final String parentPath) {
+  public BwCollection add(final BwCollection val,
+                          final String parentPath) {
     return add(val, parentPath, false, privBind);
   }
 
   @Override
-  public void renameCalendar(BwCalendar val,
-                             final String newName) {
+  public void renameCollection(BwCollection val,
+                               final String newName) {
     colCache.flush();
 
     ac.checkAccess(val, privWriteProperties, false);
 
     final String parentPath = val.getColPath();
-    final BwCalendar parent = dao.getCollection(parentPath);
+    final BwCollection parent = dao.getCollection(parentPath);
 
     /* Ensure the name isn't reserved and the path is unique */
-    checkNewCalendarName(newName, false, parent);
+    checkNewCollectionName(newName, false, parent);
 
     val = unwrap(val);
 
@@ -346,7 +347,7 @@ public class CoreCalendars extends CalintfHelper
                                                  val.getName()));
 
     /* This triggers off a cascade of updates down the tree as we are storing the
-     * path in the calendar objects. This may be preferable to calculating the
+     * path in the collection objects. This may be preferable to calculating the
      * path at every access
      */
     updatePaths(val, parent);
@@ -356,8 +357,8 @@ public class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public void moveCalendar(BwCalendar val,
-                           final BwCalendar newParent) {
+  public void moveCollection(BwCollection val,
+                             final BwCollection newParent) {
     colCache.flush();
 
     /* check access - privbind on new parent privunbind on val?
@@ -365,19 +366,19 @@ public class CoreCalendars extends CalintfHelper
     ac.checkAccess(val, privUnbind, false);
     ac.checkAccess(newParent, privBind, false);
 
-    if (newParent.getCalType() != BwCalendar.calTypeFolder) {
-      throw new BedeworkException(CalFacadeErrorCode.illegalCalendarCreation);
+    if (newParent.getCalType() != BwCollection.calTypeFolder) {
+      throw new BedeworkException(CalFacadeErrorCode.illegalCollectionCreation);
     }
 
     val = unwrap(val);
 
     val.updateLastmod(getCurrentTimestamp());
 
-    final BwCalendar tombstoned = val.makeTombstoneCopy();
+    final BwCollection tombstoned = val.makeTombstoneCopy();
     tombstoned.tombstone();
 
     /* This triggers off a cascade of updates down the tree as we are storing the
-     * path in the calendar objects. This may be preferable to calculating the
+     * path in the collection objects. This may be preferable to calculating the
      * path at every access
      */
     updatePaths(val, newParent);
@@ -396,17 +397,17 @@ public class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public void touchCalendar(final String path) {
-    final BwCalendar col = dao.getCollection(path);
+  public void touchCollection(final String path) {
+    final BwCollection col = dao.getCollection(path);
     if (col == null) {
       return;
     }
 
-    touchCalendar(col);
+    touchCollection(col);
   }
 
   @Override
-  public void touchCalendar(final BwCalendar col) {
+  public void touchCollection(final BwCollection col) {
     dao.touchCollection(col, getCurrentTimestamp());
     // Remove it
     colCache.remove(col.getPath());
@@ -417,19 +418,19 @@ public class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public void updateCalendar(final BwCalendar val) {
+  public void updateCollection(final BwCollection val) {
     ac.checkAccess(val, privWriteProperties, false);
 
     dao.updateCollection(unwrap(val));
-    touchCalendar(val.getPath()); // Also indexes
+    touchCollection(val.getPath()); // Also indexes
 
     notify(SysEvent.SysCode.COLLECTION_UPDATED, val);
 
-    colCache.put((CalendarWrapper)val);
+    colCache.put((CollectionWrapper)val);
   }
 
   @Override
-  public void changeAccess(final BwCalendar col,
+  public void changeAccess(final BwCollection col,
                            final Collection<Ace> aces,
                            final boolean replaceAll) {
     ac.getAccessUtil().changeAccess(col, aces, replaceAll);
@@ -439,16 +440,16 @@ public class CoreCalendars extends CalintfHelper
 
     dao.updateCollection(unwrap(col));
 
-    touchCalendar(col); // indexes as well
+    touchCollection(col); // indexes as well
 
-    ((CalendarWrapper)col).clearCurrentAccess(); // force recheck
-    colCache.put((CalendarWrapper)col);
+    ((CollectionWrapper)col).clearCurrentAccess(); // force recheck
+    colCache.put((CollectionWrapper)col);
 
     notify(SysEvent.SysCode.COLLECTION_UPDATED, col);
   }
 
   @Override
-  public void defaultAccess(final BwCalendar cal,
+  public void defaultAccess(final BwCollection cal,
                             final AceWho who) {
     ac.getAccessUtil().defaultAccess(cal, who);
     dao.updateCollection(unwrap(cal));
@@ -461,25 +462,25 @@ public class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public boolean deleteCalendar(BwCalendar val,
-                                final boolean reallyDelete) {
+  public boolean deleteCollection(BwCollection val,
+                                  final boolean reallyDelete) {
     colCache.flush();
 
     ac.checkAccess(val, privUnbind, false);
 
     final String parentPath = val.getColPath();
     if (parentPath == null) {
-      throw new BedeworkException(CalFacadeErrorCode.cannotDeleteCalendarRoot);
+      throw new BedeworkException(CalFacadeErrorCode.cannotDeleteCollectionRoot);
     }
 
     /* Ensure the parent exists and we have writeContent on the parent.
      */
-    final BwCalendar parent = getCalendar(parentPath, privWriteContent, false);
+    final BwCollection parent = this.getCollection(parentPath, privWriteContent, false);
     if (parent == null) {
       throw new BedeworkException(CalFacadeErrorCode.collectionNotFound);
     }
 
-    val = getCalendar(val.getPath(), privUnbind, false);
+    val = this.getCollection(val.getPath(), privUnbind, false);
     if (val == null) {
       throw new BedeworkException(CalFacadeErrorCode.collectionNotFound);
     }
@@ -496,29 +497,29 @@ public class CoreCalendars extends CalintfHelper
       return true;
     }
 
-    final BwCalendar unwrapped = unwrap(val);
+    final BwCollection unwrapped = unwrap(val);
     final String path = val.getPath();
     
     /* Ensure it's not in any (auth)user preferences */
 
-    dao.removeCalendarFromAuthPrefs(unwrapped);
+    dao.removeCollectionFromAuthPrefs(unwrapped);
 
     /* Ensure no tombstoned events or childen */
     dao.removeTombstoned(fixPath(path));
     getIndexer(val).unindexContained(fixPath(path));
 
     if (reallyDelete) {
-      dao.deleteCalendar(unwrapped);
+      dao.deleteCollection(unwrapped);
       getIndexer(val).unindexEntity(path);
     } else {
       tombstoneEntity(unwrapped);
       unwrapped.tombstone();
       dao.updateCollection(unwrapped);
-      touchCalendar(unwrapped); // Indexes as well
+      touchCollection(unwrapped); // Indexes as well
     }
 
     colCache.remove(path);
-    touchCalendar(parent);
+    touchCollection(parent);
 
     notify(SysEvent.SysCode.COLLECTION_DELETED, val);
 
@@ -526,24 +527,24 @@ public class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public boolean isEmpty(final BwCalendar val) {
+  public boolean isEmpty(final BwCollection val) {
     return dao.isEmptyCollection(val);
   }
   
   @Override
-  public void addNewCalendars(final BwPrincipal<?> user) {
-    /* Add a user collection to the userCalendarRoot and then a default
-       calendar collection. */
+  public void addNewCollections(final BwPrincipal<?> user) {
+    /* Add a user collection to the userCollectionRoot and then
+      a default collection. */
 
-    String path =  userCalendarRootPath;
-    final BwCalendar userrootcal = dao.getCollection(path);
+    String path = userCollectionRootPath;
+    final BwCollection userrootcal = dao.getCollection(path);
 
     if (userrootcal == null) {
       throw new BedeworkException("No user root at " + path);
     }
 
-    BwCalendar parentCal = userrootcal;
-    BwCalendar usercal = null;
+    BwCollection parentCal = userrootcal;
+    BwCollection usercal = null;
 
     /* We may have a principal e.g. /principals/resources/vcc311
      * All except the last may exist already.
@@ -564,11 +565,11 @@ public class CoreCalendars extends CalintfHelper
       if (i == (upath.length - 1)) {
         if (usercal != null) {
           throw new BedeworkException(
-                  "User calendar already exists at " + path);
+                  "User collection already exists at " + path);
         }
 
         /* Create a folder for the user */
-        usercal = new BwCalendar();
+        usercal = new BwCollection();
         usercal.setName(pathSeg);
         usercal.setCreatorHref(user.getPrincipalRef());
         usercal.setOwnerHref(user.getPrincipalRef());
@@ -588,7 +589,7 @@ public class CoreCalendars extends CalintfHelper
         /* Create a new system owned folder for part of the principal
          * hierarchy
          */
-        usercal = new BwCalendar();
+        usercal = new BwCollection();
         usercal.setName(pathSeg);
         usercal.setCreatorHref(userrootcal.getCreatorHref());
         usercal.setOwnerHref(userrootcal.getOwnerHref());
@@ -613,16 +614,16 @@ public class CoreCalendars extends CalintfHelper
       throw new BedeworkException("Invalid user " + user);
     }
 
-    /* Create a default calendar */
-    final var cal = new BwCalendar();
-    cal.setName(BasicSystemProperties.userDefaultCalendar);
+    /* Create a default collection */
+    final var cal = new BwCollection();
+    cal.setName(BasicSystemProperties.userDefaultCollection);
     cal.setCreatorHref(user.getPrincipalRef());
     cal.setOwnerHref(user.getPrincipalRef());
     cal.setPublick(false);
     cal.setPath(Util.buildPath(colPathEndsWithSlash, path, "/",
                                cal.getName()));
     cal.setColPath(usercal.getPath());
-    cal.setCalType(BwCalendar.calTypeCalendarCollection);
+    cal.setCalType(BwCollection.calTypeCalendarCollection);
     cal.setAffectsFreeBusy(true);
 
     final var lm = cal.getLastmod();
@@ -636,16 +637,16 @@ public class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public Set<BwCalendar> getSynchCols(final String path,
-                                      final String token) {
-    final Collection<BwCalendar> cols =
+  public Set<BwCollection> getSynchCols(final String path,
+                                        final String token) {
+    final Collection<BwCollection> cols =
             dao.getSynchCollections(fixPath(path),
                                     token);
 
-    final Set<BwCalendar> res = new TreeSet<>();
+    final Set<BwCollection> res = new TreeSet<>();
 
-    for (final BwCalendar col: cols) {
-      final BwCalendar wcol = intf.wrap(col);
+    for (final BwCollection col: cols) {
+      final BwCollection wcol = intf.wrap(col);
       final CurrentAccess ca = ac.checkAccess(wcol, privAny, true);
       if (!ca.getAccessAllowed()) {
         continue;
@@ -658,7 +659,7 @@ public class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public boolean testSynchCol(final BwCalendar col,
+  public boolean testSynchCol(final BwCollection col,
                               final String token)
           {
     throw new BedeworkException("Should not get here - handled by interface");
@@ -666,7 +667,7 @@ public class CoreCalendars extends CalintfHelper
 
   @Override
   public String getSyncToken(final String path) {
-    final BwCalendar thisCol = getCalendar(path, privAny, false);
+    final BwCollection thisCol = this.getCollection(path, privAny, false);
     
     if (thisCol == null) {
       return null;
@@ -683,18 +684,18 @@ public class CoreCalendars extends CalintfHelper
     final String fpath = fixPath(path); // Removes "/"
     final String fpathSlash = fpath + "/";
     
-    final List<BwCalendar> cols = dao.getPathPrefix(fpath);
+    final List<BwCollection> cols = dao.getPathPrefix(fpath);
 
     String token = thisCol.getLastmod().getTagValue();
 
-    for (final BwCalendar col: cols) {
+    for (final BwCollection col: cols) {
       final String colPath = col.getPath();
       
       if (!colPath.equals(fpath) && !colPath.startsWith(fpathSlash)) {
         continue;
       }
       
-      final BwCalendar wcol = intf.wrap(col);
+      final BwCollection wcol = intf.wrap(col);
       final CurrentAccess ca = ac.checkAccess(wcol, privAny, true);
       if (!ca.getAccessAllowed()) {
         continue;
@@ -721,77 +722,77 @@ public class CoreCalendars extends CalintfHelper
    *                   Private methods
    * ============================================================== */
 
-  private GetSpecialCalendarResult getIfSpecial(final BwPrincipal<?> owner,
-                                                final String path) {
-    final String pathTo = intf.getPrincipalInfo().getCalendarHomePath(owner);
+  private GetSpecialCollectionResult getIfSpecial(final BwPrincipal<?> owner,
+                                                  final String path) {
+    final String pathTo = intf.getPrincipalInfo().getCollectionHomePath(owner);
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
                        BasicSystemProperties.userInbox)
             .equals(path)) {
-      return getSpecialCalendar(owner, BwCalendar.calTypeInbox,
-                                true, false, PrivilegeDefs.privAny,
-                                null);
+      return getSpecialCollection(owner, BwCollection.calTypeInbox,
+                                  true, false, PrivilegeDefs.privAny,
+                                  null);
     }
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
                        BasicSystemProperties.userPendingInbox)
             .equals(path)) {
-      return getSpecialCalendar(owner, BwCalendar.calTypePendingInbox,
-                                true, false, PrivilegeDefs.privAny,
-                                null);
+      return getSpecialCollection(owner, BwCollection.calTypePendingInbox,
+                                  true, false, PrivilegeDefs.privAny,
+                                  null);
     }
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
                        BasicSystemProperties.userOutbox)
             .equals(path)) {
-      return getSpecialCalendar(owner, BwCalendar.calTypeOutbox,
-                                true, false, PrivilegeDefs.privAny,
-                                null);
+      return getSpecialCollection(owner, BwCollection.calTypeOutbox,
+                                  true, false, PrivilegeDefs.privAny,
+                                  null);
     }
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
                        BasicSystemProperties.defaultNotificationsName)
             .equals(path)) {
-      return getSpecialCalendar(owner, BwCalendar.calTypeNotifications,
-                                true, false, PrivilegeDefs.privAny,
-                                null);
+      return getSpecialCollection(owner, BwCollection.calTypeNotifications,
+                                  true, false, PrivilegeDefs.privAny,
+                                  null);
     }
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
                        BasicSystemProperties.defaultReferencesName)
             .equals(path)) {
-      return getSpecialCalendar(owner, BwCalendar.calTypeEventList,
-                                true, false, PrivilegeDefs.privAny,
-                                null);
+      return getSpecialCollection(owner, BwCollection.calTypeEventList,
+                                  true, false, PrivilegeDefs.privAny,
+                                  null);
     }
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
-                       BasicSystemProperties.userDefaultPollsCalendar)
+                       BasicSystemProperties.userDefaultPollsCollection)
             .equals(path)) {
-      return getSpecialCalendar(owner, BwCalendar.calTypePoll,
-                                true, false, PrivilegeDefs.privAny,
-                                null);
+      return getSpecialCollection(owner, BwCollection.calTypePoll,
+                                  true, false, PrivilegeDefs.privAny,
+                                  null);
     }
 
     return null;
   }
 
-  private GetSpecialCalendarResult getSpecialCalendar(
+  private GetSpecialCollectionResult getSpecialCollection(
           final BwPrincipal<?> owner,
           final int calType,
           final boolean create,
           final boolean tryFetch,
           final int access,
           final BwIndexer indexer) {
-    final String name = intf.getCalendarNameFromType(calType);
+    final String name = intf.getCollectionNameFromType(calType);
     if (name == null) {
       // Not supported
       return null;
     }
 
-    final String pathTo = intf.getPrincipalInfo().getCalendarHomePath(owner);
+    final String pathTo = intf.getPrincipalInfo().getCollectionHomePath(owner);
 
-    final GetSpecialCalendarResult gscr = new GetSpecialCalendarResult();
+    final GetSpecialCollectionResult gscr = new GetSpecialCollectionResult();
 
     if (!dao.collectionExists(pathTo)) {
       gscr.noUserHome = true;
@@ -805,9 +806,9 @@ public class CoreCalendars extends CalintfHelper
                                                    pathTo, "/", name),
                                     access, false);
       } else {
-        gscr.cal = getCalendar(Util.buildPath(colPathEndsWithSlash,
-                                              pathTo, "/", name),
-                               access, false);
+        gscr.cal = this.getCollection(Util.buildPath(colPathEndsWithSlash,
+                                                     pathTo, "/", name),
+                                      access, false);
       }
 
       if ((gscr.cal != null) || !create) {
@@ -816,21 +817,21 @@ public class CoreCalendars extends CalintfHelper
     }
 
     /*
-    BwCalendar parent = getCalendar(pathTo, privRead);
+    BwCollection parent = getCollection(pathTo, privRead);
 
     if (parent == null) {
-      throw new BedeworkException("org.bedework.calcore.calendars.unabletocreate");
+      throw new BedeworkException("org.bedework.calcore.calenollectiondars.unabletocreate");
     }
     */
 
-    gscr.cal = new BwCalendar();
+    gscr.cal = new BwCollection();
     gscr.cal.setName(name);
     gscr.cal.setCreatorHref(owner.getPrincipalRef());
     gscr.cal.setOwnerHref(owner.getPrincipalRef());
     gscr.cal.setCalType(calType);
 
     /* I think we're allowing privNone here because we don't mind if the
-     * calendar gets created even if the caller has no access.
+     * collection gets created even if the caller has no access.
      */
     gscr.cal = add(gscr.cal, pathTo, true, access);
     gscr.created = true;
@@ -841,22 +842,22 @@ public class CoreCalendars extends CalintfHelper
   /*
     indexer != null => Use ES for the searches
    */
-  private BwCalendar resolveAlias(final BwCalendar val,
-                                  final boolean resolveSubAlias,
-                                  final boolean freeBusy,
-                                  final ArrayList<String> pathElements,
-                                  final BwIndexer indexer) {
+  private BwCollection resolveAlias(final BwCollection val,
+                                    final boolean resolveSubAlias,
+                                    final boolean freeBusy,
+                                    final ArrayList<String> pathElements,
+                                    final BwIndexer indexer) {
     if ((val == null) || !val.getInternalAlias()) {
       return val;
     }
 
-    final BwCalendar c = val.getAliasTarget();
+    final BwCollection c = val.getAliasTarget();
     if (c != null) {
       if (!resolveSubAlias) {
         return c;
       }
 
-      final BwCalendar res = resolveAlias(c, true, freeBusy, pathElements, indexer);
+      final BwCollection res = resolveAlias(c, true, freeBusy, pathElements, indexer);
       res.setAliasOrigin(val);
       
       return res;
@@ -881,16 +882,16 @@ public class CoreCalendars extends CalintfHelper
     pathElements.add(path);
 
     //if (debug()) {
-    //  debug("Search for calendar \"" + path + "\"");
+    //  debug("Search for collection \"" + path + "\"");
     //}
 
-    BwCalendar col;
+    BwCollection col;
 
     try {
       if (indexer != null) {
         col = getCollectionIdx(indexer, path, desiredAccess, false);
       } else {
-        col = getCalendar(path, desiredAccess, false);
+        col = this.getCollection(path, desiredAccess, false);
       }
     } catch (final BedeworkAccessException ignored) {
       col = null;
@@ -914,13 +915,13 @@ public class CoreCalendars extends CalintfHelper
       return col;
     }
 
-    final BwCalendar res = resolveAlias(col, true, freeBusy, pathElements, indexer);
+    final BwCollection res = resolveAlias(col, true, freeBusy, pathElements, indexer);
     res.setAliasOrigin(val);
 
     return res;
   }
 
-  private void disableAlias(final BwCalendar val) {
+  private void disableAlias(final BwCollection val) {
     val.setDisabled(true);
     if (!val.unsaved()) {
       // Save the state
@@ -928,17 +929,17 @@ public class CoreCalendars extends CalintfHelper
       dao.updateCollection(unwrap(val));
 
       indexEntity(val);
-      //touchCalendar(val.getPath());
+      //touchCollection(val.getPath());
 
       notify(SysEvent.SysCode.COLLECTION_UPDATED, val);
 
-      colCache.put((CalendarWrapper)val);
+      colCache.put((CollectionWrapper)val);
     }
   }
 
-  private void checkNewCalendarName(final String name,
-                                    final boolean special,
-                                    final BwCalendar parent) {
+  private void checkNewCollectionName(final String name,
+                                      final boolean special,
+                                      final BwCollection parent) {
     // XXX This should be accessible to all implementations.
     if (!special) {
       /* Ensure the name isn't reserved */
@@ -946,13 +947,13 @@ public class CoreCalendars extends CalintfHelper
       switch (name) {
         case BasicSystemProperties.userInbox ->
                 throw new BedeworkException(
-                        CalFacadeErrorCode.illegalCalendarCreation);
+                        CalFacadeErrorCode.illegalCollectionCreation);
         case BasicSystemProperties.userOutbox ->
                 throw new BedeworkException(
-                        CalFacadeErrorCode.illegalCalendarCreation);
+                        CalFacadeErrorCode.illegalCollectionCreation);
         case BasicSystemProperties.defaultNotificationsName ->
                 throw new BedeworkException(
-                        CalFacadeErrorCode.illegalCalendarCreation);
+                        CalFacadeErrorCode.illegalCollectionCreation);
       }
 
     }
@@ -961,7 +962,7 @@ public class CoreCalendars extends CalintfHelper
      */
     if ((name == null) ||
         name.contains("/")) {
-      throw new BedeworkException(CalFacadeErrorCode.illegalCalendarCreation);
+      throw new BedeworkException(CalFacadeErrorCode.illegalCollectionCreation);
     }
 
     /* Ensure the new path is unique */
@@ -973,29 +974,29 @@ public class CoreCalendars extends CalintfHelper
     }
 
     path = Util.buildPath(colPathEndsWithSlash, path, "/", name);
-    final BwCalendar col = dao.getCollection(path);
+    final BwCollection col = dao.getCollection(path);
 
     if (col != null) {
       if (!col.getTombstoned()) {
-        throw new BedeworkException(CalFacadeErrorCode.duplicateCalendar);
+        throw new BedeworkException(CalFacadeErrorCode.duplicateCollection);
       }
 
-      dao.deleteCalendar(unwrap(col));
+      dao.deleteCollection(unwrap(col));
     }
   }
 
-  private BwCalendar add(final BwCalendar val,
-                         final String parentPath,
-                         final boolean special,
-                         final int access) {
-    BwCalendar parent = null;
+  private BwCollection add(final BwCollection val,
+                           final String parentPath,
+                           final boolean special,
+                           final int access) {
+    BwCollection parent = null;
     final String newPath;
 
     if ("/".equals(parentPath)) {
       // creating a new root
       newPath = Util.buildPath(colPathEndsWithSlash, "/", val.getName());
     } else {
-      parent = getCalendar(parentPath, access, false);
+      parent = this.getCollection(parentPath, access, false);
 
       if (parent == null) {
         throw new BedeworkException(CalFacadeErrorCode.collectionNotFound,
@@ -1005,18 +1006,18 @@ public class CoreCalendars extends CalintfHelper
       /* Is the parent a calendar collection or a resource folder?
        */
       if (parent.getCalendarCollection() ||
-          (parent.getCalType() == BwCalendar.calTypeResourceCollection)) {
+          (parent.getCalType() == BwCollection.calTypeResourceCollection)) {
         if (val.getAlias() ||
-            ((val.getCalType() != BwCalendar.calTypeFolder) &&
-            (val.getCalType() != BwCalendar.calTypeResourceCollection))) {
-          throw new BedeworkException(CalFacadeErrorCode.illegalCalendarCreation);
+            ((val.getCalType() != BwCollection.calTypeFolder) &&
+            (val.getCalType() != BwCollection.calTypeResourceCollection))) {
+          throw new BedeworkException(CalFacadeErrorCode.illegalCollectionCreation);
         }
 
-        if (val.getCalType() == BwCalendar.calTypeFolder) {
-          val.setCalType(BwCalendar.calTypeResourceCollection);
+        if (val.getCalType() == BwCollection.calTypeFolder) {
+          val.setCalType(BwCollection.calTypeResourceCollection);
         }
-      } else if (parent.getCalType() != BwCalendar.calTypeFolder) {
-        throw new BedeworkException(CalFacadeErrorCode.illegalCalendarCreation);
+      } else if (parent.getCalType() != BwCollection.calTypeFolder) {
+        throw new BedeworkException(CalFacadeErrorCode.illegalCollectionCreation);
       }
 
       newPath = Util.buildPath(colPathEndsWithSlash, parent.getPath(), 
@@ -1024,7 +1025,7 @@ public class CoreCalendars extends CalintfHelper
     }
 
     /* Ensure the name isn't reserved and is unique */
-    checkNewCalendarName(val.getName(), special, parent);
+    checkNewCollectionName(val.getName(), special, parent);
 
     val.setPath(newPath);
     if (val.getOwnerHref() == null) {
@@ -1045,23 +1046,23 @@ public class CoreCalendars extends CalintfHelper
     dao.addCollection(unwrap(val));
 
     if (parent != null) {
-      touchCalendar(parent);
+      touchCollection(parent);
     }
 
     indexEntityNow(val);
 
     notify(SysEvent.SysCode.COLLECTION_ADDED, val);
 
-    final CalendarWrapper wcol = intf.wrap(val);
+    final CollectionWrapper wcol = intf.wrap(val);
 
     colCache.put(wcol);
 
     return checkAccess(wcol, privAny, true);
   }
 
-  private void updatePaths(BwCalendar val,
-                           final BwCalendar newParent) {
-    final Collection<BwCalendar> children = getChildren(val);
+  private void updatePaths(BwCollection val,
+                           final BwCollection newParent) {
+    final Collection<BwCollection> children = getChildren(val);
 
     final String oldHref = val.getPath();
 
@@ -1082,32 +1083,32 @@ public class CoreCalendars extends CalintfHelper
     notifyMove(SysEvent.SysCode.COLLECTION_MOVED,
                oldHref, val);
 
-    //updateCalendar(val);
+    //updateCollection(val);
 
-    for (final BwCalendar ch: children) {
+    for (final BwCollection ch: children) {
       updatePaths(ch, val);
     }
   }
 
   /** Return a Collection of the objects after checking access and wrapping
    *
-   * @param ents          Collection of Bwcalendar
+   * @param ents          Collection of BwCollection
    * @param desiredAccess access we want
    * @param nullForNoAccess boolean flag behaviour on no access
    * @return Collection   of checked objects
    */
-  private Collection<BwCalendar> checkAccess(
-          final Collection<BwCalendar> ents,
+  private Collection<BwCollection> checkAccess(
+          final Collection<BwCollection> ents,
           @SuppressWarnings("SameParameterValue") final int desiredAccess,
           @SuppressWarnings("SameParameterValue") final boolean nullForNoAccess)
   {
-    final TreeSet<BwCalendar> out = new TreeSet<>();
+    final TreeSet<BwCollection> out = new TreeSet<>();
     if (ents == null) {
       return out;
     }
 
-    for (BwCalendar cal: ents) {
-      cal = checkAccess((CalendarWrapper)cal, desiredAccess, nullForNoAccess);
+    for (BwCollection cal: ents) {
+      cal = checkAccess((CollectionWrapper)cal, desiredAccess, nullForNoAccess);
       if (cal != null) {
         out.add(cal);
       }
@@ -1116,9 +1117,9 @@ public class CoreCalendars extends CalintfHelper
     return out;
   }
 
-  public BwCalendar checkAccess(final CalendarWrapper col,
-                                final int desiredAccess,
-                                final boolean alwaysReturnResult)
+  public BwCollection checkAccess(final CollectionWrapper col,
+                                  final int desiredAccess,
+                                  final boolean alwaysReturnResult)
           {
     if (col == null) {
       return null;
@@ -1144,7 +1145,7 @@ public class CoreCalendars extends CalintfHelper
   }
 
   private void notify(final SysEvent.SysCode code,
-                      final BwCalendar val) {
+                      final BwCollection val) {
     final boolean indexed = true;
     if (code.equals(SysEvent.SysCode.COLLECTION_DELETED)) {
       postNotification(
@@ -1168,7 +1169,7 @@ public class CoreCalendars extends CalintfHelper
 
   private void notifyMove(@SuppressWarnings("SameParameterValue") final SysEvent.SysCode code,
                           final String oldHref,
-                          final BwCalendar val) {
+                          final BwCollection val) {
     final boolean indexed = true;
 
     postNotification(
@@ -1183,9 +1184,9 @@ public class CoreCalendars extends CalintfHelper
   }
 
   /* No access checks performed */
-  private Collection<BwCalendar> getChildren(final BwCalendar col) {
-    final List<BwCalendar> ch;
-    final List<BwCalendar> wch = new ArrayList<>();
+  private Collection<BwCollection> getChildren(final BwCollection col) {
+    final List<BwCollection> ch;
+    final List<BwCollection> wch = new ArrayList<>();
 
     if (col == null) {
       return wch;
@@ -1217,7 +1218,7 @@ public class CoreCalendars extends CalintfHelper
                 BwLastMod.getTagValue(lmp.timestamp(),
                                       lmp.sequence());
 
-        final BwCalendar c = colCache.get(lmp.path(), token);
+        final BwCollection c = colCache.get(lmp.path(), token);
 
         if ((c != null) && !c.getTombstoned()) {
           wch.add(c);
@@ -1242,8 +1243,8 @@ public class CoreCalendars extends CalintfHelper
       return wch;
     }
 
-    for (final BwCalendar c: ch) {
-      final CalendarWrapper wc = intf.wrap(c);
+    for (final BwCollection c: ch) {
+      final CollectionWrapper wc = intf.wrap(c);
 
       colCache.put(wc);
       wch.add(wc);

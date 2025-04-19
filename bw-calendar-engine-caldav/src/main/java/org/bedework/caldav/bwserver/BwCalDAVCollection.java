@@ -20,7 +20,7 @@ package org.bedework.caldav.bwserver;
 
 import org.bedework.access.AccessPrincipal;
 import org.bedework.caldav.server.CalDAVCollection;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 import org.bedework.webdav.servlet.shared.WebdavException;
@@ -37,14 +37,14 @@ import javax.xml.namespace.QName;
 public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   private final BwSysIntfImpl intf;
 
-  private BwCalendar col;
+  private BwCollection col;
 
   /**
    * @param intf the system interface
    * @param col the collection
    */
   BwCalDAVCollection(final BwSysIntfImpl intf,
-                     final BwCalendar col) {
+                     final BwCollection col) {
     this.intf = intf;
     this.col = col;
   }
@@ -90,7 +90,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
 
   @Override
   public void setRefreshRate(final int val) {
-    getCol().setRefreshRate(Math.max(BwCalendar.minRefreshRateSeconds, val));
+    getCol().setRefreshRate(Math.max(BwCollection.minRefreshRateSeconds, val));
   }
 
   @Override
@@ -104,7 +104,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
       return this;
     }
 
-    final BwCalendar c;
+    final BwCollection c;
     try {
       c = intf.resolveAlias(col, resolveSubAlias);
     } catch (final WebdavException e) {
@@ -138,7 +138,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   @Override
   public int getCalType() {
     final int calType;
-    BwCalendar c = getCol();
+    BwCollection c = getCol();
 
     if (isAlias()) {
       try {
@@ -154,37 +154,37 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
 
     calType = c.getCalType();
 
-    if (calType == BwCalendar.calTypeFolder) {
+    if (calType == BwCollection.calTypeFolder) {
       // Broken alias
       return CalDAVCollection.calTypeCollection;
     }
 
-    if ((calType == BwCalendar.calTypeCalendarCollection) ||
-        (calType == BwCalendar.calTypeEventList) ||
-        (calType == BwCalendar.calTypeExtSub)) {
+    if ((calType == BwCollection.calTypeCalendarCollection) ||
+        (calType == BwCollection.calTypeEventList) ||
+        (calType == BwCollection.calTypeExtSub)) {
       // Broken alias
       return CalDAVCollection.calTypeCalendarCollection;
     }
 
-    if (calType == BwCalendar.calTypeInbox) {
+    if (calType == BwCollection.calTypeInbox) {
       // Broken alias
       return CalDAVCollection.calTypeInbox;
     }
 
-    if (calType == BwCalendar.calTypeOutbox) {
+    if (calType == BwCollection.calTypeOutbox) {
       // Broken alias
       return CalDAVCollection.calTypeOutbox;
     }
 
-    if (calType == BwCalendar.calTypeNotifications) {
+    if (calType == BwCollection.calTypeNotifications) {
       return CalDAVCollection.calTypeNotifications;
     }
 
-    if (calType == BwCalendar.calTypePoll) {
+    if (calType == BwCollection.calTypePoll) {
       return CalDAVCollection.calTypeCalendarCollection;
     }
 
-    if (calType == BwCalendar.calTypeTasks) {
+    if (calType == BwCollection.calTypeTasks) {
       return CalDAVCollection.calTypeCalendarCollection;
     }
 
@@ -296,11 +296,11 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   public String getName() {
     final String n = getCol().getName();
 
-    if (!n.endsWith(BwCalendar.tombstonedSuffix)) {
+    if (!n.endsWith(BwCollection.tombstonedSuffix)) {
       return n;
     }
 
-    return n.substring(0, n.length() - BwCalendar.tombstonedSuffix.length());
+    return n.substring(0, n.length() - BwCollection.tombstonedSuffix.length());
   }
 
   @Override
@@ -322,11 +322,11 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   public String getPath() {
     final String p = getCol().getPath();
 
-    if (!p.endsWith(BwCalendar.tombstonedSuffix)) {
+    if (!p.endsWith(BwCollection.tombstonedSuffix)) {
       return p;
     }
 
-    return p.substring(0, p.length() - BwCalendar.tombstonedSuffix.length());
+    return p.substring(0, p.length() - BwCollection.tombstonedSuffix.length());
   }
 
   @Override
@@ -398,9 +398,9 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
    *                      Private methods
    * ==================================================================== */
 
-  BwCalendar getCol() {
+  BwCollection getCol() {
     if (col == null) {
-      col = new BwCalendar();
+      col = new BwCollection();
     }
 
     return col;

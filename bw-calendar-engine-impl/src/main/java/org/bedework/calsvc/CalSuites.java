@@ -28,7 +28,7 @@ import org.bedework.access.Privilege;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.WhoDefs;
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.configs.BasicSystemProperties;
@@ -192,7 +192,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
 
     final BwPrincipal<?> eventsOwner = getPrincipal(suite.getGroup().getOwnerHref());
 
-    final String home = getSvc().getPrincipalInfo().getCalendarHomePath(eventsOwner);
+    final String home = getSvc().getPrincipalInfo().getCollectionHomePath(eventsOwner);
 
     final BwPreferences prefs = getPrefs(eventsOwner);
 
@@ -269,15 +269,15 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
    *                   Private methods
    *  =================================================================== */
 
-  private BwCalendar getResourcesDir(final BwCalSuite suite,
-                                     final ResourceClass cl) {
+  private BwCollection getResourcesDir(final BwCalSuite suite,
+                                       final ResourceClass cl) {
     final String path = getResourcesPath(suite, cl);
 
     if (path == null) {
       throw new BedeworkException(CalFacadeErrorCode.noCalsuiteResCol);
     }
 
-    BwCalendar resCol = getCols().get(path);
+    BwCollection resCol = getCols().get(path);
     if (resCol != null) {
       return resCol;
     }
@@ -286,7 +286,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
      * collection is writable to the calsuite owner.
      */
 
-    resCol = new BwCalendar();
+    resCol = new BwCollection();
 
     resCol.setName(path.substring(path.lastIndexOf("/") + 1));
     resCol.setSummary(resCol.getName());
@@ -333,7 +333,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
       return;
     }
 
-    final BwCalendar rootCol = getCols().get(rootCollectionPath);
+    final BwCollection rootCol = getCols().get(rootCollectionPath);
     if (rootCol == null) {
       throw new BedeworkException(CalFacadeErrorCode.calsuiteUnknownRootCollection,
                                    rootCollectionPath);
@@ -343,7 +343,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     cs.setRootCollectionPath(rootCol.getPath());
   }
 
-  private record HomeAndOwner(BwCalendar home,
+  private record HomeAndOwner(BwCollection home,
                               BwPrincipal<?> eventsOwner) {}
 
   /* Ensure the given group is valid for the given calendar suite
@@ -382,7 +382,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
               CalFacadeErrorCode.calsuiteBadowner);
     }
 
-    final BwCalendar home = getCols().getHomeDb(eventsOwner, true);
+    final BwCollection home = getCols().getHomeDb(eventsOwner, true);
     if (home == null) {
       throw new BedeworkException(
               CalFacadeErrorCode.missingGroupOwnerHome);
@@ -458,7 +458,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
       return w;
     }
 
-    w.setResourcesHome(getSvc().getPrincipalInfo().getCalendarHomePath(eventsOwner));
+    w.setResourcesHome(getSvc().getPrincipalInfo().getCollectionHomePath(eventsOwner));
 
     return w;
   }

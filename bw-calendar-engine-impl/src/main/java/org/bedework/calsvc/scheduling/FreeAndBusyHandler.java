@@ -25,7 +25,7 @@ import org.bedework.caldav.util.filter.EntityTypeFilter;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.caldav.util.filter.OrFilter;
 import org.bedework.calfacade.BwAttendee;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwDuration;
 import org.bedework.calfacade.BwEvent;
@@ -44,7 +44,7 @@ import org.bedework.calfacade.util.EventPeriods;
 import org.bedework.calfacade.util.Granulator;
 import org.bedework.calfacade.util.Granulator.GetPeriodsPars;
 import org.bedework.calsvc.CalSvc;
-import org.bedework.calsvci.CalendarsI;
+import org.bedework.calsvci.CollectionsI;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.webdav.servlet.shared.WebdavException;
 
@@ -90,15 +90,15 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
    * @see org.bedework.calsvci.SchedulingI#getFreeBusy(java.util.Collection, org.bedework.calfacade.BwPrincipal, org.bedework.calfacade.BwDateTime, org.bedework.calfacade.BwDateTime, org.bedework.calfacade.BwOrganizer, java.lang.String)
    */
   @Override
-  public BwEvent getFreeBusy(final Collection<BwCalendar> fbset,
+  public BwEvent getFreeBusy(final Collection<BwCollection> fbset,
                              final BwPrincipal<?> who,
                              final BwDateTime start,
                              final BwDateTime end,
                              final BwOrganizer org,
                              final String uid,
                              final String exceptUid) {
-    final CalendarsI colHandler = getSvc().getCalendarsHandler();
-    Collection<BwCalendar> cals = null;
+    final CollectionsI colHandler = getSvc().getCollectionsHandler();
+    Collection<BwCollection> cals = null;
 
     if (fbset != null) {
       /* Don't check - we do so at the fetch of events
@@ -122,12 +122,12 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
       /* CalDAV uses Inbox to determine scheduling acccess */
       try {
         getSpecialCalendar(who,
-                           BwCalendar.calTypeInbox,
+                           BwCollection.calTypeInbox,
                            true,
                            PrivilegeDefs.privReadFreeBusy);
       } catch (final BedeworkAccessException ignored) {
         getSpecialCalendar(who,
-                           BwCalendar.calTypeInbox,
+                           BwCollection.calTypeInbox,
                            true,
                            PrivilegeDefs.privScheduleFreeBusy);
       }
@@ -180,7 +180,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
 
     final String userHref = who.getPrincipalRef();
 
-    for (final BwCalendar c: cals) {
+    for (final BwCollection c: cals) {
       if (!c.getAffectsFreeBusy()) {
         continue;
       }
@@ -313,39 +313,39 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
   }
 
   @Override
-  public Collection<BwCalendar> getFreebusySet() {
-    final Collection<BwCalendar> fbset = new ArrayList<>();
+  public Collection<BwCollection> getFreebusySet() {
+    final Collection<BwCollection> fbset = new ArrayList<>();
 
-    fbset.add(getSvc().getCalendarsHandler().getHome());
+    fbset.add(getSvc().getCollectionsHandler().getHome());
 
     return addToFreeBusySet(null, fbset);
   }
 
-  private Collection<BwCalendar> addToFreeBusySet(final Collection<BwCalendar> cals,
-                                                  final Collection<BwCalendar> fbset) {
-    final Collection<BwCalendar> resCals;
+  private Collection<BwCollection> addToFreeBusySet(final Collection<BwCollection> cals,
+                                                    final Collection<BwCollection> fbset) {
+    final Collection<BwCollection> resCals;
     if (cals == null) {
       resCals = new ArrayList<>();
     } else {
       resCals = cals;
     }
 
-    for (BwCalendar cal: fbset) {
-      if (cal.getCalType() == BwCalendar.calTypeCalendarCollection) {
+    for (BwCollection cal: fbset) {
+      if (cal.getCalType() == BwCollection.calTypeCalendarCollection) {
         if (cal.getAffectsFreeBusy()) {
           resCals.add(cal);
         }
-      } else if (cal.getCalType() == BwCalendar.calTypeAlias) {
+      } else if (cal.getCalType() == BwCollection.calTypeAlias) {
         if (!cal.getAffectsFreeBusy()) {
           continue;
         }
 
         cal = getCols().resolveAlias(cal, true, true);
-        if (cal.getCalType() == BwCalendar.calTypeCalendarCollection) {
+        if (cal.getCalType() == BwCollection.calTypeCalendarCollection) {
           resCals.add(cal);
         }
       } else {
-        addToFreeBusySet(resCals, getSvc().getCalendarsHandler().getChildren(cal));
+        addToFreeBusySet(resCals, getSvc().getCollectionsHandler().getChildren(cal));
       }
     }
 
@@ -460,16 +460,16 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
    * ==================================================================== */
 
   /*
-  private void addFbcal(Collection<BwCalendar> cals,
-                        BwCalendar cal) {
-    if (cal.getCalType() == BwCalendar.calTypeCollection) {
+  private void addFbcal(Collection<BwCollection> cals,
+                        BwCollection cal) {
+    if (cal.getCalType() == BwCollection.calTypeCollection) {
       // Leaf
       cals.add(cal);
       return;
     }
 
-    Collection<BwCalendar> chs = getSvc().getCalendarsHandler().getChildren(cal);
-    for (BwCalendar ch: chs) {
+    Collection<BwCollection> chs = getSvc().getCalendarsHandler().getChildren(cal);
+    for (BwCollection ch: chs) {
       addFbcal(cals, ch);
     }
   }

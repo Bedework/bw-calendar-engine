@@ -19,7 +19,7 @@
 package org.bedework.inoutsched.processors;
 
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
@@ -134,7 +134,7 @@ public class InRequest extends InProcessor {
           debug("InSchedule add for " + owner);
         }
 
-        final String prefSched = getSvc().getCalendarsHandler().
+        final String prefSched = getSvc().getCollectionsHandler().
                                          getPreferred(IcalDefs.entityTypeIcalNames[ev.getEntityType()]);
         if (prefSched == null) {
           // SCHED - status = no default collection
@@ -199,7 +199,7 @@ public class InRequest extends InProcessor {
 
       final var resp =
               sched.addEvent(ourCopy, namePrefix,
-                             BwCalendar.calTypeCalendarCollection,
+                             BwCollection.calTypeCalendarCollection,
                              noInvites);
       if (!resp.isOk()) {
         if (debug()) {

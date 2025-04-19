@@ -222,7 +222,7 @@ public class CoreResources extends CalintfHelper
     }
 
     intf.indexEntity(r);
-    intf.touchCalendar(r.getColPath());
+    intf.touchCollection(r.getColPath());
   }
 
   @Override

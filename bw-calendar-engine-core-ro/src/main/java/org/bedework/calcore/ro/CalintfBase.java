@@ -27,7 +27,7 @@ import org.bedework.calcore.indexing.BwIndexerFactory;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CoreEventInfo;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEvent;
@@ -55,7 +55,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.util.AccessUtilI;
-import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.calfacade.wrappers.CollectionWrapper;
 import org.bedework.sysevents.NotificationsHandlerFactory;
 import org.bedework.sysevents.events.SysEventBase;
 import org.bedework.util.calendar.PropertyIndex;
@@ -138,25 +138,25 @@ public abstract class CalintfBase implements Logged, Calintf {
     }
 
     @Override
-    public CalendarWrapper checkAccess(final BwCalendar val) {
+    public CollectionWrapper checkAccess(final BwCollection val) {
       return checkAccess(val, PrivilegeDefs.privAny);
     }
 
     @Override
-    public CalendarWrapper checkAccess(final BwCalendar val,
-                                       final int desiredAccess) {
+    public CollectionWrapper checkAccess(final BwCollection val,
+                                         final int desiredAccess) {
       if (val == null) {
         return null;
       }
 
-      if (val instanceof CalendarWrapper) {
+      if (val instanceof CollectionWrapper) {
         // CALWRAPPER get this from getEvents with an internal temp calendar
-        return (CalendarWrapper)val;
+        return (CollectionWrapper)val;
       }
 
-      final CalendarWrapper cw =
-              new CalendarWrapper(val,
-                                  ac.getAccessUtil());
+      final CollectionWrapper cw =
+              new CollectionWrapper(val,
+                                    ac.getAccessUtil());
       final CurrentAccess ca =
               checkAccess(cw,
                           desiredAccess,
@@ -253,24 +253,24 @@ public abstract class CalintfBase implements Logged, Calintf {
   }
 
   @Override
-  public String getCalendarNameFromType(final int calType) {
+  public String getCollectionNameFromType(final int calType) {
     return switch (calType) {
-      case BwCalendar.calTypeInbox -> BasicSystemProperties.userInbox;
-      case BwCalendar.calTypePendingInbox ->
+      case BwCollection.calTypeInbox -> BasicSystemProperties.userInbox;
+      case BwCollection.calTypePendingInbox ->
               BasicSystemProperties.userPendingInbox;
-      case BwCalendar.calTypeOutbox ->
+      case BwCollection.calTypeOutbox ->
               BasicSystemProperties.userOutbox;
-      case BwCalendar.calTypeNotifications ->
+      case BwCollection.calTypeNotifications ->
               BasicSystemProperties.defaultNotificationsName;
-      case BwCalendar.calTypeEventList ->
+      case BwCollection.calTypeEventList ->
               BasicSystemProperties.defaultReferencesName;
-      case BwCalendar.calTypePoll ->
-              BasicSystemProperties.userDefaultPollsCalendar;
-      case BwCalendar.calTypeAttachments ->
+      case BwCollection.calTypePoll ->
+              BasicSystemProperties.userDefaultPollsCollection;
+      case BwCollection.calTypeAttachments ->
               BasicSystemProperties.defaultAttachmentsName;
-      case BwCalendar.calTypeCalendarCollection ->
-              BasicSystemProperties.userDefaultCalendar;
-      case BwCalendar.calTypeTasks ->
+      case BwCollection.calTypeCalendarCollection ->
+              BasicSystemProperties.userDefaultCollection;
+      case BwCollection.calTypeTasks ->
               BasicSystemProperties.userDefaultTasksCalendar;
       default ->
         // Not supported
@@ -278,16 +278,16 @@ public abstract class CalintfBase implements Logged, Calintf {
     };
   }
 
-  public CalendarWrapper wrap(final BwCalendar val) {
+  public CollectionWrapper wrap(final BwCollection val) {
     if (val == null) {
       return null;
     }
 
-    if (val instanceof CalendarWrapper) {
+    if (val instanceof CollectionWrapper) {
       // CALWRAPPER get this from getEvents with an internal temp calendar
-      return (CalendarWrapper)val;
+      return (CollectionWrapper)val;
     }
-    return new CalendarWrapper(val, ac.getAccessUtil());
+    return new CollectionWrapper(val, ac.getAccessUtil());
   }
 
   public boolean getSuperUser() {
@@ -703,7 +703,7 @@ public abstract class CalintfBase implements Logged, Calintf {
   static {
     toDocType.put(BwAdminGroup.class, BwIndexer.docTypePrincipal);
     toDocType.put(BwAuthUser.class, BwIndexer.docTypePrincipal);
-    toDocType.put(BwCalendar.class, BwIndexer.docTypeCollection);
+    toDocType.put(BwCollection.class, BwIndexer.docTypeCollection);
     toDocType.put(BwCalSuite.class, BwIndexer.docTypePrincipal);
     toDocType.put(BwCategory.class, docTypeCategory);
     toDocType.put(BwContact.class, BwIndexer.docTypeContact);
@@ -716,7 +716,7 @@ public abstract class CalintfBase implements Logged, Calintf {
     toDocType.put(BwPrincipal.class, BwIndexer.docTypePrincipal);
     toDocType.put(BwResource.class, BwIndexer.docTypeResource);
     toDocType.put(BwResourceContent.class, BwIndexer.docTypeResourceContent);
-    toDocType.put(CalendarWrapper.class, BwIndexer.docTypeCollection);
+    toDocType.put(CollectionWrapper.class, BwIndexer.docTypeCollection);
     toDocType.put(EventInfo.class, BwIndexer.docTypeEvent);
   }
 

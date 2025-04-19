@@ -33,7 +33,7 @@ import org.bedework.caldav.util.filter.OrFilter;
 import org.bedework.caldav.util.filter.PresenceFilter;
 import org.bedework.caldav.util.filter.PropertyFilter;
 import org.bedework.caldav.util.filter.TimeRangeFilter;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
@@ -1481,7 +1481,7 @@ public class ESQueryFilter extends ESQueryFilterBase
       return res;
     }
 
-    if (o instanceof final BwCalendar cal) {
+    if (o instanceof final BwCollection cal) {
       return cal.getPath();
     }
 

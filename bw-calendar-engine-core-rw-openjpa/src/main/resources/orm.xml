@@ -483,7 +483,7 @@ Put this or the equiv somewhere
        A calendar definition in Bedework.
        ========================================================= -->
 
-  <entity class="org.bedework.calfacade.BwCalendar">
+  <entity class="org.bedework.calfacade.BwCollection">
     <table name="bw_calendars" />
     <attributes>
       <id name="id">

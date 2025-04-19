@@ -30,7 +30,7 @@ import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwAlarm;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
@@ -47,7 +47,7 @@ import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
-import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.calfacade.wrappers.CollectionWrapper;
 import org.bedework.convert.RecurUtil;
 import org.bedework.convert.RecurUtil.RecurPeriods;
 import org.bedework.sysevents.events.StatsEvent;
@@ -231,8 +231,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
     /*
     if (colPath != null) {
-      BwCalendar cal = getEntityCollection(colPath, privRead, scheduling, false);
-      desiredAccess = ((CalendarWrapper)cal).getLastDesiredAccess();
+      BwCollection cal = getEntityCollection(colPath, privRead, scheduling, false);
+      desiredAccess = ((CollectionWrapper)cal).getLastDesiredAccess();
     }
     */
 
@@ -443,7 +443,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
   @Override
   public Collection<CoreEventInfo> getEvents(
-          final Collection<BwCalendar> calendars,
+          final Collection<BwCollection> collections,
           final FilterBase filter,
           final BwDateTime startDate,
           final BwDateTime endDate,
@@ -464,8 +464,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     RecuridTable recurids = null;
     final UpdateEventResult uer = new UpdateEventResult();
 
-    final BwCalendar cal = getEntityCollection(val.getColPath(), privBind,
-                                               scheduling, false);
+    final BwCollection cal = getEntityCollection(val.getColPath(), privBind,
+                                                 scheduling, false);
 
     if (cal == null) {
       uer.errorCode = CalFacadeErrorCode.noEventCalendar;
@@ -517,8 +517,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
      * new uid - also disallowed.
      */
     if ((val.getEntityType() != IcalDefs.entityTypeAvailable) &&
-        (calendarNameExists(val, false, true) ||
-          calendarNameExists(val, true, true))) {
+        (collectionNameExists(val, false, true) ||
+          collectionNameExists(val, true, true))) {
       throwException(CalFacadeErrorCode.duplicateName, val.getName());
     }
 
@@ -681,7 +681,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       proxy = (BwEventProxy)val;
     }
 
-    final BwCalendar col = getCollection(val.getColPath());
+    final BwCollection col = getCollection(val.getColPath());
     final boolean shared = col.getPublick() || col.getShared();
 
     /* Don't allow name and uid changes for overrides */
@@ -719,8 +719,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
       /* Similarly for event names which must be unique within a collection
        */
-      if (calendarNameExists(val, false, false) ||
-          calendarNameExists(val, true, false)) {
+      if (collectionNameExists(val, false, false) ||
+          collectionNameExists(val, true, false)) {
         throwException(new BedeworkDupNameException(val.getName()));
       }
     }
@@ -887,7 +887,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
          * Set desiredAccess to something that works.
          *  */
 
-        final CalendarWrapper cw = (CalendarWrapper)col;
+        final CollectionWrapper cw = (CollectionWrapper)col;
         desiredAccess = cw.getLastDesiredAccess();
       }
 
@@ -1034,8 +1034,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
   @Override
   public void moveEvent(final EventInfo ei,
-                        final BwCalendar from,
-                        final BwCalendar to) {
+                        final BwCollection from,
+                        final BwCollection to) {
     final var ev = ei.getEvent();
 
     if (ev.getRecurrenceId() != null) {
@@ -1048,7 +1048,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     // Tombstoning effectively deletes the old entity.
     // No tombstone for pending inbox
 
-    if (from.getCalType() != BwCalendar.calTypePendingInbox) {
+    if (from.getCalType() != BwCollection.calTypePendingInbox) {
       final BwEvent tombstone = ev.cloneTombstone();
       tombstone.setDtstamps(intf.getCurrentTimestamp());
 
@@ -1134,7 +1134,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
     final String fpath = fixPath(path);
 
-    final BwCalendar col = getCollection(fpath);
+    final BwCollection col = getCollection(fpath);
     ac.checkAccess(col, privAny, false);
 
     @SuppressWarnings("unchecked")
@@ -1455,10 +1455,10 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     uc.addDeleted(rid);
   }
 
-  private BwCalendar getEntityCollection(final String path,
-                                         final int nonSchedAccess,
-                                         final boolean scheduling,
-                                         final boolean alwaysReturn) {
+  private BwCollection getEntityCollection(final String path,
+                                           final int nonSchedAccess,
+                                           final boolean scheduling,
+                                           final boolean alwaysReturn) {
     final int desiredAccess;
 
     if (!scheduling) {
@@ -1467,7 +1467,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       desiredAccess = privAny;
     }
 
-    final BwCalendar cal =
+    final BwCollection cal =
             intf.getCollection(path, desiredAccess,
                                alwaysReturn | scheduling);
     if (cal == null) {
@@ -1485,8 +1485,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     CurrentAccess ca;
     final AccessUtilI access = ac.getAccessUtil();
 
-    if ((cal.getCalType() == BwCalendar.calTypeInbox) ||
-            (cal.getCalType() == BwCalendar.calTypePendingInbox)) {
+    if ((cal.getCalType() == BwCollection.calTypeInbox) ||
+            (cal.getCalType() == BwCollection.calTypePendingInbox)) {
       ca = access.checkAccess(cal, privScheduleDeliver,
                               true); //alwaysReturn
       if (!ca.getAccessAllowed()) {
@@ -1494,7 +1494,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         ca = access.checkAccess(cal, privScheduleRequest,
                                 true); //alwaysReturn
       }
-    } else if (cal.getCalType() == BwCalendar.calTypeOutbox) {
+    } else if (cal.getCalType() == BwCollection.calTypeOutbox) {
       ca = access.checkAccess(cal, privScheduleSend, true);
       if (!ca.getAccessAllowed()) {
         // try old style
@@ -1546,12 +1546,12 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     return new CoreEventInfo(new BwEventProxy(override), ca);
   }
 
-  private boolean calendarNameExists(final BwEvent val,
-                                     final boolean annotation,
-                                     final boolean adding) {
+  private boolean collectionNameExists(final BwEvent val,
+                                       final boolean annotation,
+                                       final boolean adding) {
     final long startTime = System.currentTimeMillis();
     try {
-      return dao.calendarNameExists(val, annotation, adding);
+      return dao.collectionNameExists(val, annotation, adding);
     } finally {
       stat(StatsEvent.checkNameTime, startTime);
     }

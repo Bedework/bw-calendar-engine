@@ -20,7 +20,7 @@ package org.bedework.inoutsched;
 
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.base.exc.persist.BedeworkStaleStateException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.indexing.BwIndexer;
@@ -271,9 +271,9 @@ public class OutScheduler extends AbstractScheduler {
   }
 
   private Collection<EventInfo> getOutboxEvents() {
-    final BwCalendar outbox =
-            getSvc().getCalendarsHandler()
-                    .getSpecial(BwCalendar.calTypeOutbox, false);
+    final BwCollection outbox =
+            getSvc().getCollectionsHandler()
+                    .getSpecial(BwCollection.calTypeOutbox, false);
     if (outbox == null) {
       return null;
     }

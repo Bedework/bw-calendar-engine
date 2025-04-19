@@ -22,12 +22,12 @@ import org.bedework.base.exc.BedeworkException;
 import org.bedework.base.response.Response;
 import org.bedework.caldav.server.soap.synch.SynchConnection;
 import org.bedework.caldav.server.soap.synch.SynchConnectionsMBean;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.configs.SynchConfig;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.synch.BwSynchInfo;
-import org.bedework.calsvci.CalendarsI.CheckSubscriptionResult;
-import org.bedework.calsvci.CalendarsI.SynchStatusResponse;
+import org.bedework.calsvci.CollectionsI.CheckSubscriptionResult;
+import org.bedework.calsvci.CollectionsI.SynchStatusResponse;
 import org.bedework.calsvci.SynchI;
 import org.bedework.synch.wsmessages.ActiveSubscriptionRequestType;
 import org.bedework.synch.wsmessages.ArrayOfSynchProperties;
@@ -132,7 +132,7 @@ class Synch extends CalSvcDb implements SynchI {
   }
 
   @Override
-  public boolean subscribe(final BwCalendar val) {
+  public boolean subscribe(final BwCollection val) {
     final SConnection sconn = (SConnection)getSynchConnection();
 
     if ((sconn == null) || (sconn.sc == null)) {
@@ -266,7 +266,7 @@ class Synch extends CalSvcDb implements SynchI {
   }
 
   @Override
-  public boolean unsubscribe(final BwCalendar val,
+  public boolean unsubscribe(final BwCollection val,
                              final boolean forDelete) {
     if (val.getSubscriptionId() == null) {
       return true; // just noop it
@@ -302,7 +302,7 @@ class Synch extends CalSvcDb implements SynchI {
   }
 
   @Override
-  public Response<?> refresh(final BwCalendar val) {
+  public Response<?> refresh(final BwCollection val) {
     if (val.getSubscriptionId() == null) {
       return new Response<>().ok(); // just noop it
     }
@@ -333,7 +333,7 @@ class Synch extends CalSvcDb implements SynchI {
   }
 
   @Override
-  public SynchStatusResponse getSynchStatus(final BwCalendar val) {
+  public SynchStatusResponse getSynchStatus(final BwCollection val) {
     final SynchStatusResponse ssr = new SynchStatusResponse();
 
     if (val == null) {
@@ -384,7 +384,7 @@ class Synch extends CalSvcDb implements SynchI {
   }
 
   @Override
-  public CheckSubscriptionResult checkSubscription(final BwCalendar val) {
+  public CheckSubscriptionResult checkSubscription(final BwCollection val) {
     final SynchStatusResponse ssr = getSynchStatus(val);
 
     if (ssr.requestStatus == CheckSubscriptionResult.notsubscribed) {
@@ -467,7 +467,7 @@ class Synch extends CalSvcDb implements SynchI {
     }
   }
 
-  private ActiveSubscriptionRequestType makeAsr(final BwCalendar val,
+  private ActiveSubscriptionRequestType makeAsr(final BwCollection val,
                                                 final ActiveSubscriptionRequestType asr,
                                                 final String synchToken) {
     if (val.getSubscriptionId() == null) {
@@ -485,7 +485,7 @@ class Synch extends CalSvcDb implements SynchI {
     return asr;
   }
 
-  private ConnectorInfoType makeCi(final BwCalendar val) {
+  private ConnectorInfoType makeCi(final BwCollection val) {
     final ConnectorInfoType ci = new ConnectorInfoType();
 
     ci.setConnectorId(synchConf.getConnectorId());
@@ -526,7 +526,7 @@ class Synch extends CalSvcDb implements SynchI {
     return idToken;
   }
 
-  private String makeOpaqueData(final BwCalendar col) {
+  private String makeOpaqueData(final BwCollection col) {
     final BwCalSuite cs = getSvc().getCalSuitesHandler().get();
     final String csname;
     if (cs != null) {

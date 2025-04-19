@@ -6,7 +6,7 @@ package org.bedework.calcore.hibernate.daoimpl;
 import org.bedework.access.WhoDefs;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcore.rw.common.dao.PrincipalsAndPrefsDAO;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwGroup;
@@ -425,7 +425,7 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
 
     if (val instanceof BwCategory) {
       q = removeCategoryPrefForAllQuery;
-    } else if (val instanceof BwCalendar) {
+    } else if (val instanceof BwCollection) {
       q = removeCalendarPrefForAllQuery;
     } else if (val instanceof BwContact) {
       q = removeContactPrefForAllQuery;

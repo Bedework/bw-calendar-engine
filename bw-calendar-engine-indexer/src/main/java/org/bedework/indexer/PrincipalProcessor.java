@@ -18,7 +18,7 @@
 */
 package org.bedework.indexer;
 
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
@@ -93,8 +93,8 @@ public class PrincipalProcessor extends Crawler {
       }
 
       if (docType == null) {
-        final String homePath = svc.getCalendarsHandler().getHomePath();
-        final GetEntityResponse<BwCalendar> ger =
+        final String homePath = svc.getCollectionsHandler().getHomePath();
+        final GetEntityResponse<BwCollection> ger =
                 getIndexer(svc,
                            principal,
                            BwIndexer.docTypeCollection)

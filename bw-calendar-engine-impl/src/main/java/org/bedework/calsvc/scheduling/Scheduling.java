@@ -19,7 +19,7 @@
 package org.bedework.calsvc.scheduling;
 
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeErrorCode;
@@ -53,7 +53,7 @@ public class Scheduling extends ImplicitSchedulingHandler {
 
   @Override
   public EventInfo getStoredMeeting(final BwEvent ev) {
-    final String preferred = getSvc().getCalendarsHandler().
+    final String preferred = getSvc().getCollectionsHandler().
             getPreferred(IcalDefs.entityTypeIcalNames[ev.getEntityType()]);
     if (preferred == null) {
       throw new BedeworkException(CalFacadeErrorCode.schedulingNoCalendar);
@@ -79,7 +79,7 @@ public class Scheduling extends ImplicitSchedulingHandler {
     for (final EventInfo ei: evs) {
       final BwEvent e = ei.getEvent();
       // Skip anything other than a calendar collection
-      final BwCalendar evcal = getSvc().getCalendarsHandler().get(e.getColPath());
+      final BwCollection evcal = getSvc().getCollectionsHandler().get(e.getColPath());
 
       if (!evcal.getCollectionInfo().scheduling) {
         continue;

@@ -30,7 +30,7 @@ import org.bedework.caldav.util.filter.BooleanFilter;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttendee;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
@@ -105,7 +105,7 @@ import static org.bedework.base.response.Response.Status.failed;
 import static org.bedework.base.response.Response.Status.forbidden;
 import static org.bedework.base.response.Response.Status.limitExceeded;
 import static org.bedework.base.response.Response.Status.noAccess;
-import static org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
+import static org.bedework.calcorei.CoreCollectionsI.GetSpecialCollectionResult;
 import static org.bedework.calsvci.EventsI.SetEntityCategoriesResult.success;
 
 /** This class handles fetching and updates of events.
@@ -306,7 +306,7 @@ class Events extends CalSvcDb implements EventsI {
   }
 
   @Override
-  public EventInfo get(final BwCalendar col,
+  public EventInfo get(final BwCollection col,
                        final String name,
                        final String recurrenceId,
                        final List<String> retrieveList)
@@ -355,7 +355,7 @@ class Events extends CalSvcDb implements EventsI {
        * path part to be the path of the actual event
        */
 
-    if (col.getCalType() == BwCalendar.calTypeEventList) {
+    if (col.getCalType() == BwCollection.calTypeEventList) {
         /* Find the event in the list using the name */
       final SortedSet<EventListEntry> eles =
               col.getEventList();
@@ -377,13 +377,13 @@ class Events extends CalSvcDb implements EventsI {
 
   @Override
   public Collection<EventInfo> getEvents(
-          final BwCalendar cal, final FilterBase filter,
+          final BwCollection cal, final FilterBase filter,
           final BwDateTime startDate, final BwDateTime endDate,
           final List<BwIcalPropertyInfoEntry> retrieveList,
           final DeletedState delState,
           final RecurringRetrievalMode recurRetrieval)
           {
-    Collection<BwCalendar> cals = null;
+    Collection<BwCollection> cals = null;
 
     if (cal != null) {
       cals = Collections.singleton(cal);
@@ -466,8 +466,8 @@ class Events extends CalSvcDb implements EventsI {
         return updResult;
       }
 
-      BwCalendar cal = validate(event, true, schedulingInbox, 
-                                autoCreateCollection);
+      BwCollection cal = validate(event, true, schedulingInbox,
+                                  autoCreateCollection);
       if (cal == null) {
         throw new BedeworkException("No calendar for event");
       }
@@ -498,7 +498,7 @@ class Events extends CalSvcDb implements EventsI {
         }
       }
 
-      final BwCalendar undereffedCal = cal;
+      final BwCollection undereffedCal = cal;
 
       if (cal.getInternalAlias()) {
         /* Resolve the alias and put the event in it's proper place */
@@ -720,8 +720,8 @@ class Events extends CalSvcDb implements EventsI {
         return updResult;
       }
 
-      final BwCalendar cal = validate(event, false, false,
-                                      autoCreateCollection);
+      final BwCollection cal = validate(event, false, false,
+                                        autoCreateCollection);
       if (cal == null) {
         throw new BedeworkException("No calendar for event");
       }
@@ -889,7 +889,7 @@ class Events extends CalSvcDb implements EventsI {
                   new IcalTranslator(getSvc().getIcalCallback());
           final String colPath = getSvc().getCalendarsHandler().getPreferred(
                   comp.getName());
-          final BwCalendar col = getSvc().getCalendarsHandler().get(colPath);
+          final BwCollection col = getSvc().getCalendarsHandler().get(colPath);
           final Icalendar ical = trans.fromComp(col, comp, true, true);
 
           add(ical.getEventInfo(), false, false, true, true);
@@ -1049,7 +1049,7 @@ class Events extends CalSvcDb implements EventsI {
       event.setDeleted(true);
 
       GetSpecialCalendarResult gscr = getCal().getSpecialCalendar(getUser(), //event.getOwner(),
-                                          BwCalendar.calTypeTrash,
+                                          BwCollection.calTypeTrash,
                                           true,
                                           PrivilegeDefs.privWriteContent);
       if (gscr.created) {
@@ -1090,10 +1090,10 @@ class Events extends CalSvcDb implements EventsI {
 
     // Where does the ref go? Not in the same calendar - we have no access
 
-    final BwCalendar cal = getCal()
-            .getSpecialCalendar(null, getPrincipal(),
-                                BwCalendar.calTypeDeleted,
-                                true, PrivilegeDefs.privRead).cal;
+    final BwCollection cal = getCal()
+            .getSpecialCollection(null, getPrincipal(),
+                                  BwCollection.calTypeDeleted,
+                                  true, PrivilegeDefs.privRead).cal;
     proxy.setOwnerHref(getPrincipal().getPrincipalRef());
     proxy.setDeleted(true);
     proxy.setColPath(cal.getPath());
@@ -1102,7 +1102,7 @@ class Events extends CalSvcDb implements EventsI {
 
   @Override
   public Response<?> copyMoveNamed(final EventInfo fromEi,
-                                   final BwCalendar to,
+                                   final BwCollection to,
                                    String name,
                                    final boolean copy,
                                    final boolean overwrite,
@@ -1154,11 +1154,11 @@ class Events extends CalSvcDb implements EventsI {
           add(to, newEi, true);
           */
 
-          final BwCalendar from = getCols().get(fromPath);
+          final BwCollection from = getCols().get(fromPath);
 
           getCal().moveEvent(fromEi, from, to);
 
-          getCal().touchCalendar(from);
+          getCal().touchCollection(from);
         } else {
           // Just changing name
           ev.setName(name);
@@ -1543,7 +1543,7 @@ class Events extends CalSvcDb implements EventsI {
    * range. If retrieveList is supplied only those fields (and a few required
    * fields) will be returned.
    *
-   * @param cals         BwCalendar objects - non-null means limit to
+   * @param cals         BwCollection objects - non-null means limit to
    *                     given calendar set
    *                     null is limit to current user
    * @param filter       BwFilter object restricting search or null.
@@ -1555,7 +1555,7 @@ class Events extends CalSvcDb implements EventsI {
    * @return Collection  populated matching event value objects
    */
   Collection<EventInfo> getMatching(
-          final Collection<BwCalendar> cals,
+          final Collection<BwCollection> cals,
           final FilterBase filter,
           final BwDateTime startDate, final BwDateTime endDate,
           final List<BwIcalPropertyInfoEntry> retrieveList,
@@ -1568,14 +1568,14 @@ class Events extends CalSvcDb implements EventsI {
       return ts;
     }
 
-    Collection<BwCalendar> calSet = null;
+    Collection<BwCollection> calSet = null;
 
     if (cals != null) {
       /* Turn the calendar reference into a set of calendar collections
        */
       calSet = new ArrayList<>();
 
-      for (final BwCalendar cal:cals) {
+      for (final BwCollection cal:cals) {
         buildCalendarSet(calSet, cal, freeBusy);
       }
     }
@@ -1589,7 +1589,7 @@ class Events extends CalSvcDb implements EventsI {
     return ts;
   }
   
-  boolean isVisible(final BwCalendar col,
+  boolean isVisible(final BwCollection col,
                     final String entityName) {
     // This should do a cheap test of access - not retrieve the entire event
     return getSvc().getEventsHandler().get(col,
@@ -1622,7 +1622,7 @@ class Events extends CalSvcDb implements EventsI {
     if (!event.getTombstoned()) {
       // Handle some scheduling stuff.
 
-      final BwCalendar cal;
+      final BwCollection cal;
       try {
         cal = getCols().get(event.getColPath());
       } catch (final BedeworkException be) {
@@ -1726,8 +1726,8 @@ class Events extends CalSvcDb implements EventsI {
   private void adjustEntities(final EventInfo event) {
   }
 
-  private void buildCalendarSet(final Collection<BwCalendar> cals,
-                                BwCalendar calendar,
+  private void buildCalendarSet(final Collection<BwCollection> cals,
+                                BwCollection calendar,
                                 final boolean freeBusy) {
     if (calendar == null) {
       return;
@@ -1749,7 +1749,7 @@ class Events extends CalSvcDb implements EventsI {
     }
 
     if (calendar.getInternalAlias()) {
-      final BwCalendar saveColl = calendar;
+      final BwCollection saveColl = calendar;
       getCols().resolveAlias(calendar, true, freeBusy);
 
       while (calendar.getInternalAlias()) {
@@ -1775,19 +1775,19 @@ class Events extends CalSvcDb implements EventsI {
       return;
     }
 
-    if (calendar.getCalType() != BwCalendar.calTypeFolder) {
+    if (calendar.getCalType() != BwCollection.calTypeFolder) {
       return;
     }
 
-    for (final BwCalendar c: getCols().getChildren(calendar)) {
+    for (final BwCollection c: getCols().getChildren(calendar)) {
       buildCalendarSet(cals, c, freeBusy);
     }
   }
 
-  private BwCalendar validate(final BwEvent ev,
-                              final boolean adding,
-                              final boolean schedulingInbox,
-                              final boolean autoCreateCollection) {
+  private BwCollection validate(final BwEvent ev,
+                                final boolean adding,
+                                final boolean schedulingInbox,
+                                final boolean autoCreateCollection) {
     if (ev.getColPath() == null) {
       throw new BedeworkException(CalFacadeErrorCode.noEventCalendar);
     }
@@ -1835,7 +1835,7 @@ class Events extends CalSvcDb implements EventsI {
 
     setScheduleState(ev, adding, schedulingInbox);
 
-    BwCalendar col = getCols().get(ev.getColPath());
+    BwCollection col = getCols().get(ev.getColPath());
     
     if (col == null) {
       if (!autoCreateCollection) {
@@ -1850,17 +1850,17 @@ class Events extends CalSvcDb implements EventsI {
       final String entityType = IcalDefs.entityTypeIcalNames[ev
               .getEntityType()];
       final int calType = switch (entityType) {
-        case Component.VEVENT -> BwCalendar.calTypeCalendarCollection;
-        case Component.VTODO -> BwCalendar.calTypeTasks;
-        case Component.VPOLL -> BwCalendar.calTypePoll;
+        case Component.VEVENT -> BwCollection.calTypeCalendarCollection;
+        case Component.VTODO -> BwCollection.calTypeTasks;
+        case Component.VPOLL -> BwCollection.calTypePoll;
         default -> throw new BedeworkException(
                 CalFacadeErrorCode.noEventCalendar);
       };
 
-      final GetSpecialCalendarResult gscr =
-              getCal().getSpecialCalendar(null, getPrincipal(), calType,
-                                          true,
-                                          PrivilegeDefs.privAny);
+      final GetSpecialCollectionResult gscr =
+              getCal().getSpecialCollection(null, getPrincipal(), calType,
+                                            true,
+                                            PrivilegeDefs.privAny);
 
       if (gscr.cal == null) {
         throw new BedeworkException(CalFacadeErrorCode.noEventCalendar);
@@ -2146,7 +2146,7 @@ class Events extends CalSvcDb implements EventsI {
   }
 
   private void setDefaultAlarms(final EventInfo ei,
-                                final BwCalendar col) {
+                                final BwCollection col) {
     final BwEvent event = ei.getEvent();
 
     final boolean isEvent = event.getEntityType() == IcalDefs.entityTypeEvent;
@@ -2196,7 +2196,7 @@ class Events extends CalSvcDb implements EventsI {
     }
   }
 
-  private String getDefaultAlarmDef(final BwCalendar col,
+  private String getDefaultAlarmDef(final BwCollection col,
                                     final boolean isEvent,
                                     final boolean isDate) {
     if (col == null) {

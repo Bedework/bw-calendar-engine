@@ -18,7 +18,7 @@
 */
 package org.bedework.tools.cmdutil;
 
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.util.misc.Util;
@@ -76,9 +76,9 @@ public class ProcessPrefs extends CmdUtilHelper {
       while (wd != null) {
         switch (wd) {
           case "defaultImageDirectory":
-            final BwCalendar cal = getCal();
+            final BwCollection cal = getCal();
             if (cal == null) {
-              error("Unknown calendar");
+              error("Unknown collection");
               return true;
             }
             prefs.setDefaultImageDirectory(cal.getPath());
@@ -155,9 +155,9 @@ public class ProcessPrefs extends CmdUtilHelper {
 
             /*
             case"newCalPath")) {
-              BwCalendar cal = cl.getCollection(str);
+              BwCollection cal = cl.getCollection(str);
               if (cal == null) {
-                form.getErr().emit(ClientError.unknownCalendar, str);
+                form.getErr().emit(ClientError.unknownCollection, str);
                 return forwardNotFound;
               }
               prefs.setDefaultCalendarPath(cal.getPath());

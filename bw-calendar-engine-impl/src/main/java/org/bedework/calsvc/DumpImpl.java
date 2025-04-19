@@ -23,7 +23,7 @@ import org.bedework.access.AccessPrincipal;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.PrivilegeSet;
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEvent;
@@ -97,13 +97,13 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   }
 
   @Override
-  public Iterator<BwCalendar> getCalendars() {
-    final Collection<BwCalendar> cols = new ArrayList<>();
+  public Iterator<BwCollection> getCalendars() {
+    final Collection<BwCollection> cols = new ArrayList<>();
 
-    cols.add(getCal().getCalendar(
-            BasicSystemProperties.publicCalendarRootPath,
+    cols.add(getCal().getCollection(
+            BasicSystemProperties.publicCollectionRootPath,
             PrivilegeDefs.privAny, false));
-    cols.add(getCal().getCalendar(
+    cols.add(getCal().getCollection(
             BasicSystemProperties.userCalendarRootPath,
             PrivilegeDefs.privAny, false));
 
@@ -111,8 +111,8 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   }
 
   @Override
-  public Collection<BwCalendar> getChildren(final BwCalendar val) {
-    return getCal().getCalendars(val, null);
+  public Collection<BwCollection> getChildren(final BwCollection val) {
+    return getCal().getCollections(val, null);
   }
 
   @Override

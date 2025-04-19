@@ -39,7 +39,7 @@ import org.bedework.caldav.util.sharing.ShareResultType;
 import org.bedework.caldav.util.sharing.ShareType;
 import org.bedework.caldav.util.sharing.UserType;
 import org.bedework.caldav.util.sharing.parse.Parser;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.configs.NotificationProperties;
@@ -88,7 +88,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
   @Override
   public ShareResultType share(final String principalHref,
-                               final BwCalendar col,
+                               final BwCollection col,
                                final ShareType share) {
     /* Switch identity to the sharer then reget the handler
      * and do the share
@@ -126,7 +126,7 @@ public class Sharing extends CalSvcDb implements SharingI {
   }
 
   @Override
-  public ShareResultType share(final BwCalendar col,
+  public ShareResultType share(final BwCollection col,
                                final ShareType share) {
     if (!col.getCanAlias()) {
       throw new BedeworkForbidden("Cannot share");
@@ -298,9 +298,9 @@ public class Sharing extends CalSvcDb implements SharingI {
   }
 
   @Override
-  public SharingReplyResult reply(final BwCalendar col,
+  public SharingReplyResult reply(final BwCollection col,
                                   final InviteReplyType reply) {
-    final BwCalendar home = getCols().getHome();
+    final BwCollection home = getCols().getHome();
 
     if (!home.getPath().equals(col.getPath())) {
       throw new BedeworkForbidden("Not calendar home");
@@ -308,7 +308,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     /* We must have at least read access to the shared collection */
 
-    final BwCalendar sharerCol = getCols().get(Util.buildPath(colPathEndsWithSlash, reply.getHostUrl()));
+    final BwCollection sharerCol = getCols().get(Util.buildPath(colPathEndsWithSlash, reply.getHostUrl()));
 
     if (sharerCol == null) {
       // Bad hosturl
@@ -334,11 +334,11 @@ public class Sharing extends CalSvcDb implements SharingI {
      * Otherwise we need to create an alias in the calendar home using the
      * reply summary as the display name */
 
-    final List<BwCalendar> aliases =
-            ((Calendars)getCols()).findUserAlias(
+    final List<BwCollection> aliases =
+            ((Collections)getCols()).findUserAlias(
                     sharerCol.getPath());
     if (!Util.isEmpty(aliases)) {
-      final BwCalendar alias = aliases.get(0);
+      final BwCollection alias = aliases.get(0);
 
       alias.setSharedWritable(sharedWritable);
       getCols().update(alias);
@@ -346,7 +346,7 @@ public class Sharing extends CalSvcDb implements SharingI {
       return SharingReplyResult.success(alias.getPath());
     }
 
-    final BwCalendar alias = new BwCalendar();
+    final BwCollection alias = new BwCollection();
 
     String summary = reply.getSummary();
     if ((summary == null) || (summary.length() == 0)) {
@@ -355,19 +355,19 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     alias.setName(reply.getInReplyTo());
     alias.setSummary(summary);
-    alias.setCalType(BwCalendar.calTypeAlias);
+    alias.setCalType(BwCollection.calTypeAlias);
     //alias.setPath(home.getPath() + "/" + UUID.randomUUID().toString());
     alias.setAliasUri("bwcal://" + sharerCol.getPath());
     alias.setShared(true);
     alias.setSharedWritable(sharedWritable);
 
-    final BwCalendar createdAlias = getCols().add(alias, home.getPath());
+    final BwCollection createdAlias = getCols().add(alias, home.getPath());
 
     return SharingReplyResult.success(createdAlias.getPath());
   }
 
   @Override
-  public InviteType getInviteStatus(final BwCalendar col) {
+  public InviteType getInviteStatus(final BwCollection col) {
     final String inviteStr =
             col.getProperty(NamespaceAbbrevs.prefixed(
                     AppleServerTags.invite));
@@ -384,7 +384,7 @@ public class Sharing extends CalSvcDb implements SharingI {
   }
 
   @Override
-  public void delete(final BwCalendar col,
+  public void delete(final BwCollection col,
                      final boolean sendNotifications) {
     final InviteType invite = getInviteStatus(col);
 
@@ -434,7 +434,7 @@ public class Sharing extends CalSvcDb implements SharingI {
   }
 
   @Override
-  public void publish(final BwCalendar col) {
+  public void publish(final BwCollection col) {
     if (!col.getCanAlias()) {
       throw new BedeworkForbidden("Cannot publish");
     }
@@ -457,7 +457,7 @@ public class Sharing extends CalSvcDb implements SharingI {
   }
 
   @Override
-  public void unpublish(final BwCalendar col) {
+  public void unpublish(final BwCollection col) {
     if (col.getPublick() ||
         (col.getQproperty(AppleServerTags.publishUrl) == null)) {
       throw new BedeworkForbidden("Not published");
@@ -490,7 +490,7 @@ public class Sharing extends CalSvcDb implements SharingI {
                                    final String subscribedName) {
     /* We must have at least read access to the published collection */
 
-    final BwCalendar publishedCol = getCols().get(colPath);
+    final BwCollection publishedCol = getCols().get(colPath);
     final SubscribeResult sr = new SubscribeResult();
 
     if (publishedCol == null) {
@@ -511,8 +511,8 @@ public class Sharing extends CalSvcDb implements SharingI {
      * Otherwise we need to create an alias in the calendar home using the
      * reply summary as the display name */
 
-    final List<BwCalendar> aliases =
-            ((Calendars)getCols()).findUserAlias(colPath);
+    final List<BwCollection> aliases =
+            ((Collections)getCols()).findUserAlias(colPath);
     if (!Util.isEmpty(aliases)) {
       sr.setPath(aliases.get(0).getPath());
       sr.setAlreadySubscribed(true);
@@ -520,7 +520,7 @@ public class Sharing extends CalSvcDb implements SharingI {
       return sr;
     }
 
-    final BwCalendar alias = new BwCalendar();
+    final BwCollection alias = new BwCollection();
 
     String summary = subscribedName;
     if ((summary == null) || (summary.length() == 0)) {
@@ -529,7 +529,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     alias.setName(getEncodedUuid());
     alias.setSummary(summary);
-    alias.setCalType(BwCalendar.calTypeAlias);
+    alias.setCalType(BwCollection.calTypeAlias);
     //alias.setPath(home.getPath() + "/" + UUID.randomUUID().toString());
     alias.setAliasUri("bwcal://" + colPath);
     alias.setShared(true);
@@ -546,7 +546,7 @@ public class Sharing extends CalSvcDb implements SharingI {
                                            final int refresh,
                                            final String remoteId,
                                            final String remotePw) {
-    final BwCalendar alias = new BwCalendar();
+    final BwCollection alias = new BwCollection();
     final SubscribeResult sr = new SubscribeResult();
 
     String summary = subscribedName;
@@ -556,7 +556,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     alias.setName(getEncodedUuid());
     alias.setSummary(summary);
-    alias.setCalType(BwCalendar.calTypeExtSub);
+    alias.setCalType(BwCollection.calTypeExtSub);
     //alias.setPath(home.getPath() + "/" + UUID.randomUUID().toString());
     alias.setAliasUri(extUrl);
     alias.setSharedWritable(false);
@@ -589,12 +589,12 @@ public class Sharing extends CalSvcDb implements SharingI {
   }
 
   @Override
-  public void unsubscribe(final BwCalendar col) {
+  public void unsubscribe(final BwCollection col) {
     if (!col.getInternalAlias()) {
       return;
     }
 
-    final BwCalendar shared = getCols().resolveAlias(col, true, false);
+    final BwCollection shared = getCols().resolveAlias(col, true, false);
     if (shared == null) {
       // Gone or no access - nothing to do now.
       return;
@@ -707,7 +707,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     getSvc().pushPrincipalOrFail(sharerHref);
 
     try {
-      final BwCalendar col = getCols().get(path);
+      final BwCollection col = getCols().get(path);
 
       if (col == null) {
         // Bad hosturl?
@@ -790,7 +790,7 @@ public class Sharing extends CalSvcDb implements SharingI {
   /** Remove a principal from the list of sharers
    *
    */
-  private InviteNotificationType doRemove(final BwCalendar col,
+  private InviteNotificationType doRemove(final BwCollection col,
                                           final RemoveType rem,
                                           final String calAddr,
                                           final InviteType invite) {
@@ -819,7 +819,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     return note;
   }
 
-  private boolean removeAccess(final BwCalendar col,
+  private boolean removeAccess(final BwCollection col,
                                final String principalHref) {
     Acl acl = col.getCurrentAccess().getAcl();
 
@@ -843,10 +843,10 @@ public class Sharing extends CalSvcDb implements SharingI {
         return true;
       }
 
-      final BwCalendar target =
-              getSvc().getCalendarsHandler().resolveAlias(col,
-                                                          false,
-                                                          false);
+      final BwCollection target =
+              getSvc().getCollectionsHandler().resolveAlias(col,
+                                                            false,
+                                                            false);
 
       if (target == null) {
         return false;
@@ -945,7 +945,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     return sh;
   }
 
-  private InviteNotificationType doSet(final BwCalendar col,
+  private InviteNotificationType doSet(final BwCollection col,
                                        final SetType s,
                                        final List<AddPrincipal> addPrincipals,
                                        final String calAddr,
@@ -1087,7 +1087,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     readWritePrivs.add(scheduleDeliverPriv);
   }
 
-  private void setAccess(final BwCalendar col,
+  private void setAccess(final BwCollection col,
                          final AddPrincipal ap) {
     try {
       final String whoHref;
@@ -1159,10 +1159,10 @@ public class Sharing extends CalSvcDb implements SharingI {
         return;
       }
 
-      final BwCalendar target =
-              getSvc().getCalendarsHandler().resolveAlias(col,
-                                                          false,
-                                                          false);
+      final BwCollection target =
+              getSvc().getCollectionsHandler().resolveAlias(col,
+                                                            false,
+                                                            false);
 
       if (target != null) {
         /* Switch identity to the sharee then reget the handler
@@ -1197,7 +1197,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     }
   }
 
-  private void removeAlias(final BwCalendar col,
+  private void removeAlias(final BwCollection col,
                            final String shareeHref,
                            final boolean sendNotifications,
                            final boolean unsubscribe) {
@@ -1210,14 +1210,14 @@ public class Sharing extends CalSvcDb implements SharingI {
     try {
       getSvc().pushPrincipal(pr);
 
-      final List<BwCalendar> cols =
-              ((Calendars)getCols()).findUserAlias(col.getPath());
+      final List<BwCollection> cols =
+              ((Collections)getCols()).findUserAlias(col.getPath());
 
       if (!Util.isEmpty(cols)) {
-        for (final BwCalendar alias: cols) {
-          ((Calendars)getCols()).delete(alias, false, false,
-                                        sendNotifications,
-                                        unsubscribe);
+        for (final BwCollection alias: cols) {
+          ((Collections)getCols()).delete(alias, false, false,
+                                          sendNotifications,
+                                          unsubscribe);
         }
       }
     } finally {

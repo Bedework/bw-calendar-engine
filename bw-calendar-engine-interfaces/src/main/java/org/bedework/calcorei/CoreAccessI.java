@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.Collection;
 
 public interface CoreAccessI extends Serializable  {
-  /** Change the access to the given calendar entity.
+  /** Change the access to the given collection entity.
    *
    * @param ent      BwShareableDbentity
    * @param aces     Collection of ace
@@ -18,7 +18,7 @@ public interface CoreAccessI extends Serializable  {
                     Collection<Ace> aces,
                     boolean replaceAll);
 
-  /** Remove any explicit access for the given who to the given calendar entity.
+  /** Remove any explicit access for the given who to the given collection entity.
    *
    * @param ent      A shareable entity
    * @param who      AceWho

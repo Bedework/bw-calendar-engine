@@ -18,7 +18,7 @@
 */
 package org.bedework.tools.cmdutil;
 
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.svc.BwAdminGroup;
@@ -287,16 +287,16 @@ public class ProcessCreate extends CmdUtilHelper {
         cats.add(quotedVal());
       }
 
-      final BwCalendar cal = makeCollection(type,
-                                            parentPath,
-                                            calName,
-                                            calSummary,
-                                            aliasTarget,
-                                            ownerHref,
-                                            creatorHref,
-                                            description,
-                                            filter,
-                                            cats);
+      final BwCollection cal = makeCollection(type,
+                                              parentPath,
+                                              calName,
+                                              calSummary,
+                                              aliasTarget,
+                                              ownerHref,
+                                              creatorHref,
+                                              description,
+                                              filter,
+                                              cats);
 
       return cal != null;
     } finally {

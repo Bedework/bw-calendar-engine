@@ -86,7 +86,7 @@
           <key foreign-key="bw_apcal_ap_fk1">
             <column name="userid" not-null="true" />
           </key>
-          <many-to-many class="org.bedework.calfacade.BwCalendar"
+          <many-to-many class="org.bedework.calfacade.BwCollection"
                         column="calendarid"
                         foreign-key="bw_apcal_cal_fk1"/>
         </set>

@@ -19,7 +19,7 @@
 package org.bedework.indexer;
 
 import org.bedework.base.exc.BedeworkAccessException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
@@ -158,10 +158,10 @@ public abstract class ProcessorBase extends CalSys
 
     status.stats.inc(IndexedType.collections);
 
-    final var cols = svci.getCalendarsHandler();
+    final var cols = svci.getCollectionsHandler();
 
     try {
-      BwCalendar col = null;
+      BwCollection col = null;
 
       try {
         col = cols.get(path);

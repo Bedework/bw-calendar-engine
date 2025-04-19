@@ -10,7 +10,7 @@ import org.bedework.calcore.ro.CalintfHelper;
 import org.bedework.calcore.rw.common.dao.AccessDAO;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CoreAccessI;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.ShareableEntity;
 import org.bedework.calfacade.util.AccessChecker;
@@ -51,8 +51,8 @@ public class CoreAccess extends CalintfHelper
   public void changeAccess(final ShareableEntity ent,
                            final Collection<Ace> aces,
                            final boolean replaceAll) {
-    if (ent instanceof BwCalendar) {
-      changeAccess((BwCalendar)ent, aces, replaceAll);
+    if (ent instanceof BwCollection) {
+      changeAccess((BwCollection)ent, aces, replaceAll);
       return;
     }
     checker.getAccessUtil().changeAccess(ent, aces, replaceAll);
@@ -62,8 +62,8 @@ public class CoreAccess extends CalintfHelper
   @Override
   public void defaultAccess(final ShareableEntity ent,
                             final AceWho who) {
-    if (ent instanceof BwCalendar) {
-      defaultAccess((BwCalendar)ent, who);
+    if (ent instanceof BwCollection) {
+      defaultAccess((BwCollection)ent, who);
       return;
     }
     intf.checkAccess(ent, privWriteAcl, false);

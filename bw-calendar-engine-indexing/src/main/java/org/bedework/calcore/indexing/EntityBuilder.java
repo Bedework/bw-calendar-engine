@@ -22,7 +22,7 @@ import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttachment;
 import org.bedework.calfacade.BwAttendee;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwContact;
@@ -284,8 +284,8 @@ public class EntityBuilder extends EntityBuilderBase {
     return ent;
   }
 
-  BwCalendar makeCollection() {
-    final BwCalendar col = new BwCalendar();
+  BwCollection makeCollection() {
+    final BwCollection col = new BwCollection();
 
     restoreSharedEntity(col);
 

@@ -94,7 +94,7 @@ public class PublicProcessor extends Crawler {
       if (docType == null) {
         info("PublicProcessor: index the public collection(s)");
         indexCollection(svc,
-                        BasicSystemProperties.publicCalendarRootPath);
+                        BasicSystemProperties.publicCollectionRootPath);
         info("PublicProcessor: finished index of the public collection(s)");
       }
 

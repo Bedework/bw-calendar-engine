@@ -22,7 +22,7 @@ import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttachment;
 import org.bedework.calfacade.BwAttendee;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
@@ -484,7 +484,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   /* Return the docinfo for the indexer */
-  EsDocInfo makeDoc(final BwCalendar col) {
+  EsDocInfo makeDoc(final BwCollection col) {
     try {
       final long version = col.getMicrosecsVersion();
 

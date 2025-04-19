@@ -22,7 +22,7 @@ import org.bedework.access.PrivilegeDefs;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfDefs;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.AlarmsEntity;
@@ -44,7 +44,7 @@ import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.util.NotificationsInfo;
-import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.calfacade.wrappers.CollectionWrapper;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.logging.BwLogger;
@@ -98,16 +98,16 @@ public abstract class CalintfHelper
     return throwException(new BedeworkException(err, extra));
   }
 
-  /** Used to fetch a calendar from the cache
+  /** Used to fetch a collection from the cache
    *
    * @param path to collection
    * @param desiredAccess we need
    * @param alwaysReturn false to throw an exception if not accessible
-   * @return BwCalendar
+   * @return BwCollection
    */
-  public BwCalendar getCollection(final String path,
-                                  final int desiredAccess,
-                                  final boolean alwaysReturn) {
+  public BwCollection getCollection(final String path,
+                                    final int desiredAccess,
+                                    final boolean alwaysReturn) {
     return intf.getCollection(path, desiredAccess,
                             alwaysReturn);
   }
@@ -146,16 +146,16 @@ public abstract class CalintfHelper
     return getPrincipal().getPrincipalRef();
   }
 
-  public BwCalendar getCollection(final String path) {
+  public BwCollection getCollection(final String path) {
     return intf.getCollection(path, PrivilegeDefs.privAny, true);
   }
 
   /*
-    final List<String> entityTypes = BwCalendar.entityTypes.get(calType);
+    final List<String> entityTypes = BwCollection.entityTypes.get(calType);
 
-    final String pathTo = intf.getPrincipalInfo().getCalendarHomePath(owner);
+    final String pathTo = intf.getPrincipalInfo().getCollectionHomePath(owner);
 
-    final GetSpecialCalendarResult gscr = new GetSpecialCalendarResult();
+    final GetSpecialCollectionResult gscr = new GetSpecialCollectionResult();
 
     if (!dao.collectionExists(pathTo)) {
       gscr.noUserHome = true;
@@ -169,7 +169,7 @@ public abstract class CalintfHelper
                                                    pathTo, "/", name),
                                     access, false);
       } else {
-        gscr.cal = getCalendar(Util.buildPath(colPathEndsWithSlash,
+        gscr.cal = getCollection(Util.buildPath(colPathEndsWithSlash,
                                               pathTo, "/", name),
                                access, false);
       }
@@ -180,14 +180,14 @@ public abstract class CalintfHelper
     }
 
     /*
-    BwCalendar parent = getCalendar(pathTo, privRead);
+    BwCollection parent = getCollection(pathTo, privRead);
 
     if (parent == null) {
-      throw new BedeworkException("org.bedework.calcore.calendars.unabletocreate");
+      throw new BedeworkException("org.bedework.calcore.collections.unabletocreate");
     }
     * /
 
-    gscr.cal = new BwCalendar();
+    gscr.cal = new BwCollection();
     gscr.cal.setName(name);
     gscr.cal.setCreatorHref(owner.getPrincipalRef());
     gscr.cal.setOwnerHref(owner.getPrincipalRef());
@@ -198,7 +198,7 @@ public abstract class CalintfHelper
     }
 
     /* I think we're allowing privNone here because we don't mind if the
-     * calendar gets created even if the caller has no access.
+     * collection gets created even if the caller has no access.
      * /
     gscr.cal = add(gscr.cal, pathTo, true, access);
     gscr.created = true;
@@ -241,11 +241,11 @@ public abstract class CalintfHelper
     }
   }
 
-  protected void indexEntityNow(final BwCalendar col) {
+  protected void indexEntityNow(final BwCollection col) {
     intf.indexEntityNow(col);
   }
 
-  protected void unindex(final BwCalendar col) {
+  protected void unindex(final BwCollection col) {
     getIndexer(col).unindexEntity(col.getHref());
   }
 
@@ -259,18 +259,18 @@ public abstract class CalintfHelper
     intf.postNotification(ev);
   }
 
-  protected BwCalendar unwrap(final BwCalendar val) {
+  protected BwCollection unwrap(final BwCollection val) {
     if (val == null) {
       return null;
     }
 
-    if (!(val instanceof CalendarWrapper)) {
+    if (!(val instanceof CollectionWrapper)) {
       // We get these at the moment - getEvents at svci level
       return val;
       // CALWRAPPER throw new BedeworkException("org.bedework.not.wrapped");
     }
 
-    return ((CalendarWrapper)val).fetchEntity();
+    return ((CollectionWrapper)val).fetchEntity();
   }
 
   protected void tombstoneEntity(final BwShareableContainedDbentity<?> val) {

@@ -19,7 +19,7 @@
 package org.bedework.calcorei;
 
 import org.bedework.caldav.util.filter.FilterBase;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
@@ -36,7 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-/** This is the events section of the low level interface to the calendar
+/** This is the events section of the low level interface to the collection
  * database.
  *
  * @author Mike Douglass   douglm  rpi.edu
@@ -72,7 +72,7 @@ public interface CoreEventsI extends Serializable {
   /** Return the events for the current user within the given date/time
    * range.
    *
-   * @param calendars    BwCalendar objects restricting search or null.
+   * @param calendars    BwCollection objects restricting search or null.
    *                     Each object must be a calendar collection. All aliases
    *                     must have been resolved.
    * @param filter       BwFilter object restricting search or null.
@@ -85,7 +85,7 @@ public interface CoreEventsI extends Serializable {
    * @return Collection  of CoreEventInfo objects
    */
   Collection<CoreEventInfo> getEvents(
-          Collection<BwCalendar> calendars,
+          Collection<BwCollection> calendars,
           FilterBase filter,
           BwDateTime startDate, BwDateTime endDate,
           List<BwIcalPropertyInfoEntry> retrieveList,
@@ -233,8 +233,8 @@ public interface CoreEventsI extends Serializable {
    * @param to             Where it's going
    */
   void moveEvent(EventInfo ei,
-                 BwCalendar from,
-                 BwCalendar to);
+                 BwCollection from,
+                 BwCollection to);
 
   /** Return all events on the given path with a lastmod GREATER
    * THAN that supplied. The path may not be null. A null lastmod will

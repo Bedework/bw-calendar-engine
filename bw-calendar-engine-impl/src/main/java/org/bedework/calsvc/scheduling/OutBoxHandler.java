@@ -18,7 +18,7 @@
 */
 package org.bedework.calsvc.scheduling;
 
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
@@ -44,7 +44,7 @@ public abstract class OutBoxHandler extends SchedulingBase {
   }
 
   protected Response addToOutBox(final EventInfo ei,
-                                 final BwCalendar outBox,
+                                 final BwCollection outBox,
                                  final Set<String> externalRcs) {
     // We have external recipients. Put in the outbox for mailing
     final EventInfo outEi = copyEventInfo(ei, getPrincipal());
@@ -56,7 +56,7 @@ public abstract class OutBoxHandler extends SchedulingBase {
 
     final var addResp = addEvent(outEi,
                                  "Out-" + Uid.getUid() + "-" + event.getDtstamp(),
-                                 BwCalendar.calTypeOutbox,
+                                 BwCollection.calTypeOutbox,
                                  true);
 
     if (!addResp.isOk()) {

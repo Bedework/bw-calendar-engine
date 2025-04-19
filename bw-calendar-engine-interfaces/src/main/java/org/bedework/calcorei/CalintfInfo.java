@@ -20,7 +20,7 @@ package org.bedework.calcorei;
 
 import java.io.Serializable;
 
-/** This class provides information about the underlying calendar interface
+/** This class provides information about the underlying collection interface
  * allowing the service level to tailor queries appropriately.
  *
  * @author Mike Douglass

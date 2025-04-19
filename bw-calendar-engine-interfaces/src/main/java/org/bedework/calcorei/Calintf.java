@@ -19,7 +19,7 @@
 package org.bedework.calcorei;
 
 import org.bedework.access.CurrentAccess;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
@@ -33,14 +33,14 @@ import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.PrincipalInfo;
-import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.calfacade.wrappers.CollectionWrapper;
 import org.bedework.database.db.StatsEntry;
 import org.bedework.sysevents.events.SysEventBase;
 
 import java.sql.Timestamp;
 import java.util.Collection;
 
-/** This is the low level interface to the calendar database.
+/** This is the low level interface to the collection database.
  *
  * <p>This interface provides a view of the data as seen by the supplied user
  * id. This may or may not be the actual authenticated user of whatever
@@ -58,7 +58,7 @@ import java.util.Collection;
  * @author Mike Douglass   douglm  rpi.edu
  */
 public interface Calintf
-        extends CoreAccessI, CoreAlarmsI, CoreCalendarsI,
+        extends CoreAccessI, CoreAlarmsI, CoreCollectionsI,
         CoreCalSuitesI, CoreDumpRestoreI, CoreEventsI,
         CoreFilterDefsI, CorePrincipalsAndPrefsI, CoreResourcesI {
   interface FilterParserFetcher {
@@ -266,9 +266,9 @@ public interface Calintf
    */
   Timestamp getCurrentTimestamp();
 
-  String getCalendarNameFromType(int calType);
+  String getCollectionNameFromType(int calType);
 
-  CalendarWrapper wrap(BwCalendar val);
+  CollectionWrapper wrap(BwCollection val);
 
   /**
    * @param docType type of entity
@@ -310,7 +310,7 @@ public interface Calintf
   /**
    * @param entity to index
    */
-  void indexEntityNow(BwCalendar entity);
+  void indexEntityNow(BwCollection entity);
 
   /** Method for reindexing.
    *
@@ -404,7 +404,7 @@ public interface Calintf
    * @return  BwFreeBusy object representing the calendar (or principal's)
    *          free/busy
    */
-  BwEvent getFreeBusy(Collection<BwCalendar> cals,
+  BwEvent getFreeBusy(Collection<BwCollection> cals,
                       BwPrincipal<?> who,
                       BwDateTime start, BwDateTime end,
                       boolean returnAll,

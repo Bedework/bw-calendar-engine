@@ -22,7 +22,7 @@ import org.bedework.access.PrivilegeDefs;
 import org.bedework.base.exc.BedeworkAccessException;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.caldav.server.sysinterface.Host;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwXproperty;
@@ -282,7 +282,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     /* Add it and post to the autoscheduler */
     final var addResp = addEvent(ei,
                                  "In-" + Uid.getUid() + "-" + evDtstamp,
-                                 BwCalendar.calTypePendingInbox,
+                                 BwCollection.calTypePendingInbox,
                                  true);
 
     if (!addResp.isOk()) {
@@ -435,9 +435,9 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
         priv = PrivilegeDefs.privScheduleRequest;
       }
 
-      final BwCalendar inbox = getSpecialCalendar(ui.principal,
-                                                  BwCalendar.calTypePendingInbox,
-                                                  true, priv);
+      final BwCollection inbox = getSpecialCalendar(ui.principal,
+                                                    BwCollection.calTypePendingInbox,
+                                                    true, priv);
       if (inbox == null) {
         ui.setStatus(ScheduleStates.scheduleNoAccess);
       } else {

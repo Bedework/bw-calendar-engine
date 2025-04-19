@@ -21,7 +21,7 @@ package org.bedework.calsvc.scheduling;
 import org.bedework.base.exc.BedeworkBadRequest;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.calfacade.BwAttendee;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwRequestStatus;
@@ -194,8 +194,8 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
       // Delete the given event from the inbox.
       final EventsI events = getSvc().getEventsHandler();
 
-      final BwCalendar inbox = getSvc().getCalendarsHandler()
-                                       .getSpecial(BwCalendar.calTypeInbox, true);
+      final BwCollection inbox = getSvc().getCollectionsHandler()
+                                         .getSpecial(BwCollection.calTypeInbox, true);
       final EventInfo inboxei = events.get(inbox.getPath(),
                                            ei.getInboxEventName());
 

@@ -25,7 +25,7 @@ import org.bedework.calcore.ro.CalintfROImpl;
 import org.bedework.calcorei.CalintfInfo;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calfacade.BwAlarm;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwFilterDef;
@@ -74,7 +74,7 @@ public abstract class CalintfCommonImpl extends CalintfROImpl {
 
   protected abstract CoreAlarms alarms();
 
-  protected abstract CoreCalendars calendars();
+  protected abstract CoreCollections collections();
 
   protected abstract CoreCalSuites calSuites();
 
@@ -190,7 +190,7 @@ public abstract class CalintfCommonImpl extends CalintfROImpl {
   }
 
   @Override
-  public void indexEntityNow(final BwCalendar entity) {
+  public void indexEntityNow(final BwCollection entity) {
     indexEntity(getIndexer(entity), entity, true);
   }
 
@@ -214,8 +214,8 @@ public abstract class CalintfCommonImpl extends CalintfROImpl {
   public void changeAccess(final ShareableEntity ent,
                            final Collection<Ace> aces,
                            final boolean replaceAll) {
-    if (ent instanceof BwCalendar) {
-      changeAccess((BwCalendar)ent, aces, replaceAll);
+    if (ent instanceof BwCollection) {
+      changeAccess((BwCollection)ent, aces, replaceAll);
       return;
     }
     checkOpen();
@@ -223,18 +223,18 @@ public abstract class CalintfCommonImpl extends CalintfROImpl {
   }
 
   @Override
-  public void changeAccess(final BwCalendar cal,
+  public void changeAccess(final BwCollection cal,
                            final Collection<Ace> aces,
                            final boolean replaceAll) {
     checkOpen();
-    calendars().changeAccess(cal, aces, replaceAll);
+    collections().changeAccess(cal, aces, replaceAll);
   }
 
   @Override
   public void defaultAccess(final ShareableEntity ent,
                             final AceWho who) {
-    if (ent instanceof BwCalendar) {
-      defaultAccess((BwCalendar)ent, who);
+    if (ent instanceof BwCollection) {
+      defaultAccess((BwCollection)ent, who);
       return;
     }
     checkOpen();
@@ -242,10 +242,10 @@ public abstract class CalintfCommonImpl extends CalintfROImpl {
   }
 
   @Override
-  public void defaultAccess(final BwCalendar cal,
+  public void defaultAccess(final BwCollection cal,
                             final AceWho who) {
     checkOpen();
-    calendars().defaultAccess(cal, who);
+    collections().defaultAccess(cal, who);
   }
 
   /* =============================================================
@@ -267,12 +267,12 @@ public abstract class CalintfCommonImpl extends CalintfROImpl {
   }
 
   /* ============================================================
-   *                       Calendars
+   *                       Collections
    * ============================================================ */
 
   @Override
   public void principalChanged() {
-    calendars().principalChanged();
+    collections().principalChanged();
   }
 
   @Override
@@ -280,115 +280,115 @@ public abstract class CalintfCommonImpl extends CalintfROImpl {
                                           final String token) {
     checkOpen();
 
-    return calendars().getSynchInfo(path, token);
+    return collections().getSynchInfo(path, token);
   }
 
   @Override
-  public Collection<BwCalendar> getCalendars(final BwCalendar cal,
-                                             final BwIndexer indexer) {
+  public Collection<BwCollection> getCollections(final BwCollection cal,
+                                                 final BwIndexer indexer) {
     checkOpen();
 
-    return calendars().getCalendars(cal, indexer);
+    return collections().getCollections(cal, indexer);
   }
 
   @Override
-  public BwCalendar resolveAlias(final BwCalendar val,
-                                 final boolean resolveSubAlias,
-                                 final boolean freeBusy,
-                                 final BwIndexer indexer) {
+  public BwCollection resolveAlias(final BwCollection val,
+                                   final boolean resolveSubAlias,
+                                   final boolean freeBusy,
+                                   final BwIndexer indexer) {
     checkOpen();
 
-    return calendars().resolveAlias(val, resolveSubAlias,
-                                  freeBusy, indexer);
+    return collections().resolveAlias(val, resolveSubAlias,
+                                      freeBusy, indexer);
   }
 
   @Override
-  public List<BwCalendar> findAlias(final String val) {
+  public List<BwCollection> findAlias(final String val) {
     checkOpen();
 
-    return calendars().findAlias(val);
+    return collections().findAlias(val);
   }
 
   @Override
-  public BwCalendar getCalendar(final String path,
-                                final int desiredAccess,
-                                final boolean alwaysReturnResult) {
+  public BwCollection getCollection(final String path,
+                                    final int desiredAccess,
+                                    final boolean alwaysReturnResult) {
     checkOpen();
 
-    return calendars().getCalendar(path, desiredAccess, alwaysReturnResult);
+    return collections().getCollection(path, desiredAccess, alwaysReturnResult);
   }
 
   @Override
-  public GetSpecialCalendarResult getSpecialCalendar(
+  public GetSpecialCollectionResult getSpecialCollection(
           final BwIndexer indexer,
           final BwPrincipal<?> owner,
           final int calType,
           final boolean create,
           final int access) {
-    return calendars().getSpecialCalendar(indexer,
-                                        owner, calType, create, access);
+    return collections().getSpecialCollection(indexer,
+                                              owner, calType, create, access);
   }
 
   @Override
-  public BwCalendar add(final BwCalendar val,
-                                final String parentPath) {
+  public BwCollection add(final BwCollection val,
+                          final String parentPath) {
     checkOpen();
 
-    return calendars().add(val, parentPath);
+    return collections().add(val, parentPath);
   }
 
   @Override
-  public void touchCalendar(final String path) {
+  public void touchCollection(final String path) {
     checkOpen();
-    calendars().touchCalendar(path);
+    collections().touchCollection(path);
   }
 
   @Override
-  public void touchCalendar(final BwCalendar col) {
+  public void touchCollection(final BwCollection col) {
     checkOpen();
-    calendars().touchCalendar(col);
+    collections().touchCollection(col);
   }
 
   @Override
-  public void updateCalendar(final BwCalendar val) {
+  public void updateCollection(final BwCollection val) {
     checkOpen();
-    calendars().updateCalendar(val);
+    collections().updateCollection(val);
   }
 
   @Override
-  public void renameCalendar(final BwCalendar val,
-                             final String newName) {
+  public void renameCollection(final BwCollection val,
+                               final String newName) {
     checkOpen();
-    calendars().renameCalendar(val, newName);
+    collections().renameCollection(val, newName);
   }
 
   @Override
-  public void moveCalendar(final BwCalendar val,
-                           final BwCalendar newParent) {
+  public void moveCollection(final BwCollection val,
+                             final BwCollection newParent) {
     checkOpen();
-    calendars().moveCalendar(val, newParent);
+    collections().moveCollection(val, newParent);
   }
 
   @Override
-  public boolean deleteCalendar(final BwCalendar val,
-                                final boolean reallyDelete) {
+  public boolean deleteCollection(final BwCollection val,
+                                  final boolean reallyDelete) {
     checkOpen();
 
-    return calendars().deleteCalendar(val, reallyDelete);
+    return collections().deleteCollection(val, reallyDelete);
   }
 
   @Override
-  public boolean isEmpty(final BwCalendar val) {
+  public boolean isEmpty(final BwCollection val) {
     checkOpen();
 
-    return calendars().isEmpty(val);
+    return collections().isEmpty(val);
   }
 
   @Override
-  public void addNewCalendars(final BwPrincipal<?> user) {
+  public void addNewCollections(final BwPrincipal<?> user) {
     checkOpen();
 
-    calendars().addNewCalendars(user);
+    collections().addNewCollections(user);
   }
 
   @Override
@@ -397,13 +397,13 @@ public abstract class CalintfCommonImpl extends CalintfROImpl {
                                         final int count) {
     checkOpen();
 
-    return calendars().getChildCollections(parentPath, start, count);
+    return collections().getChildCollections(parentPath, start, count);
   }
 
   @Override
-  public Set<BwCalendar> getSynchCols(final String path,
-                                      final String lastmod) {
-    return calendars().getSynchCols(path, lastmod);
+  public Set<BwCollection> getSynchCols(final String path,
+                                        final String lastmod) {
+    return collections().getSynchCols(path, lastmod);
   }
 
   @Override
@@ -436,7 +436,7 @@ public abstract class CalintfCommonImpl extends CalintfROImpl {
                             rollbackOnError);
 
     if (!forRestore && uer.addedUpdated) {
-      calendars().touchCalendar(ei.getEvent().getColPath());
+      collections().touchCollection(ei.getEvent().getColPath());
     }
 
     return uer;
@@ -448,7 +448,7 @@ public abstract class CalintfCommonImpl extends CalintfROImpl {
     final UpdateEventResult ue;
 
     try {
-      calendars().touchCalendar(ei.getEvent().getColPath());
+      collections().touchCollection(ei.getEvent().getColPath());
 
       ue = events().updateEvent(ei);
     } catch (final BedeworkException be) {
@@ -476,14 +476,14 @@ public abstract class CalintfCommonImpl extends CalintfROImpl {
         throw be;
       }
     } finally {
-      calendars().touchCalendar(colPath);
+      collections().touchCollection(colPath);
     }
   }
 
   @Override
   public void moveEvent(final EventInfo ei,
-                        final BwCalendar from,
-                        final BwCalendar to) {
+                        final BwCollection from,
+                        final BwCollection to) {
     checkOpen();
     events().moveEvent(ei, from, to);
   }
@@ -518,7 +518,7 @@ public abstract class CalintfCommonImpl extends CalintfROImpl {
   @Override
   public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) {
     checkOpen();
-    return calendars().merge(val);
+    return collections().merge(val);
   }
 
   @Override

@@ -4,7 +4,7 @@
 package org.bedework.calsvc;
 
 import org.bedework.caldav.util.filter.FilterBase;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.RecurringRetrievalMode;
@@ -49,10 +49,10 @@ public class CalSvcHelperRw extends CalSvcDb {
     return getSvc().getEncrypter();
   }
 
-  protected BwCalendar getSpecialCalendar(final BwPrincipal<?> owner,
-                                          final int calType,
-                                          final boolean create,
-                                          final int access) {
+  protected BwCollection getSpecialCalendar(final BwPrincipal<?> owner,
+                                            final int calType,
+                                            final boolean create,
+                                            final int access) {
     return getCols().getSpecial(owner, calType, create, access);
   }
 
@@ -68,7 +68,7 @@ public class CalSvcHelperRw extends CalSvcDb {
    * @return Collection of matching events
    */
   protected Collection<EventInfo> getEvents(
-          final Collection<BwCalendar> cols,
+          final Collection<BwCollection> cols,
           final FilterBase filter,
           final BwDateTime startDate, final BwDateTime endDate,
           final RecurringRetrievalMode recurRetrieval,

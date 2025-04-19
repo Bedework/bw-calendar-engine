@@ -18,7 +18,7 @@
 */
 package org.bedework.tools.cmdutil;
 
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwXproperty;
@@ -106,7 +106,7 @@ public class ProcessMove extends CmdUtilHelper {
 
       open();
 
-      final BwCalendar from = getCal();
+      final BwCollection from = getCal();
 
       if (from == null) {
         if (debug()) {
@@ -117,7 +117,7 @@ public class ProcessMove extends CmdUtilHelper {
 
       fromPath = from.getPath();
 
-      final BwCalendar to = getCal();
+      final BwCollection to = getCal();
 
       if (to == null) {
         if (debug()) {

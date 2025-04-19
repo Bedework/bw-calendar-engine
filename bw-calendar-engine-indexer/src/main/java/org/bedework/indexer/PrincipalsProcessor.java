@@ -84,7 +84,7 @@ public class PrincipalsProcessor extends Crawler {
         indexCollection(svc, Util.buildPath(
                 BasicSystemProperties.colPathEndsWithSlash,
                 "/",
-                BasicSystemProperties.userCalendarRoot));
+                BasicSystemProperties.userCollectionRoot));
       }
     } catch (final Throwable t) {
       error(t);

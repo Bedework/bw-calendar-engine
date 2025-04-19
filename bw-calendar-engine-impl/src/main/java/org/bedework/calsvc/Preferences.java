@@ -19,7 +19,7 @@
 package org.bedework.calsvc;
 
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEventProperty;
@@ -155,7 +155,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
   }
 
   public void updateAdminPrefs(final boolean remove,
-                               final BwCalendar cal,
+                               final BwCollection cal,
                                final Collection<BwCategory> cats,
                                final BwLocation loc,
                                final BwContact ctct) {
@@ -237,7 +237,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
 
     if (path == null) {
       path = Util.buildPath(BasicSystemProperties.colPathEndsWithSlash,
-                            getSvc().getCalendarsHandler().getHomePath(),
+                            getSvc().getCollectionsHandler().getHomePath(),
                             "/",
                             "attachments");
       get().setAttachmentsPath(path);

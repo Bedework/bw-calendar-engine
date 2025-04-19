@@ -19,7 +19,7 @@
 package org.bedework.calsvc.scheduling;
 
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
@@ -476,9 +476,9 @@ public abstract class SchedulingBase extends CalSvcHelperRw
     final BwEvent ev = ei.getEvent();
     String prefix = namePrefix;
 
-    final boolean schedulingBox = (calType == BwCalendar.calTypeInbox) ||
-            (calType == BwCalendar.calTypePendingInbox) ||
-            (calType == BwCalendar.calTypeOutbox);
+    final boolean schedulingBox = (calType == BwCollection.calTypeInbox) ||
+            (calType == BwCollection.calTypePendingInbox) ||
+            (calType == BwCollection.calTypeOutbox);
 
     /* We can get a lot of adds and deletions in scheduling inboxes.
        An event will arrive, be processed and deleted from the inbox

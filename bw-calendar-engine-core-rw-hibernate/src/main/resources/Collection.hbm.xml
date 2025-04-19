@@ -8,7 +8,7 @@
      =================================================================== -->
 
 <hibernate-mapping>
-  <class name="org.bedework.calfacade.BwCalendar"
+  <class name="org.bedework.calfacade.BwCollection"
          table="bw_calendars" lazy="false">
     <cache usage="read-write"/>
     <id name="id" type="integer" column="id" unsaved-value="-1">
@@ -134,7 +134,7 @@
     </id>
 
     <one-to-one name="dbEntity"
-                class="org.bedework.calfacade.BwCalendar"
+                class="org.bedework.calfacade.BwCollection"
                 constrained="true"/>
 
     <property name="path" column="bwpath" type="string" length="3000"

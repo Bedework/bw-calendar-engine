@@ -19,7 +19,7 @@
 package org.bedework.inoutsched;
 
 import org.bedework.base.exc.persist.BedeworkStaleStateException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.AbstractScheduler;
@@ -266,8 +266,8 @@ public class InScheduler extends AbstractScheduler {
 
   private EventInfo getInboxEvent(final CalSvcI svci,
                                   final String eventName) {
-    final BwCalendar inbox = svci.getCalendarsHandler().
-            getSpecial(BwCalendar.calTypePendingInbox, false);
+    final BwCollection inbox = svci.getCollectionsHandler().
+                                   getSpecial(BwCollection.calTypePendingInbox, false);
     if (inbox == null) {
       return null;
     }

@@ -19,7 +19,7 @@
 package org.bedework.indexer;
 
 import org.bedework.base.exc.BedeworkException;
-import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calfacade.svc.EventInfo;
@@ -244,7 +244,7 @@ public abstract class CalSys implements Logged {
     return new BwSvc(adminAccount);
   }
 
-  protected boolean hasAccess(final BwCalendar col) {
+  protected boolean hasAccess(final BwCollection col) {
     // XXX This should do a real access check so we can index subscriptions.
 
     if (col.getPublick()) {
@@ -340,7 +340,7 @@ public abstract class CalSys implements Logged {
    * @param refs - null on first call.
    * @return next batch of hrefs or null for no more.
    */
-  protected Refs getChildCollections(final BwCalendar col,
+  protected Refs getChildCollections(final BwCollection col,
                                      final Refs refs) {
     Refs r = refs;
 
@@ -389,7 +389,7 @@ public abstract class CalSys implements Logged {
    * @param refs - null on first call.
    * @return next batch of hrefs or null for no more.
    */
-  protected Refs getChildEntities(final BwCalendar col,
+  protected Refs getChildEntities(final BwCollection col,
                                   final Refs refs) {
     Refs r = refs;
 

@@ -219,7 +219,7 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
     if (val instanceof BwCategory) {
       refs.addAll(getRefs(val,
                           "select new org.bedework.calfacade.EventPropertiesReference(col.path) " +
-                                  "from BwCalendar col " +
+                                  "from BwCollection col " +
                                   "where :ent in elements(col.categories)"));
     }
 
@@ -235,7 +235,7 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
      */
     if (val instanceof BwCategory) {
       total += getRefsCount(val,
-                            "select count(*) from BwCalendar col " +
+                            "select count(*) from BwCollection col " +
                                     "where :ent in elements(col.categories)");
     }
 
