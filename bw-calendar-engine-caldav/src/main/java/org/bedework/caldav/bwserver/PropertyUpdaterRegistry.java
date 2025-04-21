@@ -41,6 +41,7 @@ import org.bedework.caldav.bwserver.stdupdaters.RdatePropUpdater;
 import org.bedework.caldav.bwserver.stdupdaters.RelatedToPropUpdater;
 import org.bedework.caldav.bwserver.stdupdaters.RepeatPropUpdater;
 import org.bedework.caldav.bwserver.stdupdaters.ResourcesPropUpdater;
+import org.bedework.caldav.bwserver.stdupdaters.RrulePropUpdater;
 import org.bedework.caldav.bwserver.stdupdaters.SequencePropUpdater;
 import org.bedework.caldav.bwserver.stdupdaters.StatusPropUpdater;
 import org.bedework.caldav.bwserver.stdupdaters.SummaryPropUpdater;
@@ -79,6 +80,7 @@ import ietf.params.xml.ns.icalendar_2.RecurrenceIdPropType;
 import ietf.params.xml.ns.icalendar_2.RelatedToPropType;
 import ietf.params.xml.ns.icalendar_2.RepeatPropType;
 import ietf.params.xml.ns.icalendar_2.ResourcesPropType;
+import ietf.params.xml.ns.icalendar_2.RrulePropType;
 import ietf.params.xml.ns.icalendar_2.SequencePropType;
 import ietf.params.xml.ns.icalendar_2.StatusPropType;
 import ietf.params.xml.ns.icalendar_2.SummaryPropType;
@@ -241,8 +243,12 @@ public class PropertyUpdaterRegistry {
 
     immutableProp(RecurrenceIdPropType.class);
 
-    standardPropUpdater(RelatedToPropType.class, RelatedToPropUpdater.class);
-    standardPropUpdater(ResourcesPropType.class, ResourcesPropUpdater.class);
+    standardPropUpdater(RelatedToPropType.class,
+                        RelatedToPropUpdater.class);
+    standardPropUpdater(ResourcesPropType.class,
+                        ResourcesPropUpdater.class);
+    standardPropUpdater(RrulePropType.class,
+                        RrulePropUpdater.class);
     standardPropUpdater(StatusPropType.class, StatusPropUpdater.class);
     standardPropUpdater(SummaryPropType.class, SummaryPropUpdater.class);
     standardPropUpdater(TranspPropType.class, TranspPropUpdater.class);
