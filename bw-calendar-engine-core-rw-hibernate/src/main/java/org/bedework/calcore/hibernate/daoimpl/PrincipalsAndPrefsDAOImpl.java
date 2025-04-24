@@ -214,11 +214,7 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
     }
 
     sess.setInt("mbrId", group.getId());
-
-    /* This is what I want to do but it inserts 'true' or 'false'
-    sess.setBool("isgroup", (val instanceof BwGroup));
-    */
-    sess.setString("isgroup", "T");
+    sess.setBool("isgroup", true);
     sess.executeUpdate();
 
     sess.delete(group);
@@ -248,15 +244,7 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
 
     sess.setEntity("grp", group);
     sess.setInt("mbrId", val.getId());
-
-    /* This is what I want to do but it inserts 'true' or 'false'
-    sess.setBool("isgroup", (val instanceof BwGroup));
-    */
-    if (val instanceof BwGroup) {
-      sess.setString("isgroup", "T");
-    } else {
-      sess.setString("isgroup", "F");
-    }
+    sess.setBool("isgroup", val instanceof BwGroup);
 
     final Object ent = sess.getUnique();
 
@@ -370,16 +358,7 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
     }
 
     sess.setInt("entId", val.getId());
-
-    /* This is what I want to do but it inserts 'true' or 'false'
-    */
     sess.setBool("isgroup", (val instanceof BwGroup));
-    /*
-    if (val.getKind() == WhoDefs.whoTypeGroup) {
-      sess.setString("isgroup", "T");
-    } else {
-      sess.setString("isgroup", "F");
-    }*/
 
     final Set<BwGroup<?>> gs =
             new TreeSet<>(
