@@ -162,18 +162,10 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
               "where ent.ownerHref=:ownerHref " +
               "order by ent." + keyFieldName;
     }
-    
-    final var sess = getSess();
 
-    sess.createQuery(getAllQuery);
-
-    if (debug()) {
-      debug("getAll: q=" + getAllQuery + " owner=" + ownerHref);
-    }
-
-    sess.setString("ownerHref", ownerHref);
-
-    return (List<BwEventProperty<?>>)sess.getList();
+    return (List<BwEventProperty<?>>)createQuery(getAllQuery)
+            .setString("ownerHref", ownerHref)
+            .getList();
   }
 
   private String getQuery;
@@ -185,13 +177,9 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
               "where uid=:uid";
     }
 
-    final var sess = getSess();
-
-    sess.createQuery(getQuery);
-
-    sess.setString("uid", uid);
-
-    return (BwEventProperty<?>)sess.getUnique();
+    return (BwEventProperty<?>)createQuery(getQuery)
+            .setString("uid", uid)
+            .getUnique();
   }
 
   @Override
@@ -200,9 +188,9 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
 
     final var v = (BwEventProperty<?>)sess.merge(val);
 
-    sess.createQuery(delPrefsQuery.get(cl));
-    sess.setInt("id", v.getId());
-    sess.executeUpdate();
+    createQuery(delPrefsQuery.get(cl))
+            .setInt("id", v.getId())
+            .executeUpdate();
 
     sess.delete(v);
   }
@@ -291,30 +279,24 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
       throw new BedeworkException("Missing owner value");
     }
 
-    final var sess = getSess();
-
     final StringBuilder qstr = new StringBuilder(qpfx);
 
     addBwStringKeyTerms(val, finderFieldName, qstr);
     qstr.append("and ent.ownerHref=:ownerHref");
 
-    sess.createQuery(qstr.toString());
+    createQuery(qstr.toString())
+            .setString("ownerHref", ownerHref);
 
     addBwStringKeyvals(val);
-
-    sess.setString("ownerHref", ownerHref);
   }
 
-  @SuppressWarnings("unchecked")
   private List<EventPropertiesReference> getRefs(final BwEventProperty<?> val,
                                                  final String query) {
-    final var sess = getSess();
-
-    sess.createQuery(query);
-    sess.setEntity("ent", val);
-
     /* May get multiple counts back for events and annotations. */
-    final List<EventPropertiesReference> refs = (List<EventPropertiesReference>)sess.getList();
+    //noinspection unchecked
+    final List<EventPropertiesReference> refs = (List<EventPropertiesReference>)createQuery(query)
+            .setEntity("ent", val)
+            .getList();
 
     if (debug()) {
       debug(" ----------- count = " + refs.size());
@@ -325,14 +307,11 @@ public class CoreEventPropertiesDAOImpl extends DAOBaseImpl
 
   private long getRefsCount(final BwEventProperty<?> val,
                             final String query) {
-    final var sess = getSess();
-
-    sess.createQuery(query);
-    sess.setEntity("ent", val);
-
     /* May get multiple counts back for events and annotations. */
     @SuppressWarnings("unchecked")
-    final Collection<Long> counts = (Collection<Long>)sess.getList();
+    final Collection<Long> counts = (Collection<Long>)
+            createQuery(query)
+                    .setEntity("ent", val);
 
     long total = 0;
 

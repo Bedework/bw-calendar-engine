@@ -47,13 +47,13 @@ public class AlarmsDAOImpl extends DAOBaseImpl
   @Override
   public Collection<BwAlarm> getUnexpiredAlarms(
           final long triggerTime) {
-    final var sess = getSess();
+    final DbSession sess;
 
     if (triggerTime == 0) {
-      sess.createQuery(getUnexpiredAlarmsQuery);
+      sess = createQuery(getUnexpiredAlarmsQuery);
     } else {
-      sess.createQuery(getUnexpiredAlarmsTimeQuery);
-      sess.setString("tt", String.valueOf(triggerTime));
+      sess = createQuery(getUnexpiredAlarmsTimeQuery)
+              .setString("tt", String.valueOf(triggerTime));
     }
 
     return (Collection<BwAlarm>)sess.getList();
@@ -66,11 +66,8 @@ public class AlarmsDAOImpl extends DAOBaseImpl
   @SuppressWarnings("unchecked")
   @Override
   public Collection<BwEvent> getEventsByAlarm(final BwAlarm alarm) {
-    final var sess = getSess();
-
-    sess.createQuery(eventByAlarmQuery);
-    sess.setInt("alarmId", alarm.getId());
-
-    return (Collection<BwEvent>)sess.getList();
+    return (Collection<BwEvent>)createQuery(eventByAlarmQuery)
+            .setInt("alarmId", alarm.getId())
+            .getList();
   }
 }

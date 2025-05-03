@@ -58,8 +58,6 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
 
   @Override
   public BwPrincipal<?> getPrincipal(final String href) {
-    final var sess = getSess();
-
     if (href == null) {
       return null;
     }
@@ -71,15 +69,9 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
      * principal table and allow any principal to log on and own entities.
      */
 
-    if (sess == null) {
-      warn("Null sesssion");
-      throw new NullPointerException("No session");
-    }
-    sess.createQuery(getPrincipalQuery);
-
-    sess.setString("href", href);
-
-    return (BwPrincipal<?>)sess.getUnique();
+    return (BwPrincipal<?>)createQuery(getPrincipalQuery)
+            .setString("href", href)
+            .getUnique();
   }
 
   private static final String getPrincipalHrefsQuery =
@@ -89,15 +81,11 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
   @Override
   public List<String> getPrincipalHrefs(final int start,
                                         final int count) {
-    final var sess = getSess();
-
-    sess.createQuery(getPrincipalHrefsQuery);
-
-    sess.setFirstResult(start);
-    sess.setMaxResults(count);
-
     @SuppressWarnings("unchecked")
-    final List<String> res = (List<String>)sess.getList();
+    final var res = (List<String>)createQuery(getPrincipalHrefsQuery)
+            .setFirstResult(start)
+            .setMaxResults(count)
+            .getList();
 
     if (Util.isEmpty(res)) {
       return null;
@@ -112,12 +100,9 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
 
   @Override
   public BwPreferences getPreferences(final String principalHref) {
-    final var sess = getSess();
-
-    sess.createQuery(getOwnerPreferencesQuery);
-    sess.setString("ownerHref", principalHref);
-
-    return (BwPreferences)sess.getUnique();
+    return (BwPreferences)createQuery(getOwnerPreferencesQuery)
+            .setString("ownerHref", principalHref)
+            .getUnique();
   }
 
   /* ======================================================
@@ -135,17 +120,17 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
   @Override
   public BwGroup<?> findGroup(final String account,
                               final boolean admin) {
-    final var sess = getSess();
+    final String q;
 
     if (admin) {
-      sess.createQuery(getAdminGroupQuery);
+      q = getAdminGroupQuery;
     } else {
-      sess.createQuery(getGroupQuery);
+      q = getGroupQuery;
     }
 
-    sess.setString("account", account);
-
-    return (BwGroup<?>)sess.getUnique();
+    return (BwGroup<?>)createQuery(q)
+            .setString("account", account)
+            .getUnique();
   }
 
   private static final String getAdminGroupParentsQuery =
@@ -158,22 +143,22 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
                   "where g.id = ge.groupId and " +
                   "ge.memberId=:grpid and ge.memberIsGroup=true";
 
-  @SuppressWarnings("unchecked")
   @Override
   public Collection<BwGroup<?>> findGroupParents(
           final BwGroup<?> group,
           final boolean admin) {
-    final var sess = getSess();
+    final String q;
 
     if (admin) {
-      sess.createQuery(getAdminGroupParentsQuery);
+      q = getAdminGroupParentsQuery;
     } else {
-      sess.createQuery(getGroupParentsQuery);
+      q = getGroupParentsQuery;
     }
 
-    sess.setInt("grpid", group.getId());
-
-    return (Collection<BwGroup<?>>)sess.getList();
+    //noinspection unchecked
+    return (Collection<BwGroup<?>>)createQuery(q)
+            .setInt("grpid", group.getId())
+            .getList();
   }
 
   private static final String removeAllAdminGroupMemberRefsQuery =
@@ -194,30 +179,32 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
   @Override
   public void removeGroup(final BwGroup<?> group,
                           final boolean admin) {
-    final var sess = getSess();
+    String q;
 
     if (admin) {
-      sess.createQuery(removeAllAdminGroupMemberRefsQuery);
+      q = removeAllAdminGroupMemberRefsQuery;
     } else {
-      sess.createQuery(removeAllGroupMembersQuery);
+      q = removeAllGroupMembersQuery;
     }
 
-    sess.setEntity("gr", group);
-    sess.executeUpdate();
+    createQuery(q)
+            .setEntity("gr", group)
+            .executeUpdate();
 
     // Remove from any groups
 
     if (admin) {
-      sess.createQuery(removeFromAllAdminGroupsQuery);
+      q = removeFromAllAdminGroupsQuery;
     } else {
-      sess.createQuery(removeFromAllGroupsQuery);
+      q = removeFromAllGroupsQuery;
     }
 
-    sess.setInt("mbrId", group.getId());
-    sess.setBool("isgroup", true);
-    sess.executeUpdate();
+    createQuery(q)
+            .setInt("mbrId", group.getId())
+            .setBool("isgroup", true)
+            .executeUpdate();
 
-    sess.delete(group);
+    getSess().delete(group);
   }
 
   private static final String findAdminGroupEntryQuery =
@@ -234,25 +221,25 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
   public void removeMember(final BwGroup<?> group,
                            final BwPrincipal<?> val,
                            final boolean admin) {
-    final var sess = getSess();
+    final String q;
 
     if (admin) {
-      sess.createQuery(findAdminGroupEntryQuery);
+      q = findAdminGroupEntryQuery;
     } else {
-      sess.createQuery(findGroupEntryQuery);
+      q = findGroupEntryQuery;
     }
 
-    sess.setEntity("grp", group);
-    sess.setInt("mbrId", val.getId());
-    sess.setBool("isgroup", val instanceof BwGroup);
-
-    final Object ent = sess.getUnique();
+    final Object ent = createQuery(q)
+            .setEntity("grp", group)
+            .setInt("mbrId", val.getId())
+            .setBool("isgroup", val instanceof BwGroup)
+            .getUnique();
 
     if (ent == null) {
       return;
     }
 
-    sess.delete(ent);
+    getSess().delete(ent);
   }
 
   private static final String getAdminGroupUserMembersQuery =
@@ -276,33 +263,34 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
                   "where g.id = ge.memberId and " +
                   "ge.grp=:gr and ge.memberIsGroup=true";
 
-  @SuppressWarnings("unchecked")
   @Override
   public Collection<BwPrincipal<?>> getMembers(final BwGroup<?> group,
                                                final boolean admin) {
-    final var sess = getSess();
+    String q;
 
     if (admin) {
-      sess.createQuery(getAdminGroupUserMembersQuery);
+      q = getAdminGroupUserMembersQuery;
     } else {
-      sess.createQuery(getGroupUserMembersQuery);
+      q = getGroupUserMembersQuery;
     }
 
-    sess.setEntity("gr", group);
-
+    //noinspection unchecked
     final Collection<BwPrincipal<?>> ms =
             new TreeSet<>(
-                    (Collection<? extends BwPrincipal<?>>)sess.getList());
+                    (Collection<? extends BwPrincipal<?>>)    createQuery(q)
+                            .setEntity("gr", group)
+                            .getList());
 
     if (admin) {
-      sess.createQuery(getAdminGroupGroupMembersQuery);
+      q = getAdminGroupGroupMembersQuery;
     } else {
-      sess.createQuery(getGroupGroupMembersQuery);
+      q = getGroupGroupMembersQuery;
     }
 
-    sess.setEntity("gr", group);
-
-    ms.addAll((Collection<? extends BwPrincipal<?>>)sess.getList());
+    //noinspection unchecked
+    ms.addAll((Collection<? extends BwPrincipal<?>>)createQuery(q)
+            .setEntity("gr", group)
+            .getList());
 
     return ms;
   }
@@ -315,19 +303,19 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
           "select g from BwGroup g " +
                   "order by g.account";
 
-  @SuppressWarnings("unchecked")
   @Override
   public <T extends BwGroup<?>> Collection<T> getAllGroups(
           final boolean admin) {
-    final var sess = getSess();
+    final String q;
 
     if (admin) {
-      sess.createQuery(getAllAdminGroupsQuery);
+      q = getAllAdminGroupsQuery;
     } else {
-      sess.createQuery(getAllGroupsQuery);
+      q = getAllGroupsQuery;
     }
 
-    return (Collection<T>)sess.getList();
+    //noinspection unchecked
+    return (Collection<T>)createQuery(q).getList();
   }
 
   /* Groups principal is a member of */
@@ -344,35 +332,37 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
           "select g.grp from BwGroupEntry g " +
                   "where g.memberId=:entId and g.memberIsGroup=:isgroup";
 
-  @SuppressWarnings("unchecked")
   @Override
   public <T extends BwGroup<?>> Collection<T> getGroups(
           final BwPrincipal<?> val,
           final boolean admin) {
-    final var sess = getSess();
-
+    final String q;
     if (admin) {
-      sess.createQuery(getAdminGroupsQuery);
+      q = getAdminGroupsQuery;
     } else {
-      sess.createQuery(getGroupsQuery);
+      q = getGroupsQuery;
     }
 
-    sess.setInt("entId", val.getId());
-    sess.setBool("isgroup", (val instanceof BwGroup));
-
+    //noinspection unchecked
     final Set<BwGroup<?>> gs =
             new TreeSet<>(
-                    (Collection<? extends BwGroup<?>>)sess.getList());
+                    (Collection<? extends BwGroup<?>>)createQuery(q)
+                            .setInt("entId", val.getId())
+                            .setBool("isgroup",
+                                     val instanceof BwGroup)
+                            .getList());
 
     if (admin && (val.getKind() == WhoDefs.whoTypeUser)) {
       /* Event owner for group is implicit member of group. */
 
-      sess.createQuery(getAdminGroupsByEventOwnerQuery);
-      sess.setString("ownerHref", val.getPrincipalRef());
-
-      gs.addAll((Collection<? extends BwGroup<?>>)sess.getList());
+      //noinspection unchecked
+      gs.addAll((Collection<? extends BwGroup<?>>)
+                        createQuery(getAdminGroupsByEventOwnerQuery)
+              .setString("ownerHref", val.getPrincipalRef())
+              .getList());
     }
 
+    //noinspection unchecked
     return (Collection<T>)gs;
   }
 
@@ -398,26 +388,18 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
 
   @Override
   public void removeFromAllPrefs(final BwShareableDbentity<?> val) {
-    final var sess = getSess();
+    final String q = switch (val) {
+      case final BwCategory bwCategory -> removeCategoryPrefForAllQuery;
+      case final BwCollection bwCollection -> removeCalendarPrefForAllQuery;
+      case final BwContact bwContact -> removeContactPrefForAllQuery;
+      case final BwLocation bwLocation -> removeLocationPrefForAllQuery;
+      case null, default ->
+              throw new BedeworkException("Can't handle " + val);
+    };
 
-    final String q;
-
-    if (val instanceof BwCategory) {
-      q = removeCategoryPrefForAllQuery;
-    } else if (val instanceof BwCollection) {
-      q = removeCalendarPrefForAllQuery;
-    } else if (val instanceof BwContact) {
-      q = removeContactPrefForAllQuery;
-    } else if (val instanceof BwLocation) {
-      q = removeLocationPrefForAllQuery;
-    } else {
-      throw new BedeworkException("Can't handle " + val);
-    }
-
-    sess.createQuery(q);
-    sess.setInt("id", val.getId());
-
-    sess.executeUpdate();
+    createQuery(q)
+            .setInt("id", val.getId())
+            .executeUpdate();
   }
 
   /* ==========================================================
@@ -430,25 +412,19 @@ public class PrincipalsAndPrefsDAOImpl extends DAOBaseImpl
 
   @Override
   public BwAuthUser getAuthUser(final String href) {
-    final var sess = getSess();
-    
-    sess.createQuery(getUserQuery);
-    sess.setString("userHref", href);
-
-    return (BwAuthUser)sess.getUnique();
+    return (BwAuthUser)createQuery(getUserQuery)
+            .setString("userHref", href)
+            .getUnique();
   }
 
   private final static String getAllAuthUsersQuery =
           "select au from BwAuthUser au " +
                   "order by au.userHref";
 
-  @SuppressWarnings("unchecked")
   @Override
   public List<BwAuthUser> getAllAuthUsers() {
-    final var sess = getSess();
-
-    sess.createQuery(getAllAuthUsersQuery);
-
-    return (List<BwAuthUser>)sess.getList();
+    //noinspection unchecked
+    return (List<BwAuthUser>)createQuery(getAllAuthUsersQuery)
+            .getList();
   }
 }

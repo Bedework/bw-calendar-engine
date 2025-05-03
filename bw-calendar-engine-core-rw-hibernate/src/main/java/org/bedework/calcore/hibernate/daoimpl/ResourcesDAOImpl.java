@@ -42,15 +42,11 @@ public class ResourcesDAOImpl extends DAOBaseImpl implements
   public BwResource getResource(final String name,
                                 final String colPath,
                                 final int desiredAccess) {
-    final var sess = getSess();
-
-    sess.createQuery(getResourceQuery);
-
-    sess.setString("name", name);
-    sess.setString("path", colPath);
-    sess.setString("tsenc", BwResource.tombstoned);
-
-    return (BwResource)sess.getUnique();
+    return (BwResource)createQuery(getResourceQuery)
+            .setString("name", name)
+            .setString("path", colPath)
+            .setString("tsenc", BwResource.tombstoned)
+            .getUnique();
   }
 
   private static final String getResourceContentQuery =
@@ -59,13 +55,11 @@ public class ResourcesDAOImpl extends DAOBaseImpl implements
 
   @Override
   public void getResourceContent(final BwResource val) {
-    final var sess = getSess();
+    final var rc = (BwResourceContent)createQuery(getResourceContentQuery)
+            .setString("path", val.getColPath())
+            .setString("name", val.getName())
+            .getUnique();
 
-    sess.createQuery(getResourceContentQuery);
-    sess.setString("path", val.getColPath());
-    sess.setString("name", val.getName());
-
-    final BwResourceContent rc = (BwResourceContent)sess.getUnique();
     if (rc == null) {
       throw new BedeworkException(CalFacadeErrorCode.missingResourceContent);
     }
@@ -93,20 +87,21 @@ public class ResourcesDAOImpl extends DAOBaseImpl implements
                                           final boolean forSynch,
                                           final String token,
                                           final int count) {
-    final var sess = getSess();
+    final String q;
 
     if (forSynch && (token != null)) {
-      sess.createQuery(getAllResourcesSynchQuery);
+      q = getAllResourcesSynchQuery;
     } else {
-      sess.createQuery(getAllResourcesQuery);
+      q = getAllResourcesQuery;
     }
 
-    sess.setString("path", Util.buildPath(colPathEndsWithSlash,
-                                          path));
+    final var sess = createQuery(q)
+            .setString("path", Util.buildPath(colPathEndsWithSlash,
+                                              path));
 
     if (forSynch && (token != null)) {
-      sess.setString("lastmod", token.substring(0, 16));
-      sess.setInt("seq", Integer.parseInt(token.substring(17), 16));
+      sess.setString("lastmod", token.substring(0, 16))
+          .setInt("seq", Integer.parseInt(token.substring(17), 16));
     } else {
       sess.setString("tsenc", BwResource.tombstoned);
     }

@@ -35,13 +35,10 @@ public class CalSuitesDAOImpl extends DAOBaseImpl
 
   @Override
   public BwCalSuite get(final BwAdminGroup group) {
-    final var sess = getSess();
+    final var sess = createQuery(getCalSuiteByGroupQuery)
+            .setEntity("group", group);
 
-    sess.createQuery(getCalSuiteByGroupQuery);
-
-    sess.setEntity("group", group);
-
-    final BwCalSuite cs = (BwCalSuite)sess.getUnique();
+    final var cs = (BwCalSuite)sess.getUnique();
 
     if (cs != null){
       sess.evict(cs);
@@ -56,13 +53,9 @@ public class CalSuitesDAOImpl extends DAOBaseImpl
 
   @Override
   public BwCalSuite getCalSuite(final String name) {
-    final var sess = getSess();
-
-    sess.createQuery(getCalSuiteQuery);
-
-    sess.setString("name", name);
-
-    return (BwCalSuite)sess.getUnique();
+    return (BwCalSuite)createQuery(getCalSuiteQuery)
+            .setString("name", name)
+            .getUnique();
   }
 
   private static final String getAllCalSuitesQuery =
@@ -71,10 +64,7 @@ public class CalSuitesDAOImpl extends DAOBaseImpl
   @SuppressWarnings("unchecked")
   @Override
   public Collection<BwCalSuite> getAllCalSuites() {
-    final var sess = getSess();
-
-    sess.createQuery(getAllCalSuitesQuery);
-
-    return (Collection<BwCalSuite>)sess.getList();
+    return (Collection<BwCalSuite>)createQuery(getAllCalSuitesQuery)
+            .getList();
   }
 }

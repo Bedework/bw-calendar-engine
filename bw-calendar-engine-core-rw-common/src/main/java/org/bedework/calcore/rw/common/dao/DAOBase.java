@@ -21,13 +21,15 @@ public interface DAOBase extends Logged {
 
   DbSession getSess();
 
+  DbSession createQuery(String query);
+
   void rollback();
 
-  void add(BwUnversionedDbentity<?> val);
+  DbSession add(BwUnversionedDbentity<?> val);
 
-  void update(BwUnversionedDbentity<?> val);
+  DbSession update(BwUnversionedDbentity<?> val);
 
-  void delete(BwUnversionedDbentity<?> val);
+  DbSession delete(BwUnversionedDbentity<?> val);
 
   BwUnversionedDbentity<?> merge(BwUnversionedDbentity<?> val);
 

@@ -60,20 +60,27 @@ public abstract class DAOBaseImpl implements DAOBase {
     return sess;
   }
 
+  public DbSession createQuery(final String query) {
+    return sess.createQuery(query);
+  }
+
   public void rollback() {
     getSess().rollback();
   }
 
-  public void add(final BwUnversionedDbentity<?> val) {
+  public DbSession add(final BwUnversionedDbentity<?> val) {
     getSess().add(val);
+    return sess;
   }
 
-  public void update(final BwUnversionedDbentity<?> val) {
+  public DbSession update(final BwUnversionedDbentity<?> val) {
     getSess().update(val);
+    return sess;
   }
 
-  public void delete(final BwUnversionedDbentity<?> val) {
+  public DbSession delete(final BwUnversionedDbentity<?> val) {
     getSess().delete(val);
+    return sess;
   }
 
   public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) {

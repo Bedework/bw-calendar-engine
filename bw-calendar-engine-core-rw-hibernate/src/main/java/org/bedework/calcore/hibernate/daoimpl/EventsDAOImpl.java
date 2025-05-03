@@ -58,12 +58,11 @@ public class EventsDAOImpl extends DAOBaseImpl
                                        final String name) {
     final var sess = getSess();
 
-    sess.createQuery(eventsByNameQuery);
-    sess.setString("name", name);
-    sess.setString("colPath", colPath);
-
     //noinspection unchecked
-    return (List<BwEvent>)sess.getList();
+    return (List<BwEvent>)createQuery(eventsByNameQuery)
+            .setString("name", name)
+            .setString("colPath", colPath)
+            .getList();
   }
 
   private static final String eventAnnotationsByNameQuery =
@@ -77,13 +76,10 @@ public class EventsDAOImpl extends DAOBaseImpl
   public BwEventAnnotation getEventsAnnotationName(
           final String colPath,
           final String name) {
-    final var sess = getSess();
-
-    sess.createQuery(eventAnnotationsByNameQuery);
-    sess.setString("name", name);
-    sess.setString("colPath", colPath);
-
-    return (BwEventAnnotation)sess.getUnique();
+    return (BwEventAnnotation)createQuery(eventAnnotationsByNameQuery)
+            .setString("name", name)
+            .setString("colPath", colPath)
+            .getUnique();
   }
 
   /* TODO - we get deadlocks (at least with mysql) when
@@ -105,14 +101,10 @@ public class EventsDAOImpl extends DAOBaseImpl
   @Override
   public void deleteTombstonedEvent(final String colPath,
                                     final String uid) {
-    final var sess = getSess();
-
-    sess.createQuery(deleteTombstonedEventQuery);
-
-    sess.setString("path", colPath);
-    sess.setString("uid", uid);
-
-    sess.executeUpdate();
+    createQuery(deleteTombstonedEventQuery)
+            .setString("path", colPath)
+            .setString("uid", uid)
+            .executeUpdate();
   }
   
   private static final String getSynchEventObjectsTokenQuery =
@@ -130,26 +122,22 @@ public class EventsDAOImpl extends DAOBaseImpl
   @Override
   public List<?> getSynchEventObjects(final String path,
                                       final String token) {
-    final var sess = getSess();
-    
     if (token != null) {
-      sess.createQuery(getSynchEventObjectsTokenQuery);
-    } else {
-      sess.createQuery(getSynchEventObjectsQuery);
+      return createQuery(getSynchEventObjectsTokenQuery)
+              .setString("path", path)
+              .setString("token", token)
+              .getList();
     }
 
-    sess.setString("path", path);
 
-    if (token != null) {
-      sess.setString("token", token);
-    }
-
-    return sess.getList();
+    return createQuery(getSynchEventObjectsQuery)
+              .setString("path", path)
+              .getList();
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                  Admin support
-   * ==================================================================== */
+   * ============================================================== */
   
   private final static String getChildEntitiesQuery =
           "select ev.name from BwEventObj ev " +
@@ -163,17 +151,12 @@ public class EventsDAOImpl extends DAOBaseImpl
           final String parentPath,
           final int start,
           final int count) {
-    final var sess = getSess();
-
-    sess.createQuery(getChildEntitiesQuery);
-
-    sess.setString("colPath", parentPath);
-
-    sess.setFirstResult(start);
-    sess.setMaxResults(count);
-
     //noinspection unchecked
-    return (List<String>)sess.getList();
+    return (List<String>)createQuery(getChildEntitiesQuery)
+            .setString("colPath", parentPath)
+            .setFirstResult(start)
+            .setMaxResults(count)
+            .getList();
   }
 
   /* ==========================================================
@@ -186,15 +169,10 @@ public class EventsDAOImpl extends DAOBaseImpl
 
   @Override
   public Iterator<BwEventAnnotation> getEventAnnotations() {
-    final var sess = getSess();
-
-    sess.createQuery(getEventAnnotationsQuery);
-
-    @SuppressWarnings("unchecked") 
-    final Collection<BwEventAnnotation> anns =
-            (Collection<BwEventAnnotation>)sess.getList();
-
-    return anns.iterator();
+    //noinspection unchecked
+    return ((Collection<BwEventAnnotation>)createQuery(getEventAnnotationsQuery)
+            .getList())
+            .iterator();
   }
 
   private static final String getEventOverridesQuery =
@@ -202,16 +180,13 @@ public class EventsDAOImpl extends DAOBaseImpl
                   "where ev.recurrenceId<>null " +
                   "and ev.target=:target";
 
-  @SuppressWarnings("unchecked")
   @Override
   public Collection<BwEventAnnotation> getEventOverrides(
           final BwEvent ev) {
-    final var sess = getSess();
-
-    sess.createQuery(getEventOverridesQuery);
-    sess.setEntity("target", ev);
-
-    return (Collection<BwEventAnnotation>)sess.getList();
+    //noinspection unchecked
+    return (Collection<BwEventAnnotation>)createQuery(getEventOverridesQuery)
+            .setEntity("target", ev)
+            .getList();
   }
 
   /* ==========================================================
@@ -232,8 +207,6 @@ public class EventsDAOImpl extends DAOBaseImpl
   public String calendarGuidExists(final BwEvent val,
                                    final boolean annotation,
                                    final boolean adding) {
-    final var sess = getSess();
-
     final StringBuilder sb = new StringBuilder();
 
     if (!annotation) {
@@ -261,9 +234,8 @@ public class EventsDAOImpl extends DAOBaseImpl
 
     sb.append("ev.colPath=:colPath and ev.uid = :uid");
 
-    sess.createQuery(sb.toString());
-    /* Change the above to
-     *     sess.createNoFlushQuery(sb.toString());
+    /* Change the createQuery to
+     *     createNoFlushQuery(sb.toString());
      * and we save about 50% of the cpu for some updates. However we can't do
      * just that. The savings come about in not doing the flush which is
      * expensive - however we need it to ensure we are not getting dup uids.
@@ -279,16 +251,15 @@ public class EventsDAOImpl extends DAOBaseImpl
      * which is not meant to be called frequently.
      */
 
+    final var sess = createQuery(sb.toString());
 
     if (testEvent != null) {
       sess.setEntity("event", testEvent);
     }
 
-    sess.setString("colPath", val.getColPath());
-    sess.setString("uid", val.getUid());
-
-
-    final Collection<?> refs = sess.getList();
+    final var refs = sess.setString("colPath", val.getColPath())
+                         .setString("uid", val.getUid())
+                         .getList();
 
     String res = null;
 
@@ -311,8 +282,6 @@ public class EventsDAOImpl extends DAOBaseImpl
   public boolean collectionNameExists(final BwEvent val,
                                       final boolean annotation,
                                       final boolean adding) {
-    final var sess = getSess();
-
     final StringBuilder sb = new StringBuilder();
 
     if (!annotation) {
@@ -341,19 +310,19 @@ public class EventsDAOImpl extends DAOBaseImpl
     sb.append("ev.colPath=:colPath and ");
     sb.append("ev.name = :name");
 
-    sess.createQuery(sb.toString());
     /* See above note
-      sess.createNoFlushQuery(sb.toString());
+      createNoFlushQuery(sb.toString());
       */
+
+    final var sess = createQuery(sb.toString());
 
     if (testEvent != null) {
       sess.setEntity("event", testEvent);
     }
 
-    sess.setString("colPath", val.getColPath());
-    sess.setString("name", val.getName());
-
-    final Collection<?> refs = sess.getList();
+    final var refs = sess.setString("colPath", val.getColPath())
+                         .setString("name", val.getName())
+                         .getList();
 
     final Object o = refs.iterator().next();
 
@@ -378,20 +347,8 @@ public class EventsDAOImpl extends DAOBaseImpl
   @Override
   public Collection<BwEventAnnotation> getAnnotations(
           final BwEvent val) {
-    final var sess = getSess();
-
-    sess.createQuery(getAnnotationsQuery);
-    sess.setEntity("target", val);
-
-    final Collection<BwEventAnnotation> anns =
-            (Collection<BwEventAnnotation>)sess.getList();
-
-    if (debug()) {
-      debug("getAnnotations for event " + val.getId() +
-               " returns " + anns.size());
-    }
-
-    return anns;
+    return (Collection<BwEventAnnotation>)createQuery(getAnnotationsQuery)
+                    .setEntity("target", val).getList();
   }
 
   @Override
@@ -401,7 +358,6 @@ public class EventsDAOImpl extends DAOBaseImpl
           final String guid,
           final BwEvent master,
           final Boolean overrides) {
-    final var sess = getSess();
     final EventQueryBuilder qb = new EventQueryBuilder();
     final String qevName = "ev";
     final BwDateTime startDate = null;
@@ -432,6 +388,7 @@ public class EventsDAOImpl extends DAOBaseImpl
       qb.append(" and ev.override=:override ");
     }
 
+    final var sess = getSess();
     qb.createQuery(sess);
 
     qb.setDateTermValues(startDate, endDate);

@@ -53,9 +53,9 @@ public class CollectionsDAOImpl extends DAOBaseImpl
     return CollectionsDAOImpl.class.getName();
   }
   
-  /* ====================================================================
+  /* ============================================================
    *                   CollectionsI methods
-   * ==================================================================== */
+   * ============================================================ */
 
   private static final String getSynchInfoQuery = 
           "select lm.timestamp, lm.sequence " +
@@ -65,13 +65,9 @@ public class CollectionsDAOImpl extends DAOBaseImpl
   @Override
   public CollectionSynchInfo getSynchInfo(final String path,
                                           final String token) {
-    final var sess = getSess();
-
-    sess.createQuery(getSynchInfoQuery);
-
-    sess.setString("path", path);
-
-    final Object[] lmfields = (Object[])sess.getUnique();
+    final var lmfields = (Object[])createQuery(getSynchInfoQuery)
+            .setString("path", path)
+            .getUnique();
 
     if (lmfields == null) {
       return null;
@@ -96,17 +92,12 @@ public class CollectionsDAOImpl extends DAOBaseImpl
   @Override
   public List<BwCollection> findCollectionAlias(final String aliasPath,
                                                 final String ownerHref) {
-    final var sess = getSess();
-
-    sess.createQuery(findAliasQuery);
-
-    sess.setString("owner", ownerHref);
-    sess.setString("alias", "bwcal://" + aliasPath);
-    sess.setInt("caltype", BwCollection.calTypeAlias);
-    sess.setString("tsfilter", BwCollection.tombstonedFilter);
-
     //noinspection unchecked
-    return (List<BwCollection>)sess.getList();
+    return (List<BwCollection>)createQuery(findAliasQuery)
+            .setString("owner", ownerHref)
+            .setString("alias", "bwcal://" + aliasPath).setInt("caltype", BwCollection.calTypeAlias)
+            .setString("tsfilter", BwCollection.tombstonedFilter)
+            .getList();
   }
 
   private static final String getCollectionByPathQuery =
@@ -116,12 +107,9 @@ public class CollectionsDAOImpl extends DAOBaseImpl
 
   @Override
   public BwCollection getCollection(final String path) {
-    final var sess = getSess();
-
-    sess.createQuery(getCollectionByPathQuery);
-    sess.setString("path", path);
-
-    return (BwCollection)sess.getUnique();
+    return (BwCollection)createQuery(getCollectionByPathQuery)
+            .setString("path", path)
+            .getUnique();
   }
 
   private final static String collectionExistsQuery =
@@ -131,19 +119,14 @@ public class CollectionsDAOImpl extends DAOBaseImpl
 
   @Override
   public boolean collectionExists(final String path) {
-    final var sess = getSess();
-
-    sess.createQuery(collectionExistsQuery);
-
-    sess.setString("path", path);
-
-    final Collection<?> refs = sess.getList();
+    final Collection<?> refs = createQuery(collectionExistsQuery)
+            .setString("path", path)
+            .getList();
 
     final Object o = refs.iterator().next();
 
     /* Apparently some get a Long - others get Integer */
-    if (o instanceof Long) {
-      final Long ct = (Long)o;
+    if (o instanceof final Long ct) {
       return ct > 0;
     }
     
@@ -168,15 +151,11 @@ public class CollectionsDAOImpl extends DAOBaseImpl
     final BwCollectionLastmod lm = col.getLastmod();
     lm.updateLastmod(ts);
 
-    final var sess = getSess();
-
-    sess.createQuery(touchCollectionQuery);
-
-    sess.setString("timestamp", lm.getTimestamp());
-    sess.setInt("sequence", lm.getSequence());
-    sess.setString("path", col.getPath());
-
-    sess.executeUpdate();
+    createQuery(touchCollectionQuery)
+             .setString("timestamp", lm.getTimestamp())
+             .setInt("sequence", lm.getSequence())
+             .setString("path", col.getPath())
+             .executeUpdate();
   }
 
   @Override
@@ -195,12 +174,9 @@ public class CollectionsDAOImpl extends DAOBaseImpl
 
   @Override
   public void removeCollectionFromAuthPrefs(final BwCollection val) {
-    final var sess = getSess();
-
-    sess.createQuery(removeCollectionPrefForAllQuery);
-    sess.setInt("id", val.getId());
-
-    sess.executeUpdate();
+    createQuery(removeCollectionPrefForAllQuery)
+             .setInt("id", val.getId())
+             .executeUpdate();
   }
 
   @Override
@@ -221,12 +197,9 @@ public class CollectionsDAOImpl extends DAOBaseImpl
 
   @Override
   public boolean isEmptyCollection(final BwCollection val) {
-    final var sess = getSess();
-
-    sess.createQuery(countCalendarEventRefsQuery);
-    sess.setString("colPath", val.getPath());
-
-    Long res = (Long)sess.getUnique();
+    var res = (Long)createQuery(countCalendarEventRefsQuery)
+            .setString("colPath", val.getPath())
+            .getUnique();
 
     if (debug()) {
       debug(" ----------- count = " + res);
@@ -236,10 +209,9 @@ public class CollectionsDAOImpl extends DAOBaseImpl
       return false;
     }
 
-    sess.createQuery(countCollectionChildrenQuery);
-    sess.setString("colPath", val.getPath());
-
-    res = (Long)sess.getUnique();
+    res = (Long)createQuery(countCollectionChildrenQuery)
+            .setString("colPath", val.getPath())
+            .getUnique();
 
     if (debug()) {
       debug(" ----------- count children = " + res);
@@ -281,17 +253,17 @@ public class CollectionsDAOImpl extends DAOBaseImpl
       sb.append("and (col.filterExpr is null or col.filterExpr <> :tsfilter)");
     }
 
-    sess.createQuery(sb.toString());
-
-    sess.setString("path", path);
+    sess.createQuery(sb.toString())
+        .setString("path", path);
 
     if (token != null) {
-      sess.setString("lastmod", token.substring(0, 16));
-      sess.setInt("seq", Integer.parseInt(token.substring(17), 16));
+      sess.setString("lastmod", token.substring(0, 16))
+          .setInt("seq", Integer.parseInt(token.substring(17), 16));
     } else {
       sess.setString("tsfilter", BwCollection.tombstonedFilter);
     }
 
+    //noinspection unchecked
     return (List<BwCollection>)sess.getList();
   }
 
@@ -301,18 +273,15 @@ public class CollectionsDAOImpl extends DAOBaseImpl
           
   @Override
   public List<BwCollection> getPathPrefix(final String path) {
-    final var sess = getSess();
-
-    sess.createQuery(getPathPrefixQuery);
-
-    sess.setString("path", path + "%");
-
-    return (List<BwCollection>)sess.getList();
+    //noinspection unchecked
+    return (List<BwCollection>)createQuery(getPathPrefixQuery)
+            .setString("path", path + "%")
+            .getList();
   }
 
-  /* ====================================================================
+  /* ============================================================
    *                  Admin support
-   * ==================================================================== */
+   * ============================================================ */
 
   private final static String getChildCollectionPathsQuery =
           "select col.path from BwCollection col where " +
@@ -323,22 +292,25 @@ public class CollectionsDAOImpl extends DAOBaseImpl
   public List<String> getChildrenCollections(final String parentPath,
                                              final int start,
                                              final int count) {
-    final var sess = getSess();
+    final DbSession sess;
 
     if (parentPath == null) {
-      sess.createQuery(getChildCollectionPathsQuery + " is null order by col.path");
+      sess = createQuery(getChildCollectionPathsQuery +
+                                 " is null order by col.path");
     } else {
-      sess.createQuery(getChildCollectionPathsQuery + "=:colPath order by col.path");
-      sess.setString("colPath", parentPath);
+      sess = createQuery(getChildCollectionPathsQuery +
+                                 "=:colPath order by col.path")
+              .setString("colPath", parentPath);
     }
 
     sess.setString("tsfilter", BwCollection.tombstonedFilter);
 
     if (start >= 0) {
-      sess.setFirstResult(start);
-      sess.setMaxResults(count);
+      sess.setFirstResult(start)
+          .setMaxResults(count);
     }
 
+    //noinspection unchecked
     final List<String> res = (List<String>)sess.getList();
 
     if (Util.isEmpty(res)) {
@@ -354,21 +326,23 @@ public class CollectionsDAOImpl extends DAOBaseImpl
                   "col.filterExpr <> :tsfilter) and " +
                   "col.colPath";
 
-  @SuppressWarnings("unchecked")
   @Override
   public List<BwCollection> getChildCollections(final String parentPath) {
-    final var sess = getSess();
+    final DbSession sess;
 
     if (parentPath == null) {
-      sess.createQuery(getChildCollectionsQuery + " is null order by col.path");
+      sess = createQuery(getChildCollectionsQuery +
+                                 " is null order by col.path");
     } else {
-      sess.createQuery(getChildCollectionsQuery + "=:colPath order by col.path");
-      sess.setString("colPath", parentPath);
+      sess = createQuery(getChildCollectionsQuery +
+                                 "=:colPath order by col.path")
+              .setString("colPath", parentPath);
     }
 
-    sess.setString("tsfilter", BwCollection.tombstonedFilter);
-
-    return (List<BwCollection>)sess.getList();
+    //noinspection unchecked
+    return (List<BwCollection>)sess
+            .setString("tsfilter", BwCollection.tombstonedFilter)
+            .getList();
   }
 
   private final static String getChildLastModsAndPathsQuery =
@@ -383,14 +357,10 @@ public class CollectionsDAOImpl extends DAOBaseImpl
   @Override
   public List<LastModAndPath> getChildLastModsAndPaths(
           final String parentPath) {
-    final var sess = getSess();
-
-    sess.createQuery(getChildLastModsAndPathsQuery);
-
-    sess.setString("path", parentPath);
-    sess.setString("tsfilter", BwCollection.tombstonedFilter);
-
-    final List<?> chfields = sess.getList();
+    final var chfields = createQuery(getChildLastModsAndPathsQuery)
+            .setString("path", parentPath)
+            .setString("tsfilter", BwCollection.tombstonedFilter)
+            .getList();
 
     final List<LastModAndPath> res = new ArrayList<>();
     
@@ -401,7 +371,6 @@ public class CollectionsDAOImpl extends DAOBaseImpl
     for (final Object o: chfields) {
       final Object[] fs = (Object[])o;
 
- 
       res.add(new LastModAndPath((String)fs[0],
                                  (String)fs[1], 
                                  (Integer)fs[2]));
@@ -416,17 +385,15 @@ public class CollectionsDAOImpl extends DAOBaseImpl
   
   @Override
   public List<BwCollection> getCollections(final List<String> paths) {
-    final var sess = getSess();
-    sess.createQuery(getCollectionsQuery);
-
-    sess.setParameterList("paths", paths);
-
-    return (List<BwCollection>)sess.getList();
+    //noinspection unchecked
+    return (List<BwCollection>)createQuery(getCollectionsQuery)
+            .setParameterList("paths", paths)
+            .getList();
   }
 
-  /* ====================================================================
+  /* ============================================================
    *                   Private methods
-   * ==================================================================== */
+   * ============================================================ */
 
   private static final String removeTombstonedCollectionEventsQuery =
           "delete from BwEventObj ev" +
@@ -442,25 +409,20 @@ public class CollectionsDAOImpl extends DAOBaseImpl
           
   @Override
   public void removeTombstoned(final String path) {
-    final var sess = getSess();
+    createQuery(removeTombstonedCollectionEventsQuery)
+             .setString("path", path)
+             .executeUpdate();
 
-    sess.createQuery(removeTombstonedCollectionEventsQuery);
-
-    sess.setString("path", path);
-
-    sess.executeUpdate();
-
-    sess.createQuery(getTombstonedCollectionsQuery);
-
-    sess.setString("path", path);
-    sess.setString("tsfilter", BwCollection.tombstonedFilter);
-
-    @SuppressWarnings("unchecked")
-    final List<BwCollection> cols = (List<BwCollection>)sess.getList();
+    //noinspection unchecked
+    final var cols = (List<BwCollection>)
+            createQuery(getTombstonedCollectionsQuery)
+            .setString("path", path)
+            .setString("tsfilter", BwCollection.tombstonedFilter)
+            .getList();
 
     if (!Util.isEmpty(cols)) {
       for (final BwCollection col: cols) {
-        sess.delete(col);
+        getSess().delete(col);
       }
     }
   }
@@ -485,12 +447,10 @@ public class CollectionsDAOImpl extends DAOBaseImpl
 
   @Override
   public BwCollection getTombstonedCollection(final String path) {
-    final var sess = getSess();
-
-    sess.createQuery(getTombstonedCollectionByPathQuery);
-    sess.setString("path", path);
-    sess.setString("tsfilter", BwCollection.tombstonedFilter);
-
-    return (BwCollection)sess.getUnique();
+    return (BwCollection)
+            createQuery(getTombstonedCollectionByPathQuery)
+            .setString("path", path)
+            .setString("tsfilter", BwCollection.tombstonedFilter)
+            .getUnique();
   }
 }

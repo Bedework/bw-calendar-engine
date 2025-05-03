@@ -52,12 +52,9 @@ public class FilterDefsDAOImpl extends DAOBaseImpl
   @Override
   public Collection<BwFilterDef> getAllFilterDefs(
           final BwPrincipal<?> owner) {
-    final var sess = getSess();
-
-    sess.createQuery(getAllFilterDefsQuery);
-    sess.setString("ownerHref", owner.getPrincipalRef());
-
-    return (Collection<BwFilterDef>)sess.getList();
+    return (Collection<BwFilterDef>)createQuery(getAllFilterDefsQuery)
+            .setString("ownerHref", owner.getPrincipalRef())
+            .getList();
   }
 
   private static final String fetchFilterDefQuery =
@@ -67,12 +64,9 @@ public class FilterDefsDAOImpl extends DAOBaseImpl
   @Override
   public BwFilterDef fetch(final String name,
                            final BwPrincipal<?> owner) {
-    final var sess = getSess();
-
-    sess.createQuery(fetchFilterDefQuery);
-    sess.setString("ownerHref", owner.getPrincipalRef());
-    sess.setString("name", name);
-
-    return (BwFilterDef)sess.getUnique();
+    return (BwFilterDef)createQuery(fetchFilterDefQuery)
+            .setString("ownerHref", owner.getPrincipalRef())
+            .setString("name", name)
+            .getUnique();
   }
 }

@@ -31,15 +31,12 @@ public class IteratorsDAOImpl extends DAOBaseImpl
   public List<?> getBatch(final String className,
                           final int start,
                           final int size) {
-    final var sess = getSess();
-
-    sess.createQuery("select colPath, name from " + className +
-                             " order by dtstart.dtval desc");
-
-    sess.setFirstResult(start);
-    sess.setMaxResults(size);
-
-    return sess.getList();
+    return createQuery(
+            "select colPath, name from " + className +
+                    " order by dtstart.dtval desc")
+            .setFirstResult(start)
+            .setMaxResults(size)
+            .getList();
   }
 
   @Override
@@ -67,9 +64,7 @@ public class IteratorsDAOImpl extends DAOBaseImpl
       query += " ownerHref=:ownerHref";
     }
 
-    final var sess = getSess();
-
-    sess.createQuery(query);
+    final var sess = createQuery(query);
 
     if (colPath != null) {
       sess.setString("colPath", colPath);
@@ -81,9 +76,8 @@ public class IteratorsDAOImpl extends DAOBaseImpl
       sess.setString("ownerHref", ownerHref);
     }
 
-    sess.setFirstResult(start);
-    sess.setMaxResults(size);
-
-    return sess.getList();
+    return sess.setFirstResult(start)
+               .setMaxResults(size)
+               .getList();
   }
 }
