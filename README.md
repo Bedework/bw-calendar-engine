@@ -7,7 +7,7 @@ This project provides most of the protocol support for the system.
 
 ## Requirements
 
-1. JDK 17
+1. JDK 21
 2. Maven 3
 
 ## Building Locally
@@ -16,7 +16,7 @@ This project provides most of the protocol support for the system.
 
 ## Releasing
 
-Releases of this fork are published to Maven Central via Sonatype.
+Releases of this project are published to Maven Central via Sonatype.
 
 To create a release, you must have:
 
