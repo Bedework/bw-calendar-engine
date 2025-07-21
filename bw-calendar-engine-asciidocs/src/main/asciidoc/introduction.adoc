@@ -1,0 +1,5 @@
+[[introduction]]
+== Introduction
+The calendar engine for bedework.
+
+This documentation is mostly a place-holder.

@@ -1,0 +1,3 @@
+[[indexing]]
+== indexing
+Provides implementations of indexing code used when interacting with the indexing service.

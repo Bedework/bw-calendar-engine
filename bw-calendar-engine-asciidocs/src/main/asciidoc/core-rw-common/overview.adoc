@@ -1,0 +1,3 @@
+[[core-rw-common]]
+== core-rw-common
+Provides common code for the read-write functions.

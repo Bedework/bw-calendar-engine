@@ -1,0 +1,10 @@
+=== Using this project
+Add the artifact(s) as a dependency to your project:
+
+[source]
+----
+      <dependency>
+        <groupId>org.bedework.caleng</groupId>
+        <artifactId>bw-calendar-engine-core-rw-common</artifactId>
+      </dependency>
+----

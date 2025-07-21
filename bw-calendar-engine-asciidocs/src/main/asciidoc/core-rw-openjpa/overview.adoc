@@ -1,0 +1,3 @@
+[[core-rw-openjpa]]
+== core-rw-openjpa
+Provides openjpa specific code for the read-write functions.

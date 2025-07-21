@@ -1,0 +1,3 @@
+[[indexer]]
+== indexer
+Provides implementations of indexing code used when reindexing data.

@@ -1,0 +1,3 @@
+[[core-ro]]
+== core-ro
+Provides core readonly functionality, i.e reading indexed data. There are no db interactions.

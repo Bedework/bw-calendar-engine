@@ -1,0 +1,3 @@
+[[core-rw-hibernate]]
+== core-rw-hibernate
+Provides hibernate specific code for the read-write functions.

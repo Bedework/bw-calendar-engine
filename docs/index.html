@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>The Bedework Calendar Engine modules.</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>Bedework Calendar Engine modules.</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#api">1. api</a></li>
+<li><a href="#caldav">2. caldav</a></li>
+<li><a href="#chgnote">3. chgnote</a></li>
+<li><a href="#core-ro">4. core-ro</a></li>
+<li><a href="#core-rw-common">5. core-rw-common</a></li>
+<li><a href="#core-rw-hibernate">6. core-rw-hibernate</a></li>
+<li><a href="#core-rw-openjpa">7. core-rw-openjpa</a></li>
+<li><a href="#impl">8. impl</a></li>
+<li><a href="#indexer">9. indexer</a></li>
+<li><a href="#indexing">10. indexing</a></li>
+<li><a href="#inoutsched">11. inoutsched</a></li>
+<li><a href="#interfaces">12. interfaces</a></li>
+<li><a href="#tools">13. tools</a></li>
+<li><a href="#reports">14. Reports</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The calendar engine for bedework.</p>
+</div>
+<div class="paragraph">
+<p>This documentation is mostly a place-holder.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="api">1. api</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Not sure why we still have this.
+=== Using this project
+Add the artifact(s) as a dependency to your project:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>      &lt;dependency&gt;
+        &lt;groupId&gt;org.bedework.caleng&lt;/groupId&gt;
+        &lt;artifactId&gt;bw-calendar-engine-api&lt;/artifactId&gt;
+      &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="caldav">2. caldav</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Provides the bedework implementation of th ecaldav system interfaces along with supporting code.
+=== Using this project
+Add the artifact(s) as a dependency to your project:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>      &lt;dependency&gt;
+        &lt;groupId&gt;org.bedework.caleng&lt;/groupId&gt;
+        &lt;artifactId&gt;bw-calendar-engine-caldav&lt;/artifactId&gt;
+      &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="chgnote">3. chgnote</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Provides chnage notification code.
+=== Using this project
+Add the artifact(s) as a dependency to your project:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>      &lt;dependency&gt;
+        &lt;groupId&gt;org.bedework.caleng&lt;/groupId&gt;
+        &lt;artifactId&gt;bw-calendar-engine-chgnote&lt;/artifactId&gt;
+      &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="core-ro">4. core-ro</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Provides core readonly functionality, i.e reading indexed data. There are no db interactions.
+=== Using this project
+Add the artifact(s) as a dependency to your project:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>      &lt;dependency&gt;
+        &lt;groupId&gt;org.bedework.caleng&lt;/groupId&gt;
+        &lt;artifactId&gt;bw-calendar-engine-core-ro&lt;/artifactId&gt;
+      &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="core-rw-common">5. core-rw-common</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Provides common code for the read-write functions.
+=== Using this project
+Add the artifact(s) as a dependency to your project:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>      &lt;dependency&gt;
+        &lt;groupId&gt;org.bedework.caleng&lt;/groupId&gt;
+        &lt;artifactId&gt;bw-calendar-engine-core-rw-common&lt;/artifactId&gt;
+      &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="core-rw-hibernate">6. core-rw-hibernate</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Provides hibernate specific code for the read-write functions.
+=== Using this project
+Add the artifact(s) as a dependency to your project:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>      &lt;dependency&gt;
+        &lt;groupId&gt;org.bedework.caleng&lt;/groupId&gt;
+        &lt;artifactId&gt;bw-calendar-engine-core-rw-hibernate&lt;/artifactId&gt;
+      &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="core-rw-openjpa">7. core-rw-openjpa</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Provides openjpa specific code for the read-write functions.
+=== Using this project
+Add the artifact(s) as a dependency to your project:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>      &lt;dependency&gt;
+        &lt;groupId&gt;org.bedework.caleng&lt;/groupId&gt;
+        &lt;artifactId&gt;bw-calendar-engine-core-rw-openjpa&lt;/artifactId&gt;
+      &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="impl">8. impl</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Provides implementations of the svci interfaces.
+=== Using this project
+Add the artifact(s) as a dependency to your project:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>      &lt;dependency&gt;
+        &lt;groupId&gt;org.bedework.caleng&lt;/groupId&gt;
+        &lt;artifactId&gt;bw-calendar-engine-impl&lt;/artifactId&gt;
+      &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="indexer">9. indexer</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Provides implementations of indexing code used when reindexing data.
+=== Using this project
+Add the artifact(s) as a dependency to your project:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>      &lt;dependency&gt;
+        &lt;groupId&gt;org.bedework.caleng&lt;/groupId&gt;
+        &lt;artifactId&gt;bw-calendar-engine-api&lt;/artifactId&gt;
+      &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="indexing">10. indexing</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Provides implementations of indexing code used when interacting with the indexing service.
+=== Using this project
+Add the artifact(s) as a dependency to your project:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>      &lt;dependency&gt;
+        &lt;groupId&gt;org.bedework.caleng&lt;/groupId&gt;
+        &lt;artifactId&gt;bw-calendar-engine-indexing&lt;/artifactId&gt;
+      &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="inoutsched">11. inoutsched</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Provides definitions for scheduling code.
+=== Using this project
+Add the artifact(s) as a dependency to your project:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>      &lt;dependency&gt;
+        &lt;groupId&gt;org.bedework.caleng&lt;/groupId&gt;
+        &lt;artifactId&gt;bw-calendar-engine-inoutsched&lt;/artifactId&gt;
+      &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="interfaces">12. interfaces</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Provides definitions for the lower level code used by the svci implementations.
+=== Using this project
+Add the artifact(s) as a dependency to your project:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>      &lt;dependency&gt;
+        &lt;groupId&gt;org.bedework.caleng&lt;/groupId&gt;
+        &lt;artifactId&gt;bw-calendar-engine-interfaces&lt;/artifactId&gt;
+      &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="tools">13. tools</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Provides tools used mostly by the cli to update stored data.
+=== Using this project
+Add the artifact(s) as a dependency to your project:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>      &lt;dependency&gt;
+        &lt;groupId&gt;org.bedework.caleng&lt;/groupId&gt;
+        &lt;artifactId&gt;bw-calendar-engine-api&lt;/artifactId&gt;
+      &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="reports">14. Reports</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="reports/dependency-check-report.html">Dependency check</a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-07-21 00:43:00 -0400
+</div>
+</div>
+</body>
+</html>

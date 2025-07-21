@@ -1,0 +1,75 @@
+= Bedework Calendar Engine modules.
+:title: The Bedework Calendar Engine modules.
+:safe-mode-unsafe:
+:docinfo: shared
+:docinfodir: ./docinfo
+:docinfo2:
+:scriptsdir: ./tocbot-3.0.2
+:imagesdir: ./resources/
+:toc: left
+:toclevels: 4
+:sectnumlevels: 4
+//
+:reports-dir: reports/
+:api-dir: api
+:caldav-dir: caldav
+:chgnote-dir: chgnote
+:core-ro-dir: core-ro
+:core-rw-common-dir: core-rw-common
+:core-rw-hibernate-dir: core-rw-hibernate
+:core-rw-openjpa-dir: core-rw-openjpa
+:impl-dir: impl
+:indexer-dir: indexer
+:indexing-dir: indexing
+:inoutsched-dir: inoutsched
+:interfaces-dir: interfaces
+:tools-dir: tools
+//
+:sectnums!:
+
+include::introduction.adoc[]
+
+:sectnums:
+
+include::{api-dir}/overview.adoc[]
+include::{api-dir}/using.adoc[]
+
+include::{caldav-dir}/overview.adoc[]
+include::{caldav-dir}/using.adoc[]
+
+include::{chgnote-dir}/overview.adoc[]
+include::{chgnote-dir}/using.adoc[]
+
+include::{core-ro-dir}/overview.adoc[]
+include::{core-ro-dir}/using.adoc[]
+
+include::{core-rw-common-dir}/overview.adoc[]
+include::{core-rw-common-dir}/using.adoc[]
+
+include::{core-rw-hibernate-dir}/overview.adoc[]
+include::{core-rw-hibernate-dir}/using.adoc[]
+
+include::{core-rw-openjpa-dir}/overview.adoc[]
+include::{core-rw-openjpa-dir}/using.adoc[]
+
+include::{impl-dir}/overview.adoc[]
+include::{impl-dir}/using.adoc[]
+
+include::{indexer-dir}/overview.adoc[]
+include::{indexer-dir}/using.adoc[]
+
+include::{indexing-dir}/overview.adoc[]
+include::{indexing-dir}/using.adoc[]
+
+include::{inoutsched-dir}/overview.adoc[]
+include::{inoutsched-dir}/using.adoc[]
+
+include::{interfaces-dir}/overview.adoc[]
+include::{interfaces-dir}/using.adoc[]
+
+include::{tools-dir}/overview.adoc[]
+include::{tools-dir}/using.adoc[]
+
+[[reports]]
+== Reports
+link:reports/dependency-check-report.html[Dependency check]
