@@ -9,7 +9,7 @@
 
   <groupId>org.bedework.caleng</groupId>
   <artifactId>bw-calendar-engine</artifactId>
-  <version>5.0.0-SNAPSHOT</version>
+  <version>5.0.0</version>
   <packaging>pom</packaging>
   <name>Bedework: calendar engine</name>
   <description>Main calendar engine code for bedework</description>
