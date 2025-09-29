@@ -242,7 +242,7 @@ public class CorePrincipalsAndPrefs
 
   @Override
   public Collection<BwAdminGroup> getAdminGroups() {
-    return dao.getAllGroups(false);
+    return dao.getAllGroups(true);
   }
 
   @Override
