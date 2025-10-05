@@ -3,6 +3,7 @@
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased (5.1.0-SNAPSHOT)
+* Incorrect value parameter (false instead of true) for admin groups fetch broke the restore.
 
 ## [5.0.0] - 2025-07-21
 * First jakarta release
