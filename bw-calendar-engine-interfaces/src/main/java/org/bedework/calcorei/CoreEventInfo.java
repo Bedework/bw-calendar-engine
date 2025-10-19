@@ -59,6 +59,12 @@ public class CoreEventInfo implements Comparable, Comparator, Serializable {
    */
   private Set<CoreEventInfo> containedItems;
 
+  /** non-null for an instance */
+  public CoreEventInfo retrievedEvent;
+
+  /** non-null if this is an instance due to an override */
+  public CoreEventInfo override;
+
   /** Constructor
    *
    */
@@ -67,8 +73,8 @@ public class CoreEventInfo implements Comparable, Comparator, Serializable {
 
   /** Constructor
    *
-   * @param event
-   * @param currentAccess
+   * @param event to contain
+   * @param currentAccess to the event
    */
   public CoreEventInfo(final BwEvent event,
                        final CurrentAccess currentAccess) {
@@ -77,7 +83,7 @@ public class CoreEventInfo implements Comparable, Comparator, Serializable {
   }
 
   /**
-   * @param val
+   * @param val event to contain
    */
   public void setEvent(final BwEvent val) {
     event = val;

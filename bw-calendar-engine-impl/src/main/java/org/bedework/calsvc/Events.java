@@ -83,15 +83,17 @@ import org.bedework.util.misc.Util;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
-import jakarta.servlet.http.HttpServletResponse;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.parameter.CuType;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -125,12 +127,17 @@ class Events extends CalSvcDb implements EventsI {
   public Collection<EventInfo> getByUid(final String colPath,
                                         final String guid,
                                         final String recurrenceId,
-                                        final RecurringRetrievalMode recurRetrieval)
-          {
-    final Collection<EventInfo> res =
+                                        final RecurringRetrievalMode recurRetrieval) {
+    final var res =
             postProcess(getCal().getEvent(colPath,
                                           guid));
 
+    return postGet(res, recurrenceId, recurRetrieval);
+  }
+
+  private Collection<EventInfo> postGet(final Set<EventInfo> res,
+                                        final String recurrenceId,
+                                        final RecurringRetrievalMode recurRetrieval) {
     final int num = res.size();
 
     if (num == 0) {
@@ -145,14 +152,14 @@ class Events extends CalSvcDb implements EventsI {
       return res;
     }
 
-    /* For an expansion replace the result with a set of expansions
+    /* For an expansion, replace the result with a set of expansions
      */
     if (recurrenceId == null) {
       return processExpanded(res, recurRetrieval);
     }
 
     if (num > 1) {
-      throw new RuntimeException("cannot return rid for multiple events");
+      throw new BedeworkException("cannot return rid for multiple events");
     }
 
     final Collection<EventInfo> eis = new ArrayList<>();
@@ -279,8 +286,20 @@ class Events extends CalSvcDb implements EventsI {
   @Override
   public EventInfo get(final String colPath,
                        final String name,
-                       final String recurrenceId)
-          {
+                       final String recurrenceId) {
+    final var ei = postProcess(getCal().getEvent(
+            Util.buildPath(false,
+                           colPath, "/",
+                           name)));
+    if (ei == null) {
+      return null;
+    }
+
+    final Set<EventInfo> res = new HashSet<>();
+    res.add(ei);
+    return postGet(res, recurrenceId,
+                   RecurringRetrievalMode.expanded).iterator().next();
+            /*
     String href = Util.buildPath(false,
                                  colPath, "/",
                                  name);
@@ -298,6 +317,7 @@ class Events extends CalSvcDb implements EventsI {
             new EntityFetchEvent(SysCode.ENTITY_FETCHED, num));
 
     return res;
+             */
 /*    if (res == null) {
       return null;
     }
@@ -2115,21 +2135,35 @@ class Events extends CalSvcDb implements EventsI {
      * proxy and return that object.
      */
     BwEvent ev = cei.getEvent();
+    boolean override = false;
 
-    if (ev instanceof BwEventAnnotation) {
+    if (ev instanceof BwEventProxy) {
+      override = true;
+    } else if (ev instanceof BwEventAnnotation) {
       ev = new BwEventProxy((BwEventAnnotation)ev);
     }
 
-    final Set<EventInfo> overrides = new TreeSet<>();
-    if (cei.getOverrides() != null) {
-      for (final CoreEventInfo ocei: cei.getOverrides()) {
-        final BwEventProxy op = (BwEventProxy)ocei.getEvent();
+    final EventInfo ei;
+    if (!override) {
+      final Set<EventInfo> overrides = new TreeSet<>();
+      if (cei.getOverrides() != null) {
+        for (final CoreEventInfo ocei: cei.getOverrides()) {
+          final BwEventProxy op = (BwEventProxy)ocei.getEvent();
 
-        overrides.add(new EventInfo(op));
+          overrides.add(new EventInfo(op));
+        }
       }
-    }
 
-    final EventInfo ei = new EventInfo(ev, overrides);
+      ei = new EventInfo(ev, overrides);
+    } else {
+      if (cei.override != null) {
+        ei = new EventInfo(cei.override.getEvent());
+      } else {
+        ei = new EventInfo(cei.getEvent());
+      }
+
+      ei.setRetrievedEvent(new EventInfo(cei.retrievedEvent.getEvent()));
+    }
 
     /* Reconstruct if any contained items. */
     if (cei.getNumContainedItems() > 0) {

@@ -4,6 +4,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## Unreleased (5.1.0-SNAPSHOT)
 * Incorrect value parameter (false instead of true) for admin groups fetch broke the restore.
+* Fetch by href did not work for updates. Changed to behave the same as fetch by uid. This means we are not using the indexer to fetch (single) instances. Future change should fetch only a single override for the instance.
 
 ## [5.0.0] - 2025-07-21
 * First jakarta release

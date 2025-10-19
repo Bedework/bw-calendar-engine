@@ -437,8 +437,20 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     }
 
     final EventInfo ei = ires.getEntity();
-    return new CoreEventInfo(ei.getEvent(),
-                             ei.getCurrentAccess());
+    final var ocei = new CoreEventInfo(ei.getEvent(),
+                                       ei.getCurrentAccess());
+    if (cei.getOverrides() != null) {
+      for (final CoreEventInfo acei: cei.getOverrides()) {
+        if (acei.getEvent().getRecurrenceId().equals(recurrenceId)) {
+          ocei.override = acei;
+          break;
+        }
+      }
+    }
+
+    ocei.retrievedEvent = cei;
+
+    return ocei;
   }
 
   @Override

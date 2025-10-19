@@ -1927,7 +1927,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       // Check validity
       final int pos = href.lastIndexOf("/");
       if (pos < 0) {
-        throw new RuntimeException("Bad href: " + href);
+        throw new BedeworkException("Bad href: " + href);
       }
 
       final int fragPos = href.lastIndexOf("#");
