@@ -1423,7 +1423,7 @@ public class CalSvc
         authPrincipal = currentPrincipal;
         maxAllowedPrivs = PrivilegeSet.readOnlyPrivileges;
       } else {
-        currentPrincipal = unauthUsers.get(authenticatedUser);
+        currentPrincipal = authUsers.get(authenticatedUser);
 
         if (currentPrincipal == null) {
           currentPrincipal = users.getUser(authenticatedUser);
@@ -1434,7 +1434,7 @@ public class CalSvc
         if (currentPrincipal == null) {
           if (pars.getReadonly()) {
             // We need read-write
-            throw new RuntimeException(upgradeToReadWriteMessage);
+            throw new BedeworkException(upgradeToReadWriteMessage);
           }
 
           /* Add the user to the database. Presumably this is first logon
@@ -1458,7 +1458,7 @@ public class CalSvc
                        authenticatedUser, pars.getLogId(),
                        pars.getPublicAdmin()));
         } else {
-          currentPrincipal = unauthUsers.get(runAsUser);
+          currentPrincipal = authUsers.get(runAsUser);
 
           if (currentPrincipal == null) {
             currentPrincipal = users.getUser(runAsUser);
