@@ -298,7 +298,7 @@ class Events extends CalSvcDb implements EventsI {
     final Set<EventInfo> res = new HashSet<>();
     res.add(ei);
     return postGet(res, recurrenceId,
-                   RecurringRetrievalMode.expanded).iterator().next();
+                   RecurringRetrievalMode.overrides).iterator().next();
             /*
     String href = Util.buildPath(false,
                                  colPath, "/",
