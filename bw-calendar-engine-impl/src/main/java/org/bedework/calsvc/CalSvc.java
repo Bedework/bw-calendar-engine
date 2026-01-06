@@ -1423,7 +1423,7 @@ public class CalSvc
         authPrincipal = currentPrincipal;
         maxAllowedPrivs = PrivilegeSet.readOnlyPrivileges;
       } else {
-        currentPrincipal = authUsers.get(authenticatedUser);
+        currentPrincipal = unauthUsers.get(authenticatedUser);
 
         if (currentPrincipal == null) {
           currentPrincipal = users.getUser(authenticatedUser);
@@ -1458,7 +1458,7 @@ public class CalSvc
                        authenticatedUser, pars.getLogId(),
                        pars.getPublicAdmin()));
         } else {
-          currentPrincipal = authUsers.get(runAsUser);
+          currentPrincipal = unauthUsers.get(runAsUser);
 
           if (currentPrincipal == null) {
             currentPrincipal = users.getUser(runAsUser);
