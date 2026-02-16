@@ -21,6 +21,9 @@ package org.bedework.calsvc;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.base.exc.BedeworkAccessException;
 import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.response.GetEntitiesResponse;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 import org.bedework.calcorei.CoreEventPropertiesI;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwPrincipal;
@@ -32,16 +35,11 @@ import org.bedework.calfacade.svc.EnsureEntityExistsResult;
 import org.bedework.calsvci.EventProperties;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;
-import org.bedework.base.response.GetEntitiesResponse;
-import org.bedework.base.response.GetEntityResponse;
-import org.bedework.base.response.Response;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static org.bedework.calfacade.BwEventProperty.statusDeleted;
 
 /** Class which handles manipulation of BwEventProperty subclasses which are
  * treated in the same manner, these being Category, Location and contact.
@@ -125,13 +123,13 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
     return get(true, null);
   }
 
-  Collection<T> filterDeleted(final Collection<T> ents) {
+  Collection<T> filterArchived(final Collection<T> ents) {
     if (isSuper()) {
       return ents;
     }
 
     return ents.stream()
-               .filter(ent -> !statusDeleted.equals(ent.getStatus()))
+               .filter(ent -> !ent.getArchived())
                .collect(Collectors.toList());
   }
 
@@ -564,7 +562,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
     }
 
     if (creatorHref == null) {
-      return filterDeleted(ents);
+      return filterArchived(ents);
     }
 
     final List<T> someEnts = new ArrayList<>();
@@ -574,7 +572,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       }
     }
 
-    return filterDeleted(someEnts);
+    return filterArchived(someEnts);
   }
 
   private String checkHref(final String ownerHref) {

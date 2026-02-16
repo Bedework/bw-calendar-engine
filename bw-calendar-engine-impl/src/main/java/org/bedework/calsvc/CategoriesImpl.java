@@ -60,8 +60,8 @@ public class CategoriesImpl
   @Override
   Collection<BwCategory> fetchAllIndexed(final boolean publick,
                                          final String ownerHref) {
-    return filterDeleted(getIndexer(publick,
-                                    ownerHref).fetchAllCats());
+    return filterArchived(getIndexer(publick,
+                                     ownerHref).fetchAllCats());
   }
 
   @Override

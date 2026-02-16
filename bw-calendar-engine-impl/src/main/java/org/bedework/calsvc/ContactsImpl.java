@@ -60,8 +60,8 @@ public class ContactsImpl
   @Override
   Collection<BwContact> fetchAllIndexed(final boolean publick,
                                         final String ownerHref) {
-    return filterDeleted(getIndexer(publick,
-                                    ownerHref).fetchAllContacts());
+    return filterArchived(getIndexer(publick,
+                                     ownerHref).fetchAllContacts());
   }
 
   @Override

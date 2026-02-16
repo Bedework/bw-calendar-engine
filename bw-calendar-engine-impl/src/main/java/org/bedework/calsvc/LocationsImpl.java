@@ -93,8 +93,8 @@ public class LocationsImpl
   @Override
   Collection<BwLocation> fetchAllIndexed(final boolean publick,
                                          final String ownerHref) {
-    return filterDeleted(getIndexer(publick,
-                                    ownerHref).fetchAllLocations());
+    return filterArchived(getIndexer(publick,
+                                     ownerHref).fetchAllLocations());
   }
 
   @Override
