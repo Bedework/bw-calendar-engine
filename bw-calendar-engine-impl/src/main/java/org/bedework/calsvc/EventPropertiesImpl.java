@@ -53,17 +53,6 @@ import java.util.stream.Collectors;
  */
 public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
         extends CalSvcDb implements EventProperties<T>, PrivilegeDefs {
-  /* We'll cache lists of entities by principal href - flushing them
-    every so often.
-   */
-  private final FlushMap<String, Collection<T>> cached =
-          new FlushMap<>(60 * 1000 * 5, // 5 mins
-                         2000);  // max size
-
-  private final FlushMap<String, T> cachedByUid =
-          new FlushMap<>(60 * 1000 * 5, // 5 mins
-                         2000);  // max size
-
   private Class<T> ourClass;
   private CoreEventPropertiesI<T> coreHdlr;
 
@@ -72,6 +61,10 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
   private String lastChangeToken;
 
   abstract String getDocType();
+
+  abstract FlushMap<String, Collection<T>> getCache();
+
+  abstract FlushMap<String, T> getCachedByUid();
 
   /* fetch from indexer */
   abstract Collection<T> fetchAllIndexed(boolean publick,
@@ -135,7 +128,9 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
 
   @Override
   public Collection<T> get() {
-    return get(isPublicAdmin(), null);
+    synchronized (getCache()) {
+      return get(isPublicAdmin(), null);
+    }
   }
 
   @Override
@@ -267,13 +262,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
 
       getCal().indexEntity(val);
 
-      // Update cached
-      final Collection<T> ents = get();
-      if (ents != null) {
-        ents.add(val);
-      }
-
-      putCachedByUid(val.getUid(), val);
+      updateCache(val);
 
       return resp;
     } catch (final Throwable t) {
@@ -299,15 +288,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
 
     getCal().indexEntity(val);
 
-    // Update cached
-    final Collection<T> ents = get();
-    if (ents != null) {
-      ents.remove(val);
-      ents.add(val);
-    }
-
-//    removeCached(val.getOwnerHref());
-    putCachedByUid(val.getUid(), val);
+    updateCache(val);
   }
 
   @Override
@@ -334,13 +315,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
 
     getSvc().getIndexer(ent).unindexEntity(ent);
 
-    // Update cached
-    final Collection<T> ents = get();
-    if (ents != null) {
-      ents.remove(ent);
-    }
-
-    removeCachedByUid(ent.getUid());
+    removeFromCache(ent);
 
     return 0;
   }
@@ -473,14 +448,14 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
     }
   }
 
-  protected Collection<T> getCached(final String ownerHref)  {
-    checkChache();
-    return cached.get(ownerHref);
+  protected Collection<T> getCache(final String ownerHref)  {
+    checkCache();
+    return getCache().get(ownerHref);
   }
 
   protected void putCached(final String ownerHref,
                            final Collection<T> vals) {
-    cached.put(ownerHref, vals);
+    getCache().put(ownerHref, vals);
   }
 
   /*
@@ -490,17 +465,17 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
    */
 
   protected T getCachedByUid(final String uid) {
-    checkChache();
-    return cachedByUid.get(uid);
+    checkCache();
+    return getCachedByUid().get(uid);
   }
 
   protected void putCachedByUid(final String uid,
                                 final T val) {
-    cachedByUid.put(uid, val);
+    getCachedByUid().put(uid, val);
   }
 
   protected void removeCachedByUid(final String uid) {
-    cachedByUid.remove(uid);
+    getCachedByUid().remove(uid);
   }
 
   protected GetEntityResponse<T> findPersistent(final BwString val,
@@ -521,14 +496,16 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
     }
   }
 
-  /* ====================================================================
+  /* ============================================================
    *                   Private methods
-   * ==================================================================== */
+   * ============================================================ */
 
-  private void checkChache() {
-    if (indexChanged()) {
-      cached.clear();
-      cachedByUid.clear();
+  private void checkCache() {
+    synchronized (getCache()) {
+      if (indexChanged()) {
+        getCache().clear();
+        getCachedByUid().clear();
+      }
     }
   }
 
@@ -544,7 +521,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       ownerHref = getPrincipal().getPrincipalRef();
     }
 
-    Collection<T> ents = getCached(ownerHref);
+    Collection<T> ents = getCache(ownerHref);
 
     if (ents == null) {
       ents = fetchAllIndexed(publick, ownerHref);
@@ -624,6 +601,32 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
     }
 
     throw new BedeworkAccessException();
+  }
+
+  private void updateCache(final T val) {
+    synchronized (getCache()) {
+      // Update cached
+      final Collection<T> ents = get(isPublicAdmin(), null);
+      if (ents != null) {
+        ents.remove(val);
+        ents.add(val);
+      }
+
+//    removeCached(val.getOwnerHref());
+      putCachedByUid(val.getUid(), val);
+    }
+  }
+
+  private void removeFromCache(final T val) {
+    synchronized (getCache()) {
+      // Update cached
+      final Collection<T> ents = get(isPublicAdmin(), null);
+      if (ents != null) {
+        ents.remove(val);
+      }
+
+      removeCachedByUid(val.getUid());
+    }
   }
 
   /* This provides some limits to shareable entity updates for the

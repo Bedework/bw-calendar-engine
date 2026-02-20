@@ -19,14 +19,15 @@
 package org.bedework.calsvc;
 
 import org.bedework.base.exc.BedeworkException;
+import org.bedework.base.response.GetEntitiesResponse;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calsvci.Locations;
+import org.bedework.util.caching.FlushMap;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.base.response.GetEntitiesResponse;
-import org.bedework.base.response.GetEntityResponse;
-import org.bedework.base.response.Response;
 
 import java.util.Collection;
 
@@ -39,6 +40,16 @@ import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
 public class LocationsImpl
         extends EventPropertiesImpl<BwLocation>
         implements Locations {
+  private static final FlushMap<String,
+          Collection<BwLocation>> cached =
+          new FlushMap<>(60 * 1000 * 5, // 5 mins
+                         2000);  // max size
+
+  private static final FlushMap<String,
+          BwLocation> cachedByUid =
+          new FlushMap<>(60 * 1000 * 5, // 5 mins
+                         2000);  // max size
+
   /** Constructor
   *
   * @param svci calsvc object
@@ -56,6 +67,16 @@ public class LocationsImpl
   @Override
   String getDocType() {
     return docTypeLocation;
+  }
+
+  @Override
+  FlushMap<String, Collection<BwLocation>> getCache() {
+    return cached;
+  }
+
+  @Override
+  FlushMap<String, BwLocation> getCachedByUid() {
+    return cachedByUid;
   }
 
   @Override

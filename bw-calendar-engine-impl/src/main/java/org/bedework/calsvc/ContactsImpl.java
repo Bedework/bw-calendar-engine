@@ -18,14 +18,15 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.base.response.GetEntitiesResponse;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calsvci.Contacts;
+import org.bedework.util.caching.FlushMap;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.base.response.GetEntitiesResponse;
-import org.bedework.base.response.GetEntityResponse;
-import org.bedework.base.response.Response;
 
 import java.util.Collection;
 
@@ -38,6 +39,15 @@ import static org.bedework.calfacade.indexing.BwIndexer.docTypeContact;
 public class ContactsImpl
         extends EventPropertiesImpl<BwContact>
         implements Contacts {
+  private static final FlushMap<String,
+          Collection<BwContact>> cached =
+          new FlushMap<>(60 * 1000 * 5, // 5 mins
+                         2000);  // max size
+
+  private static final FlushMap<String, BwContact> cachedByUid =
+          new FlushMap<>(60 * 1000 * 5, // 5 mins
+                         2000);  // max size
+
   /** Constructor
   *
   * @param svci calsvc object
@@ -55,6 +65,16 @@ public class ContactsImpl
   @Override
   String getDocType() {
     return docTypeContact;
+  }
+
+  @Override
+  FlushMap<String, Collection<BwContact>> getCache() {
+    return cached;
+  }
+
+  @Override
+  FlushMap<String, BwContact> getCachedByUid() {
+    return cachedByUid;
   }
 
   @Override
