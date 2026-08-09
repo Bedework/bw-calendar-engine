@@ -23,12 +23,14 @@ import org.bedework.access.PrivilegeDefs;
 import org.bedework.base.exc.BedeworkAccessException;
 import org.bedework.base.exc.BedeworkException;
 import org.bedework.base.exc.BedeworkForbidden;
+import org.bedework.base.response.GetEntityResponse;
+import org.bedework.base.response.Response;
 import org.bedework.calcorei.CoreCollectionsI.GetSpecialCollectionResult;
 import org.bedework.caldav.util.sharing.InviteType;
 import org.bedework.caldav.util.sharing.UserType;
 import org.bedework.calfacade.AliasesInfo;
-import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwCollection;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.CalFacadeDefs;
@@ -44,9 +46,6 @@ import org.bedework.calsvci.ResourcesI;
 import org.bedework.calsvci.SynchI;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;
-import org.bedework.base.response.GetEntityResponse;
-import org.bedework.base.response.Response;
-import org.bedework.util.timezones.DateTimeUtil;
 import org.bedework.util.xml.tagdefs.AppleServerTags;
 
 import net.fortuna.ical4j.model.Component;
@@ -67,6 +66,7 @@ import java.util.TreeSet;
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
 import static org.bedework.calfacade.configs.BasicSystemProperties.publicCollectionRootPath;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeCollection;
+import static org.bedework.util.dates.DateFormatter.icalDateTimeUTCFormat;
 
 /** This acts as an interface to the database for collections.
  *
@@ -729,7 +729,7 @@ class Collections extends CalSvcDb implements CollectionsI {
         return false;
       }
 
-      final var date = DateTimeUtil.fromISODateTimeUTC(
+      final var date = icalDateTimeUTCFormat.toDate(
               token.substring(0, pos));
 
       if (date == null) {

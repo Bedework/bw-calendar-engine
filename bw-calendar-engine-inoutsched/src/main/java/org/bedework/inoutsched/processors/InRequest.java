@@ -48,7 +48,6 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
-import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.Period;
 
@@ -57,6 +56,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+
+import static org.bedework.util.dates.DateFormatter.icalDateTimeUTCFormat;
 
 /** Handles incoming method REQUEST scheduling messages.
  *
@@ -260,7 +261,7 @@ public class InRequest extends InProcessor {
     final BwEvent ourEvent = ourCopy.getEvent();
     final var ourSi = ourEvent.getSchedulingInfo();
 
-    final String now = DateTimeUtil.isoDateTimeUTC(new Date());
+    final String now = icalDateTimeUTCFormat.fromDate(new Date());
 
     if (!ourEvent.getRecurring()) {
       /* Don't bother if it's in the past */

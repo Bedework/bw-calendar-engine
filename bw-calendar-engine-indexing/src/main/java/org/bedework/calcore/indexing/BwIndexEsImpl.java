@@ -77,7 +77,6 @@ import org.bedework.base.response.Response;
 import org.bedework.util.opensearch.DocBuilderBase.UpdateInfo;
 import org.bedework.util.opensearch.EsDocInfo;
 import org.bedework.util.opensearch.SearchClient;
-import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.Period;
 import org.opensearch.OpenSearchException;
@@ -151,6 +150,7 @@ import static org.bedework.base.response.Response.Status.noAccess;
 import static org.bedework.base.response.Response.Status.notFound;
 import static org.bedework.base.response.Response.Status.ok;
 import static org.bedework.base.response.Response.Status.processing;
+import static org.bedework.util.dates.DateFormatter.icalDateTimeFormat;
 import static org.bedework.util.opensearch.DocBuilderBase.updateTrackerId;
 
 /** Implementation of indexer for OpenSearch
@@ -3950,7 +3950,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     // ES only allows lower case letters in names (and digits)
     final StringBuilder suffix = new StringBuilder();
 
-    final char[] ch = DateTimeUtil.isoDateTime().toCharArray();
+    final char[] ch = icalDateTimeFormat.fromDate().toCharArray();
 
     for (int i = 0; i < 8; i++) {
       suffix.append(ch[i]);

@@ -66,7 +66,6 @@ import org.bedework.util.indexing.IndexException;
 import org.bedework.util.misc.Util;
 import org.bedework.util.opensearch.DocBuilderBase;
 import org.bedework.util.opensearch.EsDocInfo;
-import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.parameter.Related;
 
@@ -80,6 +79,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.bedework.calcore.indexing.EntityBuilder.getJname;
+import static org.bedework.util.dates.DateFormatter.icalDateTimeUTCFormat;
 
 /** Build documents for OpenSearch
  *
@@ -1082,7 +1082,7 @@ public class DocBuilder extends DocBuilderBase {
               break;
             }
             
-            triggerTimes.add(DateTimeUtil.isoDateTimeUTC(dt));
+            triggerTimes.add(icalDateTimeUTCFormat.fromDate(dt));
           }
 
           if (!Util.isEmpty(triggerTimes)) {
